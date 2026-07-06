@@ -23,7 +23,7 @@ const menu = ref(false)
 
 <style scoped>
 .public-nav {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--green);
   background: var(--panel);
   position: sticky;
   top: 0;
@@ -40,6 +40,11 @@ const menu = ref(false)
 .brand {
   font-weight: 700;
   letter-spacing: 0.05em;
+  color: var(--white);
+  transition: color 0.2s;
+}
+.brand:hover {
+  color: var(--gold);
 }
 .nav-toggle {
   display: block;
@@ -55,6 +60,19 @@ const menu = ref(false)
   list-style: none;
   margin: 0;
   padding: 0;
+}
+.nav-links a {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.3rem;
+  transition: color 0.2s, background 0.2s;
+}
+.nav-links a:hover {
+  color: var(--green-light);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+.nav-links a.router-link-active {
+  color: var(--white);
+  font-weight: 600;
 }
 .nav-links.open {
   display: flex;
