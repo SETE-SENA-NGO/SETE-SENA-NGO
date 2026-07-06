@@ -4,26 +4,26 @@ import { RouterLink } from 'vue-router'
 const ways = [
   {
     title: 'Donate',
-    body: 'Support community forestry, clean water, sanitation, education, child protection and livelihood activities for vulnerable families.',
-    cta: 'Support our work',
+    body: 'A single gift waters dozens of households - pre-school scholarships, tree saplings, biogas units and emergency food relief.',
+    cta: 'Make a donation',
   },
   {
     title: 'Partner',
-    body: 'Work with Santi Sena to encourage local initiatives, strengthen communities and protect natural resources in rural Cambodia.',
+    body: 'Institutions, faith groups and foundations: co-design multi-year programs in environment, education or livelihoods.',
     cta: 'Explore partnership',
   },
   {
     title: 'Volunteer',
-    body: 'Share skills in agriculture, education, WASH, communications, child rights, monitoring or community development.',
+    body: 'Bring your skills - agronomy, education, communications, evaluation - to a community-led project in the field.',
     cta: 'Apply to volunteer',
   },
 ]
 
-const impacts = [
-  { value: '293', label: 'villages reached across Svay Rieng and Prey Veng provinces.' },
-  { value: '571.601 ha', label: 'of community forest supported and protected.' },
-  { value: '4,555', label: 'families joined Saving for Change self-help groups.' },
-  { value: '3,400', label: 'children participated in mobile library sessions.' },
+const tiers = [
+  { amount: '$25', impact: 'One month of pre-school for a rural child.' },
+  { amount: '$80', impact: 'Twenty tree saplings planted in a community forest.' },
+  { amount: '$250', impact: 'A household biogas unit replacing firewood.' },
+  { amount: '$1,000', impact: 'A Saving-for-Change group seeded for one year.' },
 ]
 </script>
 
@@ -33,10 +33,10 @@ const impacts = [
       <div class="hero-overlay"></div>
       <div class="hero-inner">
         <span class="eyebrow">Get involved</span>
-        <h1>Join Santi Sena in working for peace and community development.</h1>
+        <h1>Stand beside a village. Plant a generation.</h1>
         <p>
-          Santi Sena works with vulnerable and marginalized people to reduce poverty, support local
-          initiatives, protect natural resources and promote education, rights and social justice.
+          Every gift, partnership and pair of hands becomes another root in the tree we have been
+          tending for thirty years.
         </p>
       </div>
     </section>
@@ -53,25 +53,24 @@ const impacts = [
 
     <section class="donation-section">
       <div class="donation-inner">
-        <span class="eyebrow">Our work in communities</span>
-        <h2>Support that reaches real villages.</h2>
+        <span class="eyebrow">Your gift, in villages</span>
+        <h2>What a donation actually does.</h2>
         <div class="tier-grid">
-          <article v-for="impact in impacts" :key="impact.value" class="tier-card">
-            <strong>{{ impact.value }}</strong>
-            <p>{{ impact.label }}</p>
+          <article v-for="tier in tiers" :key="tier.amount" class="tier-card">
+            <strong>{{ tier.amount }}</strong>
+            <p>{{ tier.impact }}</p>
           </article>
         </div>
       </div>
     </section>
 
     <section class="monthly-section">
-      <h2>Stand with vulnerable families.</h2>
+      <h2>Become a monthly companion.</h2>
       <p>
-        Your support helps Santi Sena continue community-based work in natural resource management,
-        sustainable livelihoods, water and sanitation, education, Buddhist preservation and child
-        protection.
+        Recurring donors give Santi Sena the steady ground we need to plan multi-year programs with
+        communities. Even a small monthly gift sustains the slow, patient work of development.
       </p>
-      <RouterLink to="/contact" class="primary-link">Contact Santi Sena</RouterLink>
+      <RouterLink to="/contact" class="primary-link">Start monthly giving</RouterLink>
     </section>
   </main>
 </template>
@@ -91,7 +90,6 @@ const impacts = [
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  min-height: 500px;
   background:
     linear-gradient(90deg, rgba(4, 59, 56, 0.82), rgba(4, 59, 56, 0.5)),
     url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80')
@@ -106,79 +104,83 @@ const impacts = [
 }
 
 .hero-inner {
-  width: min(100% - 2rem, 1540px);
+  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 2.9rem 0 7rem;
+  padding: 8rem 1.5rem;
+  text-align: left;
 }
 
 .eyebrow {
   color: #ff7a1a;
   font-family: var(--font-body);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.34em;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
 }
 
 .hero h1 {
-  max-width: 920px;
+  max-width: 896px;
   margin: 1rem 0 0;
   color: #fff7e9;
   font-family: var(--font-display);
-  font-size: clamp(2.35rem, 4.2vw, 4.2rem);
-  line-height: 1.05;
+  font-size: 3rem;
+  line-height: 1;
   font-weight: 600;
+  text-wrap: balance;
 }
 
 .hero p {
-  max-width: 830px;
-  margin: 1.6rem 0 0;
-  color: #fff7e9;
-  font-size: clamp(1rem, 1.25vw, 1.2rem);
-  line-height: 1.45;
+  max-width: 672px;
+  margin: 1.5rem 0 0;
+  color: rgba(255, 247, 233, 0.85);
+  font-size: 1.125rem;
+  line-height: 1.55;
 }
 
 .ways-section {
   width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 7.4rem min(8vw, 10.5rem) 7.5rem;
+  padding: 6rem 1.5rem;
   background: #fbf4e6;
 }
 
 .monthly-section {
-  width: min(100% - 2rem, 1120px);
+  width: 100%;
+  max-width: 896px;
   margin: 0 auto;
-  padding: 7rem 0 8rem;
+  padding: 6rem 1.5rem;
 }
 
 .ways-grid {
   display: grid;
-  gap: 2.5rem;
+  gap: 2rem;
 }
 
 .way-card {
   display: flex;
-  min-height: 375px;
   flex-direction: column;
   border: 1px solid #e2d4bd;
   border-radius: 1.5rem;
   background: rgba(255, 251, 243, 0.78);
-  padding: 3.2rem;
-  box-shadow: 0 4px 14px rgba(54, 38, 17, 0.13);
+  padding: 2.5rem;
+  box-shadow: 0 1px 2px rgba(54, 38, 17, 0.08);
 }
 
 .way-card h2 {
   margin: 0;
   color: #073f3a;
   font-family: var(--font-display);
-  font-size: clamp(1.65rem, 2vw, 2.1rem);
+  font-size: 1.875rem;
   font-weight: 600;
-  line-height: 1.08;
+  line-height: 2.25rem;
 }
 
 .way-card p {
   flex: 1;
-  margin: 1.45rem 0 0;
+  margin: 1rem 0 0;
   color: #234b45;
   font-size: 1rem;
   line-height: 1.5;
@@ -190,87 +192,106 @@ const impacts = [
   align-items: center;
   justify-content: center;
   align-self: flex-start;
-  margin-top: 2.25rem;
+  margin-top: 2rem;
   border: 0;
   border-radius: 999px;
   background: #ff7a1a;
   color: #fffaf0;
-  font-size: 0.86rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  padding: 0.95rem 1.5rem;
+  padding: 0.625rem 1.25rem;
   box-shadow: 0 18px 34px rgba(255, 122, 26, 0.2);
 }
 
 .donation-section {
   background: #094239;
   color: #fff7e9;
-  padding: 8.2rem 0 7.6rem;
+  padding: 6rem 0;
 }
 
 .donation-inner {
-  width: min(100% - 2rem, 1380px);
+  width: 100%;
+  max-width: 1152px;
   margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
-.donation-inner h2,
-.monthly-section h2 {
+.donation-inner h2 {
   margin: 1rem 0 0;
   font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3.3vw, 3rem);
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 600;
+}
+
+.monthly-section h2 {
+  margin: 0;
+  color: #073f3a;
+  font-family: var(--font-display);
+  font-size: 2.25rem;
   line-height: 1.1;
   font-weight: 600;
 }
 
 .tier-grid {
   display: grid;
-  gap: 1.9rem;
-  margin-top: 4.2rem;
+  gap: 1.5rem;
+  margin-top: 3rem;
 }
 
 .tier-card {
-  min-height: 197px;
   border: 1px solid rgba(255, 247, 233, 0.16);
-  border-radius: 1.15rem;
-  padding: 2.8rem 2.55rem;
+  border-radius: 1rem;
+  padding: 2rem;
 }
 
 .tier-card strong {
   display: block;
   color: #ff7a1a;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 2.6vw, 2.45rem);
+  font-size: 2.25rem;
   font-weight: 500;
-  line-height: 1;
+  line-height: 2.5rem;
 }
 
 .tier-card p {
-  margin: 1.25rem 0 0;
-  color: #fff7e9;
-  font-size: 0.95rem;
-  line-height: 1.45;
+  margin: 0.75rem 0 0;
+  color: rgba(255, 247, 233, 0.8);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 .monthly-section {
-  max-width: 1120px;
   text-align: center;
 }
 
 .monthly-section p {
-  max-width: 1080px;
-  margin: 1.35rem auto 0;
+  margin: 1rem auto 0;
   color: #234b45;
   font-size: 1rem;
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .monthly-section .primary-link {
   align-self: center;
-  margin-top: 3rem;
+  margin-top: 2rem;
+  padding: 0.875rem 1.75rem;
 }
 
-@media (min-width: 700px) {
+@media (min-width: 768px) {
   .ways-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 640px) {
+  .hero h1 {
+    font-size: 3.75rem;
+  }
+
+  .donation-inner h2 {
+    font-size: 3rem;
+    line-height: 1;
   }
 
   .tier-grid {
@@ -279,12 +300,8 @@ const impacts = [
 }
 
 @media (max-width: 699px) {
-  .hero {
-    min-height: 520px;
-  }
-
   .hero-inner {
-    padding: 3rem 0 5rem;
+    padding: 8rem 1.5rem;
   }
 
   .ways-section {
@@ -292,22 +309,15 @@ const impacts = [
   }
 
   .way-card {
-    min-height: auto;
     padding: 2rem;
   }
 
-  .way-card p,
-  .monthly-section p,
-  .tier-card p {
-    font-size: 0.92rem;
-  }
-
   .get-involved-page {
-    font-size: 15px;
+    font-size: 16px;
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1024px) {
   .tier-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
