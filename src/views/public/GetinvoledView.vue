@@ -78,17 +78,13 @@ const impacts = [
 
 <style scoped>
 .get-involved-page {
+  --font-display: Cambria, Georgia, 'Times New Roman', serif;
+  --font-body: Aptos, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   min-height: 100vh;
   background: #fbf4e6;
   color: #073f3a;
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  font-family: var(--font-body);
+  font-size: 16px;
 }
 
 .hero {
@@ -117,7 +113,8 @@ const impacts = [
 
 .eyebrow {
   color: #ff7a1a;
-  font-size: 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.34em;
   text-transform: uppercase;
@@ -127,9 +124,9 @@ const impacts = [
   max-width: 920px;
   margin: 1rem 0 0;
   color: #fff7e9;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(3rem, 5.6vw, 5.4rem);
-  line-height: 1;
+  font-family: var(--font-display);
+  font-size: clamp(2.35rem, 4.2vw, 4.2rem);
+  line-height: 1.05;
   font-weight: 600;
 }
 
@@ -137,8 +134,8 @@ const impacts = [
   max-width: 830px;
   margin: 1.6rem 0 0;
   color: #fff7e9;
-  font-size: clamp(1.1rem, 1.8vw, 1.65rem);
-  line-height: 1.42;
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.45;
 }
 
 .ways-section {
@@ -173,17 +170,18 @@ const impacts = [
 .way-card h2 {
   margin: 0;
   color: #073f3a;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-family: var(--font-display);
+  font-size: clamp(1.65rem, 2vw, 2.1rem);
   font-weight: 600;
+  line-height: 1.08;
 }
 
 .way-card p {
   flex: 1;
   margin: 1.45rem 0 0;
   color: #234b45;
-  font-size: 1.35rem;
-  line-height: 1.34;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .action-link,
@@ -197,7 +195,7 @@ const impacts = [
   border-radius: 999px;
   background: #ff7a1a;
   color: #fffaf0;
-  font-size: 1rem;
+  font-size: 0.86rem;
   font-weight: 700;
   padding: 0.95rem 1.5rem;
   box-shadow: 0 18px 34px rgba(255, 122, 26, 0.2);
@@ -217,8 +215,8 @@ const impacts = [
 .donation-inner h2,
 .monthly-section h2 {
   margin: 1rem 0 0;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.3rem, 4.7vw, 4.1rem);
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 3.3vw, 3rem);
   line-height: 1.1;
   font-weight: 600;
 }
@@ -239,8 +237,8 @@ const impacts = [
 .tier-card strong {
   display: block;
   color: #ff7a1a;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 3rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 2.6vw, 2.45rem);
   font-weight: 500;
   line-height: 1;
 }
@@ -248,8 +246,8 @@ const impacts = [
 .tier-card p {
   margin: 1.25rem 0 0;
   color: #fff7e9;
-  font-size: 1.2rem;
-  line-height: 1.35;
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
 .monthly-section {
@@ -261,8 +259,8 @@ const impacts = [
   max-width: 1080px;
   margin: 1.35rem auto 0;
   color: #234b45;
-  font-size: 1.3rem;
-  line-height: 1.45;
+  font-size: 1rem;
+  line-height: 1.55;
 }
 
 .monthly-section .primary-link {
@@ -301,7 +299,11 @@ const impacts = [
   .way-card p,
   .monthly-section p,
   .tier-card p {
-    font-size: 1.05rem;
+    font-size: 0.92rem;
+  }
+
+  .get-involved-page {
+    font-size: 15px;
   }
 }
 
