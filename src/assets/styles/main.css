@@ -1,6 +1,5 @@
-@import "tailwindcss" source(none);
+/* Removed Tailwind imports — project does not use Tailwind */
 @source "../src";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
