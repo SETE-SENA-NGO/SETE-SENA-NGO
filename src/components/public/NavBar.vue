@@ -13,6 +13,15 @@ const menu = ref(false)
       <ul :class="['nav-links', { open: menu }]">
         <li><RouterLink to="/">Home</RouterLink></li>
         <li><RouterLink to="/about">About</RouterLink></li>
+        <li class="has-dropdown">
+          <RouterLink to="/programs">Programs</RouterLink>
+          <ul class="dropdown">
+            <li><a href="/programs#education">Education</a></li>
+            <li><a href="/programs#environment">Environment</a></li>
+            <li><a href="/programs#livelihood">Livelihood</a></li>
+            <li><a href="/programs#child-protection">Child Protection</a></li>
+          </ul>
+        </li>
         <li><RouterLink to="/services">Services</RouterLink></li>
         <li><RouterLink to="/contact">Contact</RouterLink></li>
         <li><RouterLink to="/admin/login">Admin</RouterLink></li>
@@ -70,6 +79,30 @@ const menu = ref(false)
 .nav-links li + li {
   margin-top: 0.25rem;
 }
+
+/* Dropdown */
+.has-dropdown {
+  position: relative;
+}
+.dropdown {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+  display: none;
+  min-width: 180px;
+}
+.has-dropdown:hover .dropdown {
+  display: block;
+}
+.dropdown li a {
+  display: block;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.3rem;
+}
+.dropdown li a:hover {
+  background: var(--border);
+}
+
 @media (min-width: 640px) {
   .nav-toggle {
     display: none;
@@ -77,6 +110,15 @@ const menu = ref(false)
   .nav-links {
     display: flex;
     flex-direction: row;
+  }
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   }
 }
 </style>
