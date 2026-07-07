@@ -3,13 +3,15 @@ import AboutView from '@/views/public/AboutView.vue'
 import ServicesView from '@/views/public/ServicesView.vue'
 import ImpactView from '@/views/public/ImpactView.vue'
 import ContactView from '@/views/public/ContactView.vue'
-import GetinvoledView from '@/views/public/GetinvoledView.vue'
+import GetInvolvedView from '@/views/public/GetinvolvedView.vue'
+import DonateView from '@/views/public/Getinvolved.donat.vue'
 
 export const publicRoutes = [
   { path: '/', component: HomeView },
   { path: '/about', component: AboutView },
   { path: '/about/organization', component: AboutView },
   { path: '/services', component: ServicesView },
-  { path: '/get-involved', component: GetinvoledView },
+  { path: '/get-involved', component: GetInvolvedView },
+  { path: '/get-involved/donate', component: DonateView },
   { path: '/contact', component: ContactView },
 ]

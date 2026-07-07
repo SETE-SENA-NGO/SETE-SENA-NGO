@@ -42,7 +42,7 @@ const menus: Menu[] = [
     label: 'Get Involved',
     to: '/get-involved',
     items: [
-      { title: 'Support Us', desc: 'Single gifts that water dozens of households.', to: '/get-involved#support' },
+      { title: 'Support Us', desc: 'Support community programs in Svay Rieng and Prey Veng.', to: '/get-involved/donate' },
       { title: 'Partner', desc: 'Co-design multi-year community programs.', to: '/get-involved#partner' },
       { title: 'Volunteer', desc: 'Bring your skills to a field project.', to: '/get-involved#volunteer' },
     ],
@@ -220,7 +220,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           </div>
         </div>
 
-        <RouterLink to="/get-involved" class="btn-support btn-support--desktop" @click="closeAll">
+        <RouterLink to="/get-involved/donate" class="btn-support btn-support--desktop" @click="closeAll">
           Support Us
           <span aria-hidden="true">→</span>
         </RouterLink>
@@ -255,7 +255,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           {{ item.title }}
         </RouterLink>
       </div>
-      <RouterLink to="/get-involved" class="btn-support btn-support--mobile" @click="closeAll">
+      <RouterLink to="/get-involved/donate" class="btn-support btn-support--mobile" @click="closeAll">
         Support Us →
       </RouterLink>
     </div>
