@@ -1,12 +1,13 @@
-import HomeView from '@/views/public/HomeView.vue'
+import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/public/AboutView.vue'
 import ServicesView from '@/views/public/ServicesView.vue'
 import ImpactView from '@/views/public/ImpactView.vue'
-import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
 import ImpactPartnersView from '@/views/public/ImpactPartnersView.vue'
 import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
+import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
+import DonateView from '@/views/public/Getinvolved.donat.vue'
 
 export const publicRoutes = [
   { path: '/', component: HomeView },
@@ -18,5 +19,6 @@ export const publicRoutes = [
   { path: '/impact/timeline', component: ImpactTimelineView },
   { path: '/impact/partners', component: ImpactPartnersView },
   { path: '/get-involved', component: GetInvolvedView },
+  { path: '/get-involved/donate', component: DonateView },
   { path: '/contact', component: ContactView },
 ]
