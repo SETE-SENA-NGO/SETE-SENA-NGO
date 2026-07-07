@@ -302,7 +302,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .header-inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0.85rem 1.5rem;
+  padding: 1.25rem 1.75rem;
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -318,8 +318,8 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .brand-mark img {
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 3.4rem;
+  height: 3.4rem;
   display: block;
   object-fit: contain;
 }
@@ -333,12 +333,12 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .brand-name {
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: var(--green);
 }
 
 .brand-tag {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -348,7 +348,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .main-nav {
   display: none;
   align-items: center;
-  gap: 1.65rem;
+  gap: 1.85rem;
 }
 
 .nav-item {
@@ -363,9 +363,9 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 0.4rem 0.55rem;
+  padding: 0.5rem 0.6rem;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 500;
   color: var(--ink);
   text-decoration: none;
@@ -518,8 +518,8 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   background: var(--orange);
   color: #211a12;
   font-weight: 600;
-  font-size: 0.9rem;
-  padding: 0.6rem 1.3rem;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.5rem;
   border-radius: 999px;
   text-decoration: none;
   white-space: nowrap;
