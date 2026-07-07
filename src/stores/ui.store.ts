@@ -10,6 +10,7 @@ export const useUiStore = defineStore('ui', () => {
     onConfirm: undefined as (() => void) | undefined,
   })
   const loading = ref(false)
+  const sidebarOpen = ref(false)
 
   function addToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
     const id = Date.now()
@@ -31,5 +32,24 @@ export const useUiStore = defineStore('ui', () => {
     loading.value = state
   }
 
-  return { toasts, modal, loading, addToast, openModal, closeModal, setLoading }
+  function toggleSidebar() {
+    sidebarOpen.value = !sidebarOpen.value
+  }
+
+  function closeSidebar() {
+    sidebarOpen.value = false
+  }
+
+  return {
+    toasts,
+    modal,
+    loading,
+    sidebarOpen,
+    addToast,
+    openModal,
+    closeModal,
+    setLoading,
+    toggleSidebar,
+    closeSidebar,
+  }
 })
