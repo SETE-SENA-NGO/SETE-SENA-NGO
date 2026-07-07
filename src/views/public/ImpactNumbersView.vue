@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import heroImage from '@/assets/hero-impact.jpg'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import heroImage1 from '@/assets/hero-impact.jpg'
+import heroImage2 from '@/assets/hero-impact-village.jpg'
+import heroImage3 from '@/assets/hero-impact-forest.jpg'
 
 type StatItem = {
   value: string
@@ -48,6 +50,35 @@ const countingMethods = [
   'External evaluations commissioned at the close of major grants',
 ]
 
+const heroImages = [heroImage1, heroImage2, heroImage3]
+const activeHeroIndex = ref(0)
+let slideTimer: number | undefined
+
+
+const isReducedMotion = () => {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
+}
+
+const startSlideshow = () => {
+  if (isReducedMotion()) return
+  stopSlideshow()
+  slideTimer = window.setInterval(() => {
+    activeHeroIndex.value = (activeHeroIndex.value + 1) % heroImages.length
+  }, 5000)
+}
+
+const stopSlideshow = () => {
+  if (slideTimer) {
+    window.clearInterval(slideTimer)
+    slideTimer = undefined
+  }
+}
+
+onBeforeUnmount(() => {
+  stopSlideshow()
+})
+
 onMounted(() => {
   document.title = 'Impact by the Numbers — Santi Sena'
 
@@ -74,13 +105,28 @@ onMounted(() => {
   setMeta('description', "Villages, hectares, students, savings groups and biogas units — the measurable footprint of Santi Sena's 30 years in Cambodia.")
   setOgMeta('og:title', 'Impact by the Numbers — Santi Sena')
   setOgMeta('og:description', '293 villages, 570+ hectares of forest, and counting.')
+
+  startSlideshow()
 })
+
+
+
 </script>
 
 <template>
   <div class="numbers-page">
-    <section class="hero-section">
-      <img :src="heroImage" alt="Cambodian rice paddies and village at dawn" class="hero-image" />
+    <section class="hero-section" @mouseenter="stopSlideshow" @mouseleave="startSlideshow">
+<div class="hero-slideshow">
+        <img
+          v-for="(img, index) in heroImages"
+          :key="img"
+          :src="img"
+          :alt="'Impact background ' + (index + 1)"
+          class="hero-image"
+          :class="{ 'is-active': index === activeHeroIndex }"
+          draggable="false"
+        />
+      </div>
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Impact · By the Numbers</span>
@@ -152,12 +198,41 @@ onMounted(() => {
   align-items: center;
 }
 
+.hero-slideshow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .hero-image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+
+.hero-image.is-active {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image {
+    transition: none;
+  }
+
+  /* Keep only the first slide visible when reduced motion is enabled */
+  .hero-image {
+    opacity: 1;
+  }
+
+  /* Make non-first slides non-visible */
+  .hero-image:not(:first-child) {
+    opacity: 0;
+  }
 }
 
 .hero-overlay {
