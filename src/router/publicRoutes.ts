@@ -5,6 +5,7 @@ import ImpactView from '@/views/public/ImpactView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
 import DonateView from '@/views/public/Getinvolved.donat.vue'
+import PartnerView from '@/views/public/Getinvolved.partner.vue'
 
 export const publicRoutes = [
   { path: '/', component: HomeView },
@@ -13,5 +14,6 @@ export const publicRoutes = [
   { path: '/services', component: ServicesView },
   { path: '/get-involved', component: GetInvolvedView },
   { path: '/get-involved/donate', component: DonateView },
+  { path: '/get-involved/partner', component: PartnerView },
   { path: '/contact', component: ContactView },
 ]

@@ -43,7 +43,7 @@ const menus: Menu[] = [
     to: '/get-involved',
     items: [
       { title: 'Support Us', desc: 'Support community programs in Svay Rieng and Prey Veng.', to: '/get-involved/donate' },
-      { title: 'Partner', desc: 'Co-design multi-year community programs.', to: '/get-involved#partner' },
+      { title: 'Partner', desc: 'Cooperate through local authorities, departments and community groups.', to: '/get-involved/partner' },
       { title: 'Volunteer', desc: 'Bring your skills to a field project.', to: '/get-involved#volunteer' },
     ],
   },
