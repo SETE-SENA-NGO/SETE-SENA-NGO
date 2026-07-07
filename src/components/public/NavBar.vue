@@ -11,11 +11,30 @@ const menu = ref(false)
       <RouterLink to="/" class="brand">Santi Sena NGO</RouterLink>
       <button class="nav-toggle" @click="menu = !menu" aria-label="Toggle menu">Menu</button>
       <ul :class="['nav-links', { open: menu }]">
+<<<<<<< HEAD
+        <li><RouterLink to="/">Home</RouterLink></li>
+        <li><RouterLink to="/about">About</RouterLink></li>
+        <li class="has-dropdown">
+          <RouterLink to="/programs">Programs</RouterLink>
+          <ul class="dropdown">
+            <li><a href="/programs#education">Education</a></li>
+            <li><a href="/programs#environment">Environment</a></li>
+            <li><a href="/programs#livelihood">Livelihood</a></li>
+            <li><a href="/programs#child-protection">Child Protection</a></li>
+          </ul>
+        </li>
+        <li><RouterLink to="/services">Services</RouterLink></li>
+        <li><RouterLink to="/contact">Contact</RouterLink></li>
+        <li><RouterLink to="/admin/login">Admin</RouterLink></li>
+=======
         <li><RouterLink to="/" @click="menu = false">Home</RouterLink></li>
-        <li><RouterLink to="/about" @click="menu = false">About</RouterLink></li>
+        <li><RouterLink to="/about/vision" @click="menu = false">About Vision</RouterLink></li>
+        <li><RouterLink to="/programs/environment" @click="menu = false">Programs</RouterLink></li>
         <li><RouterLink to="/services" @click="menu = false">Services</RouterLink></li>
+        <li><RouterLink to="/impact/partners" @click="menu = false">Partners</RouterLink></li>
         <li><RouterLink to="/contact" @click="menu = false">Contact</RouterLink></li>
         <li><RouterLink to="/admin/login" @click="menu = false">Admin</RouterLink></li>
+>>>>>>> develop
       </ul>
     </div>
   </nav>
@@ -23,7 +42,7 @@ const menu = ref(false)
 
 <style scoped>
 .public-nav {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--green);
   background: var(--panel);
   position: sticky;
   top: 0;
@@ -67,6 +86,19 @@ const menu = ref(false)
   list-style: none;
   margin: 0;
   padding: 0;
+}
+.nav-links a {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.3rem;
+  transition: color 0.2s, background 0.2s;
+}
+.nav-links a:hover {
+  color: var(--green-light);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+.nav-links a.router-link-active {
+  color: var(--white);
+  font-weight: 600;
 }
 .nav-links.open {
   display: flex;
@@ -121,6 +153,15 @@ const menu = ref(false)
   .nav-links {
     display: flex;
     flex-direction: row;
+  }
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   }
 }
 </style>

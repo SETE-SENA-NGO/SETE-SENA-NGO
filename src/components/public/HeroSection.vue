@@ -16,10 +16,12 @@ defineProps<{
 .hero-section {
   padding: 5rem 1rem;
   text-align: center;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--green) 8%, transparent) 0%, transparent 100%);
 }
 .hero-section h1 {
   font-size: 3rem;
   margin: 0 0 0.5rem;
+  color: var(--white);
 }
 .hero-section p {
   color: var(--muted);

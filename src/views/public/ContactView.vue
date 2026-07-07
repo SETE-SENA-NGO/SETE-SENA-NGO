@@ -339,6 +339,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 18px 52px var(--shadow);
   scroll-margin-top: 7rem;
 }
+<<<<<<< HEAD
 
 .contact-card h2,
 .contact-detail h2 {
@@ -548,5 +549,21 @@ onBeforeUnmount(() => {
   .contact-detail p {
     font-size: 0.9rem;
   }
+=======
+.primary {
+  justify-self: start;
+  background: var(--green);
+  border: 1px solid var(--green-dark);
+  color: #fff;
+  padding: 0.55rem 1.2rem;
+  border-radius: 0.45rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.15s;
+}
+.primary:hover {
+  background: var(--green-dark);
+  transform: translateY(-1px);
+>>>>>>> 80aef6b07918b6211b72b11bd830c3f88ae3c125
 }
 </style>
