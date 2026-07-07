@@ -18,12 +18,12 @@ const goals: ProgramGoal[] = [
     tag: 'GOAL 01',
     title: 'Environment',
     intro:
-      'Community forestry, tree nurseries, and biogas — building climate resilience one village at a time.',
+      'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.',
     whatWeDo:
-      'We support community forest management committees, run tree nurseries and annual planting campaigns, and help families install biogas digesters for cleaner energy.',
+      'Facilitate community forest agreements, install biogas systems, dig wells and support smallholder tree nurseries.',
     whyItMatters:
-      'Svay Rieng has lost much of its forest cover. Healthy forests protect water sources, reduce disaster risk, and give families an extra source of income.',
-    quote: 'The forest gives us mushrooms in the rainy season and shade all year round.',
+      'Southeastern Cambodia is one of the most climate-vulnerable regions in the country. Healthy forests and clean water are peacekeeping infrastructure.',
+    quote: 'The forest belongs to the pagoda and the pagoda belongs to the village.',
     image: '/images/programs/environment.jpg',
   },
   {
@@ -31,12 +31,12 @@ const goals: ProgramGoal[] = [
     tag: 'GOAL 02',
     title: 'Education',
     intro:
-      'Community pre-schools, mobile libraries, and scholarships that keep children learning.',
+      'Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six..',
     whatWeDo:
-      'We train community pre-school teachers, run mobile library sessions in remote villages, and provide scholarships, uniforms and school supplies to children from poor families.',
+      'Set up village pre-schools, train local teachers, stock small libraries, and support scholarships for at-risk children — especially girls.',
     whyItMatters:
-      'Many villages are far from the nearest school. Early learning and steady support keep children — especially girls — in class instead of dropping out.',
-    quote: 'Before the library came, we had never held a storybook of our own.',
+      'In the districts we work in, many hamlets are more than an hour is walk from the nearest school. Early learning centres change that.',
+    quote: 'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
     image: '/images/programs/education.jpg',
   },
   {
@@ -44,12 +44,12 @@ const goals: ProgramGoal[] = [
     tag: 'GOAL 03',
     title: 'Livelihood',
     intro:
-      'Self-help savings groups and agricultural cooperatives that keep families out of debt.',
+      'Saving-for-Change groups, women-led cooperatives, and rural enterprises that keep families out of debt.',
     whatWeDo:
-      'We train "Saving for Change" self-help groups, support agricultural cooperatives, and train farmers in integrated home-gardening for better income and nutrition.',
+      'Train Saving-for-Change facilitators, seed household enterprises and link cooperatives to fair-price buyers.',
     whyItMatters:
-      'A steady income means a family can send their child to school instead of migrating for work across the border.',
-    quote: 'Before the savings group, we had nowhere to turn but private lenders.',
+      'Cash predictability is what lets a family send their child to school this term instead of to a garment factory.',
+    quote: 'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
     image: '/images/programs/livelihood.jpg',
   },
   {
@@ -57,12 +57,12 @@ const goals: ProgramGoal[] = [
     tag: 'GOAL 04',
     title: 'Child Protection',
     intro:
-      'Community-based Child Protection Networks and anti-trafficking outreach for children on the move.',
+      'Village-level Child Protection Networks, anti-trafficking outreach, and safe-migration training for youth.',
     whatWeDo:
-      'We build Child Protection Networks with local authorities and monks, run awareness campaigns against trafficking and exploitation, and train child peer educators.',
+      'Set up Child Protection Networks, train monks and elders as safeguarding leads, and run safe-migration workshops for young people.',
     whyItMatters:
-      'The border with Vietnam brings both opportunity and risk. Community-led safeguarding is the most durable protection for children.',
-    quote: 'Every child in our village now knows who to turn to if something feels wrong.',
+      'The border with Vietnam brings both opportunity and risk. Community-led safeguarding is the most durable defense.',
+    quote: "The safest village is one where every adult knows every child's name.",
     image: '/images/programs/child-protection.jpg',
   },
 ]
@@ -118,9 +118,9 @@ onUnmounted(() => {
         <p class="eyebrow">OUR PROGRAMS</p>
         <h1>Four roots. One tree of peace.</h1>
         <p class="lead">
-          Santi Sena's work follows four interwoven goals — environment, education,
-          livelihoods and child protection — each delivered with and by the
-          communities themselves.
+          Santi Sena's work follows four interwoven strategic goals — environment, 
+          education, livelihoods and child protection — each delivered with and by 
+          the communities themselves.
         </p>
       </div>
     </section>
@@ -249,6 +249,7 @@ onUnmounted(() => {
   font-size: 3rem;
   line-height: 1.2;
   margin: 0 0 1rem;
+  
 }
 .hero-content .lead {
   font-size: 1.05rem;
