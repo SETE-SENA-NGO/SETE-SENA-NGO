@@ -1,4 +1,4 @@
-import HomeView from '@/views/public/HomeView.vue'
+import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/public/AboutView.vue'
 import ServicesView from '@/views/public/ServicesView.vue'
 import ImpactView from '@/views/public/ImpactView.vue'
