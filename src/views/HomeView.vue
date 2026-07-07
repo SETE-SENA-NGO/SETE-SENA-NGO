@@ -149,6 +149,27 @@ const stats = [
         </article>
       </div>
     </section>
+
+    <section class="quote">
+      <p class="quote-text">
+        &ldquo;When we plant a tree, we plant peace. When we teach a child, we end a war that has
+        not yet begun.&rdquo;
+      </p>
+      <p class="quote-attrib">— Founding Spirit of Santi Sena</p>
+    </section>
+
+    <section class="cta">
+      <div class="cta-card">
+        <div class="cta-text">
+          <h2 class="cta-title">Join the Peace Army.</h2>
+          <p class="cta-desc">Donate, partner, volunteer — every act seeds another village with hope.</p>
+        </div>
+        <div class="cta-actions">
+          <RouterLink to="/contact" class="btn btn--primary">Support Us</RouterLink>
+          <RouterLink to="/about" class="btn btn--outline">Partner with us</RouterLink>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -463,5 +484,81 @@ const stats = [
   color: var(--ink-soft);
   line-height: 1.6;
   font-size: 0.95rem;
+}
+
+/* Quote */
+.quote {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 3rem;
+  text-align: center;
+}
+
+.quote-text {
+  margin: 0 0 1rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  line-height: 1.4;
+  color: var(--green);
+}
+
+.quote-attrib {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* CTA */
+.cta {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem 5rem;
+}
+
+.cta-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: clamp(2rem, 4vw, 3rem);
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, #1e3d2c 0%, var(--green) 60%, #0f231a 100%);
+  box-shadow: 0 24px 48px rgba(15, 35, 26, 0.28);
+}
+
+.cta-title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  color: #fdf8ef;
+}
+
+.cta-desc {
+  margin: 0;
+  color: rgba(253, 248, 239, 0.8);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+@media (min-width: 820px) {
+  .cta-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cta-text {
+    max-width: 560px;
+  }
 }
 </style>
