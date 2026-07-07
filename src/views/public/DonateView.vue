@@ -127,7 +127,7 @@ const methods: PayMethod[] = [
       <div>
         <p>
           After completing your donation, please send your <strong>payment screenshot</strong> to
-          <a href="mailto:info@santi-sena.org">info@santi-sena.org</a>.
+          <a href="mailto:SANTISENAMONK@GMAIL.COM">SANTISENAMONK@GMAIL.COM</a>.
         </p>
         <p class="notice-sub">This allows us to send you an official receipt and our sincere gratitude.</p>
       </div>
