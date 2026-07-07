@@ -8,3 +8,4 @@ import HeaderView from '@/layouts/HeaderView.vue'
   <RouterView />
   <FooterView />
 </template>
+
