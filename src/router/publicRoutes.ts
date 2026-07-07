@@ -5,6 +5,7 @@ import ContactView from '@/views/public/ContactView.vue'
 import ProgramsView from '@/views/public/ProgramsView.vue'
 import ProgramsEducationView from '@/views/public/ProgramsEducationView.vue'
 import ProgramsEnvironmentView from '@/views/public/ProgramsEnvironmentView.vue'
+import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
 
 export const publicRoutes = [
   { path: '/', component: HomeView },
@@ -14,4 +15,5 @@ export const publicRoutes = [
   { path: '/programs', component: ProgramsView, name: 'programs' },
   { path: '/programs/education', component: ProgramsEducationView, name: 'programs-education' },
   { path: '/programs/environment', component: ProgramsEnvironmentView, name: 'programs-environment' },
+  { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
 ]
