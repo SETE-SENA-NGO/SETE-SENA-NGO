@@ -80,7 +80,7 @@ onMounted(() => {
 
             <label>
               <span>Message</span>
-              <textarea v-model="message" required rows="8"></textarea>
+              <textarea v-model="message" required rows="5"></textarea>
             </label>
 
             <div class="contact-card__actions">
@@ -190,20 +190,21 @@ onMounted(() => {
 
 .contact-body__inner {
   display: grid;
-  grid-template-columns: minmax(0, 700px) minmax(260px, 1fr);
-  gap: 3.6rem;
-  width: min(100%, 1540px);
+  grid-template-columns: minmax(0, 600px) minmax(260px, 1fr);
+  gap: 3rem;
+  width: min(100%, 1200px);
   margin: 0 auto;
 }
 
 .contact-card {
   display: grid;
-  gap: 1.08rem;
-  padding: 2rem 2.25rem;
+  gap: 0.86rem;
+  max-width: 680px;
+  padding: 1.45rem 1.65rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(255, 250, 242, 0.88);
-  box-shadow: 0 22px 70px var(--shadow);
+  box-shadow: 0 18px 52px var(--shadow);
   scroll-margin-top: 7rem;
 }
 
@@ -217,21 +218,21 @@ onMounted(() => {
 }
 
 .contact-card h2 {
-  margin-bottom: 0.3rem;
-  font-size: 1.78rem;
+  margin-bottom: 0.12rem;
+  font-size: 1.52rem;
 }
 
 .contact-card__row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.8rem;
 }
 
 .contact-card label {
   display: grid;
-  gap: 0.42rem;
+  gap: 0.32rem;
   color: #123f37;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   font-weight: 500;
 }
 
@@ -243,7 +244,7 @@ onMounted(() => {
   background: var(--cream-field);
   color: var(--green);
   outline: none;
-  padding: 0.55rem 0.75rem;
+  padding: 0.44rem 0.65rem;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -251,11 +252,12 @@ onMounted(() => {
 }
 
 .contact-card input {
-  height: 41px;
+  height: 36px;
 }
 
 .contact-card textarea {
-  min-height: 132px;
+  height: 116px;
+  min-height: 104px;
   resize: vertical;
 }
 
@@ -269,22 +271,22 @@ onMounted(() => {
 .contact-card__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.8rem;
   align-items: center;
-  min-height: 46px;
+  min-height: 40px;
   padding-top: 0.1rem;
 }
 
 .contact-card button {
-  min-width: 150px;
-  min-height: 44px;
+  min-width: 132px;
+  min-height: 40px;
   border: 0;
   border-radius: 999px;
   background: var(--orange);
   color: #fff6ea;
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   font-weight: 700;
-  box-shadow: 0 18px 38px rgba(244, 123, 32, 0.2);
+  box-shadow: 0 14px 30px rgba(244, 123, 32, 0.18);
 }
 
 .contact-card button:disabled {
@@ -339,6 +341,10 @@ onMounted(() => {
   .contact-body__inner {
     grid-template-columns: minmax(0, 1fr);
     gap: 2.45rem;
+  }
+
+  .contact-card {
+    width: min(100%, 680px);
   }
 
   .contact-details {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import FlagUK from '@/components/icons/FlagUK.vue'
 import FlagKH from '@/components/icons/FlagKH.vue'
 import logoUrl from '@/assets/logo.png'
@@ -49,8 +49,8 @@ const menus: Menu[] = [
   {
     label: 'Contact',
     items: [
-      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact#head-office' },
-      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact#field-offices' },
+      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact/head-office' },
+      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact/field-offices' },
       { title: 'Write to Us', desc: 'Send a message - we read every letter.', to: '/contact#write' },
     ],
   },
@@ -70,6 +70,14 @@ const langOpen = ref(false)
 const mobileOpen = ref(false)
 const currentLang = ref<Language>({ code: 'en', label: 'English' })
 const rootEl = ref<HTMLElement | null>(null)
+const route = useRoute()
+
+function isMenuActive(menu: Menu) {
+  return menu.items.some((item) => {
+    const itemPath = item.to.split('#')[0]
+    return route.path === itemPath || route.path.startsWith(`${itemPath}/`)
+  })
+}
 
 function activateMenu(label: string) {
   openMenu.value = label
@@ -137,7 +145,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           <button
             type="button"
             class="nav-link nav-link--trigger"
-            :class="{ 'is-open': openMenu === menu.label }"
+            :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
             @click.stop="activateMenu(menu.label)"
           >
             {{ menu.label }}
@@ -339,6 +347,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .nav-link:hover,
 .nav-link.is-open,
+.nav-link.is-active,
 .nav-link.router-link-exact-active {
   color: var(--orange);
   border-bottom-color: var(--orange);

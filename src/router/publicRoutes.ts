@@ -4,6 +4,8 @@ import ServicesView from '@/views/public/ServicesView.vue'
 import ImpactView from '@/views/public/ImpactView.vue'
 import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
 import ContactView from '@/views/public/ContactView.vue'
+import HeadOfficeView from '@/views/public/HeadOfficeView.vue'
+import FieldOfficesView from '@/views/public/FieldOfficesView.vue'
 
 export const publicRoutes = [
   { path: '/', component: HomeView },
@@ -12,4 +14,6 @@ export const publicRoutes = [
   { path: '/impact', component: ImpactView },
   { path: '/get-involved', component: GetInvolvedView },
   { path: '/contact', component: ContactView },
+  { path: '/contact/head-office', component: HeadOfficeView },
+  { path: '/contact/field-offices', component: FieldOfficesView },
 ]
