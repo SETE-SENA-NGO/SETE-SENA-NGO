@@ -36,8 +36,6 @@
 }
 
 :root {
-<<<<<<< HEAD
-=======
   --radius: 0.5rem;
   --background: oklch(0.975 0.018 85);
   --foreground: oklch(0.22 0.04 165);
@@ -71,27 +69,16 @@
   --gradient-warm: linear-gradient(135deg, oklch(0.72 0.16 55), oklch(0.55 0.13 45));
   --gradient-deep: linear-gradient(160deg, oklch(0.32 0.05 180), oklch(0.22 0.04 165));
 
->>>>>>> feature/impact-number
   --bg: #09090b;
   --panel: #111113;
   --border-soft: #27272a;
   --text: #eaeaea;
   --muted: #a1a1aa;
-<<<<<<< HEAD
-
-  /* Brand colors — inspired by the green + gold + white logo */
-  --white: #FFFFFF;
-  --green: #3A7D44;
-  --green-dark: #1B4332;
-  --green-light: #52B788;
-  --gold: #D4A017;
-=======
   --white: #ffffff;
   --green: #3a7d44;
   --green-dark: #1b4332;
   --green-light: #52b788;
   --gold: #d4a017;
->>>>>>> feature/impact-number
 }
 
 .dark {
