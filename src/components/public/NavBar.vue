@@ -11,6 +11,7 @@ const menu = ref(false)
       <RouterLink to="/" class="brand">Santi Sena NGO</RouterLink>
       <button class="nav-toggle" @click="menu = !menu" aria-label="Toggle menu">Menu</button>
       <ul :class="['nav-links', { open: menu }]">
+<<<<<<< HEAD
         <li><RouterLink to="/">Home</RouterLink></li>
         <li><RouterLink to="/about">About</RouterLink></li>
         <li class="has-dropdown">
@@ -25,6 +26,15 @@ const menu = ref(false)
         <li><RouterLink to="/services">Services</RouterLink></li>
         <li><RouterLink to="/contact">Contact</RouterLink></li>
         <li><RouterLink to="/admin/login">Admin</RouterLink></li>
+=======
+        <li><RouterLink to="/" @click="menu = false">Home</RouterLink></li>
+        <li><RouterLink to="/about/vision" @click="menu = false">About Vision</RouterLink></li>
+        <li><RouterLink to="/programs/environment" @click="menu = false">Programs</RouterLink></li>
+        <li><RouterLink to="/services" @click="menu = false">Services</RouterLink></li>
+        <li><RouterLink to="/impact/partners" @click="menu = false">Partners</RouterLink></li>
+        <li><RouterLink to="/contact" @click="menu = false">Contact</RouterLink></li>
+        <li><RouterLink to="/admin/login" @click="menu = false">Admin</RouterLink></li>
+>>>>>>> develop
       </ul>
     </div>
   </nav>
@@ -32,7 +42,7 @@ const menu = ref(false)
 
 <style scoped>
 .public-nav {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--green);
   background: var(--panel);
   position: sticky;
   top: 0;
@@ -49,6 +59,11 @@ const menu = ref(false)
 .brand {
   font-weight: 700;
   letter-spacing: 0.05em;
+  transition: color 0.2s ease;
+}
+.brand:hover {
+  color: var(--accent, #eaeaea);
+  opacity: 0.85;
 }
 .nav-toggle {
   display: block;
@@ -57,6 +72,13 @@ const menu = ref(false)
   border: 1px solid var(--border);
   padding: 0.4rem 0.7rem;
   border-radius: 0.4rem;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+.nav-toggle:hover {
+  background: var(--border);
+  border-color: var(--muted);
 }
 .nav-links {
   display: none;
@@ -64,6 +86,19 @@ const menu = ref(false)
   list-style: none;
   margin: 0;
   padding: 0;
+}
+.nav-links a {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.3rem;
+  transition: color 0.2s, background 0.2s;
+}
+.nav-links a:hover {
+  color: var(--green-light);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+.nav-links a.router-link-active {
+  color: var(--white);
+  font-weight: 600;
 }
 .nav-links.open {
   display: flex;
@@ -79,30 +114,38 @@ const menu = ref(false)
 .nav-links li + li {
   margin-top: 0.25rem;
 }
-
-/* Dropdown */
-.has-dropdown {
+.nav-links a {
   position: relative;
+  display: inline-block;
+  padding: 0.3rem 0;
+  color: var(--muted);
+  transition: color 0.2s ease;
 }
-.dropdown {
-  list-style: none;
-  margin: 0;
-  padding: 0.5rem;
-  display: none;
-  min-width: 180px;
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--text);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
-.has-dropdown:hover .dropdown {
-  display: block;
+.nav-links a:hover {
+  color: var(--text);
 }
-.dropdown li a {
-  display: block;
-  padding: 0.4rem 0.5rem;
-  border-radius: 0.3rem;
+.nav-links a:hover::after {
+  transform: scaleX(1);
 }
-.dropdown li a:hover {
-  background: var(--border);
+.nav-links a.router-link-exact-active {
+  color: var(--text);
+  font-weight: 600;
 }
-
+.nav-links a.router-link-exact-active::after {
+  transform: scaleX(1);
+}
 @media (min-width: 640px) {
   .nav-toggle {
     display: none;

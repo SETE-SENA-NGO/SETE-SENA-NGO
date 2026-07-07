@@ -65,12 +65,17 @@ async function submit() {
   font-size: 0.9rem;
 }
 .primary {
-  background: #27272a;
-  border: 1px solid #3f3f46;
-  color: var(--text);
-  padding: 0.55rem 0.9rem;
+  background: var(--green);
+  color: #fff;
+  padding: 0.55rem 1.2rem;
   border-radius: 0.45rem;
   cursor: pointer;
+  font-weight: 600;
   border: none;
+  transition: background 0.2s, transform 0.15s;
+}
+.primary:hover {
+  background: var(--green-dark);
+  transform: translateY(-1px);
 }
 </style>
