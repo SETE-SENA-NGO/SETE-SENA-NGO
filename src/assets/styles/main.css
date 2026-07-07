@@ -1,12 +1,12 @@
 :root {
-  --bg: #09090b;
+  --bg: #847676;
   --panel: #111113;
   --border: #27272a;
   --text: #eaeaea;
   --muted: #a1a1aa;
 
   /* Brand colors — inspired by the green + gold + white logo */
-  --white: #FFFFFF;
+  --white: #ffffff;
   --green: #3A7D44;
   --green-dark: #1B4332;
   --green-light: #52B788;
