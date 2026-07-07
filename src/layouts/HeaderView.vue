@@ -6,7 +6,7 @@ import FlagKH from '@/components/icons/FlagKH.vue'
 import logoUrl from '@/assets/logo.png'
 
 type MenuItem = { title: string; desc: string; to: string }
-type Menu = { label: string; items: MenuItem[] }
+type Menu = { label: string; to?: string; items: MenuItem[] }
 
 const menus: Menu[] = [
   {
@@ -40,6 +40,7 @@ const menus: Menu[] = [
   },
   {
     label: 'Get Involved',
+    to: '/get-involved',
     items: [
       { title: 'Support Us', desc: 'Single gifts that water dozens of households.', to: '/get-involved#support' },
       { title: 'Partner', desc: 'Co-design multi-year community programs.', to: '/get-involved#partner' },
@@ -127,47 +128,66 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
       <nav class="main-nav">
         <RouterLink to="/" class="nav-link" @click="closeAll">Home</RouterLink>
 
-        <div
-          v-for="menu in menus"
-          :key="menu.label"
-          class="nav-item"
-          @mouseenter="activateMenu(menu.label)"
-          @mouseleave="deactivateMenu(menu.label)"
-        >
-          <button
-            type="button"
-            class="nav-link nav-link--trigger"
-            :class="{ 'is-open': openMenu === menu.label }"
-            @click.stop="activateMenu(menu.label)"
+        <template v-for="menu in menus" :key="menu.label">
+          <div
+            class="nav-item"
+            @mouseenter="activateMenu(menu.label)"
+            @mouseleave="deactivateMenu(menu.label)"
           >
-            {{ menu.label }}
-            <svg class="chevron" viewBox="0 0 12 8" fill="none">
-              <path
-                d="M1 1.5L6 6.5L11 1.5"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
+            <RouterLink
+              v-if="menu.to"
+              :to="menu.to"
+              class="nav-link nav-link--trigger"
+              :class="{ 'is-open': openMenu === menu.label }"
+              @click="closeAll"
+            >
+              {{ menu.label }}
+              <svg class="chevron" viewBox="0 0 12 8" fill="none">
+                <path
+                  d="M1 1.5L6 6.5L11 1.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </RouterLink>
+            <button
+              v-else
+              type="button"
+              class="nav-link nav-link--trigger"
+              :class="{ 'is-open': openMenu === menu.label }"
+              @click.stop="activateMenu(menu.label)"
+            >
+              {{ menu.label }}
+              <svg class="chevron" viewBox="0 0 12 8" fill="none">
+                <path
+                  d="M1 1.5L6 6.5L11 1.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
 
-          <div class="mega-menu" v-show="openMenu === menu.label">
-            <div class="mega-menu-card">
-              <p class="mega-label">{{ menu.label }}</p>
-              <RouterLink
-                v-for="item in menu.items"
-                :key="item.title"
-                :to="item.to"
-                class="mega-item"
-                @click="closeAll"
-              >
-                <span class="mega-item-title">{{ item.title }}</span>
-                <span class="mega-item-desc">{{ item.desc }}</span>
-              </RouterLink>
+            <div class="mega-menu" v-show="openMenu === menu.label">
+              <div class="mega-menu-card">
+                <p class="mega-label">{{ menu.label }}</p>
+                <RouterLink
+                  v-for="item in menu.items"
+                  :key="item.title"
+                  :to="item.to"
+                  class="mega-item"
+                  @click="closeAll"
+                >
+                  <span class="mega-item-title">{{ item.title }}</span>
+                  <span class="mega-item-desc">{{ item.desc }}</span>
+                </RouterLink>
+              </div>
             </div>
           </div>
-        </div>
+        </template>
       </nav>
 
       <div class="header-actions">
@@ -216,7 +236,15 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
     <div class="mobile-nav" v-show="mobileOpen">
       <RouterLink to="/" class="mobile-link" @click="closeAll">Home</RouterLink>
       <div v-for="menu in menus" :key="'m-' + menu.label" class="mobile-group">
-        <p class="mobile-group-label">{{ menu.label }}</p>
+        <RouterLink
+          v-if="menu.to"
+          :to="menu.to"
+          class="mobile-group-label mobile-group-link"
+          @click="closeAll"
+        >
+          {{ menu.label }}
+        </RouterLink>
+        <p v-else class="mobile-group-label">{{ menu.label }}</p>
         <RouterLink
           v-for="item in menu.items"
           :key="'m-' + item.title"
@@ -537,6 +565,11 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--orange);
+}
+
+.mobile-group-link {
+  display: block;
+  text-decoration: none;
 }
 
 .mobile-link--sub {
