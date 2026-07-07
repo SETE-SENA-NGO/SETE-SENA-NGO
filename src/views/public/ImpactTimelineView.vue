@@ -4,45 +4,9 @@ import heroImage from '@/assets/hero-impact.jpg'
 
 const events = [
   {
-    year: '1994',
-    title: 'Founded in Svay Rieng',
-    description:
-      'Buddhist monks and community elders establish the Peace Army after the war, focused on moral regeneration and rural recovery.',
-  },
-  {
-    year: '1998',
-    title: 'First community forestry site',
-    description: 'Village committees take legal stewardship of 120 hectares of degraded forest.',
-  },
-  {
-    year: '2003',
-    title: 'Saving-for-Change begins',
-    description: 'First women-led savings circles launched in Svay Rieng; the model becomes a program backbone.',
-  },
-  {
-    year: '2007',
-    title: 'Expansion to Prey Veng',
-    description: 'Education and child protection programming reaches a second province.',
-  },
-  {
-    year: '2011',
-    title: 'Biogas program launched',
-    description: 'Household biogas units begin replacing firewood in remote kitchens.',
-  },
-  {
-    year: '2014',
-    title: '20th anniversary — Kratie office opens',
-    description: 'Programs extend to a third province; staff grows past 30 full-time.',
-  },
-  {
-    year: '2018',
-    title: 'Child Protection Networks scaled',
-    description: 'CPNs active across 43 communes with 24/7 referral pathways.',
-  },
-  {
-    year: '2020',
-    title: 'COVID-19 response',
-    description: 'Emergency food, hygiene and remote-learning kits reach 200+ villages.',
+    year: '2024',
+    title: '30-year strategic plan',
+    description: 'A new five-year strategy: deepen quality, diversify funding, invest in youth leadership.',
   },
   {
     year: '2022',
@@ -50,9 +14,45 @@ const events = [
     description: 'Village forest guardians launch a rural enterprise from non-timber forest products.',
   },
   {
-    year: '2024',
-    title: '30-year strategic plan',
-    description: 'A new five-year strategy: deepen quality, diversify funding, invest in youth leadership.',
+    year: '2020',
+    title: 'COVID-19 response',
+    description: 'Emergency food, hygiene and remote-learning kits reach 200+ villages.',
+  },
+  {
+    year: '2018',
+    title: 'Child Protection Networks scaled',
+    description: 'CPNs active across 43 communes with 24/7 referral pathways.',
+  },
+  {
+    year: '2014',
+    title: '20th anniversary — Kratie office opens',
+    description: 'Programs extend to a third province; staff grows past 30 full-time.',
+  },
+  {
+    year: '2011',
+    title: 'Biogas program launched',
+    description: 'Household biogas units begin replacing firewood in remote kitchens.',
+  },
+  {
+    year: '2007',
+    title: 'Expansion to Prey Veng',
+    description: 'Education and child protection programming reaches a second province.',
+  },
+  {
+    year: '2003',
+    title: 'Saving-for-Change begins',
+    description: 'First women-led savings circles launched in Svay Rieng; the model becomes a program backbone.',
+  },
+  {
+    year: '1998',
+    title: 'First community forestry site',
+    description: 'Village committees take legal stewardship of 120 hectares of degraded forest.',
+  },
+  {
+    year: '1994',
+    title: 'Founded in Svay Rieng',
+    description:
+      'Buddhist monks and community elders establish the Peace Army after the war, focused on moral regeneration and rural recovery.',
   },
 ]
 </script>
