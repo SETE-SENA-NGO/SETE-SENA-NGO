@@ -361,6 +361,7 @@ const stats = [
   font-weight: 600;
   text-decoration: none;
   border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
 }
 
 .pillars-link:hover {
@@ -384,6 +385,16 @@ const stats = [
   border-radius: 1rem;
   overflow: hidden;
   border: 1px solid rgba(22, 48, 42, 0.08);
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.pillar-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(22, 48, 42, 0.14);
+  border-color: rgba(221, 122, 43, 0.35);
 }
 
 .pillar-image {
@@ -391,12 +402,18 @@ const stats = [
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .pillar-icon {
   width: 3rem;
   height: 3rem;
   color: rgba(255, 255, 255, 0.92);
+  transition: transform 0.35s ease;
+}
+
+.pillar-card:hover .pillar-icon {
+  transform: scale(1.12);
 }
 
 .pillar-image--forest {
@@ -434,6 +451,11 @@ const stats = [
   font-weight: 600;
   font-size: 1.25rem;
   color: var(--green);
+  transition: color 0.25s ease;
+}
+
+.pillar-card:hover .pillar-title {
+  color: var(--orange);
 }
 
 .pillar-desc {
