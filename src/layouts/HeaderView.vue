@@ -12,7 +12,7 @@ const menus: Menu[] = [
   {
     label: 'About',
     items: [
-      { title: 'Our Story', desc: 'Founded 1994 — three decades walking with villages.', to: '/about#story' },
+      { title: 'Our Story', desc: 'Founded 1994 - three decades walking with villages.', to: '/about#story' },
       { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about#vision' },
       { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about#organization' },
     ],
@@ -51,7 +51,7 @@ const menus: Menu[] = [
     items: [
       { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact#head-office' },
       { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact#field-offices' },
-      { title: 'Write to Us', desc: 'Send a message — we read every letter.', to: '/contact#write' },
+      { title: 'Write to Us', desc: 'Send a message - we read every letter.', to: '/contact#write' },
     ],
   },
 ]
@@ -60,7 +60,7 @@ type Language = { code: 'en' | 'km'; label: string }
 
 const languages: Language[] = [
   { code: 'en', label: 'English' },
-  { code: 'km', label: 'ខ្មែរ' },
+  { code: 'km', label: 'Khmer' },
 ]
 
 const flagIcons = { en: FlagUK, km: FlagKH }
@@ -120,7 +120,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
         </span>
         <span class="brand-text">
           <span class="brand-name">Santi Sena</span>
-          <span class="brand-tag">Peace Army · Cambodia</span>
+          <span class="brand-tag">Peace Army . Cambodia</span>
         </span>
       </RouterLink>
 
@@ -200,13 +200,9 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           </div>
         </div>
 
-<<<<<<< HEAD
-        <RouterLink to="/get-involved" class="btn-support" @click="closeAll">
-=======
         <RouterLink to="/get-involved" class="btn-support btn-support--desktop" @click="closeAll">
->>>>>>> 45dfc418923f28aca11d53bc1ea4b2f43175af21
           Support Us
-          <span aria-hidden="true">→</span>
+          <span aria-hidden="true">-&gt;</span>
         </RouterLink>
 
         <button type="button" class="mobile-toggle" aria-label="Toggle menu" @click="mobileOpen = !mobileOpen">
@@ -232,7 +228,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
         </RouterLink>
       </div>
       <RouterLink to="/get-involved" class="btn-support btn-support--mobile" @click="closeAll">
-        Support Us →
+        Support Us -&gt;
       </RouterLink>
     </div>
   </header>
@@ -327,13 +323,8 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   align-items: center;
   gap: 0.3rem;
   background: none;
-<<<<<<< HEAD
-  border: 1px solid transparent;
-  border-radius: 0.4rem;
-=======
   border: none;
   border-bottom: 2px solid transparent;
->>>>>>> 45dfc418923f28aca11d53bc1ea4b2f43175af21
   padding: 0.4rem 0.55rem;
   font: inherit;
   font-size: 0.95rem;
@@ -341,26 +332,16 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   color: var(--ink);
   text-decoration: none;
   cursor: pointer;
-<<<<<<< HEAD
-=======
   transition:
     color 0.2s ease,
     border-color 0.2s ease;
->>>>>>> 45dfc418923f28aca11d53bc1ea4b2f43175af21
 }
 
 .nav-link:hover,
 .nav-link.is-open,
 .nav-link.router-link-exact-active {
   color: var(--orange);
-<<<<<<< HEAD
-}
-
-.nav-link--trigger.is-open {
-  border-color: var(--ink);
-=======
   border-bottom-color: var(--orange);
->>>>>>> 45dfc418923f28aca11d53bc1ea4b2f43175af21
 }
 
 .chevron {
@@ -413,10 +394,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .mega-item-title {
-<<<<<<< HEAD
   font-family: var(--font-serif);
-=======
->>>>>>> 45dfc418923f28aca11d53bc1ea4b2f43175af21
   font-weight: 700;
   font-size: 1rem;
   color: var(--green);
@@ -512,13 +490,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   opacity: 0.9;
 }
 
-<<<<<<< HEAD
-=======
 .btn-support--desktop {
   display: none;
 }
 
->>>>>>> 45dfc418923f28aca11d53bc1ea4b2f43175af21
 .mobile-toggle {
   display: flex;
   flex-direction: column;
@@ -581,12 +556,9 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   .main-nav {
     display: flex;
   }
-<<<<<<< HEAD
-=======
   .btn-support--desktop {
     display: inline-flex;
   }
->>>>>>> 45dfc418923f28aca11d53bc1ea4b2f43175af21
   .mobile-toggle {
     display: none;
   }
