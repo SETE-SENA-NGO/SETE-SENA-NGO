@@ -12,6 +12,7 @@ import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
 import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
 import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
 import DonateView from '@/views/public/Getinvolved.donat.vue'
+import VolunteerView from '@/views/public/Getinvolved.volunteer.vue'
 
 import ProgramsView from '@/views/public/ProgramsView.vue'
 import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
@@ -35,10 +36,15 @@ export const publicRoutes = [
   { path: '/get-involved', component: GetInvolvedView },
   { path: '/impact/partners', component: ImpactPartnersView },
   { path: '/get-involved/donate', component: DonateView },
+  { path: '/get-involved/volunteer', component: VolunteerView },
   { path: '/get-involved', component: GetInvolvedView },
   { path: '/contact', component: ContactView },
   { path: '/programs', component: ProgramsView, name: 'programs' },
   { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
-  { path: '/programs/child-protection', component: ProgramsChildProtectionView, name: 'programs-child-protection' },
+  {
+    path: '/programs/child-protection',
+    component: ProgramsChildProtectionView,
+    name: 'programs-child-protection',
+  },
   { path: '/qr-donate', component: QrDonateView },
 ]
