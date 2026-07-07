@@ -13,7 +13,7 @@
 
 <style scoped>
 .public-footer {
-  border-top: 1px solid var(--border);
+  border-top: 2px solid var(--green-dark);
   background: var(--panel);
   margin-top: auto;
 }
@@ -25,6 +25,14 @@
   flex-direction: column;
   gap: 0.5rem;
   align-items: center;
+  color: var(--white);
+}
+.footer-links a {
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.footer-links a:hover {
+  color: var(--gold);
 }
 @media (min-width: 640px) {
   .public-footer-inner {

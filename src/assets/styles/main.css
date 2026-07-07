@@ -4,6 +4,13 @@
   --border: #27272a;
   --text: #eaeaea;
   --muted: #a1a1aa;
+
+  /* Brand colors — inspired by the green + gold + white logo */
+  --white: #FFFFFF;
+  --green: #3A7D44;
+  --green-dark: #1B4332;
+  --green-light: #52B788;
+  --gold: #D4A017;
 }
 
 * {
