@@ -44,30 +44,40 @@ label {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  color: var(--muted);
+  color: #4B5563;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 input,
 textarea {
-  background: #0c0c0e;
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  color: #1F2937;
   border-radius: 0.45rem;
-  padding: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #3A7D44;
+  box-shadow: 0 0 0 3px rgba(58, 125, 68, 0.12);
 }
 .primary {
   justify-self: start;
-  background: var(--green);
-  border: 1px solid var(--green-dark);
+  background: #3A7D44;
+  border: none;
   color: #fff;
-  padding: 0.55rem 1.2rem;
+  padding: 0.65rem 1.5rem;
   border-radius: 0.45rem;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.95rem;
   transition: background 0.2s, transform 0.15s;
 }
 .primary:hover {
-  background: var(--green-dark);
+  background: #2D5E34;
   transform: translateY(-1px);
 }
 </style>

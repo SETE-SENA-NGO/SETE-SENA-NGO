@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 const values = [
   { name: 'Honesty', body: 'we have honesty with our donors, target group, operational partners and working group.' },
@@ -18,6 +18,32 @@ const team = [
 ]
 
 const provinces = ['Svay Rieng', 'Prey Veng', 'Kratie']
+
+// ── Slideshow ──
+
+const imageUrls: string[] = [
+  'https://images.pexels.com/photos/5905476/pexels-photo-5905476.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+  'https://images.pexels.com/photos/5905470/pexels-photo-5905470.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+  'https://images.pexels.com/photos/5905493/pexels-photo-5905493.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+  'https://images.pexels.com/photos/5905700/pexels-photo-5905700.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+]
+
+const currentSlide = ref(0)
+let slideTimer: number | undefined
+
+const startSlideshow = () => {
+  stopSlideshow()
+  slideTimer = window.setInterval(() => {
+    currentSlide.value = (currentSlide.value + 1) % imageUrls.length
+  }, 5000)
+}
+
+const stopSlideshow = () => {
+  if (slideTimer) {
+    clearInterval(slideTimer)
+    slideTimer = undefined
+  }
+}
 
 onMounted(() => {
   document.title = 'About Santi Sena — Buddhist NGO in Cambodia'
@@ -46,14 +72,31 @@ onMounted(() => {
 
   setOgMeta('og:title', 'About Santi Sena')
   setOgMeta('og:description', 'Our story, vision, values and the team carrying the Peace Army forward.')
+
+  startSlideshow()
+})
+
+onUnmounted(() => {
+  stopSlideshow()
 })
 </script>
 
 <template>
   <div class="about-page">
-    <!-- Hero Section -->
-    <section class="hero-section">
+    <!-- Hero Section with Background Slideshow -->
+    <section class="hero-section" @mouseenter="stopSlideshow" @mouseleave="startSlideshow">
       <div class="hero-overlay" />
+
+      <div class="slides" aria-live="polite">
+        <div
+          v-for="(url, i) in imageUrls"
+          :key="i"
+          class="slide"
+          :class="{ 'is-active': currentSlide === i }"
+          :style="{ backgroundImage: `url(${url})` }"
+        />
+      </div>
+
       <div class="hero-content">
         <span class="section-label saffron">About Santi Sena</span>
         <h1 class="hero-title">
@@ -151,7 +194,11 @@ onMounted(() => {
   --about-primary: #3A7D44;
   --about-primary-foreground: #FFFFFF;
   --about-saffron: #D4A017;
-  --about-cream: #4A7C5E;
+  --about-white: #FFFFFF;
+  --about-muted: #4B5563;
+  --about-border: #E5E7EB;
+  --about-panel: #FFFFFF;
+  --about-bg-alt: #F3F7F4;
 }
 
 /* ─── Shared ─── */
@@ -164,6 +211,15 @@ onMounted(() => {
 
 .section-label.saffron {
   color: var(--about-saffron);
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 2rem;
+  background: color-mix(in srgb, var(--about-saffron) 15%, transparent);
+  color: var(--about-saffron);
 }
 
 /* ─── Hero ─── */
@@ -174,21 +230,44 @@ onMounted(() => {
   border-bottom: 1px solid color-mix(in srgb, var(--about-primary) 40%, transparent);
 }
 
+.slides {
+  position: absolute;
+  inset: 0;
+}
+
+.slide {
+  position: absolute;
+  inset: -10px;
+  opacity: 0;
+  transition: opacity 1500ms ease-in-out;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #5a7d5e;
+  filter: blur(4px);
+  transform: scale(1.05);
+}
+
+.slide.is-active {
+  opacity: 1;
+}
+
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: -10;
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--about-primary) 85%, transparent) 0%,
-    color-mix(in srgb, var(--about-primary) 65%, transparent) 50%,
-    color-mix(in srgb, var(--about-primary) 35%, transparent) 100%);
+  z-index: 1;
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.50) 0%, rgba(0, 0, 0, 0.20) 45%, rgba(0, 0, 0, 0.05) 70%, transparent 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 40%, rgba(0, 0, 0, 0.10) 100%);
 }
 
 .hero-content {
+  position: relative;
+  z-index: 2;
   max-width: 1280px;
   margin: 0 auto;
   padding: 8rem 1.5rem;
-  color: var(--white);
+  color: var(--about-white);
 }
 
 .hero-title {
@@ -197,6 +276,7 @@ onMounted(() => {
   font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 2.75rem;
   line-height: 1.1;
+  font-weight: 700;
 }
 
 .hero-subtitle {
@@ -204,7 +284,7 @@ onMounted(() => {
   max-width: 42rem;
   font-size: 1.05rem;
   line-height: 1.75;
-  color: color-mix(in srgb, var(--white) 80%, transparent);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* ─── Vision / Mission / Goal ─── */
@@ -229,7 +309,7 @@ onMounted(() => {
 }
 
 .vmg-body {
-  color: var(--muted);
+  color: var(--about-muted);
   line-height: 1.75;
   margin: 0;
   font-size: 1rem;
@@ -237,7 +317,7 @@ onMounted(() => {
 
 /* ─── Core Values ─── */
 .values-section {
-  background: color-mix(in srgb, var(--about-cream) 60%, transparent);
+  background: var(--about-bg-alt);
   padding: 6rem 0;
 }
 
@@ -263,11 +343,17 @@ onMounted(() => {
 
 .value-card {
   border-radius: 1rem;
-  border: 1px solid var(--border);
-  background: var(--panel);
+  border: 1px solid var(--about-border);
+  background: var(--about-panel);
   padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.value-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .value-name {
@@ -279,7 +365,7 @@ onMounted(() => {
 
 .value-body {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--about-muted);
   line-height: 1.65;
   margin: 0;
 }
@@ -305,7 +391,7 @@ onMounted(() => {
 
 .org-body {
   margin-top: 1.5rem;
-  color: var(--muted);
+  color: var(--about-muted);
   line-height: 1.75;
   font-size: 1rem;
 }
@@ -322,9 +408,15 @@ onMounted(() => {
 .team-card {
   border-radius: 0.75rem;
   border-left: 4px solid var(--about-saffron);
-  background: var(--panel);
+  background: var(--about-panel);
   padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .team-role {
@@ -336,7 +428,7 @@ onMounted(() => {
 .team-desc {
   margin-top: 0.25rem;
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--about-muted);
   line-height: 1.65;
 }
 
