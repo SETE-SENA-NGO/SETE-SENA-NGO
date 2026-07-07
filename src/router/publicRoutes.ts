@@ -30,6 +30,7 @@ export const publicRoutes = [
   { path: '/about/aboutview', component: AboutView },
   { path: '/services', component: ServicesView },
   { path: '/impact', component: ImpactView },
+   { path: '/impact/partners', component: ImpactPartnersView },
   { path: '/impact/numbers', component: ImpactNumbersView },
   { path: '/impact/timeline', component: ImpactTimelineView },
   { path: '/impact/partners', component: ImpactPartnersView },
