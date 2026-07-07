@@ -200,7 +200,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           </div>
         </div>
 
-        <RouterLink to="/get-involved" class="btn-support" @click="closeAll">
+        <RouterLink to="/get-involved" class="btn-support btn-support--desktop" @click="closeAll">
           Support Us
           <span aria-hidden="true">→</span>
         </RouterLink>
@@ -323,8 +323,8 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   align-items: center;
   gap: 0.3rem;
   background: none;
-  border: 1px solid transparent;
-  border-radius: 0.4rem;
+  border: none;
+  border-bottom: 2px solid transparent;
   padding: 0.4rem 0.55rem;
   font: inherit;
   font-size: 0.95rem;
@@ -332,16 +332,16 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   color: var(--ink);
   text-decoration: none;
   cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .nav-link:hover,
 .nav-link.is-open,
 .nav-link.router-link-exact-active {
   color: var(--orange);
-}
-
-.nav-link--trigger.is-open {
-  border-color: var(--ink);
+  border-bottom-color: var(--orange);
 }
 
 .chevron {
@@ -394,7 +394,6 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .mega-item-title {
-  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1rem;
   color: var(--green);
@@ -490,6 +489,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   opacity: 0.9;
 }
 
+.btn-support--desktop {
+  display: none;
+}
+
 .mobile-toggle {
   display: flex;
   flex-direction: column;
@@ -551,6 +554,9 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 @media (min-width: 1024px) {
   .main-nav {
     display: flex;
+  }
+  .btn-support--desktop {
+    display: inline-flex;
   }
   .mobile-toggle {
     display: none;
