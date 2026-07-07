@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 const bulletsWhatWeDo: string[] = [
@@ -17,6 +17,32 @@ const bulletsWhyMatters: string[] = [
   'Mobile libraries reach children a bus route never will',
   'Pagoda-based ethics classes preserve Khmer language and moral tradition',
 ]
+
+// ── Slideshow ──
+
+const imageUrls: string[] = [
+  'https://images.pexels.com/photos/5905470/pexels-photo-5905470.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+  'https://images.pexels.com/photos/3769149/pexels-photo-3769149.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+  'https://images.pexels.com/photos/5212344/pexels-photo-5212344.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+  'https://images.pexels.com/photos/5905700/pexels-photo-5905700.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
+]
+
+const currentSlide = ref(0)
+let slideTimer: number | undefined
+
+const startSlideshow = () => {
+  stopSlideshow()
+  slideTimer = window.setInterval(() => {
+    currentSlide.value = (currentSlide.value + 1) % imageUrls.length
+  }, 3000)
+}
+
+const stopSlideshow = () => {
+  if (slideTimer) {
+    clearInterval(slideTimer)
+    slideTimer = undefined
+  }
+}
 
 onMounted(() => {
   document.title = 'Education Program — Santi Sena'
@@ -45,20 +71,37 @@ onMounted(() => {
 
   setOgMeta('og:title', 'Education — Santi Sena')
   setOgMeta('og:description', 'Learning that starts at three years old and never stops.')
+
+  startSlideshow()
+})
+
+onUnmounted(() => {
+  stopSlideshow()
 })
 </script>
 
 <template>
   <div class="edu-page">
-    <!-- ── Hero ── -->
-    <section class="hero-section">
+    <!-- ── Hero Background Slideshow (fully automatic) ── -->
+    <section class="hero-section" @mouseenter="stopSlideshow" @mouseleave="startSlideshow">
       <div class="hero-overlay" />
+
+      <div class="slides" aria-live="polite">
+        <div
+          v-for="(url, i) in imageUrls"
+          :key="i"
+          class="slide"
+          :class="{ 'is-active': currentSlide === i }"
+          :style="{ backgroundImage: `url(${url})` }"
+        />
+      </div>
+
       <div class="hero-content">
         <span class="section-label">Programs &middot; Goal 02 Education</span>
         <h1 class="hero-title">A teacher in every village. A book in every hand.</h1>
         <p class="hero-subtitle">
-          From community pre-schools to mobile libraries and pagoda-based ethics classes, Santi Sena
-          builds the kind of learning that lasts a lifetime — and lifts a household out of poverty.
+          From community pre-schools to mobile libraries and pagoda-based ethics classes,
+          Santi Sena builds the kind of learning that lasts a lifetime — and lifts a household out of poverty.
         </p>
         <div class="hero-actions">
           <RouterLink to="/contact" class="btn btn-primary">Sponsor a child</RouterLink>
@@ -233,18 +276,46 @@ onMounted(() => {
   isolation: isolate;
   overflow: hidden;
   background: linear-gradient(160deg, var(--green-deep) 0%, var(--green) 50%, var(--green-mid) 100%);
+  outline: none;
 }
 
+/* ── Slides ── */
+.slides {
+  position: absolute;
+  inset: 0;
+}
+
+.slide {
+  position: absolute;
+  inset: -10px; /* extend beyond edges to hide blur border */
+  opacity: 0;
+  transition: opacity 2000ms ease-in-out;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #8baa9a;
+  filter: blur(4px);
+  transform: scale(1.05);
+}
+
+.slide.is-active {
+  opacity: 1;
+}
+
+/* ── Hero Overlay ── */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: -10;
+  z-index: 1;
   background:
-    radial-gradient(ellipse 70% 50% at 10% 40%, rgba(201, 149, 14, 0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+    linear-gradient(to right, rgba(0, 0, 0, 0.50) 0%, rgba(0, 0, 0, 0.20) 45%, rgba(0, 0, 0, 0.05) 70%, transparent 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 40%, rgba(0, 0, 0, 0.10) 100%);
 }
 
+/* Hero content sits above overlay */
 .hero-content {
+  position: relative;
+  z-index: 2;
   max-width: 1280px;
   margin: 0 auto;
   padding: 8rem 1.5rem 7rem;
@@ -527,4 +598,6 @@ onMounted(() => {
     padding: 6rem 2rem;
   }
 }
+
+
 </style>
