@@ -292,7 +292,7 @@ onUnmounted(() => {
 
 .vision-section,
 .values-section {
-  background: linear-gradient(135deg, #eff6ff 0%, #fefce8 50%, #f0fdf4 100%);
+  background: #FBF3E3;
 }
 
 .section-label {
@@ -313,19 +313,19 @@ onUnmounted(() => {
   font-size: 2.25rem;
   font-weight: 700;
   line-height: 1.25;
-  color: #1e293b;
+  color: #1B4D4D;
   margin-bottom: 0.75rem;
 }
 
 .section-desc {
-  color: #64748b;
+  color: #1B4D4D;
   font-size: 1.1rem;
   max-width: 540px;
   margin: 0 auto;
 }
 
 .alt-bg {
-  background: #f8fafc;
+  background: #FBF3E3;
 }
 
 /* =====================
@@ -485,7 +485,7 @@ onUnmounted(() => {
 }
 
 .vision-card {
-  background: #ffffff;
+  background: #FFFBF3;
   border: 1px solid #e2e8f0;
   border-radius: 1rem;
   padding: 2rem;
@@ -505,7 +505,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
-  background: rgba(37, 99, 235, 0.08);
+  background: #FFFBF3;
   color: #2563eb;
   margin-bottom: 1.25rem;
 }
@@ -514,12 +514,12 @@ onUnmounted(() => {
   font-size: 1.15rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: #1e293b;
+  color: #1B4D4D;
 }
 
 .vision-card p {
   font-size: 0.9rem;
-  color: #64748b;
+  color: #1B4D4D;
   line-height: 1.65;
 }
 
@@ -537,12 +537,12 @@ onUnmounted(() => {
   font-size: 2rem;
   font-weight: 700;
   line-height: 1.25;
-  color: #1e293b;
+  color: #1B4D4D;
   margin-bottom: 1rem;
 }
 
 .mission-text {
-  color: #64748b;
+  color: #1B4D4D;
   line-height: 1.7;
   font-size: 1rem;
   margin-bottom: 1.5rem;
@@ -561,7 +561,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.75rem;
   font-size: 0.95rem;
-  color: #334155;
+  color: #1B4D4D;
 }
 
 .mission-list li svg {
@@ -576,7 +576,7 @@ onUnmounted(() => {
 }
 
 .stat-card {
-  background: #ffffff;
+  background: #FFFBF3;
   border: 1px solid #e2e8f0;
   border-radius: 1rem;
   padding: 1.75rem 1.5rem;
@@ -587,13 +587,13 @@ onUnmounted(() => {
   display: block;
   font-size: 2rem;
   font-weight: 700;
-  color: #2563eb;
+  color: #B8651A;
   margin-bottom: 0.25rem;
 }
 
 .stat-label {
   font-size: 0.85rem;
-  color: #64748b;
+  color: #1B4D4D;
 }
 
 /* =====================
@@ -606,7 +606,7 @@ onUnmounted(() => {
 }
 
 .value-item {
-  background: #ffffff;
+  background: #FFFBF3;
   border: 1px solid #e2e8f0;
   border-radius: 1rem;
   padding: 2rem 1.5rem;
@@ -620,7 +620,7 @@ onUnmounted(() => {
 .value-number {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #2563eb;
+  color: #B8651A;
   margin-bottom: 1rem;
   letter-spacing: 0.05em;
 }
@@ -629,12 +629,12 @@ onUnmounted(() => {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.6rem;
-  color: #1e293b;
+  color: #1B4D4D;
 }
 
 .value-item p {
   font-size: 0.88rem;
-  color: #64748b;
+  color: #1B4D4D;
   line-height: 1.6;
 }
 
@@ -643,7 +643,7 @@ onUnmounted(() => {
    ===================== */
 .quote-section {
   padding: 5rem 0;
-  background: #f8fafc;
+  background: #FBF3E3;
   border-top: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
 }
@@ -664,7 +664,7 @@ onUnmounted(() => {
 .quote-text {
   font-size: 1.2rem;
   font-style: italic;
-  color: #334155;
+  color: #1B4D4D;
   line-height: 1.8;
   margin-bottom: 1.5rem;
 }
@@ -672,7 +672,7 @@ onUnmounted(() => {
 .quote-section cite {
   font-style: normal;
   font-size: 0.9rem;
-  color: #64748b;
+  color: #1B4D4D;
 }
 
 /* =====================
@@ -680,7 +680,7 @@ onUnmounted(() => {
    ===================== */
 .cta-section {
   padding: 5rem 0;
-  background: linear-gradient(135deg, #eff6ff 0%, #fefce8 50%, #f0fdf4 100%);
+  background: #FBF3E3;
 }
 
 .cta-content {
@@ -693,12 +693,12 @@ onUnmounted(() => {
 .cta-content h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #1B4D4D;
   margin-bottom: 0.75rem;
 }
 
 .cta-content p {
-  color: #64748b;
+  color: #1B4D4D;
   line-height: 1.7;
   margin-bottom: 2rem;
 }
@@ -724,25 +724,25 @@ onUnmounted(() => {
 }
 
 .btn-primary {
-  background: #2563eb;
-  color: #ffffff;
-  border: 1px solid #2563eb;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #c7c7c8;
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+  background: #dedede;
+  border-color: #b2b2b2;
 }
 
 .btn-outline {
-  background: rgb(114, 114, 114);
+  background: rgb(238, 132, 26);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-outline:hover {
   border-color: #ffffff;
-  background: rgb(220, 136, 52);
+  background: rgb(185, 104, 23);
 }
 
 /* =====================
