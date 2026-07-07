@@ -31,11 +31,11 @@ const goals: ProgramGoal[] = [
     tag: 'GOAL 02',
     title: 'Education',
     intro:
-      'Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six..',
+      "Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six.",
     whatWeDo:
       'Set up village pre-schools, train local teachers, stock small libraries, and support scholarships for at-risk children — especially girls.',
     whyItMatters:
-      'In the districts we work in, many hamlets are more than an hour is walk from the nearest school. Early learning centres change that.',
+      "In the districts we work in, many hamlets are more than an hour's walk from the nearest school. Early learning centres change that.",
     quote: 'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
     image: '/images/programs/education.jpg',
   },
@@ -76,7 +76,7 @@ const priorities = [
 ]
 
 // --- Hero slideshow ---
-// Add more files (slide-2.jpg, slide-3.jpg, ...) into public/images/programs/hero/
+// Add more files (hero-5.jpg, hero-6.jpg, ...) into public/images/programs/
 // and list them here. It still works fine with just one image.
 const heroSlides = [
   '/images/programs/hero-1.jpg',
@@ -88,22 +88,36 @@ const heroSlides = [
 const currentSlide = ref(0)
 let slideTimer: ReturnType<typeof setInterval> | undefined
 
-onMounted(() => {
+function nextSlide() {
+  currentSlide.value = (currentSlide.value + 1) % heroSlides.length
+}
+function prevSlide() {
+  currentSlide.value = (currentSlide.value - 1 + heroSlides.length) % heroSlides.length
+}
+function goToSlide(i: number) {
+  currentSlide.value = i
+}
+function startAutoPlay() {
   if (heroSlides.length > 1) {
-    slideTimer = setInterval(() => {
-      currentSlide.value = (currentSlide.value + 1) % heroSlides.length
-    }, 5000)
+    slideTimer = setInterval(nextSlide, 5000)
   }
-})
-onUnmounted(() => {
+}
+function stopAutoPlay() {
   if (slideTimer) clearInterval(slideTimer)
-})
+}
+
+onMounted(() => startAutoPlay())
+onUnmounted(() => stopAutoPlay())
 </script>
 
 <template>
   <div class="programs-page">
     <!-- HERO SLIDESHOW -->
-    <section class="hero">
+    <section
+      class="hero"
+      @mouseenter="stopAutoPlay"
+      @mouseleave="startAutoPlay"
+    >
       <div class="hero-slides">
         <div
           v-for="(slide, i) in heroSlides"
@@ -122,6 +136,21 @@ onUnmounted(() => {
           education, livelihoods and child protection — each delivered with and by 
           the communities themselves.
         </p>
+      </div>
+
+      <!-- Arrow controls -->
+      <button class="hero-arrow hero-arrow-left" @click="prevSlide">‹</button>
+      <button class="hero-arrow hero-arrow-right" @click="nextSlide">›</button>
+
+      <!-- Dots -->
+      <div class="hero-dots">
+        <button
+          v-for="(slide, i) in heroSlides"
+          :key="'dot-' + i"
+          class="hero-dot"
+          :class="{ active: i === currentSlide }"
+          @click="goToSlide(i)"
+        ></button>
       </div>
     </section>
 
@@ -221,7 +250,6 @@ onUnmounted(() => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  /* dull olive/forest-green tint over the photo, like the reference design */
   background: linear-gradient(
     180deg,
     rgba(38, 61, 43, 0.65) 0%,
@@ -249,12 +277,56 @@ onUnmounted(() => {
   font-size: 3rem;
   line-height: 1.2;
   margin: 0 0 1rem;
-  
 }
 .hero-content .lead {
   font-size: 1.05rem;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.92);
+}
+
+/* Arrows */
+.hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 2rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.hero-arrow:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+.hero-arrow-left { left: 1.5rem; }
+.hero-arrow-right { right: 1.5rem; }
+
+/* Dots */
+.hero-dots {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  gap: 0.5rem;
+}
+.hero-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.hero-dot.active {
+  background: white;
 }
 
 /* GOAL BLOCKS */
@@ -361,6 +433,11 @@ onUnmounted(() => {
   }
   .hero-content h1 {
     font-size: 2.2rem;
+  }
+  .hero-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
   }
 }
 </style>
