@@ -4,7 +4,7 @@
   --border: #e8e4df;
   --text: #2b2b28;
   --muted: #5b564c;
-  
+
   /* Environmental theme colors */
   --cream: #FCF6E9;
   --cream-soft: #f5ebe0;
@@ -13,10 +13,22 @@
   --orange: #dd7a2b;
   --ink: #2b2b28;
   --ink-soft: #5b564c;
-  
+
   /* Font families */
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-sans: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --bg: #ffffff;
+  --panel: #111113;
+  --border: #27272a;
+  --text: #eaeaea;
+  --muted: #a1a1aa;
+
+  /* Brand colors — inspired by the green + gold + white logo */
+  --white: #ffffff;
+  --green: #3A7D44;
+  --green-dark: #1B4332;
+  --green-light: #52B788;
+  --gold: #D4A017;
 }
 
 * {
