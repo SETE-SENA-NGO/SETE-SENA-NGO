@@ -10,12 +10,12 @@ import DonateView from '@/views/public/Getinvolved.donat.vue'
 
 export const publicRoutes = [
   { path: '/', component: HomeView },
-  { path: '/about', component: AboutView },
   { path: '/about/organization', component: AboutView },
   { path: '/about/vision', component: AboutVisionView },
+  { path: '/about', component: AboutView },
   { path: '/programs/environment', component: ProgramEnviromentView },
   { path: '/services', component: ServicesView },
-  { path: '/get-involved', component: GetInvolvedView },
   { path: '/get-involved/donate', component: DonateView },
+  { path: '/get-involved', component: GetInvolvedView },
   { path: '/contact', component: ContactView },
 ]
