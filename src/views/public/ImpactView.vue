@@ -165,18 +165,17 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
 
 .hero-overlay {
   position: absolute;
-  height: 120%;
-  width: 10
-  ;
+  /* height: 1200px; */
+  /* width: 3px; */
   inset: 0;
-  background: linear-gradient(135deg, rgba(94, 56, 24, 0.92), rgba(143, 91, 39, 0.72));
+  background: linear-gradient(135deg, rgba(122, 201, 165, 0.92), rgba(87, 100, 99, 0.72), rgba(39, 143, 107, 0.72));
   z-index: 0;
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
-  max-width: 1120px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 5rem 1.5rem;
   color: #fffdf8;
@@ -199,6 +198,7 @@ h2 {
 
 h1 {
   margin-top: 1rem;
+  margin-right: 400px;
   max-width: 720px;
   font-size: clamp(2.2rem, 4.5vw, 3.6rem);
 }
