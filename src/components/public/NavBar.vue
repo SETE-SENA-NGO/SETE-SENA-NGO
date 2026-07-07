@@ -13,6 +13,7 @@ const menu = ref(false)
       <ul :class="['nav-links', { open: menu }]">
         <li><RouterLink to="/">Home</RouterLink></li>
         <li><RouterLink to="/about">About</RouterLink></li>
+        <li><RouterLink to="/programs/environment">Environment Program</RouterLink></li>
         <li><RouterLink to="/services">Services</RouterLink></li>
         <li><RouterLink to="/contact">Contact</RouterLink></li>
         <li><RouterLink to="/admin/login">Admin</RouterLink></li>
