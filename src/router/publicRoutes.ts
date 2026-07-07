@@ -2,9 +2,10 @@ import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/public/AboutView.vue'
 import ServicesView from '@/views/public/ServicesView.vue'
 import ImpactView from '@/views/public/ImpactView.vue'
-import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
 import ContactView from '@/views/public/ContactView.vue'
-import DonateView from '@/views/public/DonateView.vue'
+import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
+import DonateView from '@/views/public/Getinvolved.donat.vue'
+import QrDonateView from '@/views/public/DonateView.vue'
 
 export const publicRoutes = [
   { path: '/', component: HomeView },
@@ -13,6 +14,7 @@ export const publicRoutes = [
   { path: '/services', component: ServicesView },
   { path: '/impact', component: ImpactView },
   { path: '/get-involved', component: GetInvolvedView },
+  { path: '/get-involved/donate', component: DonateView },
   { path: '/contact', component: ContactView },
-  { path: '/qr-donate', component: DonateView },
+  { path: '/qr-donate', component: QrDonateView },
 ]
