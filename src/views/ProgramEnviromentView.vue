@@ -142,15 +142,13 @@ onUnmounted(() => {
       <div class="container">
         <div class="section-header">
           <span class="section-label">Key Initiatives</span>
-          <h2>What We're Doing</h2>
+          <h2 style="font-family: var(--font-serif);">What We're Doing</h2>
         </div>
         <div class="initiatives-list">
           <div class="initiative-item">
-            <div class="initiative-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
-                <path d="M12 6v6l4 2" />
-              </svg>
+            <div class="initiative-image">
+              <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80" alt="Reforestation Projects" loading="lazy" />
+              <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Reforestation Projects</h3>
@@ -161,14 +159,9 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="initiative-item">
-            <div class="initiative-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
+            <div class="initiative-image">
+              <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80" alt="Environmental Education" loading="lazy" />
+              <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Environmental Education</h3>
@@ -179,18 +172,9 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="initiative-item">
-            <div class="initiative-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
+            <div class="initiative-image">
+              <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80" alt="Renewable Energy Access" loading="lazy" />
+              <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Renewable Energy Access</h3>
@@ -201,10 +185,9 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="initiative-item">
-            <div class="initiative-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-              </svg>
+            <div class="initiative-image">
+              <img src="https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80" alt="Water Conservation" loading="lazy" />
+              <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Water Conservation</h3>
@@ -215,12 +198,9 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="initiative-item">
-            <div class="initiative-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                <line x1="12" y1="22.08" x2="12" y2="12" />
-              </svg>
+            <div class="initiative-image">
+              <img src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80" alt="Sustainable Agriculture" loading="lazy" />
+              <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Sustainable Agriculture</h3>
@@ -231,11 +211,9 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="initiative-item">
-            <div class="initiative-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              </svg>
+            <div class="initiative-image">
+              <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" alt="Climate Research & Advocacy" loading="lazy" />
+              <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Climate Research & Advocacy</h3>
@@ -368,6 +346,9 @@ onUnmounted(() => {
    ===================== */
 .environment-page {
   min-height: 100vh;
+  font-family: inherit;
+  color: var(--ink);
+  background: #FCF6E9;
 }
 
 .container {
@@ -387,7 +368,7 @@ onUnmounted(() => {
 
 .overview-section,
 .process-section {
-  background: #FBF3E3;
+  background: #f5ebe0;
 }
 
 .section-label {
@@ -396,31 +377,32 @@ onUnmounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #2563eb;
+  color: var(--green);
   margin-bottom: 0.75rem;
   padding: 0.35rem 1rem;
-  border: 1px solid rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(22, 48, 42, 0.15);
   border-radius: 9999px;
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(22, 48, 42, 0.05);
 }
 
 .section-header h2 {
   font-size: 2.25rem;
   font-weight: 700;
   line-height: 1.25;
-  color: #1B4D4D;
+  color: var(--green);
   margin-bottom: 0.75rem;
+  font-family: var(--font-serif);
 }
 
 .section-desc {
-  color: #1B4D4D;
+  color: var(--ink);
   font-size: 1.1rem;
   max-width: 540px;
   margin: 0 auto;
 }
 
 .alt-bg {
-  background: #FBF3E3;
+  background: #f5ebe0;
 }
 
 /* =====================
@@ -468,7 +450,7 @@ onUnmounted(() => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.65) 0%, rgba(22, 48, 42, 0.55) 100%);
   z-index: 2;
 }
 
@@ -477,8 +459,9 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(15, 23, 42, 0.6) 0%, transparent 40%),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.3) 0%, transparent 30%);
+    linear-gradient(to top, rgba(15, 23, 42, 0.7) 0%, transparent 50%),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.4) 0%, transparent 35%),
+    linear-gradient(to right, rgba(22, 48, 42, 0.3) 0%, transparent 60%);
   z-index: 3;
   pointer-events: none;
 }
@@ -580,15 +563,16 @@ onUnmounted(() => {
 }
 
 .overview-card {
-  background: #FFFBF3;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
+  border: 1px solid rgba(22, 48, 42, 0.08);
   border-radius: 1rem;
   padding: 2rem;
-  transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .overview-card:hover {
-  border-color: rgba(37, 99, 235, 0.25);
+  border-color: rgba(22, 48, 42, 0.25);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   transform: translateY(-2px);
 }
@@ -600,8 +584,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
-  background: #FFFBF3;
-  color: #2563eb;
+  background: #f5ebe0;
+  color: var(--green);
   margin-bottom: 1.25rem;
 }
 
@@ -609,12 +593,13 @@ onUnmounted(() => {
   font-size: 1.15rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: #1B4D4D;
+  color: var(--green);
+  font-family: var(--font-serif);
 }
 
 .overview-card p {
   font-size: 0.9rem;
-  color: #1B4D4D;
+  color: var(--ink);
   line-height: 1.65;
 }
 
@@ -622,42 +607,97 @@ onUnmounted(() => {
    Initiatives
    ===================== */
 .initiatives-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
 }
 
 .initiative-item {
-  background: #FFFBF3;
-  border-left: 4px solid rgb(238, 132, 26);
-  border-radius: 0.75rem;
-  padding: 2rem 2.5rem;
-  transition: all 0.3s ease;
   position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  height: 400px;
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .initiative-item:hover {
-  border-left-color: rgb(185, 104, 23);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 }
 
-.initiative-icon {
-  display: none;
+.initiative-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.initiative-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+@media (hover: hover) {
+  .initiative-item:hover .initiative-image img {
+    transform: scale(1.1);
+  }
+}
+
+.initiative-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(22, 48, 42, 0.3) 0%,
+    rgba(22, 48, 42, 0.5) 50%,
+    rgba(22, 48, 42, 0.85) 100%
+  );
+  transition: all 0.4s ease;
+}
+
+@media (hover: hover) {
+  .initiative-item:hover .initiative-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(22, 48, 42, 0.4) 0%,
+      rgba(22, 48, 42, 0.6) 50%,
+      rgba(22, 48, 42, 0.9) 100%
+    );
+  }
+}
+
+.initiative-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2rem;
+  z-index: 2;
+  color: #ffffff;
+  transform: translateY(0);
+  transition: all 0.4s ease;
 }
 
 .initiative-content h3 {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
-  color: #1B4D4D;
+  color: #ffffff;
   letter-spacing: -0.01em;
+  font-family: var(--font-serif);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .initiative-content p {
-  font-size: 1.05rem;
-  color: #1B4D4D;
-  line-height: 1.7;
-  font-style: italic;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  opacity: 0.9;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* =====================
@@ -670,16 +710,17 @@ onUnmounted(() => {
 }
 
 .impact-card {
-  background: #FFFBF3;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
+  border: 1px solid rgba(22, 48, 42, 0.08);
   border-radius: 1rem;
   padding: 2rem 1.5rem;
   text-align: center;
-  transition: border-color 0.3s, transform 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .impact-card:hover {
-  border-color: rgba(37, 99, 235, 0.25);
+  border-color: rgba(22, 48, 42, 0.25);
   transform: translateY(-2px);
 }
 
@@ -687,13 +728,14 @@ onUnmounted(() => {
   display: block;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #B8651A;
+  color: var(--orange);
   margin-bottom: 0.5rem;
+  font-family: var(--font-serif);
 }
 
 .impact-label {
   font-size: 0.9rem;
-  color: #1B4D4D;
+  color: var(--ink);
   font-weight: 500;
 }
 
@@ -708,28 +750,40 @@ onUnmounted(() => {
 
 .process-step {
   text-align: center;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
+  border: 1px solid rgba(22, 48, 42, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.process-step:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .step-number {
   font-size: 2.5rem;
   font-weight: 800;
-  color: #2563eb;
+  color: var(--green);
   opacity: 0.2;
   margin-bottom: 1rem;
   line-height: 1;
+  font-family: var(--font-serif);
 }
 
 .process-step h3 {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: #1B4D4D;
+  color: var(--green);
+  font-family: var(--font-serif);
 }
 
 .process-step p {
   font-size: 0.9rem;
-  color: #1B4D4D;
+  color: var(--ink);
   line-height: 1.65;
 }
 
@@ -738,9 +792,23 @@ onUnmounted(() => {
    ===================== */
 .quote-section {
   padding: 5rem 0;
-  background: #FBF3E3;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #f5ebe0 0%, #f0e6d8 100%);
+  border-top: 1px solid rgba(22, 48, 42, 0.08);
+  border-bottom: 1px solid rgba(22, 48, 42, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.quote-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23228047' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .quote-section blockquote {
@@ -751,7 +819,7 @@ onUnmounted(() => {
 }
 
 .quote-icon {
-  color: #2563eb;
+  color: var(--green);
   opacity: 0.12;
   margin-bottom: 1rem;
 }
@@ -759,7 +827,7 @@ onUnmounted(() => {
 .quote-text {
   font-size: 1.2rem;
   font-style: italic;
-  color: #1B4D4D;
+  color: var(--ink);
   line-height: 1.8;
   margin-bottom: 1.5rem;
 }
@@ -767,7 +835,7 @@ onUnmounted(() => {
 .quote-section cite {
   font-style: normal;
   font-size: 0.9rem;
-  color: #1B4D4D;
+  color: var(--ink-soft);
 }
 
 /* =====================
@@ -775,7 +843,20 @@ onUnmounted(() => {
    ===================== */
 .cta-section {
   padding: 5rem 0;
-  background: #FBF3E3;
+  background: linear-gradient(135deg, #f5ebe0 0%, #f0e6d8 100%);
+  position: relative;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(34, 128, 71, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 80% 50%, rgba(238, 132, 26, 0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .cta-content {
@@ -788,12 +869,13 @@ onUnmounted(() => {
 .cta-content h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: #1B4D4D;
+  color: var(--green);
   margin-bottom: 0.75rem;
+  font-family: var(--font-serif);
 }
 
 .cta-content p {
-  color: #1B4D4D;
+  color: var(--ink);
   line-height: 1.7;
   margin-bottom: 2rem;
 }
@@ -820,24 +902,24 @@ onUnmounted(() => {
 
 .btn-primary {
   background: #ffffff;
-  color: #000000;
-  border: 1px solid #c7c7c8;
+  color: var(--ink);
+  border: 1px solid rgba(22, 48, 42, 0.2);
 }
 
 .btn-primary:hover {
-  background: #dedede;
-  border-color: #b2b2b2;
+  background: #f5ebe0;
+  border-color: var(--green-muted);
 }
 
 .btn-outline {
-  background: rgb(238, 132, 26);
+  background: var(--orange);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-outline:hover {
   border-color: #ffffff;
-  background: rgb(185, 104, 23);
+  background: #b8681a;
 }
 
 /* =====================
@@ -851,6 +933,9 @@ onUnmounted(() => {
     grid-template-columns: repeat(2, 1fr);
   }
   .process-steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .initiatives-list {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -891,8 +976,24 @@ onUnmounted(() => {
     height: 8px;
   }
 
+  .initiatives-list {
+    grid-template-columns: 1fr;
+  }
+
   .initiative-item {
-    padding: 1.75rem 1.5rem;
+    height: 350px;
+  }
+
+  .initiative-content {
+    padding: 1.5rem;
+  }
+
+  .initiative-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .initiative-content p {
+    font-size: 0.9rem;
   }
 
   .btn-outline {
@@ -921,6 +1022,18 @@ onUnmounted(() => {
   }
   .impact-number {
     font-size: 1.75rem;
+  }
+  .initiative-item {
+    height: 300px;
+  }
+  .initiative-content {
+    padding: 1.25rem;
+  }
+  .initiative-content h3 {
+    font-size: 1.15rem;
+  }
+  .initiative-content p {
+    font-size: 0.85rem;
   }
 }
 </style>
