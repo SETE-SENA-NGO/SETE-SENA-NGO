@@ -155,50 +155,57 @@ onMounted(() => {
 
 <style scoped>
 /* ─── Color Tokens ───
- *   Green: brand anchor, used for headings and hero backgrounds.
- *   Gold:  warm accent for highlights, stats, and decorative elements.
- *   Text:  clean neutral grays (not green-tinted) for maximum readability.
+ * A warm, earthy palette rooted in the Buddhist NGO identity.
+ * Deep forest greens anchor headings and hero;
+ * saffron gold adds warmth, accent energy, and nods to the Dharma;
+ * neutral text colors lean warm (not cold gray) so the page feels
+ * crafted, not templated.
  */
 .org-page {
-  --org-primary:       #1B4332;
-  --org-primary-light: #2D6A4F;
-  --org-primary-deep:  #143A25;
-  --org-saffron:       #C9950E;
-  --org-saffron-bg:    #FDF6E3;
+  --green-deep:      #0C2B1E;
+  --green:           #1A4A34;
+  --green-mid:       #276749;
+  --green-soft:      #E8F0EB;
 
-  --org-text-heading:  #111827;
-  --org-text-body:     #374151;
-  --org-text-muted:    #6B7280;
-  --org-text-soft:     #9CA3AF;
+  --gold:            #C9950E;
+  --gold-light:      #F5E8B8;
+  --gold-soft:       #FFFBEB;
 
-  --org-white:         #FFFFFF;
-  --org-bg:            #F9FAFB;
-  --org-bg-alt:        #F3F6F3;
-  --org-card-bg:       #FFFFFF;
-  --org-card-alt:      #F8FAF8;
-  --org-border:        #E5E7EB;
+  --warm-white:      #FDFCF9;
+  --warm-bg:         #F8F6F1;
+  --warm-card:       #FFFFFF;
+  --warm-card-alt:   #FCFAF5;
+  --warm-border:     #EBE5DA;
+
+  /* Text — warm neutral tones with personality */
+  --text-heading:    #0F1F17;
+  --text-body:       #2C3E35;
+  --text-secondary:  #5C6B62;
+  --text-muted:      #8B9A91;
+  --text-on-hero:    rgba(255, 255, 255, 0.88);
+  --text-on-green:   rgba(255, 255, 255, 0.92);
 }
 
 /* ─── Shared ─── */
 .section-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.7rem;
-  font-weight: 600;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.35em;
+  letter-spacing: 0.4em;
   margin-bottom: 1rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 2rem;
-  background: var(--org-saffron-bg);
-  color: var(--org-saffron);
+  background: var(--gold-light);
+  color: var(--gold);
 }
 
 .section-container {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 5rem 1.5rem;
+  padding: 6rem 1.5rem;
 }
 
 .section-title {
@@ -206,8 +213,9 @@ onMounted(() => {
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 3rem;
-  color: var(--org-text-heading);
-  line-height: 1.25;
+  color: var(--text-heading);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 /* ─── Hero ─── */
@@ -215,7 +223,7 @@ onMounted(() => {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--org-primary-deep) 0%, var(--org-primary) 60%, var(--org-primary-light) 100%);
+  background: linear-gradient(160deg, var(--green-deep) 0%, var(--green) 50%, var(--green-mid) 100%);
 }
 
 .hero-overlay {
@@ -223,20 +231,19 @@ onMounted(() => {
   inset: 0;
   z-index: -10;
   background:
-    radial-gradient(ellipse 80% 60% at 0% 50%, rgba(212, 160, 23, 0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+    radial-gradient(ellipse 70% 50% at 10% 40%, rgba(201, 149, 14, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
 }
 
 .hero-content {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 7rem 1.5rem 5rem;
-  color: var(--org-white);
+  padding: 8rem 1.5rem 7rem;
 }
 
 .hero-content .section-label {
-  background: color-mix(in srgb, var(--org-saffron) 18%, transparent);
-  color: var(--org-saffron);
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+  color: var(--gold-light);
 }
 
 .hero-title {
@@ -246,15 +253,16 @@ onMounted(() => {
   font-size: 2.75rem;
   font-weight: 700;
   line-height: 1.1;
-  color: var(--org-white);
+  letter-spacing: -0.015em;
+  color: #FFFFFF;
 }
 
 .hero-subtitle {
   margin-top: 1.5rem;
   max-width: 42rem;
   font-size: 1.05rem;
-  line-height: 1.75;
-  color: color-mix(in srgb, var(--org-white) 78%, transparent);
+  line-height: 1.8;
+  color: var(--text-on-hero);
 }
 
 .hero-actions {
@@ -274,59 +282,59 @@ onMounted(() => {
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
 }
 
 .btn-primary {
-  background: var(--org-saffron);
-  color: var(--org-primary-deep);
+  background: var(--gold);
+  color: var(--green-deep);
+  box-shadow: 0 4px 14px rgba(201, 149, 14, 0.30);
 }
 
 .btn-primary:hover {
-  background: color-mix(in srgb, var(--org-saffron) 82%, black);
+  background: #B8860B;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(201, 149, 14, 0.35);
 }
 
 .btn-ghost {
   background: transparent;
-  border: 1px solid color-mix(in srgb, var(--org-white) 25%, transparent);
-  color: var(--org-white);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
 }
 
 .btn-ghost:hover {
-  background: color-mix(in srgb, var(--org-white) 8%, transparent);
-  border-color: color-mix(in srgb, var(--org-white) 45%, transparent);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.40);
 }
 
 /* ─── Key Facts ─── */
 .facts-section {
-  background: var(--org-bg);
+  background: var(--warm-bg);
 }
 
 .facts-grid {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 1.5rem 3rem;
+  padding: 3rem 1.5rem 4.5rem;
   display: grid;
   gap: 1.5rem;
-  margin-top: -2rem;
 }
 
 .fact-card {
   text-align: center;
-  padding: 2rem 1.5rem;
+  padding: 2.5rem 1.75rem;
   border-radius: 1rem;
-  background: var(--org-card-bg);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--org-border);
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  background: var(--warm-card);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--warm-border);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .fact-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-  border-color: var(--org-saffron);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.07);
+  border-color: var(--gold);
 }
 
 .fact-value {
@@ -334,7 +342,7 @@ onMounted(() => {
   font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 3rem;
   font-weight: 700;
-  color: var(--org-saffron);
+  color: var(--gold);
   line-height: 1;
 }
 
@@ -344,21 +352,20 @@ onMounted(() => {
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--org-primary);
+  letter-spacing: 0.15em;
+  color: var(--green);
 }
 
 .fact-desc {
   margin: 0.75rem 0 0;
   font-size: 0.85rem;
   line-height: 1.6;
-  color: var(--org-text-muted);
+  color: var(--text-secondary);
 }
 
 /* ─── Team Structure ─── */
 .team-section {
-  background: var(--org-card-bg);
-  border-top: 1px solid var(--org-border);
+  background: var(--warm-card);
 }
 
 .team-list {
@@ -367,27 +374,24 @@ onMounted(() => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .team-card {
   display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  border-left: 4px solid var(--org-saffron);
-  background: var(--org-card-alt);
-  border: 1px solid var(--org-border);
-  border-left-width: 4px;
-  border-left-color: var(--org-saffron);
-  transition: transform 0.2s, box-shadow 0.2s;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: 0.85rem;
+  background: var(--warm-card-alt);
+  border: 1px solid var(--warm-border);
+  border-left: 4px solid var(--gold);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .team-card:hover {
-  transform: translateX(4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  border-color: color-mix(in srgb, var(--org-saffron) 40%, var(--org-border));
-  border-left-color: color-mix(in srgb, var(--org-saffron) 110%, black);
+  transform: translateX(5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  border-color: var(--gold);
 }
 
 .team-icon {
@@ -398,8 +402,8 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--org-saffron);
-  color: var(--org-white);
+  background: var(--gold);
+  color: var(--warm-card);
   margin-top: 0.15rem;
 }
 
@@ -412,20 +416,21 @@ onMounted(() => {
   font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--org-text-heading);
+  color: var(--green);
+  letter-spacing: -0.01em;
 }
 
 .team-desc {
   margin: 0.35rem 0 0;
   font-size: 0.9rem;
-  line-height: 1.65;
-  color: var(--org-text-body);
+  line-height: 1.7;
+  color: var(--text-body);
   max-width: 50rem;
 }
 
 /* ─── Operational Priorities ─── */
 .priorities-section {
-  background: var(--org-bg);
+  background: var(--warm-bg);
 }
 
 .priorities-list {
@@ -434,24 +439,24 @@ onMounted(() => {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .priority-item {
   display: flex;
   align-items: flex-start;
   gap: 1.25rem;
-  padding: 1.25rem 1.5rem;
+  padding: 1.5rem 1.75rem;
   border-radius: 0.75rem;
-  background: var(--org-card-bg);
-  border: 1px solid var(--org-border);
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  background: var(--warm-card);
+  border: 1px solid var(--warm-border);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .priority-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  border-color: var(--org-primary-light);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  border-color: var(--green-mid);
 }
 
 .priority-num {
@@ -459,40 +464,37 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  background: var(--org-saffron-bg);
-  color: var(--org-saffron);
-  margin-top: 0.1rem;
+  background: var(--green-soft);
+  color: var(--green);
+  margin-top: 0.05rem;
 }
 
 .priority-text {
   flex: 1;
-  font-size: 0.925rem;
-  line-height: 1.65;
-  color: var(--org-text-body);
-  padding-top: 0.25rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-body);
+  padding-top: 0.35rem;
 }
 
 /* ─── Accountability ─── */
 .accountability-section {
-  background: var(--org-bg-alt);
-  border-top: 1px solid var(--org-border);
-  border-bottom: 1px solid var(--org-border);
+  background: var(--green-soft);
 }
 
 .accountability-card {
   display: flex;
   gap: 1.5rem;
-  padding: 2.5rem;
+  padding: 3rem;
   border-radius: 1rem;
-  background: linear-gradient(135deg, var(--org-primary-deep) 0%, var(--org-primary) 100%);
-  color: var(--org-white);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(145deg, var(--green-deep) 0%, var(--green) 60%, var(--green-mid) 100%);
+  box-shadow: 0 14px 36px rgba(12, 43, 30, 0.20);
   align-items: flex-start;
 }
 
@@ -504,15 +506,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--org-saffron) 20%, transparent);
-  color: var(--org-saffron);
+  background: rgba(201, 149, 14, 0.20);
+  color: var(--gold-light);
 }
 
 .accountability-text {
   margin: 0;
   font-size: 1rem;
-  line-height: 1.8;
-  color: color-mix(in srgb, var(--org-white) 82%, transparent);
+  line-height: 1.85;
+  color: var(--text-on-green);
   max-width: 50rem;
 }
 
@@ -525,11 +527,11 @@ onMounted(() => {
 
 @media (min-width: 768px) {
   .hero-title {
-    font-size: 3.75rem;
+    font-size: 3.5rem;
   }
 
   .section-title {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
   }
 
   .fact-card {
@@ -537,7 +539,7 @@ onMounted(() => {
   }
 
   .team-card {
-    padding: 1.75rem 2rem;
+    padding: 1.5rem 2rem;
   }
 
   .priority-item {
@@ -550,6 +552,14 @@ onMounted(() => {
 }
 
 @media (min-width: 1024px) {
+  .hero-title {
+    font-size: 4rem;
+  }
+
+  .section-title {
+    font-size: 2.75rem;
+  }
+
   .section-container {
     padding: 6rem 2rem;
   }
