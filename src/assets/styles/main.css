@@ -36,41 +36,18 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  /* Cream paper background */
-  --background: oklch(0.975 0.018 85);
-  --foreground: oklch(0.22 0.04 165);
+  --bg: #09090b;
+  --panel: #111113;
+  --border: #27272a;
+  --text: #eaeaea;
+  --muted: #a1a1aa;
 
-  --card: oklch(0.99 0.012 85);
-  --card-foreground: oklch(0.22 0.04 165);
-  --popover: oklch(0.99 0.012 85);
-  --popover-foreground: oklch(0.22 0.04 165);
-
-  /* Deep teal — Buddhist temple lacquer */
-  --primary: oklch(0.32 0.05 180);
-  --primary-foreground: oklch(0.975 0.018 85);
-
-  /* Saffron robe */
-  --saffron: oklch(0.72 0.16 55);
-  --clay: oklch(0.55 0.13 45);
-  --leaf: oklch(0.52 0.09 145);
-  --cream: oklch(0.96 0.025 85);
-
-  --secondary: oklch(0.93 0.025 85);
-  --secondary-foreground: oklch(0.32 0.05 180);
-  --muted: oklch(0.93 0.022 85);
-  --muted-foreground: oklch(0.45 0.03 165);
-  --accent: oklch(0.72 0.16 55);
-  --accent-foreground: oklch(0.99 0.012 85);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.88 0.025 75);
-  --input: oklch(0.88 0.025 75);
-  --ring: oklch(0.72 0.16 55);
-
-  --shadow-soft: 0 10px 40px -15px oklch(0.32 0.05 180 / 0.25);
-  --gradient-warm: linear-gradient(135deg, oklch(0.72 0.16 55), oklch(0.55 0.13 45));
-  --gradient-deep: linear-gradient(160deg, oklch(0.32 0.05 180), oklch(0.22 0.04 165));
+  /* Brand colors — inspired by the green + gold + white logo */
+  --white: #FFFFFF;
+  --green: #3A7D44;
+  --green-dark: #1B4332;
+  --green-light: #52B788;
+  --gold: #D4A017;
 }
 
 .dark {

@@ -60,11 +60,31 @@ const stats = [
 ]
 
 const timelineItems = [
-  { year: '1994', title: 'Founding', description: 'Santi Sena is established to support rural communities with practical development programs.' },
-  { year: '2002', title: 'First community forestry', description: 'The organisation expands its work around forest stewardship and local ownership.' },
-  { year: '2008', title: 'Saving-for-Change', description: 'Household savings groups begin to strengthen financial resilience and local entrepreneurship.' },
-  { year: '2014', title: '20-year horizon', description: 'Programs deepen across education, livelihoods and environmental protection.' },
-  { year: '2024', title: 'Today', description: 'The organisation continues to support resilient, community-led change at scale.' },
+  {
+    year: '1994',
+    title: 'Founding',
+    description: 'Santi Sena is established to support rural communities with practical development programs.',
+  },
+  {
+    year: '2002',
+    title: 'First community forestry',
+    description: 'The organisation expands its work around forest stewardship and local ownership.',
+  },
+  {
+    year: '2008',
+    title: 'Saving-for-Change',
+    description: 'Household savings groups begin to strengthen financial resilience and local entrepreneurship.',
+  },
+  {
+    year: '2014',
+    title: '20-year horizon',
+    description: 'Programs deepen across education, livelihoods and environmental protection.',
+  },
+  {
+    year: '2024',
+    title: 'Today',
+    description: 'The organisation continues to support resilient, community-led change at scale.',
+  },
 ]
 
 const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Children', 'ActionAid', 'Care']
@@ -93,7 +113,7 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
       </div>
     </section>
 
-    <section class="stats-section">
+    <section id="numbers" class="stats-section">
       <div class="stats-grid">
         <article v-for="stat in stats" :key="stat.label" class="stat-card">
           <div class="stat-value">{{ stat.value }}</div>
@@ -103,7 +123,7 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
       </div>
     </section>
 
-    <section class="timeline-section">
+    <section id="timeline" class="timeline-section">
       <div class="timeline-shell">
         <span class="eyebrow">Timeline</span>
         <h2>A journey rooted in patience.</h2>
@@ -120,7 +140,7 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
       </div>
     </section>
 
-    <section class="partners-section">
+    <section id="partners" class="partners-section">
       <div class="partners-heading">
         <span class="eyebrow">Financial stewardship</span>
         <h2>Trusted by partners across the world.</h2>
@@ -165,8 +185,6 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
 
 .hero-overlay {
   position: absolute;
-  /* height: 1200px; */
-  /* width: 3px; */
   inset: 0;
   background: linear-gradient(135deg, rgba(122, 201, 165, 0.92), rgba(87, 100, 99, 0.72), rgba(39, 143, 107, 0.72));
   z-index: 0;
@@ -175,7 +193,7 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
 .hero-content {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 5rem 1.5rem;
   color: #fffdf8;
@@ -211,10 +229,6 @@ h1 {
   color: rgba(255, 253, 248, 0.85);
 }
 
-.hero-grid {
-  display: none;
-}
-
 .hero-images {
   position: absolute;
   inset: 0;
@@ -232,21 +246,6 @@ h1 {
 
 .hero-background.active {
   opacity: 1;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 5rem 1.5rem;
-  color: #fffdf8;
-}
-
-@media (max-width: 640px) {
-  .hero-content {
-    padding: 3rem 1.25rem;
-  }
 }
 
 .stats-section,
