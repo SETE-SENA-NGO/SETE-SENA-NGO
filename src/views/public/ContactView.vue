@@ -57,11 +57,17 @@ textarea {
 }
 .primary {
   justify-self: start;
-  background: #27272a;
-  border: 1px solid #3f3f46;
-  color: var(--text);
-  padding: 0.55rem 0.9rem;
+  background: var(--green);
+  border: 1px solid var(--green-dark);
+  color: #fff;
+  padding: 0.55rem 1.2rem;
   border-radius: 0.45rem;
   cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.15s;
+}
+.primary:hover {
+  background: var(--green-dark);
+  transform: translateY(-1px);
 }
 </style>

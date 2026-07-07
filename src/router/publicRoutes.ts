@@ -8,6 +8,7 @@ import ContactView from '@/views/public/ContactView.vue'
 export const publicRoutes = [
   { path: '/', component: HomeView },
   { path: '/about', component: AboutView },
+  { path: '/about/organization', component: AboutView },
   { path: '/services', component: ServicesView },
   { path: '/impact', component: ImpactView },
   { path: '/get-involved', component: GetInvolvedView },
