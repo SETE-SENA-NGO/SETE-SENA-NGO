@@ -13,16 +13,16 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
-  if (to.meta.requiresAuth) {
-    const auth = useAuthStore()
-    if (!auth.initialized) {
-      await auth.init()
-    }
-    if (!auth.isAuthenticated) {
-      return { name: 'admin-login', query: { redirect: to.fullPath } }
-    }
-  }
-})
+// router.beforeEach(async (to) => {
+//   if (to.meta.requiresAuth) {
+//     const auth = useAuthStore()
+//     if (!auth.initialized) {
+//       await auth.init()
+//     }
+//     if (!auth.isAuthenticated) {
+//       return { name: 'admin-login', query: { redirect: to.fullPath } }
+//     }
+//   }
+// })
 
 export default router
