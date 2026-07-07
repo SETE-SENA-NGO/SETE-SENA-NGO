@@ -1,6 +1,40 @@
 <script setup lang="ts">
-import heroImage from '@/assets/hero-impact.jpg'
+import { onBeforeUnmount, ref } from 'vue'
+import heroImage1 from '@/assets/hero-impact.jpg'
+import heroImage2 from '@/assets/hero-impact-village.jpg'
+import heroImage3 from '@/assets/hero-impact-forest.jpg'
+
 // import CallToAction from '@/components/CallToAction.vue'
+
+const heroImages = [heroImage1, heroImage2, heroImage3]
+const activeHeroIndex = ref(0)
+let slideTimer: number | undefined
+
+const isReducedMotion = () => {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
+}
+
+const startSlideshow = () => {
+  if (isReducedMotion()) return
+  stopSlideshow()
+  slideTimer = window.setInterval(() => {
+    activeHeroIndex.value = (activeHeroIndex.value + 1) % heroImages.length
+  }, 5000)
+}
+
+const stopSlideshow = () => {
+  if (slideTimer) {
+    window.clearInterval(slideTimer)
+    slideTimer = undefined
+  }
+}
+
+onBeforeUnmount(() => {
+  stopSlideshow()
+})
+
+
 
 const events = [
   {
@@ -59,8 +93,18 @@ const events = [
 
 <template>
   <div class="timeline-page">
-    <section class="hero-section">
-      <img :src="heroImage" alt="Rural Cambodian landscape at dawn" class="hero-image" />
+<section class="hero-section" @mouseenter="stopSlideshow" @mouseleave="startSlideshow" aria-label="Impact background slideshow">
+      <div class="hero-slideshow">
+        <img
+          v-for="(img, index) in heroImages"
+          :key="img"
+          :src="img"
+          :alt="'Impact background ' + (index + 1)"
+          class="hero-image"
+          :class="{ 'is-active': index === activeHeroIndex }"
+          draggable="false"
+        />
+      </div>
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Impact · Timeline</span>
@@ -132,13 +176,36 @@ const events = [
   align-items: center;
 }
 
+.hero-slideshow {
+  position: absolute;
+  inset: 0;
+}
+
 .hero-image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
+  transition: opacity 900ms ease-in-out;
 }
+
+.hero-image.is-active {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-image {
+    transition: none;
+    opacity: 0;
+  }
+
+  .hero-image.is-active {
+    opacity: 1;
+  }
+}
+
 
 .hero-overlay {
   position: absolute;
