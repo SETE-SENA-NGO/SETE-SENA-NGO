@@ -4,8 +4,8 @@ import ContentBlock from '@/components/public/ContentBlock.vue'
 
 <template>
   <div class="public-page">
-    <ContentBlock title="Impact">
-      <p>293 villages reached since 1994, with milestones and partners tracked here.</p>
+    <ContentBlock title="Get Involved">
+      <p>Support, partner with, or volunteer alongside Santi Sena's field programs.</p>
     </ContentBlock>
   </div>
 </template>

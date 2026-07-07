@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, useRoute } from 'vue-router'
+import { useUiStore } from '@/stores/ui.store'
 
 const route = useRoute()
+const ui = useUiStore()
 const links = [
   { to: '/admin', label: 'Dashboard' },
   { to: '/admin/pages', label: 'Pages' },
@@ -11,7 +13,8 @@ const links = [
 </script>
 
 <template>
-  <aside class="admin-sidebar">
+  <div class="backdrop" v-show="ui.sidebarOpen" @click="ui.closeSidebar"></div>
+  <aside :class="['admin-sidebar', { open: ui.sidebarOpen }]">
     <div class="brand">Admin</div>
     <nav>
       <RouterLink
@@ -19,25 +22,38 @@ const links = [
         :key="link.to"
         :to="link.to"
         :class="['link', { active: route.path === link.to }]"
+        @click="ui.closeSidebar"
       >
         <span>{{ link.label }}</span>
       </RouterLink>
     </nav>
     <div class="bottom">
-      <RouterLink class="link" to="/">Back to site</RouterLink>
+      <RouterLink class="link" to="/" @click="ui.closeSidebar">Back to site</RouterLink>
     </div>
   </aside>
 </template>
 
 <style scoped>
 .admin-sidebar {
-  width: 260px;
+  width: max(10%, 180px);
   border-right: 1px solid var(--border);
   background: var(--panel);
   display: flex;
   flex-direction: column;
   position: fixed;
   inset: 0 auto 0 0;
+  z-index: 60;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+}
+.admin-sidebar.open {
+  transform: translateX(0);
+}
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 55;
 }
 .brand {
   padding: 1.25rem 1rem;
@@ -66,5 +82,13 @@ nav {
 .bottom {
   padding: 1rem;
   border-top: 1px solid var(--border);
+}
+@media (min-width: 900px) {
+  .admin-sidebar {
+    transform: none;
+  }
+  .backdrop {
+    display: none;
+  }
 }
 </style>

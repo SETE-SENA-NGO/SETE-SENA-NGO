@@ -21,8 +21,8 @@ const props = withDefaults(defineProps<Props>(), {
         </h2>
       </div>
 
-      <button
-        type="button"
+      <router-link
+        :to="props.href"
         class="group inline-flex h-14 items-center justify-center rounded-full bg-[#F68B1F] px-8 text-base font-semibold text-white shadow-[0_10px_30px_rgba(246,139,31,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#E07A13] hover:shadow-[0_14px_34px_rgba(246,139,31,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F68B1F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F9F3E8]"
       >
         <span>{{ props.buttonLabel }}</span>
@@ -35,7 +35,7 @@ const props = withDefaults(defineProps<Props>(), {
         >
           <path d="M4.16675 10H15.8334M15.8334 10L10.8334 5M15.8334 10L10.8334 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-      </button>
+      </router-link>
     </div>
   </section>
 </template>

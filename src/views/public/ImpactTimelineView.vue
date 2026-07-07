@@ -105,7 +105,6 @@ const events = [
        <section class="cta-block">
     <div class="cta-content">
       <h3>Ready to take the next step?</h3>
-
       <RouterLink to="/impact/partners" class="hero-link primary">
         Meet our partners
         <span>→</span>
@@ -122,6 +121,7 @@ const events = [
   min-height: 100vh;
   background: #fdf8ee;
   color: #2f241d;
+
 }
 
 .hero-section {
@@ -235,19 +235,18 @@ h1 {
 
 .cta-block {
   width: 100%;
-  padding: 5rem 2rem;
-  background: #f8f2e6;
+  padding: 1.25rem 0 0;
+  background: transparent;
   border-top: 1px solid #e5d8c6;
 }
 
 .cta-content {
   max-width: 1200px;
   margin: 0 auto;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .cta-content h3 {
