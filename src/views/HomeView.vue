@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
 const stats = [
@@ -7,11 +8,48 @@ const stats = [
   { value: '30+', label: 'Years of Service' },
   { value: '10+', label: 'International Partners' },
 ]
+
+const heroSlides = [
+  { label: 'Natural Resource & Environment', gradient: 'linear-gradient(135deg, #4a7a5c 0%, #1e3d2c 100%)' },
+  { label: 'Access to Education', gradient: 'linear-gradient(135deg, #c98a4a 0%, #7a4a22 100%)' },
+  { label: 'Livelihood & Economic Improvement', gradient: 'linear-gradient(135deg, #b0522c 0%, #6b2f18 100%)' },
+  { label: 'Child Protection', gradient: 'linear-gradient(135deg, #3a6b7a 0%, #1c3540 100%)' },
+]
+
+const activeSlide = ref(0)
+let heroTimer: ReturnType<typeof setInterval> | undefined
+
+function goToSlide(index: number) {
+  activeSlide.value = index
+}
+
+function nextSlide() {
+  activeSlide.value = (activeSlide.value + 1) % heroSlides.length
+}
+
+onMounted(() => {
+  heroTimer = setInterval(nextSlide, 5000)
+})
+
+onUnmounted(() => {
+  if (heroTimer) clearInterval(heroTimer)
+})
 </script>
 
 <template>
   <div class="home-view">
     <section class="hero">
+      <div class="hero-slides">
+        <div
+          v-for="(slide, index) in heroSlides"
+          :key="slide.label"
+          class="hero-slide"
+          :class="{ active: index === activeSlide }"
+          :style="{ background: slide.gradient }"
+        />
+      </div>
+      <div class="hero-overlay" />
+
       <div class="hero-inner">
         <p class="eyebrow eyebrow--light">Buddhist NGO · Cambodia · Since 1994</p>
         <h1 class="hero-title">
@@ -26,6 +64,18 @@ const stats = [
           <RouterLink to="/contact" class="btn btn--primary">Support Us</RouterLink>
           <RouterLink to="/about" class="btn btn--outline">Stand with us</RouterLink>
         </div>
+      </div>
+
+      <div class="hero-dots">
+        <button
+          v-for="(slide, index) in heroSlides"
+          :key="'dot-' + slide.label"
+          type="button"
+          class="hero-dot"
+          :class="{ active: index === activeSlide }"
+          :aria-label="`Go to slide: ${slide.label}`"
+          @click="goToSlide(index)"
+        />
       </div>
     </section>
 
@@ -223,16 +273,67 @@ const stats = [
   align-items: flex-end;
   min-height: 640px;
   padding: 4rem 1.5rem;
+  overflow: hidden;
+  background: linear-gradient(180deg, #3a5847 0%, #1e3327 60%, #12201a 100%);
+}
+
+.hero-slides {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.hero-slide.active {
+  opacity: 1;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
   background:
     linear-gradient(115deg, rgba(8, 22, 16, 0.93) 0%, rgba(8, 22, 16, 0.6) 45%, rgba(8, 22, 16, 0.2) 78%),
-    radial-gradient(circle at 82% 25%, #4d6f56 0%, transparent 55%),
-    linear-gradient(180deg, #3a5847 0%, #1e3327 60%, #12201a 100%);
+    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.55) 0%, transparent 55%);
 }
 
 .hero-inner {
+  position: relative;
+  z-index: 1;
   max-width: 760px;
   margin: 0 auto 2rem 0;
   width: 100%;
+}
+
+.hero-dots {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.hero-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(253, 248, 239, 0.4);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.hero-dot.active {
+  background: var(--orange);
+  transform: scale(1.3);
 }
 
 .hero-title {
