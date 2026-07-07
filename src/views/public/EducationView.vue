@@ -171,9 +171,9 @@ onMounted(() => {
  * Deep forest greens, saffron gold accents, warm neutral text.
  */
 .edu-page {
-  --green-deep:      #0C2B1E;
-  --green:           #1A4A34;
-  --green-mid:       #276749;
+  --green-deep:      #a3cab9;
+  --green:           #a6c5b7;
+  --green-mid:       #d1ebdf;
   --green-soft:      #E8F0EB;
 
   --gold:            #C9950E;
