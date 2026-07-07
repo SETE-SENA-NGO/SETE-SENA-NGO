@@ -14,6 +14,7 @@ const menu = ref(false)
         <li><RouterLink to="/" @click="menu = false">Home</RouterLink></li>
         <li><RouterLink to="/about/vision" @click="menu = false">About Vision</RouterLink></li>
         <li><RouterLink to="/programs/environment" @click="menu = false">Programs</RouterLink></li>
+        <li><RouterLink to="/impact/partners" @click="menu = false">Impact Partners</RouterLink></li>
         <li><RouterLink to="/services" @click="menu = false">Services</RouterLink></li>
         <li><RouterLink to="/contact" @click="menu = false">Contact</RouterLink></li>
         <li><RouterLink to="/admin/login" @click="menu = false">Admin</RouterLink></li>

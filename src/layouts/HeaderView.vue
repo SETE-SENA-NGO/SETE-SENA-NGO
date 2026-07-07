@@ -35,7 +35,7 @@ const menus: Menu[] = [
     items: [
       { title: 'By the Numbers', desc: '293 villages reached since 1994.', to: '/impact#numbers' },
       { title: 'Timeline', desc: 'Milestones from 1994 to 2024.', to: '/impact#timeline' },
-      { title: 'Partners', desc: 'UNDP, ADB, Oxfam and more.', to: '/impact#partners' },
+      { title: 'Partners', desc: 'UNDP, ADB, Oxfam and more.', to: '/impact/partners' },
     ],
   },
   {
