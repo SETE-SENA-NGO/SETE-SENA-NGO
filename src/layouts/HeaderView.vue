@@ -13,15 +13,15 @@ const menus: Menu[] = [
     label: 'About',
     items: [
       { title: 'Our Story', desc: 'Founded 1994 — three decades walking with villages.', to: '/about#story' },
-      { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about#vision' },
-      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about#organization' },
+      { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about/vision' },
+      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about/organization' },
     ],
   },
   {
     label: 'Programs',
     items: [
       { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/services#education' },
-      { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/services#environment' },
+      { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/programs/environment' },
       { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/services#livelihood' },
       {
         title: 'Child Protection',
@@ -35,7 +35,7 @@ const menus: Menu[] = [
     items: [
       { title: 'By the Numbers', desc: '293 villages reached since 1994.', to: '/impact#numbers' },
       { title: 'Timeline', desc: 'Milestones from 1994 to 2024.', to: '/impact#timeline' },
-      { title: 'Partners', desc: 'UNDP, ADB, Oxfam and more.', to: '/impact#partners' },
+      { title: 'Partners', desc: 'UNDP, ADB, Oxfam and more.', to: '/impact/partners' },
     ],
   },
   {

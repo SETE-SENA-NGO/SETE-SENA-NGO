@@ -12,8 +12,10 @@ const menu = ref(false)
       <button class="nav-toggle" @click="menu = !menu" aria-label="Toggle menu">Menu</button>
       <ul :class="['nav-links', { open: menu }]">
         <li><RouterLink to="/" @click="menu = false">Home</RouterLink></li>
-        <li><RouterLink to="/about" @click="menu = false">About</RouterLink></li>
+        <li><RouterLink to="/about/vision" @click="menu = false">About Vision</RouterLink></li>
+        <li><RouterLink to="/programs/environment" @click="menu = false">Programs</RouterLink></li>
         <li><RouterLink to="/services" @click="menu = false">Services</RouterLink></li>
+        <li><RouterLink to="/impact/partners" @click="menu = false">Partners</RouterLink></li>
         <li><RouterLink to="/contact" @click="menu = false">Contact</RouterLink></li>
         <li><RouterLink to="/admin/login" @click="menu = false">Admin</RouterLink></li>
       </ul>
