@@ -191,7 +191,7 @@ onUnmounted(() => {
  * Gold (#D4A017 / saffron) represents Buddhism, wisdom, and the Dharma.
  */
 .about-page {
-  --about-primary: #3A7D44;
+  --about-primary: #1F472F;
   --about-primary-foreground: #FFFFFF;
   --about-saffron: #D4A017;
   --about-white: #FFFFFF;
@@ -199,6 +199,9 @@ onUnmounted(() => {
   --about-border: #E5E7EB;
   --about-panel: #FFFFFF;
   --about-bg-alt: #F3F7F4;
+  --about-cream: #0e311c;
+  --about-surface: color-mix(in srgb, var(--about-primary) 90%, white);
+  --about-surface-strong: color-mix(in srgb, var(--about-primary) 82%, white);
 }
 
 /* ─── Shared ─── */
@@ -228,6 +231,7 @@ onUnmounted(() => {
   isolation: isolate;
   overflow: hidden;
   border-bottom: 1px solid color-mix(in srgb, var(--about-primary) 40%, transparent);
+  background: var(--about-primary);
 }
 
 .slides {
@@ -259,6 +263,12 @@ onUnmounted(() => {
   background:
     linear-gradient(to right, rgba(0, 0, 0, 0.50) 0%, rgba(0, 0, 0, 0.20) 45%, rgba(0, 0, 0, 0.05) 70%, transparent 100%),
     linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 40%, rgba(0, 0, 0, 0.10) 100%);
+  z-index: -10;
+  /* darker subtle gradient overlay to keep the hero firmly dark green */
+  background: linear-gradient(135deg,
+      rgba(0, 0, 0, 0.28) 0%,
+      rgba(0, 0, 0, 0.18) 50%,
+      rgba(0, 0, 0, 0.08) 100%);
 }
 
 .hero-content {
@@ -299,6 +309,11 @@ onUnmounted(() => {
 .vmg-card {
   display: flex;
   flex-direction: column;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: var(--about-surface);
+  color: var(--about-primary-foreground);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .vmg-heading {
@@ -310,6 +325,7 @@ onUnmounted(() => {
 
 .vmg-body {
   color: var(--about-muted);
+  color: var(--about-primary-foreground);
   line-height: 1.75;
   margin: 0;
   font-size: 1rem;
@@ -354,6 +370,12 @@ onUnmounted(() => {
 .value-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid color-mix(in srgb, var(--about-primary-foreground) 20%, transparent);
+  background: var(--about-surface-strong);
+  padding: 1.5rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  color: var(--about-primary-foreground);
 }
 
 .value-name {
@@ -366,6 +388,7 @@ onUnmounted(() => {
 .value-body {
   font-size: 0.9rem;
   color: var(--about-muted);
+  color: var(--about-primary-foreground);
   line-height: 1.65;
   margin: 0;
 }
@@ -392,6 +415,7 @@ onUnmounted(() => {
 .org-body {
   margin-top: 1.5rem;
   color: var(--about-muted);
+  color: var(--about-primary-foreground);
   line-height: 1.75;
   font-size: 1rem;
 }
@@ -417,6 +441,10 @@ onUnmounted(() => {
 .team-card:hover {
   transform: translateX(4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  background: var(--about-surface);
+  padding: 1.5rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  color: var(--about-primary-foreground);
 }
 
 .team-role {
@@ -429,6 +457,7 @@ onUnmounted(() => {
   margin-top: 0.25rem;
   font-size: 0.9rem;
   color: var(--about-muted);
+  color: var(--about-primary-foreground);
   line-height: 1.65;
 }
 

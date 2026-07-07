@@ -1,47 +1,50 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import FlagUK from '@/components/icons/FlagUK.vue'
 import FlagKH from '@/components/icons/FlagKH.vue'
 import logoUrl from '@/assets/logo.png'
 
 type MenuItem = { title: string; desc: string; to: string }
-type Menu = { label: string; items: MenuItem[] }
+type Menu = { label: string; to?: string; items: MenuItem[] }
 
 const menus: Menu[] = [
   {
     label: 'About',
     items: [
       { title: 'Our Story', desc: 'Founded 1994 — three decades walking with villages.', to: '/about#story' },
-      { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about#vision' },
-      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about#organization' },
+      { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about/vision' },
+      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about/organization' },
     ],
   },
   {
     label: 'Programs',
+    to: '/programs',
     items: [
-      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/services#education' },
-      { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/services#environment' },
-      { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/services#livelihood' },
+      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/programs/education' },
+      { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/programs/environment' },
+      { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/programs/livelihood' },
       {
         title: 'Child Protection',
         desc: 'Safeguarding and community-led care.',
-        to: '/services#child-protection',
+        to: '/programs/child-protection',
       },
     ],
   },
   {
     label: 'Impact',
+    to: '/impact',
     items: [
-      { title: 'By the Numbers', desc: '293 villages reached since 1994.', to: '/impact#numbers' },
-      { title: 'Timeline', desc: 'Milestones from 1994 to 2024.', to: '/impact#timeline' },
-      { title: 'Partners', desc: 'UNDP, ADB, Oxfam and more.', to: '/impact#partners' },
+      { title: 'Numbers', desc: '293 villages reached since 1994.', to: '/impact/numbers' },
+      { title: 'Timeline', desc: 'Milestones from 1994 to 2024.', to: '/impact/timeline' },
+      { title: 'Partners', desc: 'UNDP, ADB, Oxfam and more.', to: '/impact/partners' },
     ],
   },
   {
     label: 'Get Involved',
+    to: '/get-involved',
     items: [
-      { title: 'Support Us', desc: 'Single gifts that water dozens of households.', to: '/get-involved#support' },
+      { title: 'Support Us', desc: 'Support community programs in Svay Rieng and Prey Veng.', to: '/get-involved/donate' },
       { title: 'Partner', desc: 'Co-design multi-year community programs.', to: '/get-involved#partner' },
       { title: 'Volunteer', desc: 'Bring your skills to a field project.', to: '/get-involved#volunteer' },
     ],
@@ -49,9 +52,9 @@ const menus: Menu[] = [
   {
     label: 'Contact',
     items: [
-      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact#head-office' },
-      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact#field-offices' },
-      { title: 'Write to Us', desc: 'Send a message — we read every letter.', to: '/contact#write' },
+      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact/headoffice' },
+      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact/fieldoffice' },
+      { title: 'Write to Us', desc: 'Send a message - we read every letter.', to: '/contact#write' },
     ],
   },
 ]
@@ -60,7 +63,7 @@ type Language = { code: 'en' | 'km'; label: string }
 
 const languages: Language[] = [
   { code: 'en', label: 'English' },
-  { code: 'km', label: 'ខ្មែរ' },
+  { code: 'km', label: 'Khmer' },
 ]
 
 const flagIcons = { en: FlagUK, km: FlagKH }
@@ -70,6 +73,14 @@ const langOpen = ref(false)
 const mobileOpen = ref(false)
 const currentLang = ref<Language>({ code: 'en', label: 'English' })
 const rootEl = ref<HTMLElement | null>(null)
+const route = useRoute()
+
+function isMenuActive(menu: Menu) {
+  return menu.items.some((item) => {
+    const itemPath = item.to.split('#')[0]
+    return route.path === itemPath || route.path.startsWith(`${itemPath}/`)
+  })
+}
 
 function activateMenu(label: string) {
   openMenu.value = label
@@ -120,54 +131,73 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
         </span>
         <span class="brand-text">
           <span class="brand-name">Santi Sena</span>
-          <span class="brand-tag">Peace Army · Cambodia</span>
+          <span class="brand-tag">Peace Army . Cambodia</span>
         </span>
       </RouterLink>
 
       <nav class="main-nav">
         <RouterLink to="/" class="nav-link" @click="closeAll">Home</RouterLink>
 
-        <div
-          v-for="menu in menus"
-          :key="menu.label"
-          class="nav-item"
-          @mouseenter="activateMenu(menu.label)"
-          @mouseleave="deactivateMenu(menu.label)"
-        >
-          <button
-            type="button"
-            class="nav-link nav-link--trigger"
-            :class="{ 'is-open': openMenu === menu.label }"
-            @click.stop="activateMenu(menu.label)"
+        <template v-for="menu in menus" :key="menu.label">
+          <div
+            class="nav-item"
+            @mouseenter="activateMenu(menu.label)"
+            @mouseleave="deactivateMenu(menu.label)"
           >
-            {{ menu.label }}
-            <svg class="chevron" viewBox="0 0 12 8" fill="none">
-              <path
-                d="M1 1.5L6 6.5L11 1.5"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
+            <RouterLink
+              v-if="menu.to"
+              :to="menu.to"
+              class="nav-link nav-link--trigger"
+              :class="{ 'is-open': openMenu === menu.label }"
+              @click="closeAll"
+            >
+              {{ menu.label }}
+              <svg class="chevron" viewBox="0 0 12 8" fill="none">
+                <path
+                  d="M1 1.5L6 6.5L11 1.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </RouterLink>
+            <button
+              v-else
+              type="button"
+              class="nav-link nav-link--trigger"
+              :class="{ 'is-open': openMenu === menu.label }"
+              @click.stop="activateMenu(menu.label)"
+            >
+              {{ menu.label }}
+              <svg class="chevron" viewBox="0 0 12 8" fill="none">
+                <path
+                  d="M1 1.5L6 6.5L11 1.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
 
-          <div class="mega-menu" v-show="openMenu === menu.label">
-            <div class="mega-menu-card">
-              <p class="mega-label">{{ menu.label }}</p>
-              <RouterLink
-                v-for="item in menu.items"
-                :key="item.title"
-                :to="item.to"
-                class="mega-item"
-                @click="closeAll"
-              >
-                <span class="mega-item-title">{{ item.title }}</span>
-                <span class="mega-item-desc">{{ item.desc }}</span>
-              </RouterLink>
+            <div class="mega-menu" v-show="openMenu === menu.label">
+              <div class="mega-menu-card">
+                <p class="mega-label">{{ menu.label }}</p>
+                <RouterLink
+                  v-for="item in menu.items"
+                  :key="item.title"
+                  :to="item.to"
+                  class="mega-item"
+                  @click="closeAll"
+                >
+                  <span class="mega-item-title">{{ item.title }}</span>
+                  <span class="mega-item-desc">{{ item.desc }}</span>
+                </RouterLink>
+              </div>
             </div>
           </div>
-        </div>
+        </template>
       </nav>
 
       <div class="header-actions">
@@ -200,9 +230,9 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           </div>
         </div>
 
-        <RouterLink to="/get-involved" class="btn-support btn-support--desktop" @click="closeAll">
+        <RouterLink to="/qr-donate" class="btn-support btn-support--desktop" @click="closeAll">
           Support Us
-          <span aria-hidden="true">→</span>
+          <span aria-hidden="true">-&gt;</span>
         </RouterLink>
 
         <button type="button" class="mobile-toggle" aria-label="Toggle menu" @click="mobileOpen = !mobileOpen">
@@ -216,7 +246,15 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
     <div class="mobile-nav" v-show="mobileOpen">
       <RouterLink to="/" class="mobile-link" @click="closeAll">Home</RouterLink>
       <div v-for="menu in menus" :key="'m-' + menu.label" class="mobile-group">
-        <p class="mobile-group-label">{{ menu.label }}</p>
+        <RouterLink
+          v-if="menu.to"
+          :to="menu.to"
+          class="mobile-group-label mobile-group-link"
+          @click="closeAll"
+        >
+          {{ menu.label }}
+        </RouterLink>
+        <p v-else class="mobile-group-label">{{ menu.label }}</p>
         <RouterLink
           v-for="item in menu.items"
           :key="'m-' + item.title"
@@ -227,7 +265,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           {{ item.title }}
         </RouterLink>
       </div>
-      <RouterLink to="/get-involved" class="btn-support btn-support--mobile" @click="closeAll">
+      <RouterLink to="/get-involved/donate" class="btn-support btn-support--mobile" @click="closeAll">
         Support Us →
       </RouterLink>
     </div>
@@ -339,6 +377,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .nav-link:hover,
 .nav-link.is-open,
+.nav-link.is-active,
 .nav-link.router-link-exact-active {
   color: var(--orange);
   border-bottom-color: var(--orange);
@@ -394,6 +433,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .mega-item-title {
+  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1rem;
   color: var(--green);
@@ -537,6 +577,11 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--orange);
+}
+
+.mobile-group-link {
+  display: block;
+  text-decoration: none;
 }
 
 .mobile-link--sub {
