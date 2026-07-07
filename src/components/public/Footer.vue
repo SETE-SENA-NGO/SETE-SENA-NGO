@@ -13,8 +13,8 @@
 
 <style scoped>
 .public-footer {
-  border-top: 2px solid var(--green-dark);
-  background: var(--panel);
+  border-top: 2px solid #1F4223;
+  background: #0F1F17;
   margin-top: auto;
 }
 .public-footer-inner {
@@ -25,14 +25,15 @@
   flex-direction: column;
   gap: 0.5rem;
   align-items: center;
-  color: var(--white);
+  color: #FFFFFF;
 }
 .footer-links a {
-  color: var(--muted);
+  color: #9CA3AF;
   transition: color 0.2s;
+  text-decoration: none;
 }
 .footer-links a:hover {
-  color: var(--gold);
+  color: #D4A017;
 }
 @media (min-width: 640px) {
   .public-footer-inner {

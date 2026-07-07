@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import FlagUK from '@/components/icons/FlagUK.vue'
 import FlagKH from '@/components/icons/FlagKH.vue'
 import logoUrl from '@/assets/logo.png'
@@ -14,27 +14,29 @@ const menus: Menu[] = [
     items: [
       { title: 'Our Story', desc: 'Founded 1994 — three decades walking with villages.', to: '/about#story' },
       { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about/vision' },
-      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about#organization' },
+      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about/organization' },
     ],
   },
   {
     label: 'Programs',
+    to: '/programs',
     items: [
-      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/services#education' },
+      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/programs/education' },
       { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/programs/environment' },
-      { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/services#livelihood' },
+      { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/programs/livelihood' },
       {
         title: 'Child Protection',
         desc: 'Safeguarding and community-led care.',
-        to: '/services#child-protection',
+        to: '/programs/child-protection',
       },
     ],
   },
   {
     label: 'Impact',
+    to: '/impact',
     items: [
-      { title: 'By the Numbers', desc: '293 villages reached since 1994.', to: '/impact#numbers' },
-      { title: 'Timeline', desc: 'Milestones from 1994 to 2024.', to: '/impact#timeline' },
+      { title: 'Numbers', desc: '293 villages reached since 1994.', to: '/impact/numbers' },
+      { title: 'Timeline', desc: 'Milestones from 1994 to 2024.', to: '/impact/timeline' },
       { title: 'Partners', desc: 'UNDP, ADB, Oxfam and more.', to: '/impact/partners' },
     ],
   },
@@ -50,9 +52,9 @@ const menus: Menu[] = [
   {
     label: 'Contact',
     items: [
-      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact#head-office' },
-      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact#field-offices' },
-      { title: 'Write to Us', desc: 'Send a message — we read every letter.', to: '/contact#write' },
+      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact/headoffice' },
+      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact/fieldoffice' },
+      { title: 'Write to Us', desc: 'Send a message - we read every letter.', to: '/contact#write' },
     ],
   },
 ]
@@ -61,7 +63,7 @@ type Language = { code: 'en' | 'km'; label: string }
 
 const languages: Language[] = [
   { code: 'en', label: 'English' },
-  { code: 'km', label: 'ខ្មែរ' },
+  { code: 'km', label: 'Khmer' },
 ]
 
 const flagIcons = { en: FlagUK, km: FlagKH }
@@ -71,6 +73,14 @@ const langOpen = ref(false)
 const mobileOpen = ref(false)
 const currentLang = ref<Language>({ code: 'en', label: 'English' })
 const rootEl = ref<HTMLElement | null>(null)
+const route = useRoute()
+
+function isMenuActive(menu: Menu) {
+  return menu.items.some((item) => {
+    const itemPath = item.to.split('#')[0]
+    return route.path === itemPath || route.path.startsWith(`${itemPath}/`)
+  })
+}
 
 function activateMenu(label: string) {
   openMenu.value = label
@@ -121,7 +131,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
         </span>
         <span class="brand-text">
           <span class="brand-name">Santi Sena</span>
-          <span class="brand-tag">Peace Army · Cambodia</span>
+          <span class="brand-tag">Peace Army . Cambodia</span>
         </span>
       </RouterLink>
 
@@ -220,9 +230,9 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           </div>
         </div>
 
-        <RouterLink to="/get-involved/donate" class="btn-support btn-support--desktop" @click="closeAll">
+        <RouterLink to="/qr-donate" class="btn-support btn-support--desktop" @click="closeAll">
           Support Us
-          <span aria-hidden="true">→</span>
+          <span aria-hidden="true">-&gt;</span>
         </RouterLink>
 
         <button type="button" class="mobile-toggle" aria-label="Toggle menu" @click="mobileOpen = !mobileOpen">
@@ -367,6 +377,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .nav-link:hover,
 .nav-link.is-open,
+.nav-link.is-active,
 .nav-link.router-link-exact-active {
   color: var(--orange);
   border-bottom-color: var(--orange);
@@ -422,6 +433,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .mega-item-title {
+  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1rem;
   color: var(--green);
