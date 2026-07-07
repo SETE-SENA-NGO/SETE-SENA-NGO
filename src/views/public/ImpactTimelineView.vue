@@ -149,10 +149,11 @@ const events = [
        <section class="cta-block">
     <div class="cta-content">
       <h3>Ready to take the next step?</h3>
-      <RouterLink to="/impact/partners" class="hero-link primary">
-        Meet our partners
+      <RouterLink to="/impact" class="hero-link primary">
+        Back to impact
         <span>→</span>
       </RouterLink>
+
     </div>
   </section>
       </div>
