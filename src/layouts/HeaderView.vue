@@ -13,20 +13,21 @@ const menus: Menu[] = [
     label: 'About',
     items: [
       { title: 'Our Story', desc: 'Founded 1994 — three decades walking with villages.', to: '/about#story' },
-      { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about#vision' },
-      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about#organization' },
+      { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about/vision' },
+      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about/organization' },
     ],
   },
   {
     label: 'Programs',
+    to: '/programs',
     items: [
-      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/services#education' },
-      { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/services#environment' },
-      { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/services#livelihood' },
+      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/programs' },
+      { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/programs/environment' },
+      { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/programs/livelihood' },
       {
         title: 'Child Protection',
         desc: 'Safeguarding and community-led care.',
-        to: '/services#child-protection',
+        to: '/programs/child-protection',
       },
     ],
   },
@@ -221,7 +222,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           </div>
         </div>
 
-        <RouterLink to="/get-involved/donate" class="btn-support btn-support--desktop" @click="closeAll">
+        <RouterLink to="/qr-donate" class="btn-support btn-support--desktop" @click="closeAll">
           Support Us
           <span aria-hidden="true">→</span>
         </RouterLink>
