@@ -21,7 +21,7 @@ const menus: Menu[] = [
     label: 'Programs',
     to: '/programs',
     items: [
-      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/programs' },
+      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/programs/education' },
       { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/programs/environment' },
       { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/programs/livelihood' },
       {
