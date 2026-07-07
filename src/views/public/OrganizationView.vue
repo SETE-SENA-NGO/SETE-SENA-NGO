@@ -104,7 +104,8 @@ onMounted(() => {
             <div class="team-icon">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-                <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
               </svg>
             </div>
             <div class="team-card-body">
@@ -138,8 +139,10 @@ onMounted(() => {
         <div class="accountability-card">
           <div class="accountability-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor" stroke-width="2" />
+              <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor"
+                stroke-width="2" />
             </svg>
           </div>
           <p class="accountability-text">
@@ -184,6 +187,23 @@ onMounted(() => {
   --text-muted:      #8B9A91;
   --text-on-hero:    rgba(255, 255, 255, 0.88);
   --text-on-green:   rgba(255, 255, 255, 0.92);
+  --org-primary: #1B4332;
+  --org-primary-light: #2D6A4F;
+  --org-primary-deep: #143A25;
+  --org-saffron: #C9950E;
+  --org-saffron-bg: #FDF6E3;
+
+  --org-text-heading: #111827;
+  --org-text-body: #374151;
+  --org-text-muted: #6B7280;
+  --org-text-soft: #9CA3AF;
+
+  --org-white: #FFFFFF;
+  --org-bg: #F9FAFB;
+  --org-bg-alt: #F3F6F3;
+  --org-card-bg: #FFFFFF;
+  --org-card-alt: #F8FAF8;
+  --org-border: #E5E7EB;
 }
 
 /* ─── Shared ─── */
@@ -319,11 +339,13 @@ onMounted(() => {
   padding: 3rem 1.5rem 4.5rem;
   display: grid;
   gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .fact-card {
   text-align: center;
   padding: 2.5rem 1.75rem;
+  padding: 3rem 2rem;
   border-radius: 1rem;
   background: var(--warm-card);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
@@ -535,7 +557,7 @@ onMounted(() => {
   }
 
   .fact-card {
-    padding: 2.5rem 2rem;
+    padding: 3.5rem 2.5rem;
   }
 
   .team-card {

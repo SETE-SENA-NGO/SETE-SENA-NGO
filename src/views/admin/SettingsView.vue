@@ -30,8 +30,12 @@ const auth = useAuthStore()
 }
 .main {
   flex: 1;
-  margin-left: 260px;
   padding: 1.5rem;
   max-width: 1200px;
+}
+@media (min-width: 900px) {
+  .main {
+    margin-left: max(10%, 180px);
+  }
 }
 </style>

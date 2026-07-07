@@ -11,11 +11,30 @@ const menu = ref(false)
       <RouterLink to="/" class="brand">Santi Sena NGO</RouterLink>
       <button class="nav-toggle" @click="menu = !menu" aria-label="Toggle menu">Menu</button>
       <ul :class="['nav-links', { open: menu }]">
+<<<<<<< HEAD
         <li><RouterLink to="/">Home</RouterLink></li>
         <li><RouterLink to="/about">About</RouterLink></li>
+        <li class="has-dropdown">
+          <RouterLink to="/programs">Programs</RouterLink>
+          <ul class="dropdown">
+            <li><a href="/programs#education">Education</a></li>
+            <li><a href="/programs#environment">Environment</a></li>
+            <li><a href="/programs#livelihood">Livelihood</a></li>
+            <li><a href="/programs#child-protection">Child Protection</a></li>
+          </ul>
+        </li>
         <li><RouterLink to="/services">Services</RouterLink></li>
         <li><RouterLink to="/contact">Contact</RouterLink></li>
         <li><RouterLink to="/admin/login">Admin</RouterLink></li>
+=======
+        <li><RouterLink to="/" @click="menu = false">Home</RouterLink></li>
+        <li><RouterLink to="/about/vision" @click="menu = false">About Vision</RouterLink></li>
+        <li><RouterLink to="/programs/environment" @click="menu = false">Programs</RouterLink></li>
+        <li><RouterLink to="/services" @click="menu = false">Services</RouterLink></li>
+        <li><RouterLink to="/impact/partners" @click="menu = false">Partners</RouterLink></li>
+        <li><RouterLink to="/contact" @click="menu = false">Contact</RouterLink></li>
+        <li><RouterLink to="/admin/login" @click="menu = false">Admin</RouterLink></li>
+>>>>>>> develop
       </ul>
     </div>
   </nav>
@@ -40,11 +59,11 @@ const menu = ref(false)
 .brand {
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--white);
-  transition: color 0.2s;
+  transition: color 0.2s ease;
 }
 .brand:hover {
-  color: var(--gold);
+  color: var(--accent, #eaeaea);
+  opacity: 0.85;
 }
 .nav-toggle {
   display: block;
@@ -53,6 +72,13 @@ const menu = ref(false)
   border: 1px solid var(--border);
   padding: 0.4rem 0.7rem;
   border-radius: 0.4rem;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+.nav-toggle:hover {
+  background: var(--border);
+  border-color: var(--muted);
 }
 .nav-links {
   display: none;
@@ -88,6 +114,38 @@ const menu = ref(false)
 .nav-links li + li {
   margin-top: 0.25rem;
 }
+.nav-links a {
+  position: relative;
+  display: inline-block;
+  padding: 0.3rem 0;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--text);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.nav-links a:hover {
+  color: var(--text);
+}
+.nav-links a:hover::after {
+  transform: scaleX(1);
+}
+.nav-links a.router-link-exact-active {
+  color: var(--text);
+  font-weight: 600;
+}
+.nav-links a.router-link-exact-active::after {
+  transform: scaleX(1);
+}
 @media (min-width: 640px) {
   .nav-toggle {
     display: none;
@@ -95,6 +153,15 @@ const menu = ref(false)
   .nav-links {
     display: flex;
     flex-direction: row;
+  }
+  .dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   }
 }
 </style>
