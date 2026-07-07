@@ -88,13 +88,8 @@ onUnmounted(() => {
       <div class="hero-overlay" />
 
       <div class="slides" aria-live="polite">
-        <div
-          v-for="(url, i) in imageUrls"
-          :key="i"
-          class="slide"
-          :class="{ 'is-active': currentSlide === i }"
-          :style="{ backgroundImage: `url(${url})` }"
-        />
+        <div v-for="(url, i) in imageUrls" :key="i" class="slide" :class="{ 'is-active': currentSlide === i }"
+          :style="{ backgroundImage: `url(${url})` }" />
       </div>
 
       <div class="hero-content">
@@ -369,13 +364,9 @@ onUnmounted(() => {
 
 .value-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid color-mix(in srgb, var(--about-primary-foreground) 20%, transparent);
-  background: var(--about-surface-strong);
-  padding: 1.5rem;
+  border-color: var(--about-saffron);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-  text-align: left;
-  color: var(--about-primary-foreground);
+  background: var(--about-panel);
 }
 
 .value-name {
@@ -388,7 +379,6 @@ onUnmounted(() => {
 .value-body {
   font-size: 0.9rem;
   color: var(--about-muted);
-  color: var(--about-primary-foreground);
   line-height: 1.65;
   margin: 0;
 }
@@ -435,16 +425,14 @@ onUnmounted(() => {
   background: var(--about-panel);
   padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .team-card:hover {
   transform: translateX(4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  background: var(--about-surface);
-  padding: 1.5rem;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-  color: var(--about-primary-foreground);
+  background: var(--about-panel);
+  border-color: var(--about-saffron);
 }
 
 .team-role {
@@ -457,7 +445,6 @@ onUnmounted(() => {
   margin-top: 0.25rem;
   font-size: 0.9rem;
   color: var(--about-muted);
-  color: var(--about-primary-foreground);
   line-height: 1.65;
 }
 

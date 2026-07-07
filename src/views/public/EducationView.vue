@@ -18,6 +18,13 @@ const bulletsWhyMatters: string[] = [
   'Pagoda-based ethics classes preserve Khmer language and moral tradition',
 ]
 
+const teamStructure = [
+  { role: 'Program Director', desc: 'Oversees education initiatives, partnerships, and donor reporting.' },
+  { role: 'Field Coordinators', desc: 'Manage pre-school, library and scholarship programs in each province.' },
+  { role: 'Teachers & Facilitators', desc: 'Deliver early learning, literacy sessions and youth clubs.' },
+  { role: 'Monitoring & Evaluation', desc: 'Tracks learning progress, attendance and community outcomes.' },
+]
+
 // ── Slideshow ──
 
 const imageUrls: string[] = [
@@ -87,13 +94,8 @@ onUnmounted(() => {
       <div class="hero-overlay" />
 
       <div class="slides" aria-live="polite">
-        <div
-          v-for="(url, i) in imageUrls"
-          :key="i"
-          class="slide"
-          :class="{ 'is-active': currentSlide === i }"
-          :style="{ backgroundImage: `url(${url})` }"
-        />
+        <div v-for="(url, i) in imageUrls" :key="i" class="slide" :class="{ 'is-active': currentSlide === i }"
+          :style="{ backgroundImage: `url(${url})` }" />
       </div>
 
       <div class="hero-content">
@@ -174,8 +176,10 @@ onUnmounted(() => {
         <!-- ── Testimonial Blockquote ── -->
         <blockquote class="testimonial">
           <svg class="testimonial-quote-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M10 11H6a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M18 11h-4a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M10 11H6a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M18 11h-4a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
           <div class="testimonial-body">
             <p class="testimonial-quote">
@@ -188,6 +192,20 @@ onUnmounted(() => {
       </div>
     </section>
 
+    <!-- ── Organizational Structure ── -->
+    <section class="org-section">
+      <div class="section-container">
+        <span class="section-label">Organizational Structure</span>
+        <h2 class="section-title">Who delivers education programming on the ground</h2>
+        <ul class="org-team-list">
+          <li v-for="t in teamStructure" :key="t.role" class="org-team-card">
+            <div class="org-role">{{ t.role }}</div>
+            <p class="org-desc">{{ t.desc }}</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
     <!-- ── Why It Matters ── -->
     <section class="impact-section">
       <div class="section-container">
@@ -197,7 +215,8 @@ onUnmounted(() => {
           <li v-for="item in bulletsWhyMatters" :key="item" class="bullet-item">
             <span class="bullet-icon bullet-icon-impact">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M13.5 4.5L6.5 11.5L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M13.5 4.5L6.5 11.5L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
               </svg>
             </span>
             <span class="bullet-text">{{ item }}</span>
@@ -214,28 +233,28 @@ onUnmounted(() => {
  * Deep forest greens, saffron gold accents, warm neutral text.
  */
 .edu-page {
-  --green-deep:      #a3cab9;
-  --green:           #a6c5b7;
-  --green-mid:       #d1ebdf;
-  --green-soft:      #E8F0EB;
+  --green-deep: #a3cab9;
+  --green: #a6c5b7;
+  --green-mid: #d1ebdf;
+  --green-soft: #E8F0EB;
 
-  --gold:            #C9950E;
-  --gold-light:      #F5E8B8;
-  --gold-soft:       #FFFBEB;
+  --gold: #C9950E;
+  --gold-light: #F5E8B8;
+  --gold-soft: #FFFBEB;
 
-  --warm-white:      #FDFCF9;
-  --warm-bg:         #F8F6F1;
-  --warm-card:       #FFFFFF;
-  --warm-card-alt:   #FCFAF5;
-  --warm-border:     #EBE5DA;
+  --warm-white: #FDFCF9;
+  --warm-bg: #F8F6F1;
+  --warm-card: #FFFFFF;
+  --warm-card-alt: #FCFAF5;
+  --warm-border: #EBE5DA;
 
   /* Text — warm neutral tones */
-  --text-heading:    #0F1F17;
-  --text-body:       #2C3E35;
-  --text-secondary:  #5C6B62;
-  --text-muted:      #8B9A91;
-  --text-on-hero:    rgba(255, 255, 255, 0.88);
-  --text-on-green:   rgba(255, 255, 255, 0.92);
+  --text-heading: #0F1F17;
+  --text-body: #2C3E35;
+  --text-secondary: #5C6B62;
+  --text-muted: #8B9A91;
+  --text-on-hero: rgba(255, 255, 255, 0.88);
+  --text-on-green: rgba(255, 255, 255, 0.92);
 }
 
 /* ─── Shared ─── */
@@ -287,7 +306,8 @@ onUnmounted(() => {
 
 .slide {
   position: absolute;
-  inset: -10px; /* extend beyond edges to hide blur border */
+  inset: -10px;
+  /* extend beyond edges to hide blur border */
   opacity: 0;
   transition: opacity 2000ms ease-in-out;
   background-size: cover;
@@ -555,6 +575,47 @@ onUnmounted(() => {
   color: var(--text-secondary);
 }
 
+/* ─── Organizational Structure ─── */
+.org-section {
+  background: var(--warm-bg);
+}
+
+.org-team-list {
+  display: grid;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.org-team-card {
+  padding: 1.75rem;
+  border-radius: 1rem;
+  background: var(--warm-card);
+  border: 1px solid var(--warm-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.org-team-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--gold);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
+}
+
+.org-role {
+  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  font-size: 1.1rem;
+  color: var(--text-heading);
+  margin-bottom: 0.75rem;
+}
+
+.org-desc {
+  margin: 0;
+  color: var(--text-body);
+  line-height: 1.75;
+}
+
 /* ─── Impact Section ─── */
 .impact-section {
   background: var(--green-soft);
@@ -598,6 +659,4 @@ onUnmounted(() => {
     padding: 6rem 2rem;
   }
 }
-
-
 </style>
