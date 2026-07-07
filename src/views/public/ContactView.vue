@@ -1,13 +1,35 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 const name = ref('')
 const email = ref('')
 const subject = ref('')
 const message = ref('')
 const sent = ref(false)
+const activeHeroSlide = ref(0)
+let heroSlideTimer: number | undefined
 
-const canSubmit = computed(() => Boolean(name.value.trim() && email.value.trim() && message.value.trim()))
+const canSubmit = computed(() =>
+  Boolean(name.value.trim() && email.value.trim() && message.value.trim()),
+)
+
+const heroSlides = [
+  {
+    image:
+      'https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1920&q=82',
+    position: 'center 42%',
+  },
+  {
+    image:
+      'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1920&q=82',
+    position: 'center 48%',
+  },
+  {
+    image:
+      'https://images.unsplash.com/photo-1534330207526-8e81f10ec6fc?auto=format&fit=crop&w=1920&q=82',
+    position: 'center 46%',
+  },
+] as const
 
 const offices = [
   {
@@ -37,8 +59,21 @@ function submitContact() {
   sent.value = true
 }
 
+function showHeroSlide(index: number) {
+  activeHeroSlide.value = index
+}
+
 onMounted(() => {
   document.title = 'Contact Santi Sena'
+  heroSlideTimer = window.setInterval(() => {
+    activeHeroSlide.value = (activeHeroSlide.value + 1) % heroSlides.length
+  }, 5200)
+})
+
+onBeforeUnmount(() => {
+  if (heroSlideTimer) {
+    window.clearInterval(heroSlideTimer)
+  }
 })
 </script>
 
@@ -46,13 +81,34 @@ onMounted(() => {
   <div class="contact-page">
     <main>
       <section class="contact-hero" aria-labelledby="contact-heading">
+        <div class="contact-hero__slides" aria-hidden="true">
+          <div
+            v-for="(slide, index) in heroSlides"
+            :key="slide.image"
+            class="contact-hero__slide"
+            :class="{ 'contact-hero__slide--active': index === activeHeroSlide }"
+            :style="{ backgroundImage: `url(${slide.image})`, backgroundPosition: slide.position }"
+          ></div>
+        </div>
+
         <div class="contact-hero__content">
           <p class="contact-hero__eyebrow">Contact</p>
           <h1 id="contact-heading">Write to us. We read every letter.</h1>
           <p>
-            Whether you wish to partner, donate, visit or simply learn more - our team in
-            Cambodia is ready to hear from you.
+            Whether you wish to partner, donate, visit or simply learn more - our team in Cambodia
+            is ready to hear from you.
           </p>
+          <div class="contact-hero__dots" aria-label="Choose header image">
+            <button
+              v-for="(_, index) in heroSlides"
+              :key="index"
+              type="button"
+              :aria-label="`Show header image ${index + 1}`"
+              :aria-pressed="index === activeHeroSlide"
+              :class="{ 'contact-hero__dot--active': index === activeHeroSlide }"
+              @click="showHeroSlide(index)"
+            ></button>
+          </div>
         </div>
       </section>
 
@@ -84,7 +140,12 @@ onMounted(() => {
             </label>
 
             <div class="contact-card__actions">
-              <button type="submit" :disabled="!canSubmit">
+              <button
+                type="submit"
+                class="contact-card__submit"
+                :class="{ 'contact-card__submit--sent': sent }"
+                :disabled="!canSubmit"
+              >
                 {{ sent ? 'Message sent' : 'Send message' }}
               </button>
               <p v-if="sent" role="status">Thank you. Your message is ready for our team.</p>
@@ -100,9 +161,7 @@ onMounted(() => {
             >
               <h2>{{ office.title }}</h2>
               <p>
-                <template v-for="line in office.lines" :key="line">
-                  {{ line }}<br />
-                </template>
+                <template v-for="line in office.lines" :key="line"> {{ line }}<br /> </template>
               </p>
             </section>
           </aside>
@@ -138,18 +197,59 @@ onMounted(() => {
 }
 
 .contact-hero {
+  position: relative;
+  isolation: isolate;
   min-height: 530px;
   display: flex;
   align-items: center;
   overflow: hidden;
+  background: var(--green);
+}
+
+.contact-hero::before {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
   background:
-    linear-gradient(90deg, rgba(1, 47, 39, 0.96) 0%, rgba(5, 65, 55, 0.78) 46%, rgba(5, 65, 55, 0.32) 100%),
-    linear-gradient(180deg, rgba(2, 34, 29, 0.12), rgba(2, 34, 29, 0.24)),
-    url('https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1920&q=82')
-      center 42% / cover;
+    linear-gradient(
+      90deg,
+      rgba(1, 47, 39, 0.96) 0%,
+      rgba(5, 65, 55, 0.78) 46%,
+      rgba(5, 65, 55, 0.34) 100%
+    ),
+    linear-gradient(180deg, rgba(2, 34, 29, 0.1), rgba(2, 34, 29, 0.28));
+  content: '';
+  pointer-events: none;
+}
+
+.contact-hero__slides,
+.contact-hero__slide {
+  position: absolute;
+  inset: 0;
+}
+
+.contact-hero__slides {
+  z-index: 0;
+}
+
+.contact-hero__slide {
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0;
+  transform: scale(1.04);
+  transition:
+    opacity 1.1s ease,
+    transform 7s ease;
+}
+
+.contact-hero__slide--active {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .contact-hero__content {
+  position: relative;
+  z-index: 2;
   width: min(100%, 1540px);
   margin: 0 auto;
   padding: 4rem 8rem;
@@ -181,6 +281,38 @@ onMounted(() => {
   font-size: 1.1rem;
   font-weight: 500;
   line-height: 1.45;
+}
+
+.contact-hero__dots {
+  display: flex;
+  gap: 0.58rem;
+  margin-top: 1.8rem;
+}
+
+.contact-hero__dots button {
+  width: 0.78rem;
+  height: 0.78rem;
+  border: 1px solid rgba(255, 248, 237, 0.82);
+  border-radius: 50%;
+  background: rgba(255, 248, 237, 0.34);
+  padding: 0;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.contact-hero__dots button:hover,
+.contact-hero__dots button:focus-visible,
+.contact-hero__dot--active {
+  border-color: var(--orange);
+  background: var(--orange);
+  transform: scale(1.12);
+}
+
+.contact-hero__dots button:focus-visible {
+  outline: 3px solid rgba(255, 248, 237, 0.42);
+  outline-offset: 3px;
 }
 
 .contact-body {
@@ -277,22 +409,36 @@ onMounted(() => {
   padding-top: 0.1rem;
 }
 
-.contact-card button {
-  min-width: 132px;
-  min-height: 40px;
+.contact-card__submit {
+  min-width: 164px;
+  min-height: 50px;
   border: 0;
   border-radius: 999px;
-  background: var(--orange);
+  background: #ff781f;
   color: #fff6ea;
-  font-size: 0.86rem;
+  font-size: 1rem;
   font-weight: 700;
-  box-shadow: 0 14px 30px rgba(244, 123, 32, 0.18);
+  box-shadow: 0 14px 28px rgba(255, 120, 31, 0.2);
+  transition:
+    box-shadow 0.2s ease,
+    outline-color 0.2s ease;
 }
 
-.contact-card button:disabled {
+.contact-card__submit:focus-visible {
+  outline: 3px solid rgba(255, 120, 31, 0.26);
+  outline-offset: 3px;
+}
+
+.contact-card__submit--sent:not(:disabled) {
+  background: #ff781f;
+  box-shadow: 0 14px 28px rgba(255, 120, 31, 0.2);
+}
+
+.contact-card__submit:disabled {
+  background: #8da49d;
   cursor: not-allowed;
-  opacity: 0.32;
-  box-shadow: 0 20px 45px rgba(244, 123, 32, 0.1);
+  opacity: 0.62;
+  box-shadow: none;
 }
 
 .contact-card__actions p {
@@ -355,7 +501,6 @@ onMounted(() => {
 @media (max-width: 760px) {
   .contact-hero {
     min-height: 420px;
-    background-position: center top;
   }
 
   .contact-hero__content,
