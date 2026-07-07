@@ -11,22 +11,6 @@ const menu = ref(false)
       <RouterLink to="/" class="brand">Santi Sena NGO</RouterLink>
       <button class="nav-toggle" @click="menu = !menu" aria-label="Toggle menu">Menu</button>
       <ul :class="['nav-links', { open: menu }]">
-<<<<<<< HEAD
-        <li><RouterLink to="/">Home</RouterLink></li>
-        <li><RouterLink to="/about">About</RouterLink></li>
-        <li class="has-dropdown">
-          <RouterLink to="/programs">Programs</RouterLink>
-          <ul class="dropdown">
-            <li><a href="/programs#education">Education</a></li>
-            <li><a href="/programs#environment">Environment</a></li>
-            <li><a href="/programs#livelihood">Livelihood</a></li>
-            <li><a href="/programs#child-protection">Child Protection</a></li>
-          </ul>
-        </li>
-        <li><RouterLink to="/services">Services</RouterLink></li>
-        <li><RouterLink to="/contact">Contact</RouterLink></li>
-        <li><RouterLink to="/admin/login">Admin</RouterLink></li>
-=======
         <li><RouterLink to="/" @click="menu = false">Home</RouterLink></li>
         <li><RouterLink to="/about/vision" @click="menu = false">About Vision</RouterLink></li>
         <li><RouterLink to="/programs/environment" @click="menu = false">Programs</RouterLink></li>
@@ -34,7 +18,6 @@ const menu = ref(false)
         <li><RouterLink to="/impact/partners" @click="menu = false">Partners</RouterLink></li>
         <li><RouterLink to="/contact" @click="menu = false">Contact</RouterLink></li>
         <li><RouterLink to="/admin/login" @click="menu = false">Admin</RouterLink></li>
->>>>>>> develop
       </ul>
     </div>
   </nav>
