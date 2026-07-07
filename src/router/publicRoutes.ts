@@ -2,6 +2,7 @@ import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/public/AboutView.vue'
 import AboutVisionView from '@/views/AboutVisionView.vue'
 import ProgramEnviromentView from '@/views/ProgramEnviromentView.vue'
+import OrganizationView from '@/views/public/OrganizationView.vue'
 import ServicesView from '@/views/public/ServicesView.vue'
 import ImpactView from '@/views/public/ImpactView.vue'
 import ImpactPartnersView from '@/views/ImpactPartnersView.vue'
@@ -15,6 +16,9 @@ export const publicRoutes = [
   { path: '/about/vision', component: AboutVisionView },
   { path: '/about', component: AboutView },
   { path: '/programs/environment', component: ProgramEnviromentView },
+  { path: '/about', component: AboutView },
+  { path: '/about/organization', component: OrganizationView },
+  { path: '/about/aboutview', component: AboutView },
   { path: '/services', component: ServicesView },
   { path: '/impact/partners', component: ImpactPartnersView },
   { path: '/get-involved/donate', component: DonateView },

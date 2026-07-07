@@ -14,7 +14,7 @@ const menus: Menu[] = [
     items: [
       { title: 'Our Story', desc: 'Founded 1994 — three decades walking with villages.', to: '/about#story' },
       { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about/vision' },
-      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about#organization' },
+      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about/organization' },
     ],
   },
   {
