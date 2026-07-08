@@ -2,6 +2,17 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import planLogo from '@/assets/image.png'
+import globalSanitationLogo from '@/assets/image copy.png'
+import khyentseLogo from '@/assets/image copy 2.png'
+import tdhNetherlandsLogo from '@/assets/image copy 3.png'
+import cambodiaActsLogo from '@/assets/image copy 4.png'
+import tdhGermanyLogo from '@/assets/image copy 5.png'
+import germanCoopLogo from '@/assets/image copy 6.png'
+import riversLifeLogo from '@/assets/image copy 7.png'
+import educoLogo from '@/assets/image copy 8.png'
+import heiferLogo from '@/assets/image copy 9.png'
+
 const heroSlides = [
   {
     image:
@@ -20,23 +31,6 @@ const heroSlides = [
   },
 ]
 
-const proofPoints = [
-  {
-    value: '293',
-    label: 'Villages',
-    detail: 'reached across Svay Rieng and Prey Veng in 2016',
-  },
-  {
-    value: '43',
-    label: 'Communes',
-    detail: 'connected through local development programs',
-  },
-  {
-    value: '34',
-    label: 'Staff',
-    detail: 'with project-specific skills and continuing training',
-  },
-]
 
 const partnershipSteps = [
   {
@@ -96,61 +90,61 @@ const partnerLogos = [
   {
     name: 'terre des hommes',
     tagline: 'Help for Children in Need',
-    mark: 'drop',
+    logo: tdhGermanyLogo,
     variant: 'tdh-germany',
   },
   {
     name: 'german cooperation',
     tagline: 'DEUTSCHE ZUSAMMENARBEIT',
-    mark: 'flag',
+    logo: germanCoopLogo,
     variant: 'german-coop',
   },
   {
     name: 'rivers our life',
     tagline: 'Community partnership',
-    mark: 'globe',
+    logo: riversLifeLogo,
     variant: 'rivers-life',
   },
   {
     name: 'educo',
     tagline: 'Member of ChildFund Alliance',
-    mark: 'person',
+    logo: educoLogo,
     variant: 'educo',
   },
   {
     name: 'HEIFER',
     tagline: 'INTERNATIONAL CAMBODIA',
-    mark: 'goat',
+    logo: heiferLogo,
     variant: 'heifer',
   },
   {
     name: 'Cambodia ACTs',
     tagline: 'Child protection network',
-    mark: 'acts',
+    logo: cambodiaActsLogo,
     variant: 'cambodia-acts',
   },
   {
     name: 'terre des hommes',
     tagline: 'stops child exploitation',
-    mark: 'drop',
+    logo: tdhNetherlandsLogo,
     variant: 'tdh-netherlands',
   },
   {
     name: 'Plan',
     tagline: 'International Cambodia',
-    mark: 'child',
+    logo: planLogo,
     variant: 'plan',
   },
   {
     name: 'Global Sanitation Fund',
     tagline: 'Water, sanitation and hygiene',
-    mark: 'wave',
+    logo: globalSanitationLogo,
     variant: 'global-sanitation',
   },
   {
     name: 'Khyentse Foundation',
     tagline: 'Education and Buddhist preservation',
-    mark: 'seal',
+    logo: khyentseLogo,
     variant: 'khyentse',
   },
 ]
@@ -258,16 +252,6 @@ onUnmounted(() => {
       </div>
     </section>
 
-    <section class="proof-band" aria-label="Partnership reach">
-      <div class="proof-band__inner">
-        <div v-for="point in proofPoints" :key="point.label" class="proof-item">
-          <strong>{{ point.value }}</strong>
-          <span>{{ point.label }}</span>
-          <p>{{ point.detail }}</p>
-        </div>
-      </div>
-    </section>
-
     <section class="partner-content" aria-labelledby="intro-heading">
       <div class="intro-section">
         <div class="intro-copy">
@@ -367,14 +351,14 @@ onUnmounted(() => {
               v-for="(partner, index) in partnerLogoLoop"
               :key="`${partner.name}-${partner.variant}-${index}`"
               class="logo-slide"
-              :class="`logo-slide--${partner.variant}`"
               :aria-hidden="index >= partnerLogos.length ? 'true' : undefined"
             >
-              <span class="logo-symbol" :class="`logo-symbol--${partner.mark}`"></span>
-              <span class="logo-wordmark">
-                <strong>{{ partner.name }}</strong>
-                <span>{{ partner.tagline }}</span>
-              </span>
+              <img
+                :src="partner.logo"
+                :alt="`${partner.name} - ${partner.tagline}`"
+                class="partner-logo"
+                loading="lazy"
+              />
             </article>
           </div>
         </div>
@@ -467,7 +451,6 @@ onUnmounted(() => {
 
 .partner-hero__content,
 .partner-content,
-.proof-band__inner,
 .cta-band__inner {
   width: min(100% - 3rem, 1220px);
   margin: 0 auto;
@@ -577,54 +560,6 @@ onUnmounted(() => {
 .hero-dot.is-active {
   width: 2rem;
   background: #fffaf0;
-}
-
-.proof-band {
-  border-bottom: 1px solid var(--line);
-  background: var(--paper);
-}
-
-.proof-band__inner {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.proof-item {
-  min-height: 168px;
-  padding: 2.2rem 2rem;
-  border-left: 1px solid var(--line);
-}
-
-.proof-item:first-child {
-  border-left: 0;
-  padding-left: 0;
-}
-
-.proof-item strong {
-  display: block;
-  color: var(--blue);
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 5vw, 4.5rem);
-  font-weight: 500;
-  line-height: 0.95;
-}
-
-.proof-item span {
-  display: block;
-  margin-top: 0.7rem;
-  color: var(--ink);
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.proof-item p {
-  max-width: 260px;
-  margin: 0.65rem 0 0;
-  color: var(--muted);
-  font-size: 0.98rem;
-  line-height: 1.5;
 }
 
 .partner-content {
@@ -861,242 +796,24 @@ onUnmounted(() => {
 
 .logo-slide {
   position: relative;
-  flex: 0 0 clamp(132px, 14vw, 185px);
-  min-height: 58px;
+  flex: 0 0 clamp(160px, 16vw, 230px);
+  min-height: 98px;
   display: flex;
   align-items: center;
-  gap: 0.52rem;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  color: var(--muted);
-  box-shadow: none;
-}
-
-.logo-symbol {
-  position: relative;
-  flex: 0 0 auto;
-  width: 1.75rem;
-  height: 1.75rem;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: transparent;
-  color: currentColor;
-}
-
-.logo-symbol::before,
-.logo-symbol::after {
-  content: '';
-  position: absolute;
-}
-
-.logo-symbol--drop {
-  width: 1.35rem;
-  height: 1.35rem;
-  border-radius: 56% 56% 56% 0;
-  background: currentColor;
-  transform: rotate(-45deg);
-}
-
-.logo-symbol--drop::after {
-  inset: 0.35rem;
-  border-radius: 50%;
-  background: inherit;
-  filter: brightness(1.6);
-  opacity: 0.45;
-}
-
-.logo-symbol--flag {
-  width: 2.35rem;
-  height: 1.15rem;
-  border-radius: 58% 42% 56% 44%;
-  background: linear-gradient(180deg, #282828 0 33%, #d91d28 33% 66%, #ffc934 66% 100%);
-  transform: skewX(-14deg) rotate(7deg);
-}
-
-.logo-symbol--globe {
-  background:
-    radial-gradient(circle at 34% 38%, #fff 0 20%, transparent 21%),
-    radial-gradient(circle at 60% 62%, #fff 0 14%, transparent 15%), #45a647;
-}
-
-.logo-symbol--globe::after,
-.logo-symbol--wave::after {
-  inset: 1rem 0.65rem;
-  border-top: 3px solid #2f6f8f;
-  border-radius: 50%;
-  transform: rotate(58deg);
-}
-
-.logo-symbol--person {
-  border-radius: 48% 48% 48% 12%;
-  background: #69be59;
-}
-
-.logo-symbol--person::before {
-  top: 0.38rem;
-  width: 0.36rem;
-  height: 0.36rem;
-  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid rgba(221, 209, 192, 0.72);
+  border-radius: 8px;
   background: #fff;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(54, 38, 17, 0.06);
 }
 
-.logo-symbol--person::after {
-  top: 0.78rem;
-  width: 0.9rem;
-  height: 0.58rem;
-  border-radius: 999px 999px 0 0;
-  background: #fff;
-}
-
-.logo-symbol--goat::before,
-.logo-symbol--acts::before,
-.logo-symbol--child::before,
-.logo-symbol--seal::before {
-  position: static;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.logo-symbol--goat::before {
-  content: 'HI';
-  color: #8a6a45;
-}
-
-.logo-symbol--acts::before {
-  content: 'ACTs';
-  color: #b3323d;
-  font-size: 0.75rem;
-}
-
-.logo-symbol--child::before {
-  content: 'P';
-  color: #1f61c7;
-  font-size: 1.7rem;
-}
-
-.logo-symbol--wave {
-  background: radial-gradient(circle at 60% 44%, #fff 0 26%, transparent 27%), #8ed5ec;
-}
-
-.logo-symbol--seal::before {
-  content: 'KF';
-  color: #2f2f2f;
-}
-
-.logo-wordmark {
-  min-width: 0;
-  display: grid;
-  gap: 0.25rem;
-}
-
-.logo-wordmark strong {
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: clamp(0.86rem, 1vw, 1.12rem);
-  font-weight: 700;
-  line-height: 1;
-  text-transform: none;
-}
-
-.logo-wordmark span {
-  color: inherit;
-  font-size: 0.58rem;
-  font-weight: 800;
-  line-height: 1.2;
-  text-transform: none;
-}
-
-.logo-slide--tdh-germany {
-  color: #b43d49;
-}
-
-.logo-slide--tdh-germany .logo-wordmark strong,
-.logo-slide--tdh-germany .logo-wordmark span,
-.logo-slide--tdh-netherlands .logo-wordmark strong,
-.logo-slide--tdh-netherlands .logo-wordmark span {
-  color: currentColor;
-}
-
-.logo-slide--tdh-germany .logo-symbol {
-  color: #b43d49;
-}
-
-.logo-slide--german-coop .logo-wordmark strong {
-  color: #3a3a3a;
-  font-family: var(--font-body);
-  font-weight: 900;
-}
-
-.logo-slide--german-coop .logo-wordmark span {
-  color: #d9242f;
-}
-
-.logo-slide--rivers-life .logo-wordmark strong {
-  color: #35a342;
-  font-family: var(--font-body);
-  font-weight: 900;
-}
-
-.logo-slide--rivers-life .logo-wordmark span {
-  color: #2f6f8f;
-}
-
-.logo-slide--educo .logo-wordmark strong {
-  color: #00aeb8;
-  font-family: var(--font-body);
-  font-size: clamp(1.28rem, 1.55vw, 1.72rem);
-  font-weight: 800;
-}
-
-.logo-slide--educo .logo-wordmark span {
-  color: #1f2d2d;
-  font-weight: 600;
-}
-
-.logo-slide--heifer .logo-wordmark strong {
-  color: #7a5a36;
-  font-size: clamp(1.12rem, 1.45vw, 1.55rem);
-}
-
-.logo-slide--heifer .logo-wordmark span {
-  color: #7a5a36;
-}
-
-.logo-slide--cambodia-acts .logo-wordmark strong {
-  color: #b3323d;
-}
-
-.logo-slide--tdh-netherlands {
-  color: #111;
-}
-
-.logo-slide--tdh-netherlands .logo-symbol {
-  color: #d54b3d;
-}
-
-.logo-slide--tdh-netherlands .logo-wordmark strong {
-  font-family: var(--font-body);
-  font-weight: 900;
-}
-
-.logo-slide--plan .logo-wordmark strong {
-  color: #1f61c7;
-  font-family: var(--font-body);
-  font-size: clamp(1.32rem, 1.65vw, 1.85rem);
-  font-weight: 900;
-}
-
-.logo-slide--global-sanitation .logo-wordmark strong {
-  color: #377f95;
-}
-
-.logo-slide--khyentse .logo-wordmark strong {
-  color: #2f2f2f;
+.partner-logo {
+  display: block;
+  width: 100%;
+  height: 76px;
+  object-fit: contain;
 }
 
 .commitment-list {
@@ -1238,7 +955,6 @@ onUnmounted(() => {
 
   .partner-hero__content,
   .partner-content,
-  .proof-band__inner,
   .cta-band__inner {
     width: min(100% - 2rem, 1220px);
   }
@@ -1256,21 +972,8 @@ onUnmounted(() => {
     bottom: 1.35rem;
   }
 
-  .proof-band__inner,
   .area-list {
     grid-template-columns: 1fr;
-  }
-
-  .proof-item,
-  .proof-item:first-child {
-    min-height: auto;
-    border-left: 0;
-    border-top: 1px solid var(--line);
-    padding: 1.7rem 0;
-  }
-
-  .proof-item:first-child {
-    border-top: 0;
   }
 
   .partner-content {
@@ -1302,14 +1005,13 @@ onUnmounted(() => {
   }
 
   .logo-slide {
-    flex-basis: 150px;
-    min-height: 54px;
-    padding: 0;
+    flex-basis: 154px;
+    min-height: 86px;
+    padding: 0.8rem;
   }
 
-  .logo-symbol {
-    width: 1.5rem;
-    height: 1.5rem;
+  .partner-logo {
+    height: 62px;
   }
 
   .commitments-section {
