@@ -18,7 +18,7 @@ const ways = [
     title: 'Volunteer',
     body: 'Bring your skills - agronomy, education, communications, evaluation - to a community-led project in the field.',
     cta: 'Apply to volunteer',
-    to: '/contact',
+    to: '/get-involved/volunteer',
   },
 ]
 

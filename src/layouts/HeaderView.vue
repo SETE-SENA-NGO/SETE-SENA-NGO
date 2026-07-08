@@ -12,18 +12,42 @@ const menus: Menu[] = [
   {
     label: 'About',
     items: [
-      { title: 'Our Story', desc: 'Founded 1994 — three decades walking with villages.', to: '/about#story' },
-      { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about/vision' },
-      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about/organization' },
+      {
+        title: 'Our Story',
+        desc: 'Founded 1994 — three decades walking with villages.',
+        to: '/about#story',
+      },
+      {
+        title: 'Vision & Mission',
+        desc: 'Peace, sustainability, and dignified livelihoods.',
+        to: '/about/vision',
+      },
+      {
+        title: 'Organization',
+        desc: 'Board, staff and field structure.',
+        to: '/about/organization',
+      },
     ],
   },
   {
     label: 'Programs',
     to: '/programs',
     items: [
-      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/programs/education' },
-      { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/programs/environment' },
-      { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/programs/livelihood' },
+      {
+        title: 'Education',
+        desc: 'Pre-schools, scholarships and youth learning.',
+        to: '/programs/education',
+      },
+      {
+        title: 'Environment',
+        desc: 'Reforestation, biogas and climate resilience.',
+        to: '/programs/environment',
+      },
+      {
+        title: 'Livelihood',
+        desc: 'Saving-for-Change groups and rural enterprise.',
+        to: '/programs/livelihood',
+      },
       {
         title: 'Child Protection',
         desc: 'Safeguarding and community-led care.',
@@ -44,9 +68,21 @@ const menus: Menu[] = [
     label: 'Get Involved',
     to: '/get-involved',
     items: [
-      { title: 'Support Us', desc: 'Support community programs in Svay Rieng and Prey Veng.', to: '/get-involved/donate' },
-      { title: 'Partner', desc: 'Cooperate through local authorities, departments and community groups.', to: '/get-involved/partner' },
-      { title: 'Volunteer', desc: 'Bring your skills to a field project.', to: '/get-involved#volunteer' },
+      {
+        title: 'Support Us',
+        desc: 'Support community programs in Svay Rieng and Prey Veng.',
+        to: '/get-involved/donate',
+      },
+      {
+        title: 'Partner',
+        desc: 'Co-design multi-year community programs.',
+        to: '/get-involved#partner',
+      },
+      {
+        title: 'Volunteer',
+        desc: 'Bring your skills to a field project.',
+        to: '/get-involved/volunteer',
+      },
     ],
   },
   {
@@ -235,7 +271,12 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           <span aria-hidden="true">-&gt;</span>
         </RouterLink>
 
-        <button type="button" class="mobile-toggle" aria-label="Toggle menu" @click="mobileOpen = !mobileOpen">
+        <button
+          type="button"
+          class="mobile-toggle"
+          aria-label="Toggle menu"
+          @click="mobileOpen = !mobileOpen"
+        >
           <span />
           <span />
           <span />
@@ -265,7 +306,11 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           {{ item.title }}
         </RouterLink>
       </div>
-      <RouterLink to="/get-involved/donate" class="btn-support btn-support--mobile" @click="closeAll">
+      <RouterLink
+        to="/get-involved/donate"
+        class="btn-support btn-support--mobile"
+        @click="closeAll"
+      >
         Support Us →
       </RouterLink>
     </div>
