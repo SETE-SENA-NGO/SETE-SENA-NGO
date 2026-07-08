@@ -10,9 +10,9 @@ const ways = [
   },
   {
     title: 'Partner',
-    body: 'Institutions, faith groups and foundations: co-design multi-year programs in environment, education or livelihoods.',
+    body: 'Cooperate with Santi Sena through community-rooted programs, local authorities, provincial departments and field teams.',
     cta: 'Explore partnership',
-    to: '/contact',
+    to: '/get-involved/partner',
   },
   {
     title: 'Volunteer',

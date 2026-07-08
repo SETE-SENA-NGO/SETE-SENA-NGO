@@ -15,6 +15,7 @@ import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
 import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
 import DonateView from '@/views/public/Getinvolved.donat.vue'
 import VolunteerView from '@/views/public/Getinvolved.volunteer.vue'
+import PartnerView from '@/views/public/Getinvolved.partner.vue'
 
 import ProgramsView from '@/views/public/ProgramsView.vue'
 import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
@@ -41,6 +42,7 @@ export const publicRoutes = [
   { path: '/get-involved/donate', component: DonateView },
   { path: '/get-involved/volunteer', component: VolunteerView },
   { path: '/get-involved', component: GetInvolvedView },
+  { path: '/get-involved/partner', component: PartnerView },
   { path: '/contact', component: ContactView },
   { path: '/contact/headoffice', component: HeadOfficeView },
   { path: '/contact/fieldoffice', component: FieldOfficeView },
