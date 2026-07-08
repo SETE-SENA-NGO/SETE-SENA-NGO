@@ -16,7 +16,7 @@ defineProps<{
 <style scoped>
 .content-block {
   padding: 4rem 1.5rem;
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid var(--color-border);
 }
 .content-inner {
   max-width: 900px;
@@ -24,8 +24,5 @@ defineProps<{
 }
 h2 {
   margin: 0 0 1rem;
-  font-size: 1.75rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  color: #1F2937;
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
 interface ProgramGoal {
   number: string
@@ -75,51 +75,27 @@ const priorities = [
   'Public advocacy',
 ]
 
-// --- Hero slideshow ---
-// Add more files (slide-2.jpg, slide-3.jpg, ...) into public/images/programs/hero/
-// and list them here. It still works fine with just one image.
-const heroSlides = [
-  '/images/programs/hero-1.jpg',
-  '/images/programs/hero-2.jpg',
-  '/images/programs/hero-3.jpg',
-  '/images/programs/hero-4.jpg',
+const slideItems = [
+  { image: '/images/programs/education-hero.jpg', caption: 'Pre-schools, libraries and scholarships that keep children learning past grade six.' },
+  { image: '/images/programs/environment-hero.jpg', caption: 'Community forestry, biogas digesters and rainwater harvesting — climate resilience built household by household.' },
+  { image: '/images/programs/livelihood-hero1.jpg', caption: 'Saving-for-Change groups and rural enterprises that keep families out of debt.' },
+  { image: '/images/programs/child-protection.jpg', caption: 'Village Child Protection Networks and anti-trafficking outreach for safer childhoods.' },
 ]
-
-const currentSlide = ref(0)
-let slideTimer: ReturnType<typeof setInterval> | undefined
-
-onMounted(() => {
-  if (heroSlides.length > 1) {
-    slideTimer = setInterval(() => {
-      currentSlide.value = (currentSlide.value + 1) % heroSlides.length
-    }, 5000)
-  }
-})
-onUnmounted(() => {
-  if (slideTimer) clearInterval(slideTimer)
-})
 </script>
 
 <template>
   <div class="programs-page">
-    <!-- HERO SLIDESHOW -->
+    <Slideshow :slides="slideItems" />
+
+    <!-- HERO -->
     <section class="hero">
-      <div class="hero-slides">
-        <div
-          v-for="(slide, i) in heroSlides"
-          :key="slide"
-          class="hero-slide"
-          :class="{ active: i === currentSlide }"
-          :style="{ backgroundImage: `url('${slide}')` }"
-        />
-        <div class="hero-overlay" />
-      </div>
+      <div class="hero-overlay" />
       <div class="hero-content">
         <p class="eyebrow">OUR PROGRAMS</p>
         <h1>Four roots. One tree of peace.</h1>
         <p class="lead">
-          Santi Sena's work follows four interwoven strategic goals — environment, 
-          education, livelihoods and child protection — each delivered with and by 
+          Santi Sena's work follows four interwoven strategic goals — environment,
+          education, livelihoods and child protection — each delivered with and by
           the communities themselves.
         </p>
       </div>
@@ -166,33 +142,9 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap');
-
 .programs-page {
-  --p-bg: #f7f1e4;
-  --p-panel: #fffdf8;
-  --p-green: #1f3d2e;
-  --p-orange: #d9793a;
-  --p-muted: #5a6b5f;
-  --font-heading: 'Playfair Display', Georgia, serif;
-  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
-
-  background: var(--p-bg);
-  color: var(--p-green);
-  font-family: var(--font-body);
-}
-
-.programs-page h1,
-.programs-page h2,
-.programs-page h3 {
-  font-family: var(--font-heading);
-}
-.programs-page p,
-.programs-page blockquote,
-.programs-page .priority-card,
-.programs-page .tag,
-.programs-page .eyebrow {
-  font-family: var(--font-body);
+  background: var(--color-cream);
+  color: var(--primary-dark);
 }
 
 /* HERO */
@@ -202,33 +154,17 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   overflow: hidden;
-}
-.hero-slides {
-  position: absolute;
-  inset: 0;
-}
-.hero-slide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 1.2s ease-in-out;
-}
-.hero-slide.active {
-  opacity: 1;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
 }
 .hero-overlay {
   position: absolute;
   inset: 0;
-  /* dull olive/forest-green tint over the photo, like the reference design */
   background: linear-gradient(
     180deg,
-    rgba(38, 61, 43, 0.65) 0%,
-    rgba(38, 61, 43, 0.45) 55%,
-    rgba(38, 61, 43, 0.6) 100%
+    rgba(15, 23, 42, 0.35) 0%,
+    rgba(15, 23, 42, 0.15) 55%,
+    rgba(15, 23, 42, 0.3) 100%
   );
-  mix-blend-mode: multiply;
 }
 .hero-content {
   position: relative;
@@ -238,7 +174,7 @@ onUnmounted(() => {
   color: #fff;
 }
 .eyebrow {
-  color: var(--p-orange);
+  color: var(--primary-light);
   letter-spacing: 0.15em;
   font-size: 0.8rem;
   font-weight: 700;
@@ -246,13 +182,11 @@ onUnmounted(() => {
 }
 .hero-content h1 {
   font-weight: 600;
-  font-size: 3rem;
   line-height: 1.2;
   margin: 0 0 1rem;
-  
+  color: #fff;
 }
 .hero-content .lead {
-  font-size: 1.05rem;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.92);
 }
@@ -262,7 +196,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 3.5rem;
-  max-width: 1200px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 5rem 3rem;
 }
@@ -284,7 +218,7 @@ onUnmounted(() => {
   flex: 1 1 55%;
 }
 .goal-text .tag {
-  color: var(--p-orange);
+  color: var(--primary-color);
   font-weight: 700;
   letter-spacing: 0.05em;
   font-size: 0.85rem;
@@ -292,29 +226,26 @@ onUnmounted(() => {
 }
 .goal-text h2 {
   font-weight: 600;
-  font-size: 2rem;
   margin: 0 0 0.75rem;
 }
 .goal-text .intro {
-  font-size: 1.05rem;
-  color: var(--p-muted);
+  color: var(--color-ink-soft);
   margin-bottom: 1.5rem;
 }
 .goal-text h3 {
   font-weight: 600;
-  font-size: 1.1rem;
   margin: 1.25rem 0 0.35rem;
 }
 .goal-text p {
-  color: var(--p-muted);
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 .goal-text blockquote {
   margin: 1.5rem 0 0;
   padding-left: 1rem;
-  border-left: 3px solid var(--p-orange);
+  border-left: 3px solid var(--primary-color);
   font-style: italic;
-  color: var(--p-green);
+  color: var(--primary-dark);
 }
 
 /* PRIORITIES */
@@ -327,16 +258,16 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  color: var(--primary-color);
 }
 .eyebrow .line {
   width: 2rem;
   height: 1px;
-  background: var(--p-orange);
+  background: var(--primary-color);
   display: inline-block;
 }
 .priorities h2 {
   font-weight: 600;
-  font-size: 2rem;
   margin: 0.5rem 0 2.5rem;
 }
 .priorities-grid {
@@ -346,21 +277,18 @@ onUnmounted(() => {
   gap: 1.25rem;
 }
 .priority-card {
-  background: var(--p-panel);
+  background: var(--color-white);
   border-radius: 0.75rem;
   padding: 1.5rem;
   max-width: 220px;
-  color: var(--p-green);
-  box-shadow: 0 2px 10px rgba(31, 61, 46, 0.06);
+  color: var(--primary-dark);
+  box-shadow: 0 2px 10px rgba(20, 129, 62, 0.06);
 }
 
 @media (max-width: 860px) {
   .goal-block,
   .goal-block.reverse {
     flex-direction: column;
-  }
-  .hero-content h1 {
-    font-size: 2.2rem;
   }
 }
 </style>

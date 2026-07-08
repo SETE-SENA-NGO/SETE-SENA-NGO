@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
+import heroImpact from '@/assets/hero-impact.jpg'
+
+const slideItems = [
+  { image: heroImpact, caption: 'Founded in 1994 by Cambodian Buddhist monks, Santi Sena grew from the ashes of conflict into a peace army for rural development.' },
+  { image: '/images/programs/hero-1.jpg', caption: 'Community-led development rooted in Buddhist ethics — empowering farmers, women, youth and children.' },
+  { image: '/images/programs/hero-2.jpg', caption: 'Serving the most vulnerable rural households across Svay Rieng, Prey Veng and Kratie.' },
+]
 
 const values = [
   { name: 'Honesty', body: 'we have honesty with our donors, target group, operational partners and working group.' },
@@ -18,32 +26,6 @@ const team = [
 ]
 
 const provinces = ['Svay Rieng', 'Prey Veng', 'Kratie']
-
-// ── Slideshow ──
-
-const imageUrls: string[] = [
-  'https://images.pexels.com/photos/5905476/pexels-photo-5905476.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/5905470/pexels-photo-5905470.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/5905493/pexels-photo-5905493.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/5905700/pexels-photo-5905700.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-]
-
-const currentSlide = ref(0)
-let slideTimer: number | undefined
-
-const startSlideshow = () => {
-  stopSlideshow()
-  slideTimer = window.setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % imageUrls.length
-  }, 5000)
-}
-
-const stopSlideshow = () => {
-  if (slideTimer) {
-    clearInterval(slideTimer)
-    slideTimer = undefined
-  }
-}
 
 onMounted(() => {
   document.title = 'About Santi Sena — Buddhist NGO in Cambodia'
@@ -72,25 +54,16 @@ onMounted(() => {
 
   setOgMeta('og:title', 'About Santi Sena')
   setOgMeta('og:description', 'Our story, vision, values and the team carrying the Peace Army forward.')
-
-  startSlideshow()
-})
-
-onUnmounted(() => {
-  stopSlideshow()
 })
 </script>
 
 <template>
   <div class="about-page">
-    <!-- Hero Section with Background Slideshow -->
-    <section class="hero-section" @mouseenter="stopSlideshow" @mouseleave="startSlideshow">
-      <div class="hero-overlay" />
+    <Slideshow :slides="slideItems" />
 
-      <div class="slides" aria-live="polite">
-        <div v-for="(url, i) in imageUrls" :key="i" class="slide" :class="{ 'is-active': currentSlide === i }"
-          :style="{ backgroundImage: `url(${url})` }" />
-      </div>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-overlay" />
 
       <div class="hero-content">
         <span class="section-label saffron">About Santi Sena</span>
@@ -181,20 +154,17 @@ onUnmounted(() => {
 
 <style scoped>
 /* ─── About page color tokens ───
- * Green + Gold palette to match the logo.
- * Green (#3A7D44) represents nature, growth, and rural Cambodia.
- * Gold (#D4A017 / saffron) represents Buddhism, wisdom, and the Dharma.
+ * Aliased to the shared global design tokens (see src/assets/base.css).
  */
 .about-page {
-  --about-primary: #1F472F;
-  --about-primary-foreground: #FFFFFF;
-  --about-saffron: #D4A017;
-  --about-white: #FFFFFF;
-  --about-muted: #4B5563;
-  --about-border: #E5E7EB;
-  --about-panel: #FFFFFF;
-  --about-bg-alt: #F3F7F4;
-  --about-cream: #0e311c;
+  --about-primary: var(--primary-color);
+  --about-primary-foreground: var(--color-white);
+  --about-saffron: var(--primary-dark);
+  --about-white: var(--color-white);
+  --about-muted: var(--color-ink-soft);
+  --about-border: var(--color-border);
+  --about-panel: var(--color-white);
+  --about-bg-alt: var(--primary-light);
   --about-surface: color-mix(in srgb, var(--about-primary) 90%, white);
   --about-surface-strong: color-mix(in srgb, var(--about-primary) 82%, white);
 }
@@ -229,28 +199,6 @@ onUnmounted(() => {
   background: var(--about-primary);
 }
 
-.slides {
-  position: absolute;
-  inset: 0;
-}
-
-.slide {
-  position: absolute;
-  inset: -10px;
-  opacity: 0;
-  transition: opacity 1500ms ease-in-out;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #5a7d5e;
-  filter: blur(4px);
-  transform: scale(1.05);
-}
-
-.slide.is-active {
-  opacity: 1;
-}
-
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -269,7 +217,7 @@ onUnmounted(() => {
 .hero-content {
   position: relative;
   z-index: 2;
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 8rem 1.5rem;
   color: var(--about-white);
@@ -278,8 +226,6 @@ onUnmounted(() => {
 .hero-title {
   margin-top: 1rem;
   max-width: 48rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2.75rem;
   line-height: 1.1;
   font-weight: 700;
 }
@@ -294,7 +240,7 @@ onUnmounted(() => {
 
 /* ─── Vision / Mission / Goal ─── */
 .vmg-section {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   display: grid;
   gap: 3rem;
@@ -312,8 +258,6 @@ onUnmounted(() => {
 }
 
 .vmg-heading {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 1.5rem;
   color: var(--about-primary);
   margin: 0 0 0.5rem;
 }
@@ -333,7 +277,7 @@ onUnmounted(() => {
 }
 
 .values-container {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 1.5rem;
   text-align: center;
@@ -341,8 +285,6 @@ onUnmounted(() => {
 
 .values-title {
   margin-top: 1.5rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   color: var(--about-primary);
 }
 
@@ -370,7 +312,6 @@ onUnmounted(() => {
 }
 
 .value-name {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.125rem;
   color: var(--about-saffron);
   margin-bottom: 0.5rem;
@@ -385,7 +326,7 @@ onUnmounted(() => {
 
 /* ─── Organizational Structure ─── */
 .org-section {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 6rem 1.5rem;
 }
@@ -397,8 +338,6 @@ onUnmounted(() => {
 
 .org-heading {
   margin-top: 1rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   color: var(--about-primary);
 }
 
@@ -436,7 +375,6 @@ onUnmounted(() => {
 }
 
 .team-role {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.125rem;
   color: var(--about-primary);
 }
@@ -464,8 +402,6 @@ onUnmounted(() => {
 
 .geo-heading {
   margin-top: 1rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   line-height: 1.2;
 }
 
@@ -482,7 +418,6 @@ onUnmounted(() => {
 }
 
 .geo-name {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.5rem;
 }
 
@@ -496,10 +431,6 @@ onUnmounted(() => {
 
 /* ─── Responsive ─── */
 @media (min-width: 768px) {
-  .hero-title {
-    font-size: 3.75rem;
-  }
-
   .vmg-section {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -510,10 +441,6 @@ onUnmounted(() => {
 
   .org-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .geo-heading {
-    font-size: 2.5rem;
   }
 
   .geo-grid {

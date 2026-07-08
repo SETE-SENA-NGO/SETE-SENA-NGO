@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import heroImage from '@/assets/hero-impact.jpg'
+import heroImpactForest from '@/assets/hero-impact-forest.jpg'
+import heroImpactVillage from '@/assets/hero-impact-village.jpg'
+import Slideshow from '@/components/shared/Slideshow.vue'
+
+const slideItems = [
+  { image: heroImage, caption: '293 villages measured, monitored and reported on every year.' },
+  { image: heroImpactForest, caption: '570+ hectares of community forest tracked through annual monitoring.' },
+  { image: heroImpactVillage, caption: 'Savings groups, scholarships and biogas units — the numbers behind village life.' },
+]
 
 type StatItem = {
   value: string
@@ -79,6 +88,7 @@ onMounted(() => {
 
 <template>
   <div class="numbers-page">
+    <Slideshow :slides="slideItems" />
     <section class="hero-section">
       <img :src="heroImage" alt="Cambodian rice paddies and village at dawn" class="hero-image" />
       <div class="hero-overlay" />
@@ -140,8 +150,8 @@ onMounted(() => {
 <style scoped>
 .numbers-page {
   min-height: 100vh;
-  background: #fdf8ee;
-  color: #2f241d;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .hero-section {
@@ -163,13 +173,17 @@ onMounted(() => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(32, 54, 53, 0.92), rgba(111, 82, 45, 0.74));
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--color-ink) 80%, transparent),
+    color-mix(in srgb, var(--primary-dark) 60%, transparent)
+  );
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
-  max-width: 1120px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 8rem 1.5rem;
   color: #fffdf8;
@@ -182,19 +196,17 @@ onMounted(() => {
   letter-spacing: 0.3em;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #e86c20;
+  color: var(--primary-color);
 }
 
 h1,
 h2,
 h3 {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
 }
 
 h1 {
   max-width: 720px;
-  font-size: clamp(2.1rem, 4.2vw, 3.3rem);
   line-height: 1.1;
   margin-right: 400px;
 }
@@ -230,9 +242,9 @@ h1 {
 }
 
 .hero-link.primary {
-  background: #ee762c;
+  background: var(--primary-color);
   color: #fcfcfc;
-  box-shadow: 0 10px 25px rgba(243, 198, 109, 0.25);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--primary-color) 25%, transparent);
 }
 
 .cta-content {
@@ -246,10 +258,7 @@ h1 {
 }
 
 .cta-content h3 {
-
-
-  color: #0b411e;
-  font-size: 1.5rem;
+  color: var(--primary-dark);
   font-weight: 500;
   line-height: 1.2;
 }
@@ -258,7 +267,7 @@ h1 {
 }
 
 .page-shell {
-  max-width: 1160px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
 }
 
@@ -278,13 +287,12 @@ h1 {
 
 .section-title {
   margin-bottom: 1rem;
-  font-size: 1.7rem;
-  color: #3f6b4f;
+  color: var(--primary-dark);
 }
 
 .stat-card {
   background: #fffdf8;
-  border: 1px solid #e5d8c6;
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 1.25rem;
   box-shadow: 0 8px 24px rgba(47, 36, 29, 0.06);
@@ -294,20 +302,19 @@ h1 {
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #e8600c;
+  color: var(--primary-dark);
 }
 
 .stat-card h2,
 .stat-card h3 {
   margin-top: 0.35rem;
-  font-size: 1.15rem;
-  color: #1d2f1d;
+  color: var(--color-ink);
 }
 
 .stat-card p {
   margin-top: 0.45rem;
   line-height: 1.6;
-  color: #6a5848;
+  color: var(--color-ink-soft);
 }
 
 .bullet-list {
@@ -315,7 +322,7 @@ h1 {
   padding-left: 1.2rem;
   display: grid;
   gap: 0.7rem;
-  color: #4c3d2f;
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 

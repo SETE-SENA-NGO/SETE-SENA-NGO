@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import Slideshow from '@/components/shared/Slideshow.vue'
+
+const slideItems = [
+  { image: '/images/programs/education-hero.jpg', caption: 'A teacher in every village, a book in every hand.' },
+  { image: '/images/programs/education.jpg', caption: 'Community pre-schools and mobile libraries for rural Cambodian children.' },
+]
 
 const bulletsWhatWeDo: string[] = [
   'Community pre-schools led by trained local teachers in remote villages',
@@ -24,32 +30,6 @@ const teamStructure = [
   { role: 'Teachers & Facilitators', desc: 'Deliver early learning, literacy sessions and youth clubs.' },
   { role: 'Monitoring & Evaluation', desc: 'Tracks learning progress, attendance and community outcomes.' },
 ]
-
-// ── Slideshow ──
-
-const imageUrls: string[] = [
-  'https://images.pexels.com/photos/5905470/pexels-photo-5905470.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/3769149/pexels-photo-3769149.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/5212344/pexels-photo-5212344.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/5905700/pexels-photo-5905700.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-]
-
-const currentSlide = ref(0)
-let slideTimer: number | undefined
-
-const startSlideshow = () => {
-  stopSlideshow()
-  slideTimer = window.setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % imageUrls.length
-  }, 3000)
-}
-
-const stopSlideshow = () => {
-  if (slideTimer) {
-    clearInterval(slideTimer)
-    slideTimer = undefined
-  }
-}
 
 onMounted(() => {
   document.title = 'Education Program — Santi Sena'
@@ -78,25 +58,16 @@ onMounted(() => {
 
   setOgMeta('og:title', 'Education — Santi Sena')
   setOgMeta('og:description', 'Learning that starts at three years old and never stops.')
-
-  startSlideshow()
-})
-
-onUnmounted(() => {
-  stopSlideshow()
 })
 </script>
 
 <template>
   <div class="edu-page">
-    <!-- ── Hero Background Slideshow (fully automatic) ── -->
-    <section class="hero-section" @mouseenter="stopSlideshow" @mouseleave="startSlideshow">
-      <div class="hero-overlay" />
+    <Slideshow :slides="slideItems" />
 
-      <div class="slides" aria-live="polite">
-        <div v-for="(url, i) in imageUrls" :key="i" class="slide" :class="{ 'is-active': currentSlide === i }"
-          :style="{ backgroundImage: `url(${url})` }" />
-      </div>
+    <!-- ── Hero ── -->
+    <section class="hero-section">
+      <div class="hero-overlay" />
 
       <div class="hero-content">
         <span class="section-label">Programs &middot; Goal 02 Education</span>
@@ -229,19 +200,10 @@ onUnmounted(() => {
 
 <style scoped>
 /* ─── Color Tokens ───
- * Matching the warm, earthy palette used across the site.
- * Deep forest greens, saffron gold accents, warm neutral text.
+ * Neutral warm tones stay local; brand accent colors come from the
+ * global design tokens (--primary-color / --primary-dark / --primary-light).
  */
 .edu-page {
-  --green-deep: #a3cab9;
-  --green: #a6c5b7;
-  --green-mid: #d1ebdf;
-  --green-soft: #E8F0EB;
-
-  --gold: #C9950E;
-  --gold-light: #F5E8B8;
-  --gold-soft: #FFFBEB;
-
   --warm-white: #FDFCF9;
   --warm-bg: #F8F6F1;
   --warm-card: #FFFFFF;
@@ -262,30 +224,25 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4em;
   margin-bottom: 1rem;
   padding: 0.35rem 0.85rem;
   border-radius: 2rem;
-  background: var(--gold-light);
-  color: var(--gold);
+  background: var(--primary-light);
+  color: var(--primary-dark);
 }
 
 .section-container {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 6rem 1.5rem;
 }
 
 .section-title {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
-  font-weight: 700;
   margin: 0 0 3rem;
   color: var(--text-heading);
-  line-height: 1.2;
   letter-spacing: -0.01em;
 }
 
@@ -294,32 +251,8 @@ onUnmounted(() => {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: linear-gradient(160deg, var(--green-deep) 0%, var(--green) 50%, var(--green-mid) 100%);
+  background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary-color) 50%, var(--primary-light) 100%);
   outline: none;
-}
-
-/* ── Slides ── */
-.slides {
-  position: absolute;
-  inset: 0;
-}
-
-.slide {
-  position: absolute;
-  inset: -10px;
-  /* extend beyond edges to hide blur border */
-  opacity: 0;
-  transition: opacity 2000ms ease-in-out;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #8baa9a;
-  filter: blur(4px);
-  transform: scale(1.05);
-}
-
-.slide.is-active {
-  opacity: 1;
 }
 
 /* ── Hero Overlay ── */
@@ -336,21 +269,19 @@ onUnmounted(() => {
 .hero-content {
   position: relative;
   z-index: 2;
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 8rem 1.5rem 7rem;
 }
 
 .hero-content .section-label {
-  background: color-mix(in srgb, var(--gold) 18%, transparent);
-  color: var(--gold-light);
+  background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+  color: #FFFFFF;
 }
 
 .hero-title {
   margin: 1.5rem 0 0;
   max-width: 48rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2.75rem;
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.015em;
@@ -360,7 +291,6 @@ onUnmounted(() => {
 .hero-subtitle {
   margin-top: 1.5rem;
   max-width: 42rem;
-  font-size: 1.05rem;
   line-height: 1.8;
   color: var(--text-on-hero);
 }
@@ -386,15 +316,15 @@ onUnmounted(() => {
 }
 
 .btn-primary {
-  background: var(--gold);
-  color: var(--green-deep);
-  box-shadow: 0 4px 14px rgba(201, 149, 14, 0.30);
+  background: var(--primary-color);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(27, 163, 79, 0.30);
 }
 
 .btn-primary:hover {
-  background: #B8860B;
+  background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(201, 149, 14, 0.35);
+  box-shadow: 0 8px 24px rgba(20, 129, 62, 0.35);
 }
 
 .btn-ghost {
@@ -414,7 +344,6 @@ onUnmounted(() => {
 }
 
 .intro-paragraph {
-  font-size: 1.1rem;
   line-height: 1.8;
   color: var(--text-body);
   max-width: 56rem;
@@ -428,7 +357,7 @@ onUnmounted(() => {
 }
 
 .facts-grid {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 1.5rem 4.5rem;
   display: grid;
@@ -448,31 +377,28 @@ onUnmounted(() => {
 .fact-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.07);
-  border-color: var(--gold);
+  border-color: var(--primary-color);
 }
 
 .fact-value {
   display: block;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 3rem;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--primary-color);
   line-height: 1;
 }
 
 .fact-label {
   display: block;
   margin-top: 0.5rem;
-  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 .fact-desc {
   margin: 0.75rem 0 0;
-  font-size: 0.85rem;
   line-height: 1.6;
   color: var(--text-secondary);
 }
@@ -487,7 +413,6 @@ onUnmounted(() => {
 }
 
 .approach-text {
-  font-size: 1rem;
   line-height: 1.85;
   color: var(--text-body);
   max-width: 56rem;
@@ -518,15 +443,14 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   margin-top: 0.15rem;
-  color: var(--gold);
+  color: var(--primary-color);
 }
 
 .bullet-icon-impact {
-  color: var(--green-mid);
+  color: var(--primary-dark);
 }
 
 .bullet-text {
-  font-size: 0.95rem;
   line-height: 1.7;
   color: var(--text-body);
   padding-top: 0.1rem;
@@ -539,7 +463,7 @@ onUnmounted(() => {
   border-radius: 1rem;
   background: var(--warm-card);
   border: 1px solid var(--warm-border);
-  border-left: 4px solid var(--gold);
+  border-left: 4px solid var(--primary-color);
   display: flex;
   gap: 1.25rem;
   align-items: flex-start;
@@ -547,7 +471,7 @@ onUnmounted(() => {
 
 .testimonial-quote-icon {
   flex-shrink: 0;
-  color: var(--gold);
+  color: var(--primary-color);
   opacity: 0.5;
   margin-top: 0.15rem;
 }
@@ -559,8 +483,6 @@ onUnmounted(() => {
 
 .testimonial-quote {
   margin: 0;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 1.15rem;
   font-weight: 600;
   line-height: 1.6;
   color: var(--text-heading);
@@ -570,7 +492,6 @@ onUnmounted(() => {
 .testimonial-cite {
   display: block;
   margin-top: 0.75rem;
-  font-size: 0.85rem;
   font-style: normal;
   color: var(--text-secondary);
 }
@@ -599,12 +520,11 @@ onUnmounted(() => {
 
 .org-team-card:hover {
   transform: translateY(-3px);
-  border-color: var(--gold);
+  border-color: var(--primary-color);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
 }
 
 .org-role {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.1rem;
   color: var(--text-heading);
   margin-bottom: 0.75rem;
@@ -618,7 +538,7 @@ onUnmounted(() => {
 
 /* ─── Impact Section ─── */
 .impact-section {
-  background: var(--green-soft);
+  background: var(--primary-light);
 }
 
 /* ─── Responsive ─── */
@@ -629,14 +549,6 @@ onUnmounted(() => {
 }
 
 @media (min-width: 768px) {
-  .hero-title {
-    font-size: 3.5rem;
-  }
-
-  .section-title {
-    font-size: 2.25rem;
-  }
-
   .fact-card {
     padding: 2.5rem 2rem;
   }
@@ -647,14 +559,6 @@ onUnmounted(() => {
 }
 
 @media (min-width: 1024px) {
-  .hero-title {
-    font-size: 4rem;
-  }
-
-  .section-title {
-    font-size: 2.75rem;
-  }
-
   .section-container {
     padding: 6rem 2rem;
   }

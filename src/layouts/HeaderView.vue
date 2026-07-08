@@ -319,33 +319,25 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 <style scoped>
 .site-header {
-  --cream: #faf3e6;
-  --cream-soft: #fdf8ef;
-  --green: #1f3d2e;
-  --green-soft: #3f5f52;
-  --orange: #dd7a2b;
-  --ink: #2b2b28;
-  --ink-soft: #6b6558;
-  --hdr-border: rgba(31, 61, 46, 0.14);
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --cream: var(--color-cream-soft);
+  --cream-soft: var(--color-white);
+  --green: var(--primary-dark);
+  --green-soft: var(--primary-color);
+  --orange: var(--primary-color);
+  --ink: var(--color-ink);
+  --ink-soft: var(--color-ink-soft);
+  --hdr-border: var(--color-border);
 
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--cream);
   border-bottom: 1px solid var(--hdr-border);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    sans-serif;
   color: var(--ink);
 }
 
 .header-inner {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 1.25rem 1.75rem;
   display: flex;
@@ -376,7 +368,6 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .brand-name {
-  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.5rem;
   color: var(--green);
@@ -474,11 +465,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .mega-item:hover {
-  background: rgba(221, 122, 43, 0.1);
+  background: var(--primary-light);
 }
 
 .mega-item-title {
-  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1rem;
   color: var(--green);
@@ -552,7 +542,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .lang-option:hover {
-  background: rgba(221, 122, 43, 0.1);
+  background: var(--primary-light);
   color: var(--orange);
 }
 
@@ -561,7 +551,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   align-items: center;
   gap: 0.4rem;
   background: var(--orange);
-  color: #211a12;
+  color: var(--color-white);
   font-weight: 600;
   font-size: 0.95rem;
   padding: 0.7rem 1.5rem;

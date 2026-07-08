@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
 const stats = [
   { value: '293', label: 'Villages Reached' },
@@ -9,45 +9,17 @@ const stats = [
   { value: '10+', label: 'International Partners' },
 ]
 
-const heroSlides = [
-  { label: 'Natural Resource & Environment', gradient: 'linear-gradient(135deg, #4a7a5c 0%, #1e3d2c 100%)' },
-  { label: 'Access to Education', gradient: 'linear-gradient(135deg, #c98a4a 0%, #7a4a22 100%)' },
-  { label: 'Livelihood & Economic Improvement', gradient: 'linear-gradient(135deg, #b0522c 0%, #6b2f18 100%)' },
-  { label: 'Child Protection', gradient: 'linear-gradient(135deg, #3a6b7a 0%, #1c3540 100%)' },
+const slideItems: { image: string; caption: string }[] = [
+  { image: '/images/programs/hero-1.jpg', caption: '' },
+  { image: '/images/programs/hero-2.jpg', caption: '' },
+  { image: '/images/programs/hero-3.jpg', caption: '' },
+  { image: '/images/programs/hero-4.jpg', caption: '' },
 ]
-
-const activeSlide = ref(0)
-let heroTimer: ReturnType<typeof setInterval> | undefined
-
-function goToSlide(index: number) {
-  activeSlide.value = index
-}
-
-function nextSlide() {
-  activeSlide.value = (activeSlide.value + 1) % heroSlides.length
-}
-
-onMounted(() => {
-  heroTimer = setInterval(nextSlide, 5000)
-})
-
-onUnmounted(() => {
-  if (heroTimer) clearInterval(heroTimer)
-})
 </script>
 
 <template>
   <div class="home-view">
-    <section class="hero">
-      <div class="hero-slides">
-        <div
-          v-for="(slide, index) in heroSlides"
-          :key="slide.label"
-          class="hero-slide"
-          :class="{ active: index === activeSlide }"
-          :style="{ background: slide.gradient }"
-        />
-      </div>
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
 
       <div class="hero-inner">
@@ -65,19 +37,7 @@ onUnmounted(() => {
           <RouterLink to="/about" class="btn btn--outline">Stand with us</RouterLink>
         </div>
       </div>
-
-      <div class="hero-dots">
-        <button
-          v-for="(slide, index) in heroSlides"
-          :key="'dot-' + slide.label"
-          type="button"
-          class="hero-dot"
-          :class="{ active: index === activeSlide }"
-          :aria-label="`Go to slide: ${slide.label}`"
-          @click="goToSlide(index)"
-        />
-      </div>
-    </section>
+    </Slideshow>
 
     <section class="stats">
       <div class="stats-inner">
@@ -225,18 +185,9 @@ onUnmounted(() => {
 
 <style scoped>
 .home-view {
-  --cream: #faf3e6;
-  --cream-soft: #fdf8ef;
-  --green: #16302a;
-  --green-muted: #3f5f52;
-  --orange: #dd7a2b;
-  --ink: #2b2b28;
-  --ink-soft: #5b564c;
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-
   font-family: inherit;
-  color: var(--ink);
-  background: var(--cream);
+  color: var(--color-ink);
+  background: var(--color-cream);
 }
 
 .eyebrow {
@@ -245,11 +196,11 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--primary-color);
 }
 
 .eyebrow--light {
-  color: #f0a95f;
+  color: var(--primary-light);
 }
 
 .eyebrow-rule {
@@ -263,85 +214,32 @@ onUnmounted(() => {
 .eyebrow-rule .rule {
   width: 2.5rem;
   height: 1px;
-  background: var(--orange);
+  background: var(--primary-color);
 }
 
-/* Hero */
-.hero {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  min-height: 640px;
-  padding: 4rem 1.5rem;
-  overflow: hidden;
-  background: linear-gradient(180deg, #3a5847 0%, #1e3327 60%, #12201a 100%);
-}
-
-.hero-slides {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 1.2s ease;
-}
-
-.hero-slide.active {
-  opacity: 1;
-}
-
+/* Hero (overlaid on the slideshow via its default slot) */
 .hero-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(115deg, rgba(8, 22, 16, 0.93) 0%, rgba(8, 22, 16, 0.6) 45%, rgba(8, 22, 16, 0.2) 78%),
-    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.55) 0%, transparent 55%);
+    linear-gradient(115deg, rgba(8, 22, 16, 0.86) 0%, rgba(8, 22, 16, 0.55) 45%, rgba(8, 22, 16, 0.15) 78%),
+    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.5) 0%, transparent 55%);
 }
 
 .hero-inner {
-  position: relative;
-  z-index: 1;
-  max-width: 760px;
-  margin: 0 auto 2rem 0;
-  width: 100%;
-}
-
-.hero-dots {
   position: absolute;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  z-index: 2;
+  inset: 0;
+  z-index: 1;
   display: flex;
-  gap: 0.5rem;
-}
-
-.hero-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: rgba(253, 248, 239, 0.4);
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.hero-dot.active {
-  background: var(--orange);
-  transform: scale(1.3);
+  flex-direction: column;
+  justify-content: flex-end;
+  max-width: 760px;
+  padding: 3rem clamp(1.5rem, 5vw, 4.5rem) 3.5rem;
+  width: 100%;
 }
 
 .hero-title {
   margin: 0.75rem 0 1.25rem;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
-  line-height: 1.15;
   color: #fdf8ef;
 }
 
@@ -373,12 +271,12 @@ onUnmounted(() => {
 }
 
 .btn--primary {
-  background: var(--orange);
-  color: #211a12;
+  background: var(--primary-color);
+  color: var(--color-white);
 }
 
 .btn--primary:hover {
-  opacity: 0.9;
+  background: var(--primary-dark);
 }
 
 .btn--outline {
@@ -392,8 +290,8 @@ onUnmounted(() => {
 
 /* Stats */
 .stats {
-  background: var(--cream);
-  border-bottom: 1px solid rgba(22, 48, 42, 0.1);
+  background: var(--color-cream);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .stats-inner {
@@ -407,10 +305,8 @@ onUnmounted(() => {
 }
 
 .stat-number {
-  font-family: var(--font-serif);
-  font-size: clamp(2rem, 4vw, 2.75rem);
   font-weight: 600;
-  color: #b0522c;
+  color: var(--primary-dark);
 }
 
 .stat-label {
@@ -418,7 +314,7 @@ onUnmounted(() => {
   font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
 }
 
 @media (min-width: 720px) {
@@ -437,21 +333,18 @@ onUnmounted(() => {
 
 .mission-title {
   margin: 0 0 1.5rem;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 .mission-text {
   font-size: 1.05rem;
   line-height: 1.8;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
 }
 
 .mission-text em {
   font-style: italic;
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 /* Pillars */
@@ -472,14 +365,11 @@ onUnmounted(() => {
 
 .pillars-title {
   margin: 0.5rem 0 0;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 .pillars-link {
-  color: var(--green);
+  color: var(--primary-dark);
   font-weight: 600;
   text-decoration: none;
   border-bottom: 1px solid transparent;
@@ -503,10 +393,10 @@ onUnmounted(() => {
 }
 
 .pillar-card {
-  background: var(--cream-soft);
+  background: var(--color-cream-soft);
   border-radius: 1rem;
   overflow: hidden;
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  border: 1px solid var(--color-border);
   transition:
     transform 0.35s ease,
     box-shadow 0.35s ease,
@@ -516,7 +406,7 @@ onUnmounted(() => {
 .pillar-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 20px 40px rgba(22, 48, 42, 0.14);
-  border-color: rgba(221, 122, 43, 0.35);
+  border-color: var(--primary-color);
 }
 
 .pillar-image {
@@ -539,7 +429,7 @@ onUnmounted(() => {
 }
 
 .pillar-image--forest {
-  background: linear-gradient(135deg, #4a7a5c, #1e3d2c);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
 }
 
 .pillar-image--education {
@@ -564,25 +454,22 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--primary-color);
 }
 
 .pillar-title {
   margin: 0 0 0.6rem;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: 1.25rem;
-  color: var(--green);
+  color: var(--primary-dark);
   transition: color 0.25s ease;
 }
 
 .pillar-card:hover .pillar-title {
-  color: var(--orange);
+  color: var(--primary-color);
 }
 
 .pillar-desc {
   margin: 0;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -597,12 +484,10 @@ onUnmounted(() => {
 
 .quote-text {
   margin: 0 0 1rem;
-  font-family: var(--font-serif);
   font-style: italic;
   font-weight: 500;
-  font-size: clamp(1.4rem, 3vw, 1.9rem);
   line-height: 1.4;
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 .quote-attrib {
@@ -611,7 +496,7 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
 }
 
 /* CTA */
@@ -627,15 +512,12 @@ onUnmounted(() => {
   gap: 2rem;
   padding: clamp(2rem, 4vw, 3rem);
   border-radius: 1.5rem;
-  background: linear-gradient(135deg, #1e3d2c 0%, var(--green) 60%, #0f231a 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 60%, var(--color-ink) 100%);
   box-shadow: 0 24px 48px rgba(15, 35, 26, 0.28);
 }
 
 .cta-title {
   margin: 0 0 0.75rem;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(1.9rem, 4vw, 2.5rem);
   color: #fdf8ef;
 }
 

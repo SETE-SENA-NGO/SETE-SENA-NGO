@@ -1,5 +1,21 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import Slideshow from '@/components/shared/Slideshow.vue'
+
+const slideItems = [
+  {
+    image: '/images/programs/hero-1.jpg',
+    caption: 'Every gift, partnership and pair of hands roots another generation of change.',
+  },
+  {
+    image: '/images/programs/hero-2.jpg',
+    caption: 'Donate, partner or volunteer to support Santi Sena programs in rural Cambodia.',
+  },
+  {
+    image: '/images/programs/hero-3.jpg',
+    caption: 'Thirty years of standing beside villages across Svay Rieng and Prey Veng.',
+  },
+]
 
 const ways = [
   {
@@ -32,6 +48,8 @@ const tiers = [
 
 <template>
   <main class="get-involved-page">
+    <Slideshow :slides="slideItems" />
+
     <section class="hero">
       <div class="hero-overlay"></div>
       <div class="hero-inner">
@@ -80,13 +98,9 @@ const tiers = [
 
 <style scoped>
 .get-involved-page {
-  --font-display: Cambria, Georgia, 'Times New Roman', serif;
-  --font-body: Aptos, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   min-height: 100vh;
-  background: #fbf4e6;
-  color: #073f3a;
-  font-family: var(--font-body);
-  font-size: 16px;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .hero {
@@ -108,15 +122,14 @@ const tiers = [
 
 .hero-inner {
   width: 100%;
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 8rem 1.5rem;
   text-align: left;
 }
 
 .eyebrow {
-  color: #ff7a1a;
-  font-family: var(--font-body);
+  color: var(--primary-color);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.3em;
@@ -127,9 +140,6 @@ const tiers = [
   max-width: 896px;
   margin: 1rem 0 0;
   color: #fff7e9;
-  font-family: var(--font-display);
-  font-size: 3rem;
-  line-height: 1;
   font-weight: 600;
   text-wrap: balance;
 }
@@ -138,16 +148,15 @@ const tiers = [
   max-width: 672px;
   margin: 1.5rem 0 0;
   color: rgba(255, 247, 233, 0.85);
-  font-size: 1.125rem;
   line-height: 1.55;
 }
 
 .ways-section {
   width: 100%;
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 6rem 1.5rem;
-  background: #fbf4e6;
+  background: var(--color-cream);
 }
 
 .monthly-section {
@@ -174,9 +183,7 @@ const tiers = [
 
 .way-card h2 {
   margin: 0;
-  color: #073f3a;
-  font-family: var(--font-display);
-  font-size: 1.875rem;
+  color: var(--color-ink);
   font-weight: 600;
   line-height: 2.25rem;
 }
@@ -184,8 +191,7 @@ const tiers = [
 .way-card p {
   flex: 1;
   margin: 1rem 0 0;
-  color: #234b45;
-  font-size: 1rem;
+  color: var(--color-ink-soft);
   line-height: 1.5;
 }
 
@@ -198,16 +204,16 @@ const tiers = [
   margin-top: 2rem;
   border: 0;
   border-radius: 999px;
-  background: #ff7a1a;
+  background: var(--primary-color);
   color: #fffaf0;
   font-size: 0.875rem;
   font-weight: 700;
   padding: 0.625rem 1.25rem;
-  box-shadow: 0 18px 34px rgba(255, 122, 26, 0.2);
+  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.2);
 }
 
 .donation-section {
-  background: #094239;
+  background: var(--primary-dark);
   color: #fff7e9;
   padding: 6rem 0;
 }
@@ -221,17 +227,13 @@ const tiers = [
 
 .donation-inner h2 {
   margin: 1rem 0 0;
-  font-family: var(--font-display);
-  font-size: 2.25rem;
   line-height: 2.5rem;
   font-weight: 600;
 }
 
 .monthly-section h2 {
   margin: 0;
-  color: #073f3a;
-  font-family: var(--font-display);
-  font-size: 2.25rem;
+  color: var(--color-ink);
   line-height: 1.1;
   font-weight: 600;
 }
@@ -250,8 +252,7 @@ const tiers = [
 
 .tier-card strong {
   display: block;
-  color: #ff7a1a;
-  font-family: var(--font-display);
+  color: var(--primary-color);
   font-size: 2.25rem;
   font-weight: 500;
   line-height: 2.5rem;
@@ -260,7 +261,6 @@ const tiers = [
 .tier-card p {
   margin: 0.75rem 0 0;
   color: rgba(255, 247, 233, 0.8);
-  font-size: 0.875rem;
   line-height: 1.25rem;
 }
 
@@ -270,8 +270,7 @@ const tiers = [
 
 .monthly-section p {
   margin: 1rem auto 0;
-  color: #234b45;
-  font-size: 1rem;
+  color: var(--color-ink-soft);
   line-height: 1.5;
 }
 
@@ -288,12 +287,7 @@ const tiers = [
 }
 
 @media (min-width: 640px) {
-  .hero h1 {
-    font-size: 3.75rem;
-  }
-
   .donation-inner h2 {
-    font-size: 3rem;
     line-height: 1;
   }
 
@@ -313,10 +307,6 @@ const tiers = [
 
   .way-card {
     padding: 2rem;
-  }
-
-  .get-involved-page {
-    font-size: 16px;
   }
 }
 

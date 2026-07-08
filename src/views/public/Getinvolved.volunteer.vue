@@ -9,6 +9,18 @@ import livelihoodImage from '@/assets/volunteer/livelihood-home-garden.png'
 import mobileLibraryImage from '@/assets/volunteer/mobile-library.png'
 import volunteerHeroImage from '@/assets/volunteer/volunteer-hero.png'
 import washSchoolImage from '@/assets/volunteer/wash-school.png'
+import Slideshow from '@/components/shared/Slideshow.vue'
+
+const slideItems = [
+  {
+    image: '/images/programs/hero-3.jpg',
+    caption: 'Bring your skills to community-led work in Svay Rieng and Prey Veng.',
+  },
+  {
+    image: '/images/programs/hero-4.jpg',
+    caption: 'Volunteers strengthen forestry, education, WASH and child protection programs.',
+  },
+]
 
 const volunteerPathways = [
   {
@@ -183,6 +195,8 @@ onUnmounted(() => {
 
 <template>
   <main class="volunteer-page">
+    <Slideshow :slides="slideItems" />
+
     <section class="hero" aria-label="Volunteer with Santi Sena">
       <img :src="volunteerHeroImage" alt="Volunteers walking through a rural Cambodian village" />
       <div class="hero-shade"></div>
@@ -310,21 +324,11 @@ onUnmounted(() => {
 
 <style scoped>
 .volunteer-page {
-  --page: #f7f3ea;
-  --paper: #fffdf8;
-  --ink: #073f3a;
-  --muted: #315a55;
-  --line: #ddd1c0;
-  --orange: #e86f1d;
   --blue: #2f6f8f;
-  --green: #0a463d;
-  --font-display: Cambria, Georgia, 'Times New Roman', serif;
-  --font-body: Aptos, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   min-height: 100vh;
-  background: var(--page);
-  color: var(--ink);
-  font-family: var(--font-body);
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .hero {
@@ -334,7 +338,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: #0b332f;
+  background: var(--primary-dark);
 }
 
 .hero > img,
@@ -361,7 +365,7 @@ onUnmounted(() => {
 .content-section,
 .stats-band,
 .contact-band {
-  width: min(100% - 3rem, 1220px);
+  width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
 }
 
@@ -372,7 +376,7 @@ onUnmounted(() => {
 .eyebrow,
 .section-kicker {
   margin: 0;
-  color: var(--orange);
+  color: var(--primary-color);
   font-size: 0.75rem;
   font-weight: 900;
   letter-spacing: 0.22em;
@@ -384,8 +388,6 @@ onUnmounted(() => {
   max-width: 760px;
   margin: 1.25rem 0 0;
   color: #fffaf0;
-  font-family: var(--font-display);
-  font-size: clamp(2.35rem, 4.8vw, 4.35rem);
   font-weight: 600;
   line-height: 1;
   text-wrap: balance;
@@ -395,7 +397,6 @@ onUnmounted(() => {
   max-width: 760px;
   margin: 1.75rem 0 0;
   color: rgba(255, 250, 240, 0.9);
-  font-size: clamp(1.05rem, 1.5vw, 1.32rem);
   line-height: 1.6;
 }
 
@@ -406,20 +407,21 @@ onUnmounted(() => {
   min-height: 3.25rem;
   margin-top: 2rem;
   border-radius: 999px;
-  background: var(--orange);
+  background: var(--primary-color);
   color: #fffaf0;
   font-weight: 850;
   padding: 0.85rem 1.55rem;
   text-decoration: none;
-  box-shadow: 0 18px 34px rgba(232, 111, 29, 0.22);
+  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.22);
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease;
 }
 
 .primary-link:hover {
+  background: var(--primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 20px 38px rgba(232, 111, 29, 0.3);
+  box-shadow: 0 20px 38px rgba(20, 129, 62, 0.3);
 }
 
 .stats-band {
@@ -453,7 +455,6 @@ onUnmounted(() => {
   grid-area: value;
   display: block;
   color: var(--blue);
-  font-family: var(--font-display);
   font-size: clamp(2.45rem, 4vw, 3.85rem);
   font-weight: 500;
   line-height: 0.9;
@@ -464,8 +465,7 @@ onUnmounted(() => {
   display: block;
   max-width: 220px;
   margin-top: 0.55rem;
-  color: var(--muted);
-  font-size: 0.94rem;
+  color: var(--color-ink-soft);
   line-height: 1.35;
 }
 
@@ -577,9 +577,7 @@ onUnmounted(() => {
 .section-heading h2,
 .contact-band h2 {
   margin: 0.85rem 0 0;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: clamp(1.65rem, 2.45vw, 2.35rem);
+  color: var(--color-ink);
   font-weight: 600;
   line-height: 1.12;
   text-wrap: balance;
@@ -588,8 +586,7 @@ onUnmounted(() => {
 .section-heading p:not(.section-kicker),
 .contact-band__content p {
   margin: 1.1rem 0 0;
-  color: var(--muted);
-  font-size: 1.05rem;
+  color: var(--color-ink-soft);
   line-height: 1.65;
 }
 
@@ -615,7 +612,7 @@ onUnmounted(() => {
   align-items: flex-end;
   overflow: hidden;
   border-radius: 8px;
-  background: #103b35;
+  background: var(--primary-dark);
   color: #fffaf0;
   isolation: isolate;
   outline: 0;
@@ -668,7 +665,7 @@ onUnmounted(() => {
 
 .image-card__base span {
   display: block;
-  color: #ffb06e;
+  color: var(--primary-color);
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -678,8 +675,6 @@ onUnmounted(() => {
 .image-card__base h3 {
   margin: 0.55rem 0 0;
   color: #fffaf0;
-  font-family: var(--font-display);
-  font-size: clamp(1.18rem, 1.65vw, 1.55rem);
   font-weight: 600;
   line-height: 1.15;
 }
@@ -687,7 +682,7 @@ onUnmounted(() => {
 .image-card__base strong {
   display: block;
   margin-top: 0.8rem;
-  color: #ffb06e;
+  color: var(--primary-color);
   font-size: 0.86rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -713,8 +708,6 @@ onUnmounted(() => {
 }
 
 .image-card__detail p {
-  font-family: var(--font-display);
-  font-size: 1.08rem;
   font-weight: 600;
   line-height: 1.25;
 }
@@ -722,7 +715,6 @@ onUnmounted(() => {
 .image-card__detail small {
   margin-top: 0.8rem;
   color: rgba(255, 250, 240, 0.84);
-  font-size: 0.95rem;
 }
 
 .image-card:hover img,
@@ -767,7 +759,7 @@ onUnmounted(() => {
   min-height: 340px;
   overflow: hidden;
   border-radius: 8px;
-  background: var(--paper);
+  background: var(--color-white);
   outline: 0;
 }
 
@@ -806,8 +798,7 @@ onUnmounted(() => {
 }
 
 .step-card__content span {
-  color: #ffb06e;
-  font-family: var(--font-display);
+  color: var(--primary-color);
   font-size: 1.55rem;
   line-height: 1;
 }
@@ -815,8 +806,6 @@ onUnmounted(() => {
 .step-card__content h3 {
   margin: 0.4rem 0 0;
   color: #fffaf0;
-  font-family: var(--font-display);
-  font-size: 1.18rem;
   font-weight: 600;
   line-height: 1.15;
 }
@@ -876,7 +865,7 @@ onUnmounted(() => {
 .contact-band li {
   position: relative;
   padding-left: 1.25rem;
-  color: var(--muted);
+  color: var(--color-ink-soft);
   line-height: 1.5;
 }
 
@@ -888,7 +877,7 @@ onUnmounted(() => {
   width: 0.38rem;
   height: 0.38rem;
   border-radius: 50%;
-  background: var(--orange);
+  background: var(--primary-color);
 }
 
 @media (max-width: 1060px) {
@@ -924,7 +913,7 @@ onUnmounted(() => {
   .content-section,
   .stats-band,
   .contact-band {
-    width: min(100% - 2rem, 1220px);
+    width: min(100% - 2rem, var(--container-max-width));
   }
 
   .hero-content {

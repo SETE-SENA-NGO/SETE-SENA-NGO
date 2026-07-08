@@ -1,31 +1,9 @@
 <template>
   <div class="partners-page">
-    <!-- Hero Section with Slideshow -->
+    <Slideshow :slides="slideItems" />
+
+    <!-- Hero Section -->
     <section class="hero">
-      <!-- Slideshow backgrounds -->
-      <div class="slideshow-container">
-        <div
-          v-for="(src, index) in slides"
-          :key="index"
-          class="slide"
-          :class="{ active: index === currentSlide, prev: index === (currentSlide - 1 + slides.length) % slides.length }"
-          :style="{ backgroundImage: `url(${src})` }"
-        ></div>
-        <div class="hero-overlay"></div>
-      </div>
-
-      <!-- Slide indicators -->
-      <div class="slide-indicators">
-        <button
-          v-for="(_, index) in slides"
-          :key="index"
-          class="indicator-dot"
-          :class="{ active: index === currentSlide }"
-          @click="currentSlide = index"
-          :aria-label="`Go to slide ${index + 1}`"
-        ></button>
-      </div>
-
       <div class="hero-content">
         <span class="badge">Impact · Partners</span>
         <h1>Trusted by ten+ international donors and every government line ministry we touch.</h1>
@@ -188,46 +166,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import Slideshow from '@/components/shared/Slideshow.vue';
+import heroImpact from '@/assets/hero-impact.jpg';
+import heroImpactForest from '@/assets/hero-impact-forest.jpg';
+import heroImpactVillage from '@/assets/hero-impact-village.jpg';
 
-// Slideshow background images (Unsplash - free to use)
-const slides = [
-  'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80',  // community
-  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80',  // hands together
-  'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&q=80',  // children education
-  'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=1600&q=80',   // nature/sustainability
-];
-
-const currentSlide = ref(0);
-const isTransitioning = ref(false);
-let intervalId: ReturnType<typeof setInterval> | null = null;
-
-function nextSlide() {
-  if (isTransitioning.value) return;
-  isTransitioning.value = true;
-  currentSlide.value = (currentSlide.value + 1) % slides.length;
-  setTimeout(() => {
-    isTransitioning.value = false;
-  }, 1200);
-}
-
-function startSlideshow() {
-  intervalId = setInterval(nextSlide, 5000);
-}
-
-function stopSlideshow() {
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
-  }
-}
-
-onMounted(() => {
-  startSlideshow();
-});
-
-onUnmounted(() => {
-  stopSlideshow();
-});
+const slideItems = [
+  { image: heroImpact, caption: 'Ten-plus international donors trust Santi Sena with multi-year grants.' },
+  { image: heroImpactForest, caption: 'Government ministries partner with us on community forestry and natural resource management.' },
+  { image: heroImpactVillage, caption: 'Local pagodas, commune councils and cooperatives anchor every partnership in the village.' },
+]
 
 // Partner data
 const partners = [
@@ -339,6 +287,7 @@ function startSmoothScroll() {
   if (!track) return;
 
   function step() {
+    if (!track) return;
     if (!isPaused.value) {
       scrollPos -= speed;
       // When we've scrolled past one full set of partners, reset position
@@ -362,7 +311,6 @@ function stopSmoothScroll() {
 }
 
 onMounted(() => {
-  startSlideshow();
   // Wait for DOM, then start smooth scroll
   nextTick(() => {
     startSmoothScroll();
@@ -370,7 +318,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  stopSlideshow();
   stopSmoothScroll();
 });
 </script>
@@ -380,23 +327,14 @@ onUnmounted(() => {
    Layout Helpers
    ===================== */
 .partners-page {
-  --green: #16302a;
-  --green-muted: #3f5f52;
-  --orange: #dd7a2b;
-  --ink: #2b2b28;
-  --ink-soft: #5b564c;
-  --cream: #faf3e6;
-  --cream-soft: #fdf8ef;
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-
   min-height: 100vh;
   font-family: inherit;
-  color: var(--ink);
-  background: var(--cream);
+  color: var(--color-ink);
+  background: var(--color-cream);
 }
 
 .container {
-  max-width: 1100px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 1.5rem;
 }
@@ -416,26 +354,24 @@ onUnmounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--orange);
+  color: var(--primary-color);
   margin-bottom: 0.75rem;
   padding: 0.35rem 1.1rem;
-  border: 1px solid rgba(221, 122, 43, 0.2);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
   border-radius: 9999px;
-  background: rgba(221, 122, 43, 0.06);
+  background: color-mix(in srgb, var(--primary-color) 6%, transparent);
 }
 
 .section-title {
-  font-size: 2.5rem;
   font-weight: 700;
-  color: var(--green);
+  color: var(--primary-dark);
   margin-bottom: 1rem;
-  font-family: var(--font-serif);
   line-height: 1.2;
 }
 
 .section-intro {
   font-size: 1.1rem;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
   line-height: 1.7;
   max-width: 700px;
   margin: 0 auto;
@@ -453,67 +389,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.slideshow-container {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.slide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 1.2s ease-in-out;
-  will-change: opacity;
-}
-
-.slide.active {
-  opacity: 1;
-}
-
-.slide.prev {
-  opacity: 0;
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 35, 26, 0.55);
-  z-index: 1;
-}
-
-.slide-indicators {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.75rem;
-  z-index: 10;
-}
-
-.indicator-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid rgba(253, 248, 239, 0.6);
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-.indicator-dot.active {
-  background: var(--orange);
-  border-color: var(--orange);
-}
-
-.indicator-dot:hover {
-  border-color: var(--orange);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--color-ink) 100%);
 }
 
 .hero-content {
@@ -530,21 +406,19 @@ onUnmounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--orange);
+  color: var(--primary-color);
   margin-bottom: 1.25rem;
   padding: 0.35rem 1.1rem;
-  border: 1px solid rgba(221, 122, 43, 0.35);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
   border-radius: 9999px;
-  background: rgba(221, 122, 43, 0.1);
+  background: color-mix(in srgb, var(--primary-color) 10%, transparent);
 }
 
 .hero-content h1 {
-  font-size: clamp(2.25rem, 4.5vw, 3.25rem);
   font-weight: 700;
   line-height: 1.2;
   color: #fdf8ef;
   margin-bottom: 1.25rem;
-  font-family: var(--font-serif);
 }
 
 .hero-subtitle {
@@ -559,11 +433,7 @@ onUnmounted(() => {
    Partners Section
    ===================== */
 .partners-section {
-  background: #f5ebe0;
-}
-
-.partners-section .container {
-  max-width: 1600px;
+  background: var(--color-cream-soft);
 }
 
 /* =====================
@@ -607,7 +477,7 @@ onUnmounted(() => {
   width: 220px;
   height: 110px;
   background: #ffffff;
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 8%, transparent);
   border-radius: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   display: flex;
@@ -620,12 +490,12 @@ onUnmounted(() => {
 
 .partner-logo-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 8px 24px rgba(22, 48, 42, 0.1);
-  border-color: rgba(221, 122, 43, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: color-mix(in srgb, var(--primary-dark) 30%, transparent);
 }
 
 .partner-logo-card:focus {
-  outline: 2px solid var(--orange);
+  outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
 
@@ -653,7 +523,7 @@ onUnmounted(() => {
    Government Section
    ===================== */
 .government-section {
-  background: #f5ebe0;
+  background: var(--color-cream-soft);
 }
 
 .government-grid {
@@ -664,8 +534,8 @@ onUnmounted(() => {
 }
 
 .gov-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  background: linear-gradient(145deg, #ffffff 0%, var(--color-cream-soft) 100%);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 8%, transparent);
   border-radius: 1rem;
   padding: 2rem;
   transition: all 0.3s ease;
@@ -674,8 +544,8 @@ onUnmounted(() => {
 
 .gov-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(22, 48, 42, 0.08);
-  border-color: rgba(221, 122, 43, 0.25);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-color: color-mix(in srgb, var(--primary-dark) 25%, transparent);
 }
 
 .gov-icon {
@@ -684,29 +554,28 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(22, 48, 42, 0.08);
+  background: color-mix(in srgb, var(--primary-color) 8%, transparent);
   border-radius: 12px;
   margin-bottom: 0.75rem;
-  color: var(--green);
+  color: var(--primary-color);
   transition: transform 0.3s ease, background 0.3s ease;
 }
 
 .gov-card:hover .gov-icon {
   transform: scale(1.1);
-  background: rgba(22, 48, 42, 0.12);
+  background: color-mix(in srgb, var(--primary-color) 12%, transparent);
 }
 
 .gov-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--green);
+  color: var(--primary-dark);
   margin: 0 0 0.5rem;
-  font-family: var(--font-serif);
 }
 
 .gov-desc {
   font-size: 0.95rem;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
   line-height: 1.6;
   margin: 0;
 }
@@ -715,7 +584,7 @@ onUnmounted(() => {
    Local Partners Section
    ===================== */
 .local-partners-section {
-  background: #f5ebe0;
+  background: var(--color-cream-soft);
 }
 
 .local-grid {
@@ -726,8 +595,8 @@ onUnmounted(() => {
 }
 
 .local-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  background: linear-gradient(145deg, #ffffff 0%, var(--color-cream-soft) 100%);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 8%, transparent);
   border-radius: 1rem;
   padding: 2rem;
   transition: all 0.3s ease;
@@ -736,14 +605,14 @@ onUnmounted(() => {
 
 .local-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(22, 48, 42, 0.08);
-  border-color: rgba(221, 122, 43, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: color-mix(in srgb, var(--primary-dark) 25%, transparent);
 }
 
 .local-number {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--orange);
+  color: var(--primary-color);
   margin-bottom: 1rem;
   letter-spacing: 0.08em;
 }
@@ -751,14 +620,13 @@ onUnmounted(() => {
 .local-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--green);
+  color: var(--primary-dark);
   margin: 0 0 0.5rem;
-  font-family: var(--font-serif);
 }
 
 .local-desc {
   font-size: 0.9rem;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
   line-height: 1.6;
   margin: 0;
 }
@@ -767,7 +635,7 @@ onUnmounted(() => {
    Why Partners Stay Section
    ===================== */
 .why-section {
-  background: #f5ebe0;
+  background: var(--color-cream-soft);
 }
 
 .why-grid {
@@ -778,8 +646,8 @@ onUnmounted(() => {
 }
 
 .why-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  background: linear-gradient(145deg, #ffffff 0%, var(--color-cream-soft) 100%);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 8%, transparent);
   border-radius: 1rem;
   padding: 2.5rem 2rem;
   text-align: center;
@@ -789,8 +657,8 @@ onUnmounted(() => {
 
 .why-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 12px 28px rgba(22, 48, 42, 0.08);
-  border-color: rgba(221, 122, 43, 0.25);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border-color: color-mix(in srgb, var(--primary-dark) 25%, transparent);
 }
 
 .why-icon {
@@ -799,30 +667,28 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(22, 48, 42, 0.08);
+  background: color-mix(in srgb, var(--primary-color) 8%, transparent);
   border-radius: 50%;
   margin: 0 auto 1rem;
-  color: var(--green);
+  color: var(--primary-color);
   transition: transform 0.3s ease, background 0.3s ease;
 }
 
 .why-card:hover .why-icon {
   transform: scale(1.12);
-  background: rgba(221, 122, 43, 0.12);
-  color: var(--orange);
+  background: color-mix(in srgb, var(--primary-dark) 12%, transparent);
+  color: var(--primary-dark);
 }
 
 .why-card h3 {
-  font-size: 1.15rem;
   font-weight: 600;
-  color: var(--green);
+  color: var(--primary-dark);
   margin-bottom: 0.5rem;
-  font-family: var(--font-serif);
 }
 
 .why-card p {
   font-size: 0.95rem;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
   line-height: 1.6;
   margin: 0;
 }
@@ -832,7 +698,7 @@ onUnmounted(() => {
    ===================== */
 .cta-section {
   padding: 5rem 0;
-  background: #f5ebe0;
+  background: var(--color-cream-soft);
 }
 
 .cta-card {
@@ -841,7 +707,7 @@ onUnmounted(() => {
   gap: 2rem;
   padding: clamp(2rem, 4vw, 3.5rem);
   border-radius: 1.5rem;
-  background: linear-gradient(135deg, #1e3d2c 0%, #16302a 60%, #0f231a 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--color-ink) 100%);
   box-shadow: 0 24px 48px rgba(15, 35, 26, 0.28);
   align-items: center;
   text-align: center;
@@ -849,9 +715,7 @@ onUnmounted(() => {
 
 .cta-title {
   margin: 0 0 0.75rem;
-  font-family: var(--font-serif);
   font-weight: 700;
-  font-size: clamp(1.8rem, 3.5vw, 2.25rem);
   color: #fdf8ef;
 }
 
@@ -884,7 +748,7 @@ onUnmounted(() => {
 }
 
 .btn--primary {
-  background: var(--orange);
+  background: var(--primary-color);
   color: #211a12;
 }
 
@@ -926,16 +790,8 @@ onUnmounted(() => {
     min-height: 50vh;
   }
 
-  .hero-content h1 {
-    font-size: 2.25rem;
-  }
-
   .hero-subtitle {
     font-size: 1.05rem;
-  }
-
-  .section-title {
-    font-size: 2rem;
   }
 
   .section {
@@ -986,10 +842,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 480px) {
-  .hero-content h1 {
-    font-size: 1.85rem;
-  }
-
   .logo-carousel-track {
     gap: 0.75rem;
   }

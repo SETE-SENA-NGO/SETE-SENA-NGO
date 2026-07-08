@@ -1,82 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
-// Slideshow background images (Unsplash - free to use)
-const slides = [
-  'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1600&q=80',  // forest/nature
-  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1600&q=80',  // green landscape
-  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=80',  // forest path
-  'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1600&q=80',  // nature/sunlight
+const slideItems = [
+  { image: '/images/programs/environment-hero.jpg', caption: 'Protecting our planet for future generations.' },
+  { image: '/images/programs/environment-hero1.jpg', caption: 'Reforestation projects restoring degraded forests and creating carbon sinks.' },
+  { image: '/images/programs/environment-hero2.jpg', caption: 'Renewable energy and clean water access for rural communities.' },
+  { image: '/images/programs/environment-hero3.jpg', caption: 'Training farmers in sustainable agriculture and agroforestry.' },
 ]
-
-const currentSlide = ref(0)
-const isTransitioning = ref(false)
-let intervalId: ReturnType<typeof setInterval> | null = null
-
-function nextSlide() {
-  if (isTransitioning.value) return
-  isTransitioning.value = true
-  currentSlide.value = (currentSlide.value + 1) % slides.length
-  setTimeout(() => {
-    isTransitioning.value = false
-  }, 1200)
-}
-
-function startSlideshow() {
-  intervalId = setInterval(nextSlide, 5000)
-}
-
-function stopSlideshow() {
-  if (intervalId) {
-    clearInterval(intervalId)
-    intervalId = null
-  }
-}
-
-onMounted(() => {
-  startSlideshow()
-})
-
-onUnmounted(() => {
-  stopSlideshow()
-})
 </script>
 
 <template>
   <div class="environment-page">
+    <Slideshow :slides="slideItems" />
+
     <!-- Hero Section -->
     <section class="hero">
-      <!-- Slideshow backgrounds -->
-      <div class="slideshow-container">
-        <div
-          v-for="(src, index) in slides"
-          :key="index"
-          class="slide"
-          :class="{ active: index === currentSlide, prev: index === (currentSlide - 1 + slides.length) % slides.length }"
-          :style="{ backgroundImage: `url(${src})` }"
-        ></div>
-        <div class="hero-overlay"></div>
-        <!-- Gradient overlay for text readability -->
-        <div class="hero-gradient-overlay"></div>
-      </div>
-
-      <!-- Slide indicators -->
-      <div class="slide-indicators">
-        <button
-          v-for="(_, index) in slides"
-          :key="index"
-          class="indicator-dot"
-          :class="{ active: index === currentSlide }"
-          @click="currentSlide = index"
-          :aria-label="`Go to slide ${index + 1}`"
-        ></button>
-      </div>
-
       <div class="hero-content">
         <span class="badge">Environment Program</span>
         <h1>Protecting Our Planet<br />For Future Generations</h1>
         <p class="hero-subtitle">
-          We are committed to environmental conservation, sustainable practices, and 
+          We are committed to environmental conservation, sustainable practices, and
           empowering communities to become stewards of their natural resources.
         </p>
       </div>
@@ -142,7 +85,7 @@ onUnmounted(() => {
       <div class="container">
         <div class="section-header">
           <span class="section-label">Key Initiatives</span>
-          <h2 style="font-family: var(--font-serif);">What We're Doing</h2>
+          <h2>What We're Doing</h2>
         </div>
         <div class="initiatives-list">
           <div class="initiative-item">
@@ -347,14 +290,14 @@ onUnmounted(() => {
 .environment-page {
   min-height: 100vh;
   font-family: inherit;
-  color: var(--ink);
-  background: #FCF6E9;
+  color: var(--color-ink);
+  background: var(--color-cream);
 }
 
 .container {
-  max-width: 1100px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 var(--container-padding);
 }
 
 .section {
@@ -368,7 +311,7 @@ onUnmounted(() => {
 
 .overview-section,
 .process-section {
-  background: #f5ebe0;
+  background: var(--color-cream-soft);
 }
 
 .section-label {
@@ -377,32 +320,28 @@ onUnmounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--green);
+  color: var(--primary-color);
   margin-bottom: 0.75rem;
   padding: 0.35rem 1rem;
-  border: 1px solid rgba(22, 48, 42, 0.15);
+  border: 1px solid rgba(27, 163, 79, 0.15);
   border-radius: 9999px;
-  background: rgba(22, 48, 42, 0.05);
+  background: var(--primary-light);
 }
 
 .section-header h2 {
-  font-size: 2.25rem;
   font-weight: 700;
-  line-height: 1.25;
-  color: var(--green);
+  color: var(--primary-color);
   margin-bottom: 0.75rem;
-  font-family: var(--font-serif);
 }
 
 .section-desc {
-  color: var(--ink);
-  font-size: 1.1rem;
+  color: var(--color-ink);
   max-width: 540px;
   margin: 0 auto;
 }
 
 .alt-bg {
-  background: #f5ebe0;
+  background: var(--color-cream-soft);
 }
 
 /* =====================
@@ -416,87 +355,7 @@ onUnmounted(() => {
   justify-content: center;
   overflow: hidden;
   padding: 5rem 1.5rem;
-}
-
-/* Slideshow */
-.slideshow-container {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.slide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transition: opacity 1.2s ease-in-out;
-  will-change: opacity;
-}
-
-.slide.active {
-  opacity: 1;
-  z-index: 1;
-}
-
-.slide.prev {
-  /* Keep the previous slide visible briefly during crossfade */
-  opacity: 0;
-  z-index: 0;
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.65) 0%, rgba(22, 48, 42, 0.55) 100%);
-  z-index: 2;
-}
-
-/* Gradient edge fade for smooth blending */
-.hero-gradient-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to top, rgba(15, 23, 42, 0.7) 0%, transparent 50%),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.4) 0%, transparent 35%),
-    linear-gradient(to right, rgba(22, 48, 42, 0.3) 0%, transparent 60%);
-  z-index: 3;
-  pointer-events: none;
-}
-
-/* Slide indicators */
-.slide-indicators {
-  position: absolute;
-  bottom: 2.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.6rem;
-  z-index: 10;
-}
-
-.indicator-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 0;
-}
-
-.indicator-dot:hover {
-  border-color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.indicator-dot.active {
-  background: #ffffff;
-  border-color: #ffffff;
-  transform: scale(1.2);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
 }
 
 /* Hero Content */
@@ -535,9 +394,7 @@ onUnmounted(() => {
 }
 
 .hero-content h1 {
-  font-size: 3.25rem;
   font-weight: 800;
-  line-height: 1.15;
   color: #ffffff;
   margin-bottom: 1.25rem;
   letter-spacing: -0.02em;
@@ -545,7 +402,6 @@ onUnmounted(() => {
 }
 
 .hero-subtitle {
-  font-size: 1.2rem;
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.7;
   max-width: 600px;
@@ -563,8 +419,8 @@ onUnmounted(() => {
 }
 
 .overview-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  background: linear-gradient(145deg, #ffffff 0%, var(--color-cream-soft) 100%);
+  border: 1px solid rgba(27, 163, 79, 0.08);
   border-radius: 1rem;
   padding: 2rem;
   transition: all 0.3s ease;
@@ -572,7 +428,7 @@ onUnmounted(() => {
 }
 
 .overview-card:hover {
-  border-color: rgba(22, 48, 42, 0.25);
+  border-color: rgba(27, 163, 79, 0.25);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   transform: translateY(-2px);
 }
@@ -584,22 +440,19 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
-  background: #f5ebe0;
-  color: var(--green);
+  background: var(--color-cream-soft);
+  color: var(--primary-color);
   margin-bottom: 1.25rem;
 }
 
 .overview-card h3 {
-  font-size: 1.15rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: var(--green);
-  font-family: var(--font-serif);
+  color: var(--primary-color);
 }
 
 .overview-card p {
-  font-size: 0.9rem;
-  color: var(--ink);
+  color: var(--color-ink);
   line-height: 1.65;
 }
 
@@ -652,9 +505,9 @@ onUnmounted(() => {
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(22, 48, 42, 0.3) 0%,
-    rgba(22, 48, 42, 0.5) 50%,
-    rgba(22, 48, 42, 0.85) 100%
+    rgba(20, 129, 62, 0.3) 0%,
+    rgba(20, 129, 62, 0.5) 50%,
+    rgba(20, 129, 62, 0.85) 100%
   );
   transition: all 0.4s ease;
 }
@@ -663,9 +516,9 @@ onUnmounted(() => {
   .initiative-item:hover .initiative-overlay {
     background: linear-gradient(
       to bottom,
-      rgba(22, 48, 42, 0.4) 0%,
-      rgba(22, 48, 42, 0.6) 50%,
-      rgba(22, 48, 42, 0.9) 100%
+      rgba(20, 129, 62, 0.4) 0%,
+      rgba(20, 129, 62, 0.6) 50%,
+      rgba(20, 129, 62, 0.9) 100%
     );
   }
 }
@@ -683,17 +536,14 @@ onUnmounted(() => {
 }
 
 .initiative-content h3 {
-  font-size: 1.35rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
   color: #ffffff;
   letter-spacing: -0.01em;
-  font-family: var(--font-serif);
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .initiative-content p {
-  font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.6;
   opacity: 0.9;
@@ -710,8 +560,8 @@ onUnmounted(() => {
 }
 
 .impact-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  background: linear-gradient(145deg, #ffffff 0%, var(--color-cream-soft) 100%);
+  border: 1px solid rgba(27, 163, 79, 0.08);
   border-radius: 1rem;
   padding: 2rem 1.5rem;
   text-align: center;
@@ -720,7 +570,7 @@ onUnmounted(() => {
 }
 
 .impact-card:hover {
-  border-color: rgba(22, 48, 42, 0.25);
+  border-color: rgba(27, 163, 79, 0.25);
   transform: translateY(-2px);
 }
 
@@ -728,14 +578,12 @@ onUnmounted(() => {
   display: block;
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--orange);
+  color: var(--primary-color);
   margin-bottom: 0.5rem;
-  font-family: var(--font-serif);
 }
 
 .impact-label {
-  font-size: 0.9rem;
-  color: var(--ink);
+  color: var(--color-ink);
   font-weight: 500;
 }
 
@@ -751,8 +599,8 @@ onUnmounted(() => {
 .process-step {
   text-align: center;
   padding: 2rem 1.5rem;
-  background: linear-gradient(145deg, #ffffff 0%, #f5ebe0 100%);
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  background: linear-gradient(145deg, #ffffff 0%, var(--color-cream-soft) 100%);
+  border: 1px solid rgba(27, 163, 79, 0.08);
   border-radius: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
@@ -766,24 +614,20 @@ onUnmounted(() => {
 .step-number {
   font-size: 2.5rem;
   font-weight: 800;
-  color: var(--green);
+  color: var(--primary-color);
   opacity: 0.2;
   margin-bottom: 1rem;
   line-height: 1;
-  font-family: var(--font-serif);
 }
 
 .process-step h3 {
-  font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: var(--green);
-  font-family: var(--font-serif);
+  color: var(--primary-color);
 }
 
 .process-step p {
-  font-size: 0.9rem;
-  color: var(--ink);
+  color: var(--color-ink);
   line-height: 1.65;
 }
 
@@ -792,9 +636,9 @@ onUnmounted(() => {
    ===================== */
 .quote-section {
   padding: 5rem 0;
-  background: linear-gradient(180deg, #f5ebe0 0%, #f0e6d8 100%);
-  border-top: 1px solid rgba(22, 48, 42, 0.08);
-  border-bottom: 1px solid rgba(22, 48, 42, 0.08);
+  background: linear-gradient(180deg, var(--color-cream-soft) 0%, #f0e6d8 100%);
+  border-top: 1px solid rgba(27, 163, 79, 0.08);
+  border-bottom: 1px solid rgba(27, 163, 79, 0.08);
   position: relative;
   overflow: hidden;
 }
@@ -806,7 +650,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23228047' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231BA34F' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   opacity: 0.5;
   pointer-events: none;
 }
@@ -819,23 +663,21 @@ onUnmounted(() => {
 }
 
 .quote-icon {
-  color: var(--green);
+  color: var(--primary-color);
   opacity: 0.12;
   margin-bottom: 1rem;
 }
 
 .quote-text {
-  font-size: 1.2rem;
   font-style: italic;
-  color: var(--ink);
+  color: var(--color-ink);
   line-height: 1.8;
   margin-bottom: 1.5rem;
 }
 
 .quote-section cite {
   font-style: normal;
-  font-size: 0.9rem;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
 }
 
 /* =====================
@@ -843,7 +685,7 @@ onUnmounted(() => {
    ===================== */
 .cta-section {
   padding: 5rem 0;
-  background: linear-gradient(135deg, #f5ebe0 0%, #f0e6d8 100%);
+  background: linear-gradient(135deg, var(--color-cream-soft) 0%, #f0e6d8 100%);
   position: relative;
 }
 
@@ -854,8 +696,8 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(34, 128, 71, 0.05) 0%, transparent 50%),
-              radial-gradient(circle at 80% 50%, rgba(238, 132, 26, 0.05) 0%, transparent 50%);
+  background: radial-gradient(circle at 20% 50%, rgba(27, 163, 79, 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 80% 50%, rgba(20, 129, 62, 0.05) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -867,15 +709,13 @@ onUnmounted(() => {
 }
 
 .cta-content h2 {
-  font-size: 2rem;
   font-weight: 700;
-  color: var(--green);
+  color: var(--primary-color);
   margin-bottom: 0.75rem;
-  font-family: var(--font-serif);
 }
 
 .cta-content p {
-  color: var(--ink);
+  color: var(--color-ink);
   line-height: 1.7;
   margin-bottom: 2rem;
 }
@@ -902,24 +742,24 @@ onUnmounted(() => {
 
 .btn-primary {
   background: #ffffff;
-  color: var(--ink);
-  border: 1px solid rgba(22, 48, 42, 0.2);
+  color: var(--color-ink);
+  border: 1px solid rgba(27, 163, 79, 0.2);
 }
 
 .btn-primary:hover {
-  background: #f5ebe0;
-  border-color: var(--green-muted);
+  background: var(--color-cream-soft);
+  border-color: var(--primary-color);
 }
 
 .btn-outline {
-  background: var(--orange);
+  background: var(--primary-color);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-outline:hover {
   border-color: #ffffff;
-  background: #b8681a;
+  background: var(--primary-dark);
 }
 
 /* =====================
@@ -941,15 +781,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .hero-content h1 {
-    font-size: 2.25rem;
-  }
-  .hero-subtitle {
-    font-size: 1.05rem;
-  }
-  .section-header h2 {
-    font-size: 1.75rem;
-  }
   .section {
     padding: 3rem 0;
   }
@@ -962,19 +793,6 @@ onUnmounted(() => {
   .process-steps {
     grid-template-columns: 1fr;
   }
-  .cta-content h2 {
-    font-size: 1.5rem;
-  }
-
-  .slide-indicators {
-    bottom: 1.75rem;
-    gap: 0.5rem;
-  }
-
-  .indicator-dot {
-    width: 8px;
-    height: 8px;
-  }
 
   .initiatives-list {
     grid-template-columns: 1fr;
@@ -986,14 +804,6 @@ onUnmounted(() => {
 
   .initiative-content {
     padding: 1.5rem;
-  }
-
-  .initiative-content h3 {
-    font-size: 1.25rem;
-  }
-
-  .initiative-content p {
-    font-size: 0.9rem;
   }
 
   .btn-outline {
@@ -1011,9 +821,6 @@ onUnmounted(() => {
     min-height: 55vh;
     padding: 3rem 1.25rem;
   }
-  .hero-content h1 {
-    font-size: 1.85rem;
-  }
   .impact-grid {
     gap: 0.75rem;
   }
@@ -1028,12 +835,6 @@ onUnmounted(() => {
   }
   .initiative-content {
     padding: 1.25rem;
-  }
-  .initiative-content h3 {
-    font-size: 1.15rem;
-  }
-  .initiative-content p {
-    font-size: 0.85rem;
   }
 }
 </style>

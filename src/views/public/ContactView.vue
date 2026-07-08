@@ -1,35 +1,15 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const name = ref('')
 const email = ref('')
 const subject = ref('')
 const message = ref('')
 const sent = ref(false)
-const activeHeroSlide = ref(0)
-let heroSlideTimer: number | undefined
 
 const canSubmit = computed(() =>
   Boolean(name.value.trim() && email.value.trim() && message.value.trim()),
 )
-
-const heroSlides = [
-  {
-    image:
-      'https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1920&q=82',
-    position: 'center 42%',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1920&q=82',
-    position: 'center 48%',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1534330207526-8e81f10ec6fc?auto=format&fit=crop&w=1920&q=82',
-    position: 'center 46%',
-  },
-] as const
 
 const offices = [
   {
@@ -59,21 +39,8 @@ function submitContact() {
   sent.value = true
 }
 
-function showHeroSlide(index: number) {
-  activeHeroSlide.value = index
-}
-
 onMounted(() => {
   document.title = 'Contact Santi Sena'
-  heroSlideTimer = window.setInterval(() => {
-    activeHeroSlide.value = (activeHeroSlide.value + 1) % heroSlides.length
-  }, 5200)
-})
-
-onBeforeUnmount(() => {
-  if (heroSlideTimer) {
-    window.clearInterval(heroSlideTimer)
-  }
 })
 </script>
 
@@ -81,16 +48,6 @@ onBeforeUnmount(() => {
   <div class="contact-page">
     <main>
       <section class="contact-hero" aria-labelledby="contact-heading">
-        <div class="contact-hero__slides" aria-hidden="true">
-          <div
-            v-for="(slide, index) in heroSlides"
-            :key="slide.image"
-            class="contact-hero__slide"
-            :class="{ 'contact-hero__slide--active': index === activeHeroSlide }"
-            :style="{ backgroundImage: `url(${slide.image})`, backgroundPosition: slide.position }"
-          ></div>
-        </div>
-
         <div class="contact-hero__content">
           <p class="contact-hero__eyebrow">Contact</p>
           <h1 id="contact-heading">Write to us. We read every letter.</h1>
@@ -98,17 +55,6 @@ onBeforeUnmount(() => {
             Whether you wish to partner, donate, visit or simply learn more - our team in Cambodia
             is ready to hear from you.
           </p>
-          <div class="contact-hero__dots" aria-label="Choose header image">
-            <button
-              v-for="(_, index) in heroSlides"
-              :key="index"
-              type="button"
-              :aria-label="`Show header image ${index + 1}`"
-              :aria-pressed="index === activeHeroSlide"
-              :class="{ 'contact-hero__dot--active': index === activeHeroSlide }"
-              @click="showHeroSlide(index)"
-            ></button>
-          </div>
         </div>
       </section>
 
@@ -173,27 +119,9 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .contact-page {
-  --cream: #fbf4e8;
-  --cream-card: #fffaf2;
-  --cream-field: #fbf2e5;
-  --green: #053d35;
-  --green-soft: #2e554d;
-  --orange: #f47b20;
-  --border: #deccb3;
-  --shadow: rgba(18, 48, 40, 0.12);
-  --serif: Georgia, 'Times New Roman', serif;
-
   min-height: 100vh;
-  background: var(--cream);
-  color: var(--green);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .contact-hero {
@@ -220,12 +148,12 @@ textarea {
 input:focus,
 textarea:focus {
   outline: none;
-  border-color: #3A7D44;
-  box-shadow: 0 0 0 3px rgba(58, 125, 68, 0.12);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(27, 163, 79, 0.12);
 }
 .primary {
   justify-self: start;
-  background: #3A7D44;
+  background: var(--primary-color);
   border: none;
   color: #fff;
   padding: 0.65rem 1.5rem;
@@ -236,11 +164,10 @@ textarea:focus {
   transition: background 0.2s, transform 0.15s;
 }
 .primary:hover {
-  background: #2D5E34;
+  background: var(--primary-dark);
   transform: translateY(-1px);
   align-items: center;
   overflow: hidden;
-  background: var(--green);
 }
 
 .contact-hero::before {
@@ -259,42 +186,17 @@ textarea:focus {
   pointer-events: none;
 }
 
-.contact-hero__slides,
-.contact-hero__slide {
-  position: absolute;
-  inset: 0;
-}
-
-.contact-hero__slides {
-  z-index: 0;
-}
-
-.contact-hero__slide {
-  background-repeat: no-repeat;
-  background-size: cover;
-  opacity: 0;
-  transform: scale(1.04);
-  transition:
-    opacity 1.1s ease,
-    transform 7s ease;
-}
-
-.contact-hero__slide--active {
-  opacity: 1;
-  transform: scale(1);
-}
-
 .contact-hero__content {
   position: relative;
   z-index: 2;
-  width: min(100%, 1540px);
+  width: min(100%, var(--container-max-width));
   margin: 0 auto;
-  padding: 4rem 8rem;
+  padding: 4rem var(--container-padding);
 }
 
 .contact-hero__eyebrow {
   margin: 0 0 1rem;
-  color: var(--orange);
+  color: var(--primary-color);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -304,9 +206,7 @@ textarea:focus {
 .contact-hero h1 {
   max-width: 720px;
   margin: 0;
-  color: #fff8ed;
-  font-family: var(--serif);
-  font-size: 3.8rem;
+  color: var(--color-white);
   font-weight: 700;
   line-height: 1.05;
 }
@@ -314,54 +214,22 @@ textarea:focus {
 .contact-hero p:last-child {
   max-width: 700px;
   margin: 1.45rem 0 0;
-  color: #fff8ed;
+  color: var(--color-white);
   font-size: 1.1rem;
   font-weight: 500;
   line-height: 1.45;
 }
 
-.contact-hero__dots {
-  display: flex;
-  gap: 0.58rem;
-  margin-top: 1.8rem;
-}
-
-.contact-hero__dots button {
-  width: 0.78rem;
-  height: 0.78rem;
-  border: 1px solid rgba(255, 248, 237, 0.82);
-  border-radius: 50%;
-  background: rgba(255, 248, 237, 0.34);
-  padding: 0;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.contact-hero__dots button:hover,
-.contact-hero__dots button:focus-visible,
-.contact-hero__dot--active {
-  border-color: var(--orange);
-  background: var(--orange);
-  transform: scale(1.12);
-}
-
-.contact-hero__dots button:focus-visible {
-  outline: 3px solid rgba(255, 248, 237, 0.42);
-  outline-offset: 3px;
-}
-
 .contact-body {
-  background: var(--cream);
-  padding: 3.75rem 8rem 4.75rem;
+  background: var(--color-cream);
+  padding: 3.75rem var(--container-padding) 4.75rem;
 }
 
 .contact-body__inner {
   display: grid;
   grid-template-columns: minmax(0, 600px) minmax(260px, 1fr);
   gap: 3rem;
-  width: min(100%, 1200px);
+  width: min(100%, var(--container-max-width));
   margin: 0 auto;
 }
 
@@ -370,25 +238,23 @@ textarea:focus {
   gap: 0.86rem;
   max-width: 680px;
   padding: 1.45rem 1.65rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   background: rgba(255, 250, 242, 0.88);
-  box-shadow: 0 18px 52px var(--shadow);
+  box-shadow: 0 18px 52px rgba(43, 43, 40, 0.12);
   scroll-margin-top: 7rem;
 }
 
 .contact-card h2,
 .contact-detail h2 {
   margin: 0;
-  color: var(--green);
-  font-family: var(--serif);
+  color: var(--color-ink);
   font-weight: 700;
   line-height: 1.12;
 }
 
 .contact-card h2 {
   margin-bottom: 0.12rem;
-  font-size: 1.52rem;
 }
 
 .contact-card__row {
@@ -400,7 +266,7 @@ textarea:focus {
 .contact-card label {
   display: grid;
   gap: 0.32rem;
-  color: #123f37;
+  color: var(--color-ink);
   font-size: 0.84rem;
   font-weight: 500;
 }
@@ -408,10 +274,10 @@ textarea:focus {
 .contact-card input,
 .contact-card textarea {
   width: 100%;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: var(--cream-field);
-  color: var(--green);
+  background: var(--color-cream-soft);
+  color: var(--color-ink);
   outline: none;
   padding: 0.44rem 0.65rem;
   transition:
@@ -432,9 +298,9 @@ textarea:focus {
 
 .contact-card input:focus,
 .contact-card textarea:focus {
-  border-color: var(--orange);
+  border-color: var(--primary-color);
   background: #fffaf2;
-  box-shadow: 0 0 0 3px rgba(244, 123, 32, 0.16);
+  box-shadow: 0 0 0 3px rgba(27, 163, 79, 0.16);
 }
 
 .contact-card__actions {
@@ -451,24 +317,24 @@ textarea:focus {
   min-height: 50px;
   border: 0;
   border-radius: 999px;
-  background: #ff781f;
+  background: var(--primary-color);
   color: #fff6ea;
   font-size: 1rem;
   font-weight: 700;
-  box-shadow: 0 14px 28px rgba(255, 120, 31, 0.2);
+  box-shadow: 0 14px 28px rgba(27, 163, 79, 0.2);
   transition:
     box-shadow 0.2s ease,
     outline-color 0.2s ease;
 }
 
 .contact-card__submit:focus-visible {
-  outline: 3px solid rgba(255, 120, 31, 0.26);
+  outline: 3px solid rgba(27, 163, 79, 0.26);
   outline-offset: 3px;
 }
 
 .contact-card__submit--sent:not(:disabled) {
-  background: #ff781f;
-  box-shadow: 0 14px 28px rgba(255, 120, 31, 0.2);
+  background: var(--primary-color);
+  box-shadow: 0 14px 28px rgba(27, 163, 79, 0.2);
 }
 
 .contact-card__submit:disabled {
@@ -480,7 +346,7 @@ textarea:focus {
 
 .contact-card__actions p {
   margin: 0;
-  color: #9e571e;
+  color: var(--primary-dark);
   font-size: 0.86rem;
 }
 
@@ -495,13 +361,9 @@ textarea:focus {
   scroll-margin-top: 7rem;
 }
 
-.contact-detail h2 {
-  font-size: 1.52rem;
-}
-
 .contact-detail p {
   margin: 0.62rem 0 0;
-  color: var(--green-soft);
+  color: var(--color-ink-soft);
   font-size: 0.98rem;
   line-height: 1.35;
 }
@@ -515,10 +377,6 @@ textarea:focus {
   .contact-body {
     padding-right: 4rem;
     padding-left: 4rem;
-  }
-
-  .contact-hero h1 {
-    font-size: 3.25rem;
   }
 
   .contact-body__inner {
@@ -551,10 +409,6 @@ textarea:focus {
     padding-bottom: 3rem;
   }
 
-  .contact-hero h1 {
-    font-size: 2.18rem;
-  }
-
   .contact-hero p:last-child {
     margin-top: 1rem;
     font-size: 0.92rem;
@@ -569,17 +423,9 @@ textarea:focus {
     padding: 1.05rem;
   }
 
-  .contact-card h2 {
-    font-size: 1.5rem;
-  }
-
   .contact-card__row,
   .contact-details {
     grid-template-columns: 1fr;
-  }
-
-  .contact-detail h2 {
-    font-size: 1.32rem;
   }
 
   .contact-detail p {

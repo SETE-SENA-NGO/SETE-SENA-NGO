@@ -1,30 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
 import heroImage from '@/assets/hero-impact.jpg'
 import heroForest from '@/assets/hero-impact-forest.jpg'
 import heroVillage from '@/assets/hero-impact-village.jpg'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
-const heroPhotos = [
-  { src: heroImage, alt: 'Community gathering', label: 'Community impact' },
-  { src: heroForest, alt: 'Forest restoration', label: 'Forest restoration' },
-  { src: heroVillage, alt: 'Village life', label: 'Village life' },
+const slideItems = [
+  { image: heroImage, caption: 'Three decades of walking beside rural Cambodian communities.' },
+  { image: heroForest, caption: 'Community forestry restoring and protecting hundreds of hectares of forest.' },
+  { image: heroVillage, caption: 'Village life at the heart of every program Santi Sena runs.' },
 ]
-
-const currentHeroIndex = ref(0)
-let heroInterval: number | undefined
-const currentHero = computed(() => heroPhotos[currentHeroIndex.value])
-
-onMounted(() => {
-  heroInterval = window.setInterval(() => {
-    currentHeroIndex.value = (currentHeroIndex.value + 1) % heroPhotos.length
-  }, 5000)
-})
-
-onUnmounted(() => {
-  if (heroInterval) {
-    window.clearInterval(heroInterval)
-  }
-})
 
 const stats = [
   {
@@ -92,17 +76,8 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
 
 <template>
   <div class="impact-page">
+    <Slideshow :slides="slideItems" />
     <section class="hero-section">
-      <div class="hero-images">
-        <div
-          v-for="(photo, index) in heroPhotos"
-          :key="photo.alt"
-          class="hero-background"
-          :class="{ active: index === currentHeroIndex }"
-          :style="{ backgroundImage: `url(${photo.src})` }"
-          aria-hidden="true"
-        />
-      </div>
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Our Impact</span>
@@ -170,14 +145,14 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #fdf8ee;
-  color: #1f2937;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .hero-section {
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid rgba(78, 48, 15, 0.25);
+  border-bottom: 1px solid var(--color-border);
   min-height: 320px;
   display: flex;
   align-items: center;
@@ -186,14 +161,19 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(122, 201, 165, 0.92), rgba(87, 100, 99, 0.72), rgba(39, 143, 107, 0.72));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary-light) 90%, transparent),
+    color-mix(in srgb, var(--color-ink) 60%, transparent),
+    color-mix(in srgb, var(--primary-dark) 70%, transparent)
+  );
   z-index: 0;
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
-  max-width: 1120px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 5rem 1.5rem;
   color: #fffdf8;
@@ -204,21 +184,19 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
   text-transform: uppercase;
   letter-spacing: 0.3em;
   font-size: 0.8rem;
-  color: #f2c46d;
+  color: var(--primary-color);
   font-weight: 700;
 }
 
 h1,
 h2 {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
 }
 
 h1 {
   margin-top: 1rem;
   margin-right: 400px;
   max-width: 720px;
-  font-size: clamp(2.2rem, 4.5vw, 3.6rem);
 }
 
 .hero-content p {
@@ -229,25 +207,6 @@ h1 {
   color: rgba(255, 253, 248, 0.85);
 }
 
-.hero-images {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.hero-background {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-}
-
-.hero-background.active {
-  opacity: 1;
-}
-
 .stats-section,
 .timeline-section,
 .partners-section {
@@ -255,7 +214,7 @@ h1 {
 }
 
 .stats-grid {
-  max-width: 1120px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   display: grid;
   gap: 1px;
@@ -271,9 +230,8 @@ h1 {
 }
 
 .stat-value {
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: 2.4rem;
-  color: #a6541a;
+  color: var(--primary-dark);
 }
 
 .stat-label {
@@ -282,7 +240,7 @@ h1 {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #5e3818;
+  color: var(--color-ink-soft);
 }
 
 .stat-description {
@@ -298,15 +256,14 @@ h1 {
 
 .timeline-shell h2 {
   margin-top: 1rem;
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
-  color: #5e3818;
+  color: var(--color-ink);
 }
 
 .timeline-list {
   margin: 2.2rem 0 0;
   padding: 0 0 0 1.5rem;
   list-style: none;
-  border-left: 2px solid rgba(242, 196, 109, 0.45);
+  border-left: 2px solid color-mix(in srgb, var(--primary-color) 45%, transparent);
 }
 
 .timeline-item {
@@ -322,19 +279,18 @@ h1 {
   width: 0.9rem;
   height: 0.9rem;
   border-radius: 50%;
-  background: #f2c46d;
+  background: var(--primary-color);
 }
 
 .timeline-year {
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.7rem;
-  color: #a6541a;
+  color: var(--primary-dark);
 }
 
 .timeline-title {
   margin-top: 0.15rem;
   font-weight: 700;
-  color: #5e3818;
+  color: var(--color-ink);
 }
 
 .timeline-description {
@@ -351,8 +307,7 @@ h1 {
 
 .partners-heading h2 {
   margin-top: 1rem;
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
-  color: #5e3818;
+  color: var(--color-ink);
 }
 
 .partners-heading p {
@@ -377,10 +332,9 @@ h1 {
 
 .partner-name {
   white-space: nowrap;
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.6rem;
   font-weight: 600;
-  color: rgba(94, 56, 24, 0.6);
+  color: color-mix(in srgb, var(--color-ink) 60%, transparent);
 }
 
 @keyframes marquee {

@@ -1,77 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
+import heroImpactForest from '@/assets/hero-impact-forest.jpg'
 
-// Slideshow background images (Unsplash - free to use)
-const slides = [
-  'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80',  // community
-  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80',  // hands together
-  'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&q=80',  // children education
-  'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=1600&q=80',   // nature/sustainability
+const slideItems = [
+  { image: heroImpactForest, caption: 'We envision a world where every individual has the power, resources, and dignity to shape their own destiny.' },
+  { image: '/images/programs/hero-3.jpg', caption: 'Our mission: partnering with local communities to address the root causes of inequality through education, healthcare and economic development.' },
+  { image: '/images/programs/hero-4.jpg', caption: 'Sustainable, resilient communities built on inclusive growth and environmental stewardship for future generations.' },
 ]
-
-const currentSlide = ref(0)
-const isTransitioning = ref(false)
-let intervalId: ReturnType<typeof setInterval> | null = null
-
-function nextSlide() {
-  if (isTransitioning.value) return
-  isTransitioning.value = true
-  currentSlide.value = (currentSlide.value + 1) % slides.length
-  setTimeout(() => {
-    isTransitioning.value = false
-  }, 1200)
-}
-
-function startSlideshow() {
-  intervalId = setInterval(nextSlide, 5000)
-}
-
-function stopSlideshow() {
-  if (intervalId) {
-    clearInterval(intervalId)
-    intervalId = null
-  }
-}
-
-onMounted(() => {
-  startSlideshow()
-})
-
-onUnmounted(() => {
-  stopSlideshow()
-})
 </script>
 
 <template>
   <div class="vision-page">
+    <Slideshow :slides="slideItems" />
+
     <!-- Hero Section -->
     <section class="hero">
-      <!-- Slideshow backgrounds -->
-      <div class="slideshow-container">
-        <div
-          v-for="(src, index) in slides"
-          :key="index"
-          class="slide"
-          :class="{ active: index === currentSlide, prev: index === (currentSlide - 1 + slides.length) % slides.length }"
-          :style="{ backgroundImage: `url(${src})` }"
-        ></div>
-        <div class="hero-overlay"></div>
-        <!-- Gradient overlay for text readability -->
-        <div class="hero-gradient-overlay"></div>
-      </div>
-
-      <!-- Slide indicators -->
-      <div class="slide-indicators">
-        <button
-          v-for="(_, index) in slides"
-          :key="index"
-          class="indicator-dot"
-          :class="{ active: index === currentSlide }"
-          @click="currentSlide = index"
-          :aria-label="`Go to slide ${index + 1}`"
-        ></button>
-      </div>
-
       <div class="hero-content">
         <span class="badge">Our Vision</span>
         <h1>Shaping a Future of<br />Equity & Opportunity</h1>
@@ -276,9 +219,9 @@ onUnmounted(() => {
    Layout Helpers
    ===================== */
 .container {
-  max-width: 1100px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 var(--container-padding);
 }
 
 .section {
@@ -292,7 +235,7 @@ onUnmounted(() => {
 
 .vision-section,
 .values-section {
-  background: #FBF3E3;
+  background: var(--color-cream-soft);
 }
 
 .section-label {
@@ -310,22 +253,21 @@ onUnmounted(() => {
 }
 
 .section-header h2 {
-  font-size: 2.25rem;
   font-weight: 700;
   line-height: 1.25;
-  color: #1B4D4D;
+  color: var(--color-ink);
   margin-bottom: 0.75rem;
 }
 
 .section-desc {
-  color: #1B4D4D;
+  color: var(--color-ink);
   font-size: 1.1rem;
   max-width: 540px;
   margin: 0 auto;
 }
 
 .alt-bg {
-  background: #FBF3E3;
+  background: var(--color-cream-soft);
 }
 
 /* =====================
@@ -339,86 +281,7 @@ onUnmounted(() => {
   justify-content: center;
   overflow: hidden;
   padding: 5rem 1.5rem;
-}
-
-/* Slideshow */
-.slideshow-container {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.slide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transition: opacity 1.2s ease-in-out;
-  will-change: opacity;
-}
-
-.slide.active {
-  opacity: 1;
-  z-index: 1;
-}
-
-.slide.prev {
-  /* Keep the previous slide visible briefly during crossfade */
-  opacity: 0;
-  z-index: 0;
-}
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  z-index: 2;
-}
-
-/* Gradient edge fade for smooth blending */
-.hero-gradient-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to top, rgba(15, 23, 42, 0.6) 0%, transparent 40%),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.3) 0%, transparent 30%);
-  z-index: 3;
-  pointer-events: none;
-}
-
-/* Slide indicators */
-.slide-indicators {
-  position: absolute;
-  bottom: 2.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 0.6rem;
-  z-index: 10;
-}
-
-.indicator-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 0;
-}
-
-.indicator-dot:hover {
-  border-color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.indicator-dot.active {
-  background: #ffffff;
-  border-color: #ffffff;
-  transform: scale(1.2);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--color-ink) 100%);
 }
 
 /* Hero Content */
@@ -457,7 +320,6 @@ onUnmounted(() => {
 }
 
 .hero-content h1 {
-  font-size: 3.25rem;
   font-weight: 800;
   line-height: 1.15;
   color: #ffffff;
@@ -485,8 +347,8 @@ onUnmounted(() => {
 }
 
 .vision-card {
-  background: #FFFBF3;
-  border: 1px solid #e2e8f0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 2rem;
   transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
@@ -505,21 +367,20 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
-  background: #FFFBF3;
+  background: var(--color-white);
   color: #2563eb;
   margin-bottom: 1.25rem;
 }
 
 .vision-card h3 {
-  font-size: 1.15rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: #1B4D4D;
+  color: var(--color-ink);
 }
 
 .vision-card p {
   font-size: 0.9rem;
-  color: #1B4D4D;
+  color: var(--color-ink);
   line-height: 1.65;
 }
 
@@ -534,15 +395,14 @@ onUnmounted(() => {
 }
 
 .mission-content h2 {
-  font-size: 2rem;
   font-weight: 700;
   line-height: 1.25;
-  color: #1B4D4D;
+  color: var(--color-ink);
   margin-bottom: 1rem;
 }
 
 .mission-text {
-  color: #1B4D4D;
+  color: var(--color-ink);
   line-height: 1.7;
   font-size: 1rem;
   margin-bottom: 1.5rem;
@@ -561,7 +421,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.75rem;
   font-size: 0.95rem;
-  color: #1B4D4D;
+  color: var(--color-ink);
 }
 
 .mission-list li svg {
@@ -576,8 +436,8 @@ onUnmounted(() => {
 }
 
 .stat-card {
-  background: #FFFBF3;
-  border: 1px solid #e2e8f0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 1.75rem 1.5rem;
   text-align: center;
@@ -587,13 +447,13 @@ onUnmounted(() => {
   display: block;
   font-size: 2rem;
   font-weight: 700;
-  color: #B8651A;
+  color: var(--primary-color);
   margin-bottom: 0.25rem;
 }
 
 .stat-label {
   font-size: 0.85rem;
-  color: #1B4D4D;
+  color: var(--color-ink);
 }
 
 /* =====================
@@ -606,8 +466,8 @@ onUnmounted(() => {
 }
 
 .value-item {
-  background: #FFFBF3;
-  border: 1px solid #e2e8f0;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 2rem 1.5rem;
   transition: border-color 0.3s;
@@ -620,21 +480,20 @@ onUnmounted(() => {
 .value-number {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #B8651A;
+  color: var(--primary-color);
   margin-bottom: 1rem;
   letter-spacing: 0.05em;
 }
 
 .value-item h3 {
-  font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.6rem;
-  color: #1B4D4D;
+  color: var(--color-ink);
 }
 
 .value-item p {
   font-size: 0.88rem;
-  color: #1B4D4D;
+  color: var(--color-ink);
   line-height: 1.6;
 }
 
@@ -643,9 +502,9 @@ onUnmounted(() => {
    ===================== */
 .quote-section {
   padding: 5rem 0;
-  background: #FBF3E3;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--color-cream-soft);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .quote-section blockquote {
@@ -664,7 +523,7 @@ onUnmounted(() => {
 .quote-text {
   font-size: 1.2rem;
   font-style: italic;
-  color: #1B4D4D;
+  color: var(--color-ink);
   line-height: 1.8;
   margin-bottom: 1.5rem;
 }
@@ -672,7 +531,7 @@ onUnmounted(() => {
 .quote-section cite {
   font-style: normal;
   font-size: 0.9rem;
-  color: #1B4D4D;
+  color: var(--color-ink);
 }
 
 /* =====================
@@ -680,7 +539,7 @@ onUnmounted(() => {
    ===================== */
 .cta-section {
   padding: 5rem 0;
-  background: #FBF3E3;
+  background: var(--color-cream-soft);
 }
 
 .cta-content {
@@ -691,14 +550,13 @@ onUnmounted(() => {
 }
 
 .cta-content h2 {
-  font-size: 2rem;
   font-weight: 700;
-  color: #1B4D4D;
+  color: var(--color-ink);
   margin-bottom: 0.75rem;
 }
 
 .cta-content p {
-  color: #1B4D4D;
+  color: var(--color-ink);
   line-height: 1.7;
   margin-bottom: 2rem;
 }
@@ -735,14 +593,14 @@ onUnmounted(() => {
 }
 
 .btn-outline {
-  background: rgb(238, 132, 26);
+  background: var(--primary-color);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-outline:hover {
   border-color: #ffffff;
-  background: rgb(185, 104, 23);
+  background: var(--primary-dark);
 }
 
 /* =====================
@@ -758,14 +616,8 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .hero-content h1 {
-    font-size: 2.25rem;
-  }
   .hero-subtitle {
     font-size: 1.05rem;
-  }
-  .section-header h2 {
-    font-size: 1.75rem;
   }
   .mission-layout {
     grid-template-columns: 1fr;
@@ -783,20 +635,6 @@ onUnmounted(() => {
   .values-grid {
     grid-template-columns: 1fr;
   }
-  .cta-content h2 {
-    font-size: 1.5rem;
-  }
-
-  .slide-indicators {
-    bottom: 1.75rem;
-    gap: 0.5rem;
-  }
-
-  .indicator-dot {
-    width: 8px;
-    height: 8px;
-  }
-
   .btn-outline {
     color: #334155;
     border: 1px solid #cbd5e1;
@@ -811,9 +649,6 @@ onUnmounted(() => {
   .hero {
     min-height: 55vh;
     padding: 3rem 1.25rem;
-  }
-  .hero-content h1 {
-    font-size: 1.85rem;
   }
   .stats-grid {
     gap: 0.75rem;

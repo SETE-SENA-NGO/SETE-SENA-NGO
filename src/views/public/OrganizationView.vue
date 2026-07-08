@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import Slideshow from '@/components/shared/Slideshow.vue'
+import heroImpactVillage from '@/assets/hero-impact-village.jpg'
+
+const slideItems = [
+  { image: heroImpactVillage, caption: 'A team of monks, managers and master practitioners, accountable to the villagers we serve.' },
+  { image: '/images/programs/hero-1.jpg', caption: 'From the Board of Directors to field staff in Kratie, every level of Santi Sena answers to the communities and donors who trust us.' },
+  { image: '/images/programs/hero-2.jpg', caption: '30+ full-time and project-based staff working across Svay Rieng, Prey Veng and Kratie provinces.' },
+]
 
 interface TeamMember {
   role: string
@@ -56,6 +64,8 @@ onMounted(() => {
 
 <template>
   <div class="org-page">
+    <Slideshow :slides="slideItems" />
+
     <!-- ── Hero ── -->
     <section class="hero-section">
       <div class="hero-overlay" />
@@ -158,52 +168,29 @@ onMounted(() => {
 
 <style scoped>
 /* ─── Color Tokens ───
- * A warm, earthy palette rooted in the Buddhist NGO identity.
- * Deep forest greens anchor headings and hero;
- * saffron gold adds warmth, accent energy, and nods to the Dharma;
- * neutral text colors lean warm (not cold gray) so the page feels
- * crafted, not templated.
+ * Aliased to the shared global design tokens (see src/assets/base.css).
  */
 .org-page {
-  --green-deep:      #0C2B1E;
-  --green:           #1A4A34;
-  --green-mid:       #276749;
-  --green-soft:      #E8F0EB;
+  --green-deep:      var(--primary-dark);
+  --green:           var(--primary-color);
+  --green-mid:       var(--primary-color);
+  --green-soft:      var(--primary-light);
 
-  --gold:            #C9950E;
-  --gold-light:      #F5E8B8;
-  --gold-soft:       #FFFBEB;
+  --gold:            var(--primary-color);
+  --gold-light:      var(--primary-light);
+  --gold-soft:       var(--primary-light);
 
-  --warm-white:      #FDFCF9;
-  --warm-bg:         #F8F6F1;
-  --warm-card:       #FFFFFF;
-  --warm-card-alt:   #FCFAF5;
-  --warm-border:     #EBE5DA;
+  --warm-bg:         var(--color-cream-soft);
+  --warm-card:       var(--color-white);
+  --warm-card-alt:   var(--color-cream);
+  --warm-border:     var(--color-border);
 
   /* Text — warm neutral tones with personality */
-  --text-heading:    #0F1F17;
-  --text-body:       #2C3E35;
-  --text-secondary:  #5C6B62;
-  --text-muted:      #8B9A91;
+  --text-heading:    var(--color-ink);
+  --text-body:       var(--color-ink);
+  --text-secondary:  var(--color-ink-soft);
   --text-on-hero:    rgba(255, 255, 255, 0.88);
   --text-on-green:   rgba(255, 255, 255, 0.92);
-  --org-primary: #1B4332;
-  --org-primary-light: #2D6A4F;
-  --org-primary-deep: #143A25;
-  --org-saffron: #C9950E;
-  --org-saffron-bg: #FDF6E3;
-
-  --org-text-heading: #111827;
-  --org-text-body: #374151;
-  --org-text-muted: #6B7280;
-  --org-text-soft: #9CA3AF;
-
-  --org-white: #FFFFFF;
-  --org-bg: #F9FAFB;
-  --org-bg-alt: #F3F6F3;
-  --org-card-bg: #FFFFFF;
-  --org-card-alt: #F8FAF8;
-  --org-border: #E5E7EB;
 }
 
 /* ─── Shared ─── */
@@ -223,14 +210,12 @@ onMounted(() => {
 }
 
 .section-container {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 6rem 1.5rem;
 }
 
 .section-title {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   font-weight: 700;
   margin: 0 0 3rem;
   color: var(--text-heading);
@@ -251,12 +236,12 @@ onMounted(() => {
   inset: 0;
   z-index: -10;
   background:
-    radial-gradient(ellipse 70% 50% at 10% 40%, rgba(201, 149, 14, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 10% 40%, color-mix(in srgb, var(--gold) 10%, transparent) 0%, transparent 60%),
     radial-gradient(ellipse 60% 40% at 90% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
 }
 
 .hero-content {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 8rem 1.5rem 7rem;
 }
@@ -269,12 +254,10 @@ onMounted(() => {
 .hero-title {
   margin: 1.5rem 0 0;
   max-width: 48rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2.75rem;
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.015em;
-  color: #FFFFFF;
+  color: var(--color-white);
 }
 
 .hero-subtitle {
@@ -307,20 +290,20 @@ onMounted(() => {
 
 .btn-primary {
   background: var(--gold);
-  color: var(--green-deep);
-  box-shadow: 0 4px 14px rgba(201, 149, 14, 0.30);
+  color: var(--color-white);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--gold) 30%, transparent);
 }
 
 .btn-primary:hover {
-  background: #B8860B;
+  background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(201, 149, 14, 0.35);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 .btn-ghost {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #FFFFFF;
+  color: var(--color-white);
 }
 
 .btn-ghost:hover {
@@ -334,7 +317,7 @@ onMounted(() => {
 }
 
 .facts-grid {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 3rem 1.5rem 4.5rem;
   display: grid;
@@ -361,7 +344,6 @@ onMounted(() => {
 
 .fact-value {
   display: block;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 3rem;
   font-weight: 700;
   color: var(--gold);
@@ -435,7 +417,6 @@ onMounted(() => {
 }
 
 .team-role {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--green);
@@ -489,7 +470,6 @@ onMounted(() => {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 0.85rem;
   font-weight: 700;
   background: var(--green-soft);
@@ -516,7 +496,7 @@ onMounted(() => {
   padding: 3rem;
   border-radius: 1rem;
   background: linear-gradient(145deg, var(--green-deep) 0%, var(--green) 60%, var(--green-mid) 100%);
-  box-shadow: 0 14px 36px rgba(12, 43, 30, 0.20);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--green-deep) 20%, transparent);
   align-items: flex-start;
 }
 
@@ -528,7 +508,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: rgba(201, 149, 14, 0.20);
+  background: color-mix(in srgb, var(--gold) 20%, transparent);
   color: var(--gold-light);
 }
 
@@ -548,14 +528,6 @@ onMounted(() => {
 }
 
 @media (min-width: 768px) {
-  .hero-title {
-    font-size: 3.5rem;
-  }
-
-  .section-title {
-    font-size: 2.25rem;
-  }
-
   .fact-card {
     padding: 3.5rem 2.5rem;
   }
@@ -574,14 +546,6 @@ onMounted(() => {
 }
 
 @media (min-width: 1024px) {
-  .hero-title {
-    font-size: 4rem;
-  }
-
-  .section-title {
-    font-size: 2.75rem;
-  }
-
   .section-container {
     padding: 6rem 2rem;
   }

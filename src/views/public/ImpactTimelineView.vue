@@ -1,40 +1,14 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from 'vue'
 import heroImage1 from '@/assets/hero-impact.jpg'
 import heroImage2 from '@/assets/hero-impact-village.jpg'
 import heroImage3 from '@/assets/hero-impact-forest.jpg'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
-// import CallToAction from '@/components/CallToAction.vue'
-
-const heroImages = [heroImage1, heroImage2, heroImage3]
-const activeHeroIndex = ref(0)
-let slideTimer: number | undefined
-
-const isReducedMotion = () => {
-  if (typeof window === 'undefined') return false
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
-}
-
-const startSlideshow = () => {
-  if (isReducedMotion()) return
-  stopSlideshow()
-  slideTimer = window.setInterval(() => {
-    activeHeroIndex.value = (activeHeroIndex.value + 1) % heroImages.length
-  }, 5000)
-}
-
-const stopSlideshow = () => {
-  if (slideTimer) {
-    window.clearInterval(slideTimer)
-    slideTimer = undefined
-  }
-}
-
-onBeforeUnmount(() => {
-  stopSlideshow()
-})
-
-
+const slideItems = [
+  { image: heroImage1, caption: 'Thirty years of milestones, from a small pagoda in Svay Rieng to province-wide programs.' },
+  { image: heroImage2, caption: 'Every milestone reflects trust built village by village.' },
+  { image: heroImage3, caption: 'From the first community forestry site to today\'s strategic plan.' },
+]
 
 const events = [
   {
@@ -93,18 +67,8 @@ const events = [
 
 <template>
   <div class="timeline-page">
-<section class="hero-section" @mouseenter="stopSlideshow" @mouseleave="startSlideshow" aria-label="Impact background slideshow">
-      <div class="hero-slideshow">
-        <img
-          v-for="(img, index) in heroImages"
-          :key="img"
-          :src="img"
-          :alt="'Impact background ' + (index + 1)"
-          class="hero-image"
-          :class="{ 'is-active': index === activeHeroIndex }"
-          draggable="false"
-        />
-      </div>
+    <Slideshow :slides="slideItems" />
+    <section class="hero-section" aria-label="Impact timeline">
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Impact · Timeline</span>
@@ -164,8 +128,8 @@ const events = [
 <style scoped>
 .timeline-page {
   min-height: 100vh;
-  background: #fdf8ee;
-  color: #2f241d;
+  background: var(--color-cream);
+  color: var(--color-ink);
 
 }
 
@@ -177,47 +141,20 @@ const events = [
   align-items: center;
 }
 
-.hero-slideshow {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 900ms ease-in-out;
-}
-
-.hero-image.is-active {
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-image {
-    transition: none;
-    opacity: 0;
-  }
-
-  .hero-image.is-active {
-    opacity: 1;
-  }
-}
-
-
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(120deg, rgba(32, 54, 53, 0.92), rgba(111, 82, 45, 0.74));
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--color-ink) 80%, transparent),
+    color-mix(in srgb, var(--primary-dark) 60%, transparent)
+  );
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
-  max-width: 1120px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 8rem 1.5rem;
   color: #fffdf8;
@@ -230,19 +167,17 @@ const events = [
   letter-spacing: 0.3em;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #e86c20;
+  color: var(--primary-color);
 }
 
 h1,
 h2,
 h3 {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
 }
 
 h1 {
   max-width: 720px;
-  font-size: clamp(2.1rem, 4.2vw, 3.3rem);
   line-height: 1.1;
   margin-right: 400px;
 }
@@ -278,9 +213,9 @@ h1 {
 }
 
 .hero-link.primary {
-  background: #ee762c;
+  background: var(--primary-color);
   color: #fcfcfc;
-  box-shadow: 0 10px 25px rgba(243, 198, 109, 0.25);
+  box-shadow: 0 10px 25px color-mix(in srgb, var(--primary-color) 25%, transparent);
 }
 
 .hero-link.secondary {
@@ -305,7 +240,7 @@ h1 {
   width: 100%;
   padding: 1.25rem 0 0;
   background: transparent;
-  border-top: 1px solid #e5d8c6;
+  border-top: 1px solid var(--color-border);
 }
 
 .cta-content {
@@ -319,8 +254,7 @@ h1 {
 
 .cta-content h3 {
   margin: 0;
-  color: #0b411e;
-  font-size: 1.5rem;
+  color: var(--primary-dark);
   font-weight: 500;
   line-height: 1.2;
 }
@@ -342,14 +276,13 @@ h1 {
 }
 
 .intro-block h2 {
-  font-size: clamp(1.7rem, 3vw, 2.3rem);
-  color: #214438;
+  color: var(--primary-dark);
 }
 
 .intro-block p {
   margin-top: 0.85rem;
   line-height: 1.7;
-  color: rgba(47, 36, 29, 0.8);
+  color: color-mix(in srgb, var(--color-ink) 80%, transparent);
 }
 
 .timeline-list {
@@ -357,7 +290,7 @@ h1 {
   margin: 2.25rem 0 0;
   padding-left: 1.75rem;
   list-style: none;
-  border-left: 2px solid rgba(243, 198, 109, 0.55);
+  border-left: 2px solid color-mix(in srgb, var(--primary-color) 55%, transparent);
 }
 
 .timeline-item {
@@ -372,8 +305,8 @@ h1 {
   width: 0.95rem;
   height: 0.95rem;
   border-radius: 999px;
-  background: #f3c66d;
-  box-shadow: 0 0 0 4px #fdf8ee;
+  background: var(--primary-color);
+  box-shadow: 0 0 0 4px var(--color-cream);
 }
 
 .timeline-content {
@@ -383,19 +316,18 @@ h1 {
 .timeline-year {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #9a5b2d;
+  color: var(--primary-dark);
 }
 
 .timeline-content h3 {
   margin-top: 0.35rem;
-  font-size: 1.3rem;
-  color: #214438;
+  color: var(--primary-dark);
 }
 
 .timeline-content p {
   margin-top: 0.5rem;
   line-height: 1.7;
-  color: rgba(47, 36, 29, 0.8);
+  color: color-mix(in srgb, var(--color-ink) 80%, transparent);
 }
 
 @media (max-width: 640px) {

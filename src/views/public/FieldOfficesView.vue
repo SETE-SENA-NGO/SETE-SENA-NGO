@@ -1,6 +1,19 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import Slideshow from '@/components/shared/Slideshow.vue'
+import heroImpactVillage from '@/assets/hero-impact-village.jpg'
+
+const slideItems = [
+  {
+    image: heroImpactVillage,
+    caption: 'Our field offices are the daily home of the staff who walk into villages.',
+  },
+  {
+    image: '/images/programs/hero-4.jpg',
+    caption: 'Provincial coordinators in Prey Veng and Kratie connect programs directly to communities.',
+  },
+]
 
 const fieldOffices = [
   {
@@ -38,6 +51,7 @@ onMounted(() => {
 
 <template>
   <main class="field-offices-page">
+    <Slideshow :slides="slideItems" />
     <section class="field-hero" aria-labelledby="field-heading">
       <div class="field-hero__content">
         <p class="field-eyebrow">Contact - Field Offices</p>
@@ -99,27 +113,9 @@ onMounted(() => {
 
 <style scoped>
 .field-offices-page {
-  --cream: #faf3e6;
-  --cream-soft: #fffaf2;
-  --green: #023f37;
-  --green-deep: #042f29;
-  --green-soft: #315b52;
-  --orange: #f47d24;
-  --border: rgba(4, 63, 55, 0.16);
-  --shadow: rgba(31, 61, 46, 0.14);
-  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-
   min-height: 100vh;
-  background: var(--cream);
-  color: var(--green);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .field-hero {
@@ -136,17 +132,19 @@ onMounted(() => {
 .field-hero__content,
 .field-details__inner,
 .field-cta__inner {
-  width: min(100% - 3rem, 1238px);
+  width: 100%;
+  max-width: var(--container-max-width);
   margin: 0 auto;
+  padding-inline: var(--container-padding);
 }
 
 .field-hero__content {
-  padding: 4.8rem 0;
+  padding-block: 4.8rem;
 }
 
 .field-eyebrow {
   margin: 0 0 1rem;
-  color: var(--orange);
+  color: var(--primary-color);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -156,9 +154,7 @@ onMounted(() => {
 .field-hero h1 {
   max-width: 760px;
   margin: 0;
-  color: #fff8ed;
-  font-family: var(--serif);
-  font-size: clamp(3rem, 5.5vw, 4.55rem);
+  color: var(--color-white);
   font-weight: 700;
   line-height: 1.05;
 }
@@ -166,13 +162,13 @@ onMounted(() => {
 .field-hero p:last-child {
   max-width: 740px;
   margin: 1.45rem 0 0;
-  color: #fff8ed;
+  color: var(--color-white);
   font-size: 1.12rem;
   line-height: 1.45;
 }
 
 .field-details {
-  background: var(--cream);
+  background: var(--color-cream);
   border-top: 1px solid rgba(250, 243, 230, 0.82);
 }
 
@@ -190,30 +186,25 @@ onMounted(() => {
 
 .field-card {
   padding: 2.05rem 2.15rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   background: rgba(255, 250, 242, 0.84);
-  box-shadow: 0 12px 30px var(--shadow);
+  box-shadow: 0 12px 30px rgba(43, 43, 40, 0.14);
 }
 
 .field-card h2,
 .field-copy h2,
 .field-cta h2 {
   margin: 0;
-  color: var(--green-deep);
-  font-family: var(--serif);
+  color: var(--color-ink);
   font-weight: 700;
   line-height: 1.15;
-}
-
-.field-card h2 {
-  font-size: 1.55rem;
 }
 
 .field-card__summary {
   min-height: 3rem;
   margin: 1.05rem 0 1.55rem;
-  color: var(--green-soft);
+  color: var(--color-ink-soft);
   font-size: 1rem;
   line-height: 1.42;
 }
@@ -225,20 +216,20 @@ onMounted(() => {
 }
 
 .field-card dt {
-  color: var(--green);
+  color: var(--color-ink);
   font-size: 0.92rem;
   font-weight: 700;
 }
 
 .field-card dd {
   margin: 0.16rem 0 0;
-  color: var(--green-soft);
+  color: var(--color-ink-soft);
   font-size: 0.93rem;
   line-height: 1.35;
 }
 
 .field-card a {
-  color: var(--orange);
+  color: var(--primary-color);
   text-decoration: none;
 }
 
@@ -251,14 +242,10 @@ onMounted(() => {
   margin: 4.2rem auto 0;
 }
 
-.field-copy h2 {
-  font-size: clamp(1.55rem, 2.4vw, 1.95rem);
-}
-
 .field-copy p,
 .field-copy ul {
   margin: 1.05rem 0 0;
-  color: var(--green);
+  color: var(--color-ink);
   font-size: 0.98rem;
   line-height: 1.45;
 }
@@ -283,11 +270,11 @@ onMounted(() => {
   width: 0.34rem;
   height: 0.34rem;
   border-radius: 50%;
-  background: var(--orange);
+  background: var(--primary-color);
 }
 
 .field-cta {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-border);
   background: rgba(255, 248, 237, 0.55);
 }
 
@@ -300,10 +287,6 @@ onMounted(() => {
   padding: 3rem 0;
 }
 
-.field-cta h2 {
-  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
-}
-
 .field-cta__button {
   display: inline-flex;
   min-height: 46px;
@@ -312,13 +295,13 @@ onMounted(() => {
   gap: 0.5rem;
   padding: 0.7rem 1.5rem;
   border-radius: 999px;
-  background: var(--orange);
+  background: var(--primary-color);
   color: #fff8ed;
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 18px 42px rgba(244, 125, 36, 0.22);
+  box-shadow: 0 18px 42px rgba(27, 163, 79, 0.22);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -326,7 +309,7 @@ onMounted(() => {
 
 .field-cta__button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 22px 48px rgba(244, 125, 36, 0.28);
+  box-shadow: 0 22px 48px rgba(20, 129, 62, 0.28);
 }
 
 @media (max-width: 760px) {
@@ -335,18 +318,8 @@ onMounted(() => {
     background-position: center;
   }
 
-  .field-hero__content,
-  .field-details__inner,
-  .field-cta__inner {
-    width: min(100% - 2rem, 1238px);
-  }
-
   .field-hero__content {
-    padding: 3.5rem 0;
-  }
-
-  .field-hero h1 {
-    font-size: 2.6rem;
+    padding-block: 3.5rem;
   }
 
   .field-hero p:last-child {
@@ -364,10 +337,6 @@ onMounted(() => {
 
   .field-card {
     padding: 1.35rem;
-  }
-
-  .field-card h2 {
-    font-size: 1.35rem;
   }
 
   .field-card__summary {
