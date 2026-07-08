@@ -76,7 +76,7 @@ const menus: Menu[] = [
       {
         title: 'Partner',
         desc: 'Co-design multi-year community programs.',
-        to: '/get-involved#partner',
+        to: '/get-involved/partner',
       },
       {
         title: 'Volunteer',
