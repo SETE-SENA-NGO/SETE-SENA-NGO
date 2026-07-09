@@ -236,7 +236,8 @@ const slideItems: { image: string; caption: string }[] = [
   justify-content: center;
   text-align: left;
   max-width: 760px;
-  padding: 3rem clamp(1.5rem, 5vw, 4.5rem);
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   width: 100%;
   animation: fadeInUp 0.8s ease-out;
 }

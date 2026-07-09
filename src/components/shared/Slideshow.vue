@@ -191,7 +191,7 @@ onUnmounted(stopAutoplay)
   right: 0;
   bottom: 0;
   margin: 0;
-  padding: 1.25rem clamp(1rem, 4vw, 3rem) 2.5rem;
+  padding: 1.25rem calc(var(--container-offset) + 1.5rem) 2.5rem;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
   color: #fff;
   font-size: 1.1rem;
@@ -276,7 +276,7 @@ onUnmounted(stopAutoplay)
 
   .slideshow-caption {
     font-size: 0.95rem;
-    padding: 1rem 1rem 2.25rem;
+    padding: 1rem 1.5rem 2.25rem;
   }
 
   .slideshow-dots {

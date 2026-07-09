@@ -150,7 +150,8 @@ const events = [
   text-align: left;
   max-width: 720px;
   margin: 0;
-  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   animation: fadeInUp 0.8s ease-out;
   color: #fffdf8;
 }
@@ -331,7 +332,7 @@ h1 {
 
 @media (max-width: 640px) {
   .hero-content {
-    padding: 3.5rem 1.25rem;
+    padding: 3.5rem 1.5rem;
   }
 
   .timeline-section {

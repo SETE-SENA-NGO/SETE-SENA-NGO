@@ -30,7 +30,7 @@ const slideItems = [
           <span class="section-label">Our Approach</span>
           <h2>Environmental Stewardship in Action</h2>
           <p class="section-desc">
-            Our environment program takes a holistic approach to conservation, combining 
+            Our environment program takes a holistic approach to conservation, combining
             immediate action with long-term community education and sustainable development.
           </p>
         </div>
@@ -43,7 +43,7 @@ const slideItems = [
             </div>
             <h3>Conservation</h3>
             <p>
-              Protecting and restoring natural habitats, wildlife corridors, and biodiversity 
+              Protecting and restoring natural habitats, wildlife corridors, and biodiversity
               hotspots through community-led initiatives and scientific research.
             </p>
           </div>
@@ -55,7 +55,7 @@ const slideItems = [
             </div>
             <h3>Sustainability</h3>
             <p>
-              Promoting renewable energy, sustainable agriculture, and circular economy 
+              Promoting renewable energy, sustainable agriculture, and circular economy
               practices that reduce environmental impact while supporting livelihoods.
             </p>
           </div>
@@ -70,7 +70,7 @@ const slideItems = [
             </div>
             <h3>Community Engagement</h3>
             <p>
-              Empowering local communities with knowledge, resources, and tools to actively 
+              Empowering local communities with knowledge, resources, and tools to actively
               participate in environmental protection and climate action.
             </p>
           </div>
@@ -94,7 +94,7 @@ const slideItems = [
             <div class="initiative-content">
               <h3>Reforestation Projects</h3>
               <p>
-                Planting native tree species to restore degraded forests, combat desertification, 
+                Planting native tree species to restore degraded forests, combat desertification,
                 and create carbon sinks. We've planted over 500,000 trees across 12 communities.
               </p>
             </div>
@@ -107,7 +107,7 @@ const slideItems = [
             <div class="initiative-content">
               <h3>Environmental Education</h3>
               <p>
-                Developing curriculum and training programs for schools and community groups 
+                Developing curriculum and training programs for schools and community groups
                 to build environmental literacy and promote sustainable practices from an early age.
               </p>
             </div>
@@ -120,7 +120,7 @@ const slideItems = [
             <div class="initiative-content">
               <h3>Renewable Energy Access</h3>
               <p>
-                Installing solar panels and clean energy solutions in rural communities, 
+                Installing solar panels and clean energy solutions in rural communities,
                 reducing dependence on fossil fuels and improving quality of life.
               </p>
             </div>
@@ -133,7 +133,7 @@ const slideItems = [
             <div class="initiative-content">
               <h3>Water Conservation</h3>
               <p>
-                Implementing rainwater harvesting, watershed management, and water purification 
+                Implementing rainwater harvesting, watershed management, and water purification
                 systems to ensure clean water access and protect aquatic ecosystems.
               </p>
             </div>
@@ -146,7 +146,7 @@ const slideItems = [
             <div class="initiative-content">
               <h3>Sustainable Agriculture</h3>
               <p>
-                Training farmers in organic farming, crop rotation, and agroforestry techniques 
+                Training farmers in organic farming, crop rotation, and agroforestry techniques
                 that increase yields while preserving soil health and biodiversity.
               </p>
             </div>
@@ -159,7 +159,7 @@ const slideItems = [
             <div class="initiative-content">
               <h3>Climate Research & Advocacy</h3>
               <p>
-                Conducting climate impact assessments and advocating for policy changes that 
+                Conducting climate impact assessments and advocating for policy changes that
                 protect vulnerable ecosystems and promote environmental justice.
               </p>
             </div>
@@ -203,7 +203,7 @@ const slideItems = [
           <span class="section-label">Our Process</span>
           <h2>How We Work</h2>
           <p class="section-desc">
-            Our approach combines scientific expertise with community participation to create 
+            Our approach combines scientific expertise with community participation to create
             lasting environmental change.
           </p>
         </div>
@@ -212,7 +212,7 @@ const slideItems = [
             <div class="step-number">01</div>
             <h3>Assessment</h3>
             <p>
-              We conduct comprehensive environmental assessments to understand local ecosystems, 
+              We conduct comprehensive environmental assessments to understand local ecosystems,
               identify challenges, and prioritize interventions.
             </p>
           </div>
@@ -220,7 +220,7 @@ const slideItems = [
             <div class="step-number">02</div>
             <h3>Planning</h3>
             <p>
-              Working with community leaders and environmental experts, we develop tailored 
+              Working with community leaders and environmental experts, we develop tailored
               action plans that balance conservation with community needs.
             </p>
           </div>
@@ -228,7 +228,7 @@ const slideItems = [
             <div class="step-number">03</div>
             <h3>Implementation</h3>
             <p>
-              We execute projects with active community participation, ensuring local ownership 
+              We execute projects with active community participation, ensuring local ownership
               and building capacity for long-term sustainability.
             </p>
           </div>
@@ -236,7 +236,7 @@ const slideItems = [
             <div class="step-number">04</div>
             <h3>Monitoring & Learning</h3>
             <p>
-              Continuous monitoring and evaluation help us measure impact, learn from experiences, 
+              Continuous monitoring and evaluation help us measure impact, learn from experiences,
               and adapt our strategies for greater effectiveness.
             </p>
           </div>
@@ -253,8 +253,8 @@ const slideItems = [
             <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" />
           </svg>
           <p class="quote-text">
-            "We do not inherit the earth from our ancestors; we borrow it from our children. 
-            Our environmental program is a pledge to protect that inheritance and ensure 
+            "We do not inherit the earth from our ancestors; we borrow it from our children.
+            Our environmental program is a pledge to protect that inheritance and ensure
             future generations inherit a planet that is healthy, vibrant, and full of possibility."
           </p>
           <cite>— SETE SENA Environmental Team</cite>
@@ -268,7 +268,7 @@ const slideItems = [
         <div class="cta-content">
           <h2>Join the Environmental Movement</h2>
           <p>
-            Whether you want to volunteer, partner with us, or support our conservation efforts, 
+            Whether you want to volunteer, partner with us, or support our conservation efforts,
             your contribution helps create a sustainable future for all.
           </p>
           <div class="cta-actions">
@@ -362,7 +362,8 @@ const slideItems = [
   text-align: left;
   max-width: 720px;
   margin: 0;
-  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   animation: fadeInUp 0.8s ease-out;
 }
 

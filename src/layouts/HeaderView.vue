@@ -87,6 +87,7 @@ const menus: Menu[] = [
   },
   {
     label: 'Contact',
+    to: '/contact',
     items: [
       { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact/headoffice' },
       { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact/fieldoffice' },
