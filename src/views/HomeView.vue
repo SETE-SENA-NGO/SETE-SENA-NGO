@@ -33,7 +33,7 @@ const slideItems: { image: string; caption: string }[] = [
           livelihoods and safeguarding families.
         </p>
         <div class="hero-actions">
-          <RouterLink to="/contact" class="btn btn--primary">Support Us</RouterLink>
+          <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
           <RouterLink to="/about" class="btn btn--outline">Stand with us</RouterLink>
         </div>
       </div>
@@ -175,7 +175,7 @@ const slideItems: { image: string; caption: string }[] = [
           <p class="cta-desc">Donate, partner, volunteer — every act seeds another village with hope.</p>
         </div>
         <div class="cta-actions">
-          <RouterLink to="/contact" class="btn btn--primary">Support Us</RouterLink>
+          <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
           <RouterLink to="/about" class="btn btn--outline">Partner with us</RouterLink>
         </div>
       </div>

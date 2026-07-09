@@ -168,6 +168,16 @@ import Slideshow from '@/components/shared/Slideshow.vue';
 import heroImpact from '@/assets/hero-impact.jpg';
 import heroImpactForest from '@/assets/hero-impact-forest.jpg';
 import heroImpactVillage from '@/assets/hero-impact-village.jpg';
+import logoUndp from '@/assets/image.png';
+import logoAdb from '@/assets/image copy.png';
+import logoOxfam from '@/assets/image copy 2.png';
+import logoBfw from '@/assets/image copy 3.png';
+import logoMisereor from '@/assets/image copy 4.png';
+import logoEu from '@/assets/image copy 5.png';
+import logoUsaid from '@/assets/image copy 6.png';
+import logoDiakonia from '@/assets/image copy 7.png';
+import logoHbs from '@/assets/image copy 8.png';
+import logoCaritas from '@/assets/image copy 9.png';
 
 const slideItems = [
   { image: heroImpact, caption: '' },
@@ -177,16 +187,16 @@ const slideItems = [
 
 // Partner data
 const partners = [
-  { name: 'UNDP', logo: 'UNDP', image: new URL('@/assets/image.png', import.meta.url).href },
-  { name: 'Asian Development Bank', logo: 'ADB', image: new URL('@/assets/image copy.png', import.meta.url).href },
-  { name: 'Oxfam', logo: 'OXFAM', image: new URL('@/assets/image copy 2.png', import.meta.url).href },
-  { name: 'Bread for the World', logo: 'BFW', image: new URL('@/assets/image copy 3.png', import.meta.url).href },
-  { name: 'Misereor', logo: 'MIS', image: new URL('@/assets/image copy 4.png', import.meta.url).href },
-  { name: 'European Union', logo: 'EU', image: new URL('@/assets/image copy 5.png', import.meta.url).href },
-  { name: 'USAID / Winrock', logo: 'USAID', image: new URL('@/assets/image copy 6.png', import.meta.url).href },
-  { name: 'Diakonia', logo: 'DIA', image: new URL('@/assets/image copy 7.png', import.meta.url).href },
-  { name: 'Heinrich Böll Stiftung', logo: 'HBS', image: new URL('@/assets/image copy 8.png', import.meta.url).href },
-  { name: 'Caritas', logo: 'CAR', image: new URL('@/assets/image copy 9.png', import.meta.url).href },
+  { name: 'UNDP', logo: 'UNDP', image: logoUndp },
+  { name: 'Asian Development Bank', logo: 'ADB', image: logoAdb },
+  { name: 'Oxfam', logo: 'OXFAM', image: logoOxfam },
+  { name: 'Bread for the World', logo: 'BFW', image: logoBfw },
+  { name: 'Misereor', logo: 'MIS', image: logoMisereor },
+  { name: 'European Union', logo: 'EU', image: logoEu },
+  { name: 'USAID / Winrock', logo: 'USAID', image: logoUsaid },
+  { name: 'Diakonia', logo: 'DIA', image: logoDiakonia },
+  { name: 'Heinrich Böll Stiftung', logo: 'HBS', image: logoHbs },
+  { name: 'Caritas', logo: 'CAR', image: logoCaritas },
 ];
 
 const governmentItems = [

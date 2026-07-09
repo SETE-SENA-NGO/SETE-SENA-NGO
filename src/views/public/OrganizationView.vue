@@ -74,7 +74,7 @@ onMounted(() => {
           accountable to the villagers we serve and the donors who trust us.
         </p>
         <div class="hero-actions">
-          <RouterLink to="/services" class="btn btn-primary">See our services</RouterLink>
+          <RouterLink to="/programs" class="btn btn-primary">See our programs</RouterLink>
           <RouterLink to="/about" class="btn btn-ghost">&larr; Back to About</RouterLink>
         </div>
       </div>

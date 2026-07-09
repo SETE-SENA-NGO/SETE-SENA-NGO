@@ -258,12 +258,11 @@ onMounted(() => {
 }
 
 .vmg-heading {
-  color: var(--about-primary);
+  color: var(--about-primary-foreground);
   margin: 0 0 0.5rem;
 }
 
 .vmg-body {
-  color: var(--about-muted);
   color: var(--about-primary-foreground);
   line-height: 1.75;
   margin: 0;
@@ -344,7 +343,6 @@ onMounted(() => {
 .org-body {
   margin-top: 1.5rem;
   color: var(--about-muted);
-  color: var(--about-primary-foreground);
   line-height: 1.75;
   font-size: 1rem;
 }
@@ -388,9 +386,9 @@ onMounted(() => {
 
 /* ─── Geographical Reach ─── */
 .geo-section {
-  background: var(--about-primary);
+  background: var(--about-bg-alt);
   padding: 6rem 0;
-  color: var(--about-primary-foreground);
+  color: var(--color-ink);
 }
 
 .geo-container {
@@ -403,6 +401,7 @@ onMounted(() => {
 .geo-heading {
   margin-top: 1rem;
   line-height: 1.2;
+  color: var(--about-primary);
 }
 
 .geo-grid {
@@ -413,12 +412,15 @@ onMounted(() => {
 
 .geo-card {
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--about-primary-foreground) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--about-primary) 25%, transparent);
+  background: var(--about-panel);
   padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .geo-name {
   font-size: 1.5rem;
+  color: var(--about-saffron);
 }
 
 .geo-label {
@@ -426,7 +428,7 @@ onMounted(() => {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: color-mix(in srgb, var(--about-primary-foreground) 55%, transparent);
+  color: var(--about-muted);
 }
 
 /* ─── Responsive ─── */

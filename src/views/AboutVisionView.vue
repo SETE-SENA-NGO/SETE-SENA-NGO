@@ -91,25 +91,25 @@ const slideItems = [
             </p>
             <ul class="mission-list">
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14813E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Partner with local organizations for lasting impact
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14813E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Prioritize education and skill-building programs
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14813E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Advocate for policy changes that protect the vulnerable
               </li>
               <li>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14813E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Promote sustainable practices in all initiatives
@@ -203,7 +203,7 @@ const slideItems = [
             us one step closer to a world of equity and opportunity for all.
           </p>
           <div class="cta-actions">
-            <router-link to="/contact" class="btn btn-primary">Get Involved</router-link>
+            <router-link to="/get-involved" class="btn btn-primary">Get Involved</router-link>
             <router-link to="/about" class="btn btn-outline">Learn About Us</router-link>
           </div>
         </div>
@@ -242,12 +242,12 @@ const slideItems = [
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #2563eb;
+  color: var(--primary-dark);
   margin-bottom: 0.75rem;
   padding: 0.35rem 1rem;
-  border: 1px solid rgba(37, 99, 235, 0.15);
+  border: 1px solid color-mix(in srgb, var(--primary-dark) 25%, transparent);
   border-radius: 9999px;
-  background: rgba(37, 99, 235, 0.05);
+  background: color-mix(in srgb, var(--primary-dark) 8%, transparent);
 }
 
 .section-header h2 {
@@ -329,7 +329,7 @@ const slideItems = [
 
 .hero-subtitle {
   font-size: 1.2rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.95);
   line-height: 1.7;
   max-width: 600px;
   margin: 0;
@@ -354,7 +354,7 @@ const slideItems = [
 }
 
 .vision-card:hover {
-  border-color: rgba(37, 99, 235, 0.25);
+  border-color: color-mix(in srgb, var(--primary-dark) 30%, transparent);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   transform: translateY(-2px);
 }
@@ -366,8 +366,8 @@ const slideItems = [
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
-  background: var(--color-white);
-  color: #2563eb;
+  background: var(--primary-light);
+  color: var(--primary-dark);
   margin-bottom: 1.25rem;
 }
 
@@ -473,7 +473,7 @@ const slideItems = [
 }
 
 .value-item:hover {
-  border-color: rgba(37, 99, 235, 0.2);
+  border-color: color-mix(in srgb, var(--primary-dark) 25%, transparent);
 }
 
 .value-number {
@@ -514,8 +514,8 @@ const slideItems = [
 }
 
 .quote-icon {
-  color: #2563eb;
-  opacity: 0.12;
+  color: var(--primary-dark);
+  opacity: 0.2;
   margin-bottom: 1rem;
 }
 

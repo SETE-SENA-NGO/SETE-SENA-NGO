@@ -41,7 +41,6 @@ export const publicRoutes = [
   { path: '/impact/partners', component: ImpactPartnersView },
   { path: '/get-involved/donate', component: DonateView },
   { path: '/get-involved/volunteer', component: VolunteerView },
-  { path: '/get-involved', component: GetInvolvedView },
   { path: '/get-involved/partner', component: PartnerView },
   { path: '/contact', component: ContactView },
   { path: '/contact/headoffice', component: HeadOfficeView },

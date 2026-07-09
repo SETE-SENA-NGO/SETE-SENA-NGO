@@ -112,10 +112,26 @@ const rootEl = ref<HTMLElement | null>(null)
 const route = useRoute()
 
 function isMenuActive(menu: Menu) {
-  return menu.items.some((item) => {
-    const itemPath = item.to.split('#')[0]
+  const paths = menu.items.map((item) => item.to)
+  if (menu.to) paths.push(menu.to)
+  return paths.some((to) => {
+    const itemPath = to.split('#')[0]
     return route.path === itemPath || route.path.startsWith(`${itemPath}/`)
   })
+}
+
+function menuLabel(menu: Menu): string {
+  // When on one of this menu's child pages, show that page's name instead
+  // of the menu label. Longest matching path wins so `/about/vision`
+  // resolves to "Vision & Mission" rather than "Our Story" (`/about`).
+  let best: { title: string; len: number } | null = null
+  for (const item of menu.items) {
+    const itemPath = item.to.split('#')[0] ?? item.to
+    if (route.path === itemPath || route.path.startsWith(`${itemPath}/`)) {
+      if (!best || itemPath.length > best.len) best = { title: item.title, len: itemPath.length }
+    }
+  }
+  return best ? best.title : menu.label
 }
 
 function activateMenu(label: string) {
@@ -184,10 +200,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
               v-if="menu.to"
               :to="menu.to"
               class="nav-link nav-link--trigger"
-              :class="{ 'is-open': openMenu === menu.label }"
+              :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
               @click="closeAll"
             >
-              {{ menu.label }}
+              {{ menuLabel(menu) }}
               <svg class="chevron" viewBox="0 0 12 8" fill="none">
                 <path
                   d="M1 1.5L6 6.5L11 1.5"
@@ -202,10 +218,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
               v-else
               type="button"
               class="nav-link nav-link--trigger"
-              :class="{ 'is-open': openMenu === menu.label }"
+              :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
               @click.stop="activateMenu(menu.label)"
             >
-              {{ menu.label }}
+              {{ menuLabel(menu) }}
               <svg class="chevron" viewBox="0 0 12 8" fill="none">
                 <path
                   d="M1 1.5L6 6.5L11 1.5"
@@ -268,7 +284,6 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
         <RouterLink to="/qr-donate" class="btn-support btn-support--desktop" @click="closeAll">
           Support Us
-          <span aria-hidden="true">-&gt;</span>
         </RouterLink>
 
         <button
@@ -339,10 +354,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .header-inner {
   max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 1.25rem 1.75rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .brand {
@@ -350,8 +365,13 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   align-items: center;
   gap: 0.65rem;
   margin-right: auto;
+  flex-shrink: 0;
   text-decoration: none;
   color: inherit;
+}
+
+.brand-mark {
+  flex-shrink: 0;
 }
 
 .brand-mark img {
@@ -371,6 +391,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   font-weight: 700;
   font-size: 1.15rem;
   color: var(--green);
+  white-space: nowrap;
 }
 
 .brand-tag {
@@ -384,7 +405,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .main-nav {
   display: none;
   align-items: center;
-  gap: 1.85rem;
+  gap: 1.1rem;
 }
 
 .nav-item {
@@ -399,12 +420,13 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 0.5rem 0.6rem;
+  padding: 0.5rem 0.45rem;
   font: inherit;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--ink);
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     color 0.2s ease,
@@ -629,6 +651,19 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .btn-support--mobile {
   justify-content: center;
   margin-top: 0.75rem;
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
+  /* The active-page nav label can get long; give it room on narrow desktops. */
+  .brand-text {
+    display: none;
+  }
+  .main-nav {
+    gap: 0.75rem;
+  }
+  .btn-support {
+    padding: 0.7rem 1.1rem;
+  }
 }
 
 @media (min-width: 1024px) {
