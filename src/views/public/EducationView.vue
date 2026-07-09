@@ -4,8 +4,8 @@ import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  { image: '/images/programs/education-hero.jpg', caption: 'A teacher in every village, a book in every hand.' },
-  { image: '/images/programs/education.jpg', caption: 'Community pre-schools and mobile libraries for rural Cambodian children.' },
+  { image: '/images/programs/education-hero.jpg', caption: '' },
+  { image: '/images/programs/education.jpg', caption: '' },
 ]
 
 const bulletsWhatWeDo: string[] = [
@@ -63,10 +63,7 @@ onMounted(() => {
 
 <template>
   <div class="edu-page">
-    <Slideshow :slides="slideItems" />
-
-    <!-- ── Hero ── -->
-    <section class="hero-section">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
 
       <div class="hero-content">
@@ -81,7 +78,7 @@ onMounted(() => {
           <RouterLink to="/services" class="btn btn-ghost">&larr; All programs</RouterLink>
         </div>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- ── Introduction ── -->
     <section class="intro-section">
@@ -247,31 +244,39 @@ onMounted(() => {
 }
 
 /* ─── Hero ─── */
-.hero-section {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary-color) 50%, var(--primary-light) 100%);
-  outline: none;
-}
-
 /* ── Hero Overlay ── */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1;
   background:
-    linear-gradient(to right, rgba(0, 0, 0, 0.50) 0%, rgba(0, 0, 0, 0.20) 45%, rgba(0, 0, 0, 0.05) 70%, transparent 100%),
-    linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 40%, rgba(0, 0, 0, 0.10) 100%);
+    linear-gradient(to right, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.2) 65%, transparent 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.15) 100%);
 }
 
 /* Hero content sits above overlay */
 .hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 8rem 1.5rem 7rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-content .section-label {

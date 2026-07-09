@@ -6,9 +6,9 @@ import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  { image: heroImage, caption: '293 villages measured, monitored and reported on every year.' },
-  { image: heroImpactForest, caption: '570+ hectares of community forest tracked through annual monitoring.' },
-  { image: heroImpactVillage, caption: 'Savings groups, scholarships and biogas units — the numbers behind village life.' },
+  { image: heroImage, caption: '' },
+  { image: heroImpactForest, caption: '' },
+  { image: heroImpactVillage, caption: '' },
 ]
 
 type StatItem = {
@@ -88,9 +88,7 @@ onMounted(() => {
 
 <template>
   <div class="numbers-page">
-    <Slideshow :slides="slideItems" />
-    <section class="hero-section">
-      <img :src="heroImage" alt="Cambodian rice paddies and village at dawn" class="hero-image" />
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Impact · By the Numbers</span>
@@ -99,12 +97,8 @@ onMounted(() => {
           Numbers do not tell the whole story, but they keep us honest. Every figure below is drawn from our annual
           monitoring and audited reports.
         </p>
-        <div class="hero-actions">
-          <!-- <RouterLink to="/impact/timeline" class="hero-link primary">See the timeline</RouterLink>
-          <RouterLink to="/impact/timeline" class="hero-link primary">See the timeline</RouterLink> -->
-        </div>
       </div>
-    </section>
+    </Slideshow>
 
     <section class="stats-section">
       <div class="page-shell">
@@ -154,39 +148,42 @@ onMounted(() => {
   color: var(--color-ink);
 }
 
-.hero-section {
-  position: relative;
-  overflow: hidden;
-  min-height: 380px;
-  display: flex;
-  align-items: center;
-}
-
-.hero-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .hero-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    120deg,
-    color-mix(in srgb, var(--color-ink) 80%, transparent),
-    color-mix(in srgb, var(--primary-dark) 60%, transparent)
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 40%,
+    rgba(6, 18, 13, 0.22) 68%,
+    transparent 100%
   );
 }
 
 .hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 8rem 1.5rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
   color: #fffdf8;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
@@ -208,7 +205,7 @@ h3 {
 h1 {
   max-width: 720px;
   line-height: 1.1;
-  margin-right: 400px;
+  color: #fffdf8;
 }
 
 .hero-content p {
@@ -217,13 +214,6 @@ h1 {
   font-size: 1.05rem;
   line-height: 1.7;
   color: rgba(255, 253, 248, 0.88);
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 1.5rem;
 }
 
 .hero-link {

@@ -3,18 +3,16 @@ import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpactForest from '@/assets/hero-impact-forest.jpg'
 
 const slideItems = [
-  { image: heroImpactForest, caption: 'We envision a world where every individual has the power, resources, and dignity to shape their own destiny.' },
-  { image: '/images/programs/hero-3.jpg', caption: 'Our mission: partnering with local communities to address the root causes of inequality through education, healthcare and economic development.' },
-  { image: '/images/programs/hero-4.jpg', caption: 'Sustainable, resilient communities built on inclusive growth and environmental stewardship for future generations.' },
+  { image: heroImpactForest, caption: '' },
+  { image: '/images/programs/hero-3.jpg', caption: '' },
+  { image: '/images/programs/hero-4.jpg', caption: '' },
 ]
 </script>
 
 <template>
   <div class="vision-page">
-    <Slideshow :slides="slideItems" />
-
-    <!-- Hero Section -->
-    <section class="hero">
+    <Slideshow :slides="slideItems">
+      <div class="hero-overlay" />
       <div class="hero-content">
         <span class="badge">Our Vision</span>
         <h1>Shaping a Future of<br />Equity & Opportunity</h1>
@@ -23,7 +21,7 @@ const slideItems = [
           shape their own destiny.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- Vision Section -->
     <section class="section vision-section">
@@ -273,23 +271,24 @@ const slideItems = [
 /* =====================
    Hero
    ===================== */
-.hero {
-  position: relative;
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 5rem 1.5rem;
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--color-ink) 100%);
+/* Hero (overlaid on the slideshow via its default slot) */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
 }
 
-/* Hero Content */
 .hero-content {
-  position: relative;
-  z-index: 5;
-  text-align: center;
-  max-width: 780px;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
   animation: fadeInUp 0.8s ease-out;
 }
 
@@ -333,7 +332,7 @@ const slideItems = [
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.7;
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0;
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 

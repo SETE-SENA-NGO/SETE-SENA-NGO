@@ -15,14 +15,8 @@ import heiferLogo from '@/assets/image copy 9.png'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  {
-    image: '/images/programs/hero-4.jpg',
-    caption: 'Build practical village-level partnerships with a Cambodian-led organization.',
-  },
-  {
-    image: '/images/programs/hero-1.jpg',
-    caption: 'Cooperate through community-rooted programs, local authorities and field teams.',
-  },
+  { image: '/images/programs/hero-4.jpg', caption: '' },
+  { image: '/images/programs/hero-1.jpg', caption: '' },
 ]
 
 const partnershipSteps = [
@@ -190,9 +184,8 @@ onUnmounted(() => {
 
 <template>
   <main class="partner-page">
-    <Slideshow :slides="slideItems" />
-
-    <section class="partner-hero" aria-label="Partner with Santi Sena">
+    <Slideshow :slides="slideItems">
+      <div class="hero-overlay" />
       <div class="partner-hero__content">
         <p class="eyebrow">Get involved - Partner</p>
         <h1>Partner with Santi Sena</h1>
@@ -205,7 +198,7 @@ onUnmounted(() => {
           <a href="#partnership-practice" class="secondary-link">See how partnership works</a>
         </div>
       </div>
-    </section>
+    </Slideshow>
 
     <section class="partner-content" aria-labelledby="intro-heading">
       <div class="intro-section">
@@ -350,17 +343,12 @@ onUnmounted(() => {
   color: var(--color-ink);
 }
 
-.partner-hero {
-  position: relative;
-  isolation: isolate;
-  min-height: min(650px, 82vh);
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  background: var(--primary-dark);
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
 }
 
-.partner-hero__content,
 .partner-content,
 .cta-band__inner {
   width: min(100% - 3rem, var(--container-max-width));
@@ -368,7 +356,27 @@ onUnmounted(() => {
 }
 
 .partner-hero__content {
-  padding: 6.25rem 0;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow,
@@ -382,7 +390,7 @@ onUnmounted(() => {
   text-transform: uppercase;
 }
 
-.partner-hero h1 {
+.partner-hero__content h1 {
   max-width: 760px;
   margin: 1.2rem 0 0;
   color: #fffaf0;
@@ -820,18 +828,13 @@ onUnmounted(() => {
 }
 
 @media (max-width: 760px) {
-  .partner-hero {
-    min-height: min(570px, 86vh);
-  }
-
-  .partner-hero__content,
   .partner-content,
   .cta-band__inner {
     width: min(100% - 2rem, var(--container-max-width));
   }
 
   .partner-hero__content {
-    padding: 5.2rem 0 5.8rem;
+    padding: 2rem 1.5rem;
   }
 
   .hero-actions {

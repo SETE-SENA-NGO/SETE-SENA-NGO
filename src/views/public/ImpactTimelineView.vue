@@ -5,9 +5,9 @@ import heroImage3 from '@/assets/hero-impact-forest.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  { image: heroImage1, caption: 'Thirty years of milestones, from a small pagoda in Svay Rieng to province-wide programs.' },
-  { image: heroImage2, caption: 'Every milestone reflects trust built village by village.' },
-  { image: heroImage3, caption: 'From the first community forestry site to today\'s strategic plan.' },
+  { image: heroImage1, caption: '' },
+  { image: heroImage2, caption: '' },
+  { image: heroImage3, caption: '' },
 ]
 
 const events = [
@@ -67,8 +67,7 @@ const events = [
 
 <template>
   <div class="timeline-page">
-    <Slideshow :slides="slideItems" />
-    <section class="hero-section" aria-label="Impact timeline">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Impact · Timeline</span>
@@ -77,12 +76,8 @@ const events = [
           From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones that shaped
           Santi Sena.
         </p>
-        <div class="hero-actions">
-          <!-- <router-link to="/impact" class="hero-link secondary">Explore impact overview</router-link> -->
-
-        </div>
       </div>
-    </section>
+    </Slideshow>
 
     <section class="timeline-section">
       <div class="timeline-shell">
@@ -133,31 +128,42 @@ const events = [
 
 }
 
-.hero-section {
-  position: relative;
-  overflow: hidden;
-  min-height: 380px;
-  display: flex;
-  align-items: center;
-}
-
 .hero-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    120deg,
-    color-mix(in srgb, var(--color-ink) 80%, transparent),
-    color-mix(in srgb, var(--primary-dark) 60%, transparent)
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 40%,
+    rgba(6, 18, 13, 0.22) 68%,
+    transparent 100%
   );
 }
 
 .hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 8rem 1.5rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
   color: #fffdf8;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
@@ -179,7 +185,6 @@ h3 {
 h1 {
   max-width: 720px;
   line-height: 1.1;
-  margin-right: 400px;
 }
 
 .hero-content p {
@@ -188,13 +193,6 @@ h1 {
   font-size: 1.05rem;
   line-height: 1.7;
   color: rgba(255, 253, 248, 0.88);
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 1.5rem;
 }
 
 .hero-link {

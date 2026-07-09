@@ -3,18 +3,9 @@ import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  {
-    image: '/images/programs/hero-1.jpg',
-    caption: 'Every gift, partnership and pair of hands roots another generation of change.',
-  },
-  {
-    image: '/images/programs/hero-2.jpg',
-    caption: 'Donate, partner or volunteer to support Santi Sena programs in rural Cambodia.',
-  },
-  {
-    image: '/images/programs/hero-3.jpg',
-    caption: 'Thirty years of standing beside villages across Svay Rieng and Prey Veng.',
-  },
+  { image: '/images/programs/hero-1.jpg', caption: '' },
+  { image: '/images/programs/hero-2.jpg', caption: '' },
+  { image: '/images/programs/hero-3.jpg', caption: '' },
 ]
 
 const ways = [
@@ -48,9 +39,7 @@ const tiers = [
 
 <template>
   <main class="get-involved-page">
-    <Slideshow :slides="slideItems" />
-
-    <section class="hero">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay"></div>
       <div class="hero-inner">
         <span class="eyebrow">Get involved</span>
@@ -60,7 +49,7 @@ const tiers = [
           tending for thirty years.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <section class="ways-section" aria-label="Ways to get involved">
       <div class="ways-grid">
@@ -103,29 +92,36 @@ const tiers = [
   color: var(--color-ink);
 }
 
-.hero {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background:
-    linear-gradient(90deg, rgba(4, 59, 56, 0.82), rgba(4, 59, 56, 0.5)),
-    url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80')
-      center 42% / cover;
-}
-
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: -1;
-  background: linear-gradient(90deg, rgba(3, 47, 48, 0.85), rgba(3, 47, 48, 0.18));
+  background: linear-gradient(90deg, rgba(3, 47, 48, 0.88) 0%, rgba(3, 47, 48, 0.58) 42%, rgba(3, 47, 48, 0.22) 70%, transparent 100%);
 }
 
 .hero-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
   width: 100%;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 8rem 1.5rem;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
   text-align: left;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
@@ -136,7 +132,7 @@ const tiers = [
   text-transform: uppercase;
 }
 
-.hero h1 {
+.hero-inner h1 {
   max-width: 896px;
   margin: 1rem 0 0;
   color: #fff7e9;
@@ -144,7 +140,7 @@ const tiers = [
   text-wrap: balance;
 }
 
-.hero p {
+.hero-inner p {
   max-width: 672px;
   margin: 1.5rem 0 0;
   color: rgba(255, 247, 233, 0.85);
@@ -298,7 +294,7 @@ const tiers = [
 
 @media (max-width: 699px) {
   .hero-inner {
-    padding: 8rem 1.5rem;
+    padding: 2rem 1.5rem;
   }
 
   .ways-section {

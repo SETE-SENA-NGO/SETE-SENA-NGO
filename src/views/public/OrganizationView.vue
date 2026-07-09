@@ -5,9 +5,9 @@ import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 
 const slideItems = [
-  { image: heroImpactVillage, caption: 'A team of monks, managers and master practitioners, accountable to the villagers we serve.' },
-  { image: '/images/programs/hero-1.jpg', caption: 'From the Board of Directors to field staff in Kratie, every level of Santi Sena answers to the communities and donors who trust us.' },
-  { image: '/images/programs/hero-2.jpg', caption: '30+ full-time and project-based staff working across Svay Rieng, Prey Veng and Kratie provinces.' },
+  { image: heroImpactVillage, caption: '' },
+  { image: '/images/programs/hero-1.jpg', caption: '' },
+  { image: '/images/programs/hero-2.jpg', caption: '' },
 ]
 
 interface TeamMember {
@@ -64,10 +64,7 @@ onMounted(() => {
 
 <template>
   <div class="org-page">
-    <Slideshow :slides="slideItems" />
-
-    <!-- ── Hero ── -->
-    <section class="hero-section">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="section-label saffron">About &middot; Organizational Structure</span>
@@ -81,7 +78,7 @@ onMounted(() => {
           <RouterLink to="/about" class="btn btn-ghost">&larr; Back to About</RouterLink>
         </div>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- ── Key Facts ── -->
     <section class="facts-section">
@@ -224,26 +221,35 @@ onMounted(() => {
 }
 
 /* ─── Hero ─── */
-.hero-section {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background: linear-gradient(160deg, var(--green-deep) 0%, var(--green) 50%, var(--green-mid) 100%);
-}
-
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: -10;
-  background:
-    radial-gradient(ellipse 70% 50% at 10% 40%, color-mix(in srgb, var(--gold) 10%, transparent) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+  background: linear-gradient(90deg, rgba(6, 18, 13, 0.85) 0%, rgba(6, 18, 13, 0.55) 42%, rgba(6, 18, 13, 0.22) 70%, transparent 100%);
 }
 
 .hero-content {
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 8rem 1.5rem 7rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-content .section-label {

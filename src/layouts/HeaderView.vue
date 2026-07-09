@@ -355,8 +355,8 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .brand-mark img {
-  width: 3.4rem;
-  height: 3.4rem;
+  width: 4.6rem;
+  height: 4.6rem;
   display: block;
   object-fit: contain;
 }
@@ -369,12 +369,12 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .brand-name {
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   color: var(--green);
 }
 
 .brand-tag {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;

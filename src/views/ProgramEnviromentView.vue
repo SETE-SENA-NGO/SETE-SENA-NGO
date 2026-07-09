@@ -2,19 +2,17 @@
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  { image: '/images/programs/environment-hero.jpg', caption: 'Protecting our planet for future generations.' },
-  { image: '/images/programs/environment-hero1.jpg', caption: 'Reforestation projects restoring degraded forests and creating carbon sinks.' },
-  { image: '/images/programs/environment-hero2.jpg', caption: 'Renewable energy and clean water access for rural communities.' },
-  { image: '/images/programs/environment-hero3.jpg', caption: 'Training farmers in sustainable agriculture and agroforestry.' },
+  { image: '/images/programs/environment-hero.jpg', caption: '' },
+  { image: '/images/programs/environment-hero1.jpg', caption: '' },
+  { image: '/images/programs/environment-hero2.jpg', caption: '' },
+  { image: '/images/programs/environment-hero3.jpg', caption: '' },
 ]
 </script>
 
 <template>
   <div class="environment-page">
-    <Slideshow :slides="slideItems" />
-
-    <!-- Hero Section -->
-    <section class="hero">
+    <Slideshow :slides="slideItems">
+      <div class="hero-overlay" />
       <div class="hero-content">
         <span class="badge">Environment Program</span>
         <h1>Protecting Our Planet<br />For Future Generations</h1>
@@ -23,7 +21,7 @@ const slideItems = [
           empowering communities to become stewards of their natural resources.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- Program Overview Section -->
     <section class="section overview-section">
@@ -347,23 +345,24 @@ const slideItems = [
 /* =====================
    Hero
    ===================== */
-.hero {
-  position: relative;
-  min-height: 70vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 5rem 1.5rem;
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+/* Hero (overlaid on the slideshow via its default slot) */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
 }
 
-/* Hero Content */
 .hero-content {
-  position: relative;
-  z-index: 5;
-  text-align: center;
-  max-width: 780px;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
   animation: fadeInUp 0.8s ease-out;
 }
 
@@ -405,7 +404,7 @@ const slideItems = [
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.7;
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0;
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 

@@ -5,14 +5,8 @@ import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 
 const slideItems = [
-  {
-    image: heroImpactVillage,
-    caption: 'Our field offices are the daily home of the staff who walk into villages.',
-  },
-  {
-    image: '/images/programs/hero-4.jpg',
-    caption: 'Provincial coordinators in Prey Veng and Kratie connect programs directly to communities.',
-  },
+  { image: heroImpactVillage, caption: '' },
+  { image: '/images/programs/hero-4.jpg', caption: '' },
 ]
 
 const fieldOffices = [
@@ -51,8 +45,8 @@ onMounted(() => {
 
 <template>
   <main class="field-offices-page">
-    <Slideshow :slides="slideItems" />
-    <section class="field-hero" aria-labelledby="field-heading">
+    <Slideshow :slides="slideItems">
+      <div class="field-hero-overlay" />
       <div class="field-hero__content">
         <p class="field-eyebrow">Contact - Field Offices</p>
         <h1 id="field-heading">Where the work actually happens.</h1>
@@ -61,7 +55,7 @@ onMounted(() => {
           villages - and the easiest way to reach a program directly.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <section class="field-details" aria-label="Field office contact details">
       <div class="field-details__inner">
@@ -118,18 +112,12 @@ onMounted(() => {
   color: var(--color-ink);
 }
 
-.field-hero {
-  min-height: 510px;
-  display: flex;
-  align-items: center;
-  background:
-    linear-gradient(90deg, rgba(3, 43, 35, 0.96) 0%, rgba(4, 62, 50, 0.76) 48%, rgba(4, 62, 50, 0.4) 100%),
-    linear-gradient(180deg, rgba(1, 29, 25, 0.06), rgba(1, 29, 25, 0.3)),
-    url('https://images.unsplash.com/photo-1534330207526-8e81f10ec6fc?auto=format&fit=crop&w=1920&q=82')
-      center 43% / cover;
+.field-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(3, 43, 35, 0.9) 0%, rgba(4, 62, 50, 0.6) 42%, rgba(4, 62, 50, 0.22) 72%, transparent 100%);
 }
 
-.field-hero__content,
 .field-details__inner,
 .field-cta__inner {
   width: 100%;
@@ -139,7 +127,27 @@ onMounted(() => {
 }
 
 .field-hero__content {
-  padding-block: 4.8rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .field-eyebrow {
@@ -151,7 +159,7 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.field-hero h1 {
+.field-hero__content h1 {
   max-width: 760px;
   margin: 0;
   color: var(--color-white);
@@ -159,7 +167,7 @@ onMounted(() => {
   line-height: 1.05;
 }
 
-.field-hero p:last-child {
+.field-hero__content p:last-child {
   max-width: 740px;
   margin: 1.45rem 0 0;
   color: var(--color-white);
@@ -313,16 +321,11 @@ onMounted(() => {
 }
 
 @media (max-width: 760px) {
-  .field-hero {
-    min-height: 430px;
-    background-position: center;
-  }
-
   .field-hero__content {
-    padding-block: 3.5rem;
+    padding-block: 2rem;
   }
 
-  .field-hero p:last-child {
+  .field-hero__content p:last-child {
     font-size: 1rem;
   }
 

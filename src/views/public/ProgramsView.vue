@@ -76,19 +76,16 @@ const priorities = [
 ]
 
 const slideItems = [
-  { image: '/images/programs/education-hero.jpg', caption: 'Pre-schools, libraries and scholarships that keep children learning past grade six.' },
-  { image: '/images/programs/environment-hero.jpg', caption: 'Community forestry, biogas digesters and rainwater harvesting — climate resilience built household by household.' },
-  { image: '/images/programs/livelihood-hero1.jpg', caption: 'Saving-for-Change groups and rural enterprises that keep families out of debt.' },
-  { image: '/images/programs/child-protection.jpg', caption: 'Village Child Protection Networks and anti-trafficking outreach for safer childhoods.' },
+  { image: '/images/programs/education-hero.jpg', caption: '' },
+  { image: '/images/programs/environment-hero.jpg', caption: '' },
+  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
+  { image: '/images/programs/child-protection.jpg', caption: '' },
 ]
 </script>
 
 <template>
   <div class="programs-page">
-    <Slideshow :slides="slideItems" />
-
-    <!-- HERO -->
-    <section class="hero">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
       <div class="hero-content">
         <p class="eyebrow">OUR PROGRAMS</p>
@@ -99,7 +96,7 @@ const slideItems = [
           the communities themselves.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- GOALS -->
     <section
@@ -148,30 +145,40 @@ const slideItems = [
 }
 
 /* HERO */
-.hero {
-  position: relative;
-  min-height: 560px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
-}
 .hero-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    180deg,
-    rgba(15, 23, 42, 0.35) 0%,
-    rgba(15, 23, 42, 0.15) 55%,
-    rgba(15, 23, 42, 0.3) 100%
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 42%,
+    rgba(6, 18, 13, 0.22) 70%,
+    transparent 100%
   );
 }
 .hero-content {
-  position: relative;
-  z-index: 1;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
   max-width: 700px;
-  padding: 0 3rem;
+  padding: 3rem clamp(1.5rem, 5vw, 3.5rem);
   color: #fff;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .eyebrow {
   color: var(--primary-light);

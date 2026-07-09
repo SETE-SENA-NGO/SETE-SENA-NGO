@@ -12,14 +12,8 @@ import washSchoolImage from '@/assets/volunteer/wash-school.png'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  {
-    image: '/images/programs/hero-3.jpg',
-    caption: 'Bring your skills to community-led work in Svay Rieng and Prey Veng.',
-  },
-  {
-    image: '/images/programs/hero-4.jpg',
-    caption: 'Volunteers strengthen forestry, education, WASH and child protection programs.',
-  },
+  { image: '/images/programs/hero-3.jpg', caption: '' },
+  { image: '/images/programs/hero-4.jpg', caption: '' },
 ]
 
 const volunteerPathways = [
@@ -195,10 +189,7 @@ onUnmounted(() => {
 
 <template>
   <main class="volunteer-page">
-    <Slideshow :slides="slideItems" />
-
-    <section class="hero" aria-label="Volunteer with Santi Sena">
-      <img :src="volunteerHeroImage" alt="Volunteers walking through a rural Cambodian village" />
+    <Slideshow :slides="slideItems">
       <div class="hero-shade"></div>
       <div class="hero-content">
         <p class="eyebrow">Get involved - Volunteer</p>
@@ -210,7 +201,7 @@ onUnmounted(() => {
         </p>
         <RouterLink to="/contact" class="primary-link">Apply to volunteer</RouterLink>
       </div>
-    </section>
+    </Slideshow>
 
     <section class="stats-band" aria-label="Volunteer context from the Santi Sena report">
       <div>
@@ -331,37 +322,14 @@ onUnmounted(() => {
   color: var(--color-ink);
 }
 
-.hero {
-  position: relative;
-  isolation: isolate;
-  min-height: min(680px, 84vh);
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  background: var(--primary-dark);
-}
-
-.hero > img,
 .hero-shade {
   position: absolute;
   inset: 0;
-}
-
-.hero > img {
-  z-index: -2;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-shade {
-  z-index: -1;
   background:
-    linear-gradient(90deg, rgba(4, 42, 38, 0.92), rgba(4, 42, 38, 0.66), rgba(4, 42, 38, 0.2)),
-    linear-gradient(0deg, rgba(4, 42, 38, 0.35), transparent 45%);
+    linear-gradient(90deg, rgba(4, 42, 38, 0.88) 0%, rgba(4, 42, 38, 0.58) 42%, rgba(4, 42, 38, 0.22) 70%, transparent 100%),
+    linear-gradient(0deg, rgba(4, 42, 38, 0.3), transparent 45%);
 }
 
-.hero-content,
 .content-section,
 .stats-band,
 .contact-band {
@@ -370,7 +338,27 @@ onUnmounted(() => {
 }
 
 .hero-content {
-  padding: 6.5rem 0;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow,
@@ -384,7 +372,7 @@ onUnmounted(() => {
   text-transform: uppercase;
 }
 
-.hero h1 {
+.hero-content h1 {
   max-width: 760px;
   margin: 1.25rem 0 0;
   color: #fffaf0;
@@ -393,7 +381,7 @@ onUnmounted(() => {
   text-wrap: balance;
 }
 
-.hero p:not(.eyebrow) {
+.hero-content p:not(.eyebrow) {
   max-width: 760px;
   margin: 1.75rem 0 0;
   color: rgba(255, 250, 240, 0.9);
@@ -905,11 +893,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 700px) {
-  .hero {
-    min-height: min(620px, 88vh);
-  }
-
-  .hero-content,
   .content-section,
   .stats-band,
   .contact-band {
@@ -917,7 +900,7 @@ onUnmounted(() => {
   }
 
   .hero-content {
-    padding: 5.3rem 0 5.8rem;
+    padding: 2rem 1.5rem;
   }
 
   .stats-band,

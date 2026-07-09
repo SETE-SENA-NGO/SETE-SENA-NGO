@@ -5,9 +5,9 @@ import heroVillage from '@/assets/hero-impact-village.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  { image: heroImage, caption: 'Three decades of walking beside rural Cambodian communities.' },
-  { image: heroForest, caption: 'Community forestry restoring and protecting hundreds of hectares of forest.' },
-  { image: heroVillage, caption: 'Village life at the heart of every program Santi Sena runs.' },
+  { image: heroImage, caption: '' },
+  { image: heroForest, caption: '' },
+  { image: heroVillage, caption: '' },
 ]
 
 const stats = [
@@ -76,8 +76,7 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
 
 <template>
   <div class="impact-page">
-    <Slideshow :slides="slideItems" />
-    <section class="hero-section">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Our Impact</span>
@@ -86,7 +85,7 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
           Every number below is a household with a safer roof, a child with a teacher, a forest still standing.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <section id="numbers" class="stats-section">
       <div class="stats-grid">
@@ -149,34 +148,42 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
   color: var(--color-ink);
 }
 
-.hero-section {
-  position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid var(--color-border);
-  min-height: 320px;
-  display: flex;
-  align-items: center;
-}
-
 .hero-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--primary-light) 90%, transparent),
-    color-mix(in srgb, var(--color-ink) 60%, transparent),
-    color-mix(in srgb, var(--primary-dark) 70%, transparent)
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 40%,
+    rgba(6, 18, 13, 0.22) 68%,
+    transparent 100%
   );
-  z-index: 0;
 }
 
 .hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 5rem 1.5rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
   color: #fffdf8;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
@@ -195,7 +202,6 @@ h2 {
 
 h1 {
   margin-top: 1rem;
-  margin-right: 400px;
   max-width: 720px;
 }
 

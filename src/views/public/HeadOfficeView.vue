@@ -1,19 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
-import heroImpactVillage from '@/assets/hero-impact-village.jpg'
-
-const slideItems = [
-  {
-    image: heroImpactVillage,
-    caption: 'Our headquarters sits in Svay Rieng town, close to the villages we serve.',
-  },
-  {
-    image: '/images/programs/hero-3.jpg',
-    caption: 'Visit our Svay Rieng head office - donors, partners and researchers are welcome.',
-  },
-]
 
 const contactBlocks = [
   {
@@ -48,7 +35,6 @@ onMounted(() => {
 
 <template>
   <main class="head-office-page">
-    <Slideshow :slides="slideItems" />
     <section class="office-hero" aria-labelledby="office-heading">
       <div class="office-hero__content">
         <p class="office-eyebrow">Contact - Head Office</p>

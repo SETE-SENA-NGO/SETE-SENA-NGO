@@ -4,9 +4,9 @@ import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpact from '@/assets/hero-impact.jpg'
 
 const slideItems = [
-  { image: heroImpact, caption: 'Founded in 1994 by Cambodian Buddhist monks, Santi Sena grew from the ashes of conflict into a peace army for rural development.' },
-  { image: '/images/programs/hero-1.jpg', caption: 'Community-led development rooted in Buddhist ethics — empowering farmers, women, youth and children.' },
-  { image: '/images/programs/hero-2.jpg', caption: 'Serving the most vulnerable rural households across Svay Rieng, Prey Veng and Kratie.' },
+  { image: heroImpact, caption: '' },
+  { image: '/images/programs/hero-1.jpg', caption: '' },
+  { image: '/images/programs/hero-2.jpg', caption: '' },
 ]
 
 const values = [
@@ -59,10 +59,7 @@ onMounted(() => {
 
 <template>
   <div class="about-page">
-    <Slideshow :slides="slideItems" />
-
-    <!-- Hero Section -->
-    <section class="hero-section">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
 
       <div class="hero-content">
@@ -76,7 +73,7 @@ onMounted(() => {
           not signed in distant offices.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- Vision / Mission / Goal -->
     <section class="vmg-section">
@@ -190,37 +187,39 @@ onMounted(() => {
   color: var(--about-saffron);
 }
 
-/* ─── Hero ─── */
-.hero-section {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-bottom: 1px solid color-mix(in srgb, var(--about-primary) 40%, transparent);
-  background: var(--about-primary);
-}
-
+/* ─── Hero (overlaid on the slideshow via its default slot) ─── */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1;
   background:
-    linear-gradient(to right, rgba(0, 0, 0, 0.50) 0%, rgba(0, 0, 0, 0.20) 45%, rgba(0, 0, 0, 0.05) 70%, transparent 100%),
-    linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 40%, rgba(0, 0, 0, 0.10) 100%);
-  z-index: -10;
-  /* darker subtle gradient overlay to keep the hero firmly dark green */
-  background: linear-gradient(135deg,
-      rgba(0, 0, 0, 0.28) 0%,
-      rgba(0, 0, 0, 0.18) 50%,
-      rgba(0, 0, 0, 0.08) 100%);
+    linear-gradient(to right, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.2) 65%, transparent 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.15) 100%);
 }
 
 .hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 8rem 1.5rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
   color: var(--about-white);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-title {
@@ -228,6 +227,7 @@ onMounted(() => {
   max-width: 48rem;
   line-height: 1.1;
   font-weight: 700;
+  color: var(--about-white);
 }
 
 .hero-subtitle {

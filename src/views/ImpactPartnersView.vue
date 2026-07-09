@@ -1,9 +1,7 @@
 <template>
   <div class="partners-page">
-    <Slideshow :slides="slideItems" />
-
-    <!-- Hero Section -->
-    <section class="hero">
+    <Slideshow :slides="slideItems">
+      <div class="hero-overlay" />
       <div class="hero-content">
         <span class="badge">Impact · Partners</span>
         <h1>Trusted by ten+ international donors and every government line ministry we touch.</h1>
@@ -11,7 +9,7 @@
           Multi-year grants, audited books and thirty years of unbroken village presence — that's why partners return.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- Partners Carousel Section -->
     <section class="section partners-section">
@@ -172,9 +170,9 @@ import heroImpactForest from '@/assets/hero-impact-forest.jpg';
 import heroImpactVillage from '@/assets/hero-impact-village.jpg';
 
 const slideItems = [
-  { image: heroImpact, caption: 'Ten-plus international donors trust Santi Sena with multi-year grants.' },
-  { image: heroImpactForest, caption: 'Government ministries partner with us on community forestry and natural resource management.' },
-  { image: heroImpactVillage, caption: 'Local pagodas, commune councils and cooperatives anchor every partnership in the village.' },
+  { image: heroImpact, caption: '' },
+  { image: heroImpactForest, caption: '' },
+  { image: heroImpactVillage, caption: '' },
 ]
 
 // Partner data
@@ -380,24 +378,35 @@ onUnmounted(() => {
 /* =====================
    Hero
    ===================== */
-.hero {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  padding: 6rem 1.5rem;
-  min-height: 60vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--color-ink) 100%);
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
 }
 
 .hero-content {
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 5;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .badge {
@@ -426,7 +435,7 @@ onUnmounted(() => {
   color: rgba(253, 248, 239, 0.85);
   line-height: 1.7;
   max-width: 700px;
-  margin: 0 auto;
+  margin: 0;
 }
 
 /* =====================

@@ -222,8 +222,8 @@ const slideItems: { image: string; caption: string }[] = [
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(115deg, rgba(8, 22, 16, 0.86) 0%, rgba(8, 22, 16, 0.55) 45%, rgba(8, 22, 16, 0.15) 78%),
-    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.5) 0%, transparent 55%);
+    linear-gradient(90deg, rgba(6, 18, 13, 0.92) 0%, rgba(6, 18, 13, 0.68) 38%, rgba(6, 18, 13, 0.3) 65%, rgba(6, 18, 13, 0.05) 100%),
+    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.4) 0%, transparent 55%);
 }
 
 .hero-inner {
@@ -232,10 +232,24 @@ const slideItems: { image: string; caption: string }[] = [
   z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
   max-width: 760px;
-  padding: 3rem clamp(1.5rem, 5vw, 4.5rem) 3.5rem;
+  padding: 3rem clamp(1.5rem, 5vw, 4.5rem);
   width: 100%;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-title {

@@ -2,10 +2,10 @@
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  { image: '/images/programs/livelihood-hero1.jpg', caption: 'Integrated farming systems that combine rice, fish, vegetables and livestock on one plot.' },
-  { image: '/images/programs/livelihood-hero2.jpg', caption: 'Saving-for-Change groups, primarily led by women, building household resilience.' },
-  { image: '/images/programs/livelihood-hero3.jpg', caption: 'Agricultural cooperatives negotiating fair prices for smallholder farmers.' },
-  { image: '/images/programs/livelihood-hero4.jpg', caption: 'Rural enterprise development keeping young adults in the village, near their children.' },
+  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
+  { image: '/images/programs/livelihood-hero2.jpg', caption: '' },
+  { image: '/images/programs/livelihood-hero3.jpg', caption: '' },
+  { image: '/images/programs/livelihood-hero4.jpg', caption: '' },
 ]
 
 const stats = [
@@ -33,10 +33,7 @@ const whyItMatters = [
 
 <template>
   <div class="education-page">
-    <Slideshow :slides="slideItems" />
-
-    <!-- Hero Section -->
-    <section class="hero">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay"></div>
 
       <div class="hero-content">
@@ -48,7 +45,7 @@ const whyItMatters = [
           parents abroad for wages.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- Intro + Stats -->
     <section class="section-cream">
@@ -127,27 +124,34 @@ const whyItMatters = [
 }
 
 /* Hero */
-.hero {
-  position: relative;
-  min-height: 480px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  padding: 0 2rem;
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
-}
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(20,129,62,0.75) 0%, rgba(20,129,62,0.3) 60%, transparent 100%);
-  z-index: 1;
+  background: linear-gradient(90deg, rgba(6,18,13,0.85) 0%, rgba(6,18,13,0.55) 42%, rgba(6,18,13,0.22) 70%, transparent 100%);
 }
 .hero-content {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
   max-width: 600px;
   color: white;
-  padding-left: 3rem;
+  padding: 3rem clamp(1.5rem, 5vw, 3.5rem);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .eyebrow {
   color: var(--primary-light);
@@ -161,6 +165,7 @@ const whyItMatters = [
   line-height: 1.15;
   letter-spacing: -0.01em;
   margin-bottom: 1.25rem;
+  color: white;
 }
 .hero-desc {
   line-height: 1.6;
