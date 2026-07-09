@@ -203,6 +203,7 @@ h2 {
 h1 {
   margin-top: 1rem;
   max-width: 720px;
+  color: #fffdf8;
 }
 
 .hero-content p {

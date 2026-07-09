@@ -148,6 +148,7 @@ const whatWeDo = [
   line-height: 1.15;
   letter-spacing: -0.01em;
   margin-bottom: 1.25rem;
+  color: white;
 }
 .hero-desc {
   line-height: 1.6;

@@ -185,6 +185,7 @@ h3 {
 h1 {
   max-width: 720px;
   line-height: 1.1;
+  color: #fffdf8;
 }
 
 .hero-content p {
