@@ -85,14 +85,6 @@ const menus: Menu[] = [
       },
     ],
   },
-  {
-    label: 'Contact',
-    items: [
-      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact/headoffice' },
-      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact/fieldoffice' },
-      { title: 'Write to Us', desc: 'Send a message - we read every letter.', to: '/contact#write' },
-    ],
-  },
 ]
 
 type Language = { code: 'en' | 'km'; label: string }
@@ -250,6 +242,8 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
             </div>
           </div>
         </template>
+
+        <RouterLink to="/contact" class="nav-link" @click="closeAll">Contact us</RouterLink>
       </nav>
 
       <div class="header-actions">
@@ -321,6 +315,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           {{ item.title }}
         </RouterLink>
       </div>
+      <RouterLink to="/contact" class="mobile-link" @click="closeAll">Contact us</RouterLink>
       <RouterLink
         to="/get-involved/donate"
         class="btn-support btn-support--mobile"

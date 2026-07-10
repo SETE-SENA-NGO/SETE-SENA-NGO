@@ -8,8 +8,6 @@ import ServicesView from '@/views/public/ServicesView.vue'
 import ImpactView from '@/views/public/ImpactView.vue'
 import ImpactPartnersView from '@/views/ImpactPartnersView.vue'
 import ContactView from '@/views/public/ContactView.vue'
-import HeadOfficeView from '@/views/public/HeadOfficeView.vue'
-import FieldOfficeView from '@/views/public/FieldOfficesView.vue'
 import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
 import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
 import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
@@ -43,8 +41,8 @@ export const publicRoutes = [
   { path: '/get-involved/volunteer', component: VolunteerView },
   { path: '/get-involved/partner', component: PartnerView },
   { path: '/contact', component: ContactView },
-  { path: '/contact/headoffice', component: HeadOfficeView },
-  { path: '/contact/fieldoffice', component: FieldOfficeView },
+  { path: '/contact/headoffice', redirect: '/contact#head-office' },
+  { path: '/contact/fieldoffice', redirect: '/contact#field-offices' },
   { path: '/programs', component: ProgramsView, name: 'programs' },
   { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
   {
