@@ -103,38 +103,50 @@ onMounted(() => {
 
     <!-- ── How We Are Organized ── -->
     <section class="team-section">
-      <div class="section-container">
-        <span class="section-label saffron">Structure</span>
-        <h2 class="section-title">How we are organized</h2>
-        <ul class="team-list">
-          <li v-for="t in team" :key="t.role" class="team-card">
-            <div class="team-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-                <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                  stroke-linejoin="round" />
-              </svg>
+      <div class="section-container team-container">
+        <div class="team-heading">
+          <div class="team-heading-main">
+            <span class="section-label saffron">Structure</span>
+            <h2 class="section-title">How we are organized</h2>
+          </div>
+          <p class="team-lead">
+            Leadership, technical support and field teams connected from strategy to village action.
+          </p>
+        </div>
+
+        <ol class="team-list">
+          <li v-for="(t, i) in team" :key="t.role" class="team-card">
+            <div class="team-card-top">
+              <span class="team-step">{{ String(i + 1).padStart(2, '0') }}</span>
+              <span class="team-line" aria-hidden="true" />
             </div>
             <div class="team-card-body">
-              <div class="team-role">{{ t.role }}</div>
+              <h3 class="team-role">{{ t.role }}</h3>
               <p class="team-desc">{{ t.desc }}</p>
             </div>
           </li>
-        </ul>
+        </ol>
       </div>
     </section>
 
     <!-- ── Operational Priorities ── -->
     <section class="priorities-section">
-      <div class="section-container">
-        <span class="section-label saffron">Focus Areas</span>
-        <h2 class="section-title">Operational priorities</h2>
-        <ul class="priorities-list">
+      <div class="section-container priorities-container">
+        <div class="priorities-intro">
+          <span class="section-label saffron">Focus Areas</span>
+          <h2 class="section-title">Operational priorities</h2>
+          <p class="priorities-lead">
+            The organization works through clear internal priorities so each program can stay
+            accountable, resilient and useful to the communities it serves.
+          </p>
+        </div>
+
+        <ol class="priorities-list">
           <li v-for="(p, i) in priorities" :key="p" class="priority-item">
             <span class="priority-num">{{ String(i + 1).padStart(2, '0') }}</span>
             <span class="priority-text">{{ p }}</span>
           </li>
-        </ul>
+        </ol>
       </div>
     </section>
 
@@ -376,120 +388,251 @@ onMounted(() => {
 
 /* ─── Team Structure ─── */
 .team-section {
-  background: var(--warm-card);
+  background:
+    linear-gradient(180deg, var(--warm-card) 0%, color-mix(in srgb, var(--green-soft) 45%, white) 100%);
+}
+
+.team-container {
+  position: relative;
+}
+
+.team-heading {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--green) 18%, var(--warm-border));
+}
+
+.team-heading::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 6rem;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--green);
+}
+
+.team-heading-main {
+  position: relative;
+  z-index: 1;
+}
+
+.team-heading .section-title {
+  margin-bottom: 0;
+}
+
+.team-lead {
+  position: relative;
+  z-index: 1;
+  max-width: 34rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
 }
 
 .team-list {
+  counter-reset: team;
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  gap: 1.25rem;
 }
 
 .team-card {
+  counter-increment: team;
+  position: relative;
   display: flex;
-  gap: 1.25rem;
-  padding: 1.5rem 1.75rem;
-  border-radius: 0.85rem;
-  background: var(--warm-card-alt);
-  border: 1px solid var(--warm-border);
-  border-left: 4px solid var(--gold);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  flex-direction: column;
+  min-height: 230px;
+  padding: 1.5rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--green) 16%, var(--warm-border));
+  border-radius: 1rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9)),
+    var(--warm-card);
+  box-shadow: 0 14px 34px rgba(31, 61, 46, 0.07);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.team-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.3rem;
+  background: linear-gradient(90deg, var(--green), var(--green-deep));
 }
 
 .team-card:hover {
-  transform: translateX(5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-  border-color: var(--gold);
+  transform: translateY(-5px);
+  border-color: color-mix(in srgb, var(--green) 38%, var(--warm-border));
+  box-shadow: 0 22px 48px rgba(31, 61, 46, 0.12);
 }
 
-.team-icon {
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
+.team-card-top {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.45rem;
+}
+
+.team-step {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: var(--gold);
-  color: var(--warm-card);
-  margin-top: 0.15rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.85rem;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.team-line {
+  height: 1px;
+  flex: 1;
+  background: color-mix(in srgb, var(--green) 20%, transparent);
 }
 
 .team-card-body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
 }
 
 .team-role {
-  font-size: 1.125rem;
-  font-weight: 700;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: var(--green);
-  letter-spacing: -0.01em;
 }
 
 .team-desc {
-  margin: 0.35rem 0 0;
+  margin: 0.75rem 0 0;
   font-size: 0.9rem;
-  line-height: 1.7;
-  color: var(--text-body);
-  /* max-width: 50rem; */
+  line-height: 1.75;
+  color: var(--text-secondary);
 }
 
 /* ─── Operational Priorities ─── */
 .priorities-section {
+  position: relative;
+  overflow: hidden;
   background: var(--warm-bg);
 }
 
+.priorities-container {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+
+.priorities-intro {
+  position: sticky;
+  top: 7rem;
+  padding: 2rem;
+  border: 1px solid color-mix(in srgb, var(--green) 18%, transparent);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 20px 48px rgba(31, 61, 46, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.priorities-intro .section-title {
+  margin-bottom: 1rem;
+}
+
+.priorities-lead {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.98rem;
+  line-height: 1.8;
+}
+
 .priorities-list {
+  counter-reset: priority;
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 1rem;
 }
 
 .priority-item {
+  counter-increment: priority;
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 1.25rem;
-  padding: 1.5rem 1.75rem;
-  border-radius: 0.75rem;
-  background: var(--warm-card);
-  border: 1px solid var(--warm-border);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  align-items: center;
+  min-height: 112px;
+  gap: 1.1rem;
+  padding: 1.4rem 1.5rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--green) 14%, var(--warm-border));
+  border-radius: 0.85rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86)),
+    var(--warm-card);
+  box-shadow: 0 10px 28px rgba(31, 61, 46, 0.06);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.priority-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.35rem;
+  background: linear-gradient(180deg, var(--green), var(--green-deep));
 }
 
 .priority-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-  border-color: var(--green-mid);
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--green) 38%, var(--warm-border));
+  box-shadow: 0 18px 44px rgba(31, 61, 46, 0.11);
 }
 
 .priority-num {
+  position: relative;
+  z-index: 1;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
   font-size: 0.85rem;
-  font-weight: 700;
-  background: var(--green-soft);
-  color: var(--green);
-  margin-top: 0.05rem;
+  font-weight: 800;
+  background: linear-gradient(145deg, var(--green), var(--green-deep));
+  color: var(--color-white);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--green) 26%, transparent);
 }
 
 .priority-text {
+  position: relative;
+  z-index: 1;
   flex: 1;
-  font-size: 0.95rem;
-  line-height: 1.7;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.6;
   color: var(--text-body);
-  padding-top: 0.35rem;
 }
 
 /* ─── Accountability ─── */
@@ -539,6 +682,14 @@ onMounted(() => {
     padding: 3.5rem 2.5rem;
   }
 
+  .team-heading {
+    grid-template-columns: minmax(0, 0.85fr) minmax(300px, 0.75fr);
+  }
+
+  .team-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .team-card {
     padding: 1.5rem 2rem;
   }
@@ -552,9 +703,86 @@ onMounted(() => {
   }
 }
 
+@media (min-width: 900px) {
+  .priorities-container {
+    grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+}
+
 @media (min-width: 1024px) {
   .section-container {
     padding: 6rem 2rem;
+  }
+
+  .team-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .section-container {
+    padding: 4rem 1rem;
+  }
+
+  .team-heading {
+    margin-bottom: 1.75rem;
+    padding-bottom: 1rem;
+  }
+
+  .team-lead {
+    font-size: 0.94rem;
+    line-height: 1.7;
+  }
+
+  .team-card {
+    min-height: auto;
+    padding: 1.35rem;
+  }
+
+  .team-card-top {
+    margin-bottom: 1.1rem;
+  }
+
+  .team-step {
+    width: 2.65rem;
+    height: 2.65rem;
+    border-radius: 0.7rem;
+  }
+
+  .priorities-intro {
+    position: relative;
+    top: auto;
+    padding: 1.5rem;
+  }
+
+  .priority-item {
+    min-height: auto;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1.25rem 1.15rem 1.25rem 1.3rem;
+  }
+
+  .priority-num {
+    width: 2.55rem;
+    height: 2.55rem;
+    border-radius: 0.65rem;
+    font-size: 0.78rem;
+  }
+
+  .priority-text {
+    font-size: 0.94rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .priorities-intro {
+    padding: 1.25rem;
+  }
+
+  .priority-item {
+    flex-direction: column;
   }
 }
 </style>
