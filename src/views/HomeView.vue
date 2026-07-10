@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
+import environmentImg from '@/assets/home-image/environtment.jpg'
+import educationImg from '@/assets/home-image/education.jpg'
+import livelihoodImg from '@/assets/home-image/livelihood.jpg'
+import childImg from '@/assets/home-image/child.jpg'
 
 const stats = [
   { value: '293', label: 'Villages Reached' },
@@ -69,19 +73,14 @@ const slideItems: { image: string; caption: string }[] = [
           <p class="eyebrow">Four Pillars</p>
           <h2 class="pillars-title">Strategic goals</h2>
         </div>
-        <RouterLink to="/services" class="pillars-link">Explore all programs →</RouterLink>
+        <RouterLink to="/programs" class="pillars-link">Explore all programs</RouterLink>
       </div>
 
       <div class="pillars-grid">
         <article class="pillar-card">
           <div class="pillar-image pillar-image--forest">
-            <svg viewBox="0 0 24 24" class="pillar-icon" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M12 22V13M12 13C12 13 5 12 5 6C5 6 12 4 12 10C12 4 19 6 19 6C19 12 12 13 12 13Z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img :src="environmentImg" alt="Community forestry in a Cambodian village" class="pillar-photo" />
+
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 01</p>
@@ -95,18 +94,8 @@ const slideItems: { image: string; caption: string }[] = [
 
         <article class="pillar-card">
           <div class="pillar-image pillar-image--education">
-            <svg viewBox="0 0 24 24" class="pillar-icon" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M4 6.5C4 5.67157 4.67157 5 5.5 5H10C11.1046 5 12 5.89543 12 7V19C12 18.1716 11.3284 17.5 10.5 17.5H4V6.5Z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M20 6.5C20 5.67157 19.3284 5 18.5 5H14C12.8954 5 12 5.89543 12 7V19C12 18.1716 12.6716 17.5 13.5 17.5H20V6.5Z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img :src="educationImg" alt="Children learning at a community pre-school" class="pillar-photo" />
+
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 02</p>
@@ -120,13 +109,8 @@ const slideItems: { image: string; caption: string }[] = [
 
         <article class="pillar-card">
           <div class="pillar-image pillar-image--livelihood">
-            <svg viewBox="0 0 24 24" class="pillar-icon" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M3 12L7 8M7 8L11 12M7 8V19M21 12L17 16M17 16L13 12M17 16V5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img :src="livelihoodImg" alt="Villagers working on rural livelihood activities" class="pillar-photo" />
+
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 03</p>
@@ -140,13 +124,8 @@ const slideItems: { image: string; caption: string }[] = [
 
         <article class="pillar-card">
           <div class="pillar-image pillar-image--protection">
-            <svg viewBox="0 0 24 24" class="pillar-icon" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M12 3L19 6V11C19 15.4183 16.0523 19.4183 12 21C7.94772 19.4183 5 15.4183 5 11V6L12 3Z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img :src="childImg" alt="Children protected and cared for in their community" class="pillar-photo" />
+            
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 04</p>
@@ -312,22 +291,26 @@ const slideItems: { image: string; caption: string }[] = [
 .stats-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: 3.5rem 1.5rem;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  gap: 2.5rem 1rem;
   text-align: center;
 }
 
 .stat-number {
-  font-weight: 600;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   color: var(--primary-dark);
 }
 
 .stat-label {
-  margin-top: 0.35rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-ink-soft);
 }
@@ -335,6 +318,10 @@ const slideItems: { image: string; caption: string }[] = [
 @media (min-width: 720px) {
   .stats-inner {
     grid-template-columns: repeat(4, 1fr);
+  }
+  /* Thin dividers between the four columns, like a classic stats band. */
+  .stat + .stat {
+    border-left: 1px solid var(--color-border);
   }
 }
 
@@ -425,6 +412,7 @@ const slideItems: { image: string; caption: string }[] = [
 }
 
 .pillar-image {
+  position: relative;
   aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
@@ -432,10 +420,33 @@ const slideItems: { image: string; caption: string }[] = [
   overflow: hidden;
 }
 
+.pillar-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.pillar-card:hover .pillar-photo {
+  transform: scale(1.06);
+}
+
+/* Color tint over the photo keeps each pillar's hue and the icon readable. */
+.pillar-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
 .pillar-icon {
+  position: relative;
+  z-index: 1;
   width: 3rem;
   height: 3rem;
   color: rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
   transition: transform 0.35s ease;
 }
 
@@ -443,21 +454,6 @@ const slideItems: { image: string; caption: string }[] = [
   transform: scale(1.12);
 }
 
-.pillar-image--forest {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-}
-
-.pillar-image--education {
-  background: linear-gradient(135deg, #c98a4a, #7a4a22);
-}
-
-.pillar-image--livelihood {
-  background: linear-gradient(135deg, #b0522c, #6b2f18);
-}
-
-.pillar-image--protection {
-  background: linear-gradient(135deg, #3a6b7a, #1c3540);
-}
 
 .pillar-body {
   padding: 1.5rem;
