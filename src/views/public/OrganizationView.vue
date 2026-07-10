@@ -141,7 +141,6 @@ onMounted(() => {
     <!-- ── Accountability ── -->
     <section class="accountability-section">
       <div class="section-container">
-        <span class="section-label saffron">Accountability</span>
         <h2 class="section-title">Accountability</h2>
         <div class="accountability-card">
           <div class="accountability-icon">
@@ -195,7 +194,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.65rem;
+  /* font-size: 0.65rem; */
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4em;
@@ -330,7 +329,7 @@ onMounted(() => {
   padding: 3rem 1.5rem 4.5rem;
   display: grid;
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 0.5rem
 }
 
 .fact-card {
@@ -436,7 +435,7 @@ onMounted(() => {
   font-size: 0.9rem;
   line-height: 1.7;
   color: var(--text-body);
-  max-width: 50rem;
+  /* max-width: 50rem; */
 }
 
 /* ─── Operational Priorities ─── */
