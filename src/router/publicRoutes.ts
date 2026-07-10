@@ -4,7 +4,6 @@ import AboutVisionView from '@/views/AboutVisionView.vue'
 import ProgramEnviromentView from '@/views/ProgramEnviromentView.vue'
 import OrganizationView from '@/views/public/OrganizationView.vue'
 import EducationView from '@/views/public/EducationView.vue'
-import ImpactView from '@/views/public/ImpactView.vue'
 import ImpactPartnersView from '@/views/ImpactPartnersView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
@@ -29,14 +28,10 @@ export const publicRoutes = [
   { path: '/about/organization', component: OrganizationView },
   { path: '/programs/education', component: EducationView },
   { path: '/about/aboutview', component: AboutView },
-  { path: '/impact', component: ImpactView },
   { path: '/impact/numbers', component: ImpactNumbersView },
   { path: '/impact/partners', component: ImpactPartnersView },
-
   { path: '/impact/timeline', component: ImpactTimelineView },
-
   { path: '/get-involved', component: GetInvolvedView },
-
   { path: '/get-involved/donate', component: DonateView },
   { path: '/get-involved/volunteer', component: VolunteerView },
   { path: '/get-involved/partner', component: PartnerView },
