@@ -10,70 +10,70 @@ const milestones = [
     title: '30-Year Strategic Plan',
     description:
       'New five-year strategy to deepen quality, diversify funding and invest in youth leadership.',
-    image: new URL('@/assets/history/2024.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/2024.png', import.meta.url).href,
   },
   {
     year: '2022',
     title: 'Melaleuca Oil Enterprise',
     description:
       'Village forest guardians launch a rural enterprise from non-timber forest products.',
-    image: new URL('@/assets/history/2022.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/2022.png', import.meta.url).href,
   },
   {
     year: '2020',
     title: 'COVID-19 Response',
     description:
       'Emergency food, hygiene and remote-learning kits reach more than 200 villages.',
-    image: new URL('@/assets/history/2020.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/2019.png', import.meta.url).href,
   },
   {
     year: '2018',
     title: 'Child Protection Networks',
     description:
       'CPNs become active across 43 communes with 24/7 referral pathways.',
-    image: new URL('@/assets/history/2018.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/2018.png', import.meta.url).href,
   },
   {
     year: '2014',
     title: '20th Anniversary',
     description:
       'Kratie office opens. Programs extend to a third province and staff grows past 30 full-time.',
-    image: new URL('@/assets/history/2014.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/2014.png', import.meta.url).href,
   },
   {
     year: '2011',
     title: 'Biogas program launched',
     description:
       'Household biogas units begin replacing firewood in remote kitchens.',
-    image: new URL('@/assets/history/2011.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/2011.png', import.meta.url).href,
   },
   {
     year: '2007',
     title: 'Expansion to Prey Veng',
     description:
       'Education and child protection programming reaches a second province.',
-    image: new URL('@/assets/history/2007.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/2007.png', import.meta.url).href,
   },
   {
     year: '2003',
     title: 'Saving-for-Change begins',
     description:
       'First women-led savings circles launched in Svay Rieng; the model becomes a program backbone.',
-    image: new URL('@/assets/history/2003.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/2003.png', import.meta.url).href,
   },
   {
     year: '1998',
     title: 'First community forestry site',
     description:
       'Village committees take legal stewardship of 120 hectares of degraded forest.',
-    image: new URL('@/assets/history/1998.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/1998.png', import.meta.url).href,
   },
   {
     year: '1994',
     title: 'Founded in Svay Rieng',
     description:
       'Buddhist monks and community elders establish the Peace Army after the war, focused on moral regeneration and rural recovery.',
-    image: new URL('@/assets/history/1994.jpg', import.meta.url).href,
+    image: new URL('@/assets/maps/1994.png', import.meta.url).href,
   },
 ]
 
@@ -175,7 +175,7 @@ const slideItems = [
 
           <div class="intro-image">
             <img
-              src="/images/programs/hero-1.jpg"
+              src="https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/505525876_3181813175305341_2459654488011023770_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=KbphgVDtLEUQ7kNvwHwZoMd&_nc_oc=AdoEQdWJwc0WofG5wZkcxZUirfqYT4NJTaUZEmHge-clF78G4Ktd1xWu97cfyLoW4Jo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=mM-k-o8joxyLISffyX9ncQ&_nc_ss=7b289&oh=00_AQBe77By6MxWzjiOTY8RROyjc3kuPm7orwHcP0SaARI5Xg&oe=6A566409"
               alt="Santi Sena Cambodia"
             />
           </div>
@@ -423,7 +423,7 @@ const slideItems = [
 .node-dot {
   width: 20px;
   height: 20px;
-  background: #1e7a55;
+  background: #119992;
   border: 4px solid #faf8f5;
   border-radius: 50%;
   z-index: 2;
@@ -433,7 +433,7 @@ const slideItems = [
 .node-year {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #1a3d2e;
+  color: #136bd6;
   margin-top: 12px;
   letter-spacing: -0.02em;
 }
@@ -461,9 +461,9 @@ const slideItems = [
 }
 
 .intro-content h2{
-  font-size:52px;
+  font-size:42px;
   font-weight:700;
-  color:#071C3F;
+  color:#1a3d2e;
   margin-bottom:30px;
 }
 
@@ -567,7 +567,7 @@ const slideItems = [
   font-weight: 600;
   font-size: 0.95rem;
   text-decoration: none;
-  background: #1e7a55;
+  background: #f99f02;
   color: #fff;
   box-shadow: 0 8px 24px rgba(30, 122, 85, 0.25);
   transition: transform 0.2s ease, box-shadow 0.25s ease;
