@@ -63,7 +63,7 @@ onMounted(() => {
       <div class="hero-overlay" />
 
       <div class="hero-content">
-        <span class="section-label saffron">About Santi Sena</span>
+        <span class="badge">About Santi Sena</span>
         <h1 class="hero-title">
           A peace army born from the Dharma, raised by villages.
         </h1>
@@ -103,7 +103,7 @@ onMounted(() => {
     <section class="values-section">
       <div class="values-container">
         <span class="section-label saffron">Core Values</span>
-        <h2 class="values-title">Five vows that shape every program</h2>
+        <h2 class="values-title">Five values that shape every program</h2>
         <div class="values-grid">
           <div v-for="v in values" :key="v.name" class="value-card">
             <div class="value-name">{{ v.name }}</div>
@@ -169,14 +169,14 @@ onMounted(() => {
 /* ─── Shared ─── */
 .section-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.3em;
 }
 
 .section-label.saffron {
   color: var(--about-saffron);
-  font-weight: 700;
+  font-weight: 900;
   letter-spacing: 0.4em;
   display: inline-flex;
   align-items: center;
@@ -184,7 +184,21 @@ onMounted(() => {
   padding: 0.35rem 0.85rem;
   border-radius: 2rem;
   background: color-mix(in srgb, var(--about-saffron) 15%, transparent);
-  color: var(--about-saffron);
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
 }
 
 /* ─── Hero (overlaid on the slideshow via its default slot) ─── */
@@ -204,9 +218,8 @@ onMounted(() => {
   align-items: flex-start;
   justify-content: center;
   text-align: left;
-  max-width: 720px;
-  margin: 0;
-  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  max-width: 760px;
+  padding: 3rem var(--container-padding);
   animation: fadeInUp 0.8s ease-out;
   color: var(--about-white);
 }
@@ -223,19 +236,22 @@ onMounted(() => {
 }
 
 .hero-title {
-  margin-top: 1rem;
+  margin-top: 1.25rem;
   max-width: 48rem;
   line-height: 1.1;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--about-white);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
 }
 
 .hero-subtitle {
   margin-top: 1.5rem;
   max-width: 42rem;
-  font-size: 1.05rem;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* ─── Vision / Mission / Goal ─── */
@@ -279,7 +295,7 @@ onMounted(() => {
   max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 1.5rem;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .values-title {
@@ -290,7 +306,7 @@ onMounted(() => {
 .values-grid {
   margin-top: 3.5rem;
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .value-card {
@@ -395,7 +411,7 @@ onMounted(() => {
   max-width: 1024px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .geo-heading {
@@ -408,6 +424,7 @@ onMounted(() => {
   margin-top: 2.5rem;
   display: grid;
   gap: 1.5rem;
+  text-align: center;
 }
 
 .geo-card {
