@@ -45,11 +45,12 @@ const whatWeDo = [
   'Market linkages with provincial buyers and social enterprises',
 ]
 
+// icon key per bullet, used only to pick which badge icon renders next to each "Why it matters" line
 const whyItMatters = [
-  'Household income diversification reduces the risk of debt bondage and trafficking',
-  'Women-led savings shift decision-making power inside the household',
-  'Cooperatives break the isolation of the smallholder in the marketplace',
-  'Local enterprise keeps young adults in the village, near their children',
+  { text: 'Household income diversification reduces the risk of debt bondage and trafficking', icon: 'shield' },
+  { text: 'Women-led savings shift decision-making power inside the household', icon: 'key' },
+  { text: 'Cooperatives break the isolation of the smallholder in the marketplace', icon: 'users' },
+  { text: 'Local enterprise keeps young adults in the village, near their children', icon: 'home' },
 ]
 </script>
 
@@ -118,49 +119,97 @@ const whyItMatters = [
     </section>
 
     <!-- What we do -->
-    <section class="section-cream">
+    <section class="section-light">
       <div class="container">
-        <h2 class="section-title">What we do</h2>
-        <ul class="bullet-list">
-          <li v-for="item in whatWeDo" :key="item">{{ item }}</li>
-        </ul>
+        <div class="two-col-grid">
+          <div class="col-text">
+            <h2 class="section-title">What we do</h2>
+            <ul class="check-list">
+              <li v-for="item in whatWeDo" :key="item">
+                <span class="check-icon">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span>{{ item }}</span>
+              </li>
+            </ul>
+          </div>
+          <div class="col-image">
+            <img src="/images/programs/livelihood-hero1.jpg" alt="Farmer tending an integrated farming plot" />
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- Our approach -->
     <section class="section-cream">
       <div class="container">
-        <h2 class="section-title">Our approach</h2>
-        <p class="approach-text">
+        <h2 class="section-title text-center">Our approach</h2>
+        <p class="approach-text text-center">
           We do not distribute cash. We build the systems — saving groups,
           cooperatives, farmer schools — that let a household earn, save, invest
           and repeat. Every group is coached for 18–24 months, then graduates to
           independence with our field team on call.
         </p>
 
-        <blockquote class="quote-block">
-          "Our group has lent to twelve families for chickens and school fees.
-          Nobody has left for Thailand this year."
-          <footer>— Chenda, SfC treasurer, Svay Rieng</footer>
-        </blockquote>
+        <div class="quote-card">
+          <span class="quote-mark">”</span>
+          <p class="quote-text">
+            "Our group has lent to twelve families for chickens and school fees.
+            Nobody has left for Thailand this year."
+          </p>
+          <div class="quote-author">
+            <div class="author-avatar">C</div>
+            <div class="author-info">
+              <p class="author-name">— Chenda</p>
+              <p class="author-role">SfC treasurer, Svay Rieng</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- Why it matters -->
-    <section class="section-cream">
+    <section class="section-light">
       <div class="container">
-        <h2 class="section-title">Why it matters</h2>
-        <ul class="bullet-list">
-          <li v-for="item in whyItMatters" :key="item">{{ item }}</li>
-        </ul>
-      </div>
-    </section>
+        <div class="two-col-grid reverse">
+          <div class="col-image">
+            <img src="/images/programs/livelihood-hero2.jpg" alt="Savings group members meeting together" />
+          </div>
+          <div class="col-text">
+            <h2 class="section-title">Why it matters</h2>
+            <ul class="icon-list">
+              <li v-for="item in whyItMatters" :key="item.text">
+                <span class="icon-badge">
+                  <svg v-if="item.icon === 'shield'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <svg v-else-if="item.icon === 'key'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="8" cy="15" r="4" stroke="currentColor" stroke-width="2"/>
+                    <path d="M11 12l8-8M16 4l3 3M19 6l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <svg v-else-if="item.icon === 'users'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="2"/>
+                    <path d="M3 20c0-3 3-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/>
+                    <path d="M15 20c0-2.5 2-4.5 5-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 11l8-7 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span>{{ item.text }}</span>
+              </li>
+            </ul>
 
-    <!-- CTA -->
-    <section class="edu-cta">
-      <div class="container cta-inner">
-        <p class="cta-text">Ready to take the next step?</p>
-        <router-link to="/get-involved" class="btn-primary">Seed a savings group →</router-link>
+            <div class="cta-inline">
+              <p class="cta-inline-text">Ready to take the next step?</p>
+              <router-link to="/get-involved" class="btn-primary">Seed a savings group →</router-link>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -286,9 +335,13 @@ const whyItMatters = [
   background: white;
 }
 
-/* Cream sections */
+/* Cream / light sections */
 .section-cream {
   background: var(--cream);
+  padding: 3.5rem 0;
+}
+.section-light {
+  background: #f2f5ee;
   padding: 3.5rem 0;
 }
 .intro-text {
@@ -329,73 +382,178 @@ const whyItMatters = [
   font-size: 0.95rem;
 }
 
-/* Section titles + lists */
+/* Section titles */
 .section-title {
-  font-family: var(--font-heading);
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-weight: 700;
   color: var(--dark-green);
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
 }
-.bullet-list {
-  list-style: none;
-  padding: 0;
-}
-.bullet-list li {
-  position: relative;
-  padding-left: 1.5rem;
-  margin-bottom: 0.9rem;
-  color: #333;
-  line-height: 1.6;
-}
-.bullet-list li::before {
-  content: '•';
-  color: var(--orange);
-  position: absolute;
-  left: 0;
-  font-size: 1.2rem;
+.text-center {
+  text-align: center;
 }
 
-/* Approach + Quote */
+/* Two-column layout (What we do / Why it matters) */
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+.two-col-grid.reverse .col-image {
+  order: 1;
+}
+.two-col-grid.reverse .col-text {
+  order: 2;
+}
+.col-image img {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  object-fit: cover;
+  border-radius: 16px;
+  display: block;
+}
+
+/* Check list (What we do) */
+.check-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.check-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  color: #333;
+  line-height: 1.55;
+}
+.check-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e3efe0;
+  color: var(--dark-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+.check-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Approach + Quote card */
 .approach-text {
   line-height: 1.7;
   color: #333;
   max-width: 850px;
-  margin-bottom: 2rem;
+  margin: 0 auto 2.5rem;
 }
-.quote-block {
-  border-left: 4px solid var(--orange);
-  background: #f5ead2;
-  padding: 1.5rem 2rem;
+.quote-card {
+  position: relative;
+  background: #e3f2e6;
+  border-radius: 20px;
+  padding: 2.5rem 3rem;
+  max-width: 750px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+.quote-mark {
+  position: absolute;
+  top: 0.5rem;
+  left: 1.5rem;
+  font-family: var(--font-heading);
+  font-size: 5rem;
+  color: rgba(22, 52, 42, 0.15);
+  line-height: 1;
+}
+.quote-text {
+  position: relative;
   font-style: italic;
   font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   color: var(--dark-green);
-  border-radius: 0 12px 12px 0;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
 }
-.quote-block footer {
-  margin-top: 0.75rem;
-  font-style: normal;
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  color: #666;
+.quote-author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.author-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--dark-green);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.author-name {
+  font-weight: 700;
+  color: var(--dark-green);
+  font-size: 0.95rem;
+}
+.author-role {
+  color: #667;
+  font-size: 0.85rem;
 }
 
-/* CTA */
-.edu-cta {
-  background-color: var(--cream);
-  padding: 2.5rem 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+/* Icon list (Why it matters) */
+.icon-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
 }
-.cta-inner {
+.icon-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  color: #333;
+  line-height: 1.55;
+}
+.icon-badge {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--dark-green);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+.icon-badge svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Inline CTA within Why it matters */
+.cta-inline {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
-.cta-text {
+.cta-inline-text {
   color: var(--dark-green);
   font-family: var(--font-heading);
-  font-size: 1.3rem;
+  font-size: 1.15rem;
 }
 .btn-primary {
   background: var(--orange);
@@ -411,6 +569,10 @@ const whyItMatters = [
   .stats-grid { grid-template-columns: 1fr; }
   .hero-content h1 { font-size: 2rem; }
   .hero-arrow { width: 36px; height: 36px; font-size: 1.5rem; }
-  .cta-inner { flex-direction: column; gap: 1rem; text-align: center; }
+  .two-col-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .two-col-grid.reverse .col-image { order: 0; }
+  .two-col-grid.reverse .col-text { order: 1; }
+  .quote-card { padding: 2rem 1.5rem; }
+  .cta-inline { flex-direction: column; align-items: flex-start; }
 }
 </style>
