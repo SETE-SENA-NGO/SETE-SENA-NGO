@@ -224,6 +224,10 @@ onMounted(() => {
   text-align: left;
   max-width: 760px;
   padding: 3rem var(--container-padding);
+  max-width: 720px;
+  margin: 0;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   animation: fadeInUp 0.8s ease-out;
   color: var(--about-white);
 }

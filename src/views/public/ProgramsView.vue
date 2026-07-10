@@ -165,7 +165,8 @@ const slideItems = [
   justify-content: center;
   text-align: left;
   max-width: 700px;
-  padding: 3rem clamp(1.5rem, 5vw, 3.5rem);
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   color: #fff;
   animation: fadeInUp 0.8s ease-out;
 }
