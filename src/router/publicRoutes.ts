@@ -41,8 +41,6 @@ export const publicRoutes = [
   { path: '/get-involved/volunteer', component: VolunteerView },
   { path: '/get-involved/partner', component: PartnerView },
   { path: '/contact', component: ContactView },
-  { path: '/contact/headoffice', redirect: '/contact#head-office' },
-  { path: '/contact/fieldoffice', redirect: '/contact#field-offices' },
   { path: '/programs', component: ProgramsView, name: 'programs' },
   { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
   {
