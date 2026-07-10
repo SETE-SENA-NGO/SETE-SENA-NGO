@@ -1,114 +1,213 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
   { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-  { image: '/images/programs/hero-3.jpg', caption: '' },
+  { image: '/images/programs/environment-hero.jpg', caption: '' },
+  { image: '/images/programs/education-hero.jpg', caption: '' },
 ]
 
-const ways = [
+const involvementPaths = [
   {
-    title: 'Donate',
-    body: 'Support community forests, livelihoods, education, WASH, Buddhist preservation and child protection work in rural Cambodia.',
-    cta: 'Support Santi Sena',
+    label: 'Give',
+    title: 'Support village work',
+    body: 'Fund practical community programs.',
     to: '/get-involved/donate',
+    cta: 'Support us',
   },
   {
-    title: 'Partner',
-    body: 'Cooperate with Santi Sena through community-rooted programs, local authorities, provincial departments and field teams.',
-    cta: 'Explore partnership',
+    label: 'Partner',
+    title: 'Build with us',
+    body: 'Create programs with local teams.',
     to: '/get-involved/partner',
+    cta: 'Explore partnership',
   },
   {
-    title: 'Volunteer',
-    body: 'Bring your skills - agronomy, education, communications, evaluation - to a community-led project in the field.',
-    cta: 'Apply to volunteer',
+    label: 'Volunteer',
+    title: 'Share your skills',
+    body: 'Bring useful time and knowledge.',
     to: '/get-involved/volunteer',
+    cta: 'Volunteer with us',
   },
 ]
 
-const tiers = [
-  { amount: '$25', impact: 'One month of pre-school for a rural child.' },
-  { amount: '$80', impact: 'Twenty tree saplings planted in a community forest.' },
-  { amount: '$250', impact: 'A household biogas unit replacing firewood.' },
-  { amount: '$1,000', impact: 'A Saving-for-Change group seeded for one year.' },
+const fieldCards = [
+  {
+    theme: 'Natural resources',
+    title: 'Protect community forests',
+    image: '/images/programs/environment-hero1.jpg',
+    summary: 'Forests, seedlings and climate action.',
+    detail: 'Community forestry, nurseries and school eco campaigns.',
+  },
+  {
+    theme: 'Livelihoods',
+    title: 'Strengthen family income',
+    image: '/images/programs/livelihood-hero2.jpg',
+    summary: 'Savings groups and home gardens.',
+    detail: 'Self-help groups, cooperatives and small rural enterprise.',
+  },
+  {
+    theme: 'Children',
+    title: 'Keep learning close to home',
+    image: '/images/programs/education-hero.jpg',
+    summary: 'Pre-schools, books and scholarships.',
+    detail: 'Parent groups, teachers and school leaders work together.',
+  },
+  {
+    theme: 'Protection',
+    title: 'Make villages safer for children',
+    image: '/images/programs/child-protection2.jpg',
+    summary: 'Local networks for child safety.',
+    detail: 'Awareness, referral and peer support against abuse and trafficking.',
+  },
 ]
+
+const description =
+  'Get involved with Santi Sena through giving, partnership or volunteering in community-led work for peace, livelihoods, education, child protection and environmental preservation.'
+
+let previousTitle = ''
+let descriptionMeta: HTMLMetaElement | null = null
+let previousDescription: string | null = null
+let createdDescriptionMeta = false
+
+onMounted(() => {
+  previousTitle = document.title
+  document.title = 'Get Involved with Santi Sena'
+
+  descriptionMeta = document.querySelector('meta[name="description"]')
+  previousDescription = descriptionMeta?.getAttribute('content') ?? null
+
+  if (!descriptionMeta) {
+    descriptionMeta = document.createElement('meta')
+    descriptionMeta.setAttribute('name', 'description')
+    document.head.appendChild(descriptionMeta)
+    createdDescriptionMeta = true
+  }
+
+  descriptionMeta.setAttribute('content', description)
+})
+
+onUnmounted(() => {
+  document.title = previousTitle
+
+  if (descriptionMeta && createdDescriptionMeta) {
+    descriptionMeta.remove()
+  } else if (descriptionMeta && previousDescription !== null) {
+    descriptionMeta.setAttribute('content', previousDescription)
+  }
+})
 </script>
 
 <template>
   <main class="get-involved-page">
-    <Slideshow :slides="slideItems">
+    <Slideshow :slides="slideItems" :interval-ms="5600">
       <div class="hero-overlay"></div>
-      <div class="hero-inner">
-        <span class="eyebrow">Get involved</span>
-        <h1>Stand beside a village. Plant a generation.</h1>
-        <p>
-          Every gift, partnership and pair of hands becomes another root in the tree we have been
-          tending for thirty years.
-        </p>
+      <div class="hero-content">
+        <p class="eyebrow">Get involved</p>
+        <h1>Stand with rural communities.</h1>
+        <p class="lead">Give, partner or volunteer with Santi Sena's village-led work.</p>
+        <div class="hero-actions" aria-label="Get involved actions">
+          <RouterLink to="/get-involved/donate" class="button button-primary">
+            Support the work
+          </RouterLink>
+          <a href="#choose-path" class="button button-secondary">Compare options</a>
+        </div>
       </div>
     </Slideshow>
 
-    <section class="ways-section" aria-label="Ways to get involved">
-      <div class="ways-grid">
-        <article v-for="way in ways" :key="way.title" class="way-card">
-          <h2>{{ way.title }}</h2>
-          <p>{{ way.body }}</p>
-          <RouterLink :to="way.to" class="action-link">{{ way.cta }} -&gt;</RouterLink>
+    <section id="choose-path" class="path-section" aria-labelledby="path-heading">
+      <div class="section-heading">
+        <p class="eyebrow">Choose your role</p>
+        <h2 id="path-heading">Three simple ways to help.</h2>
+      </div>
+
+      <div class="path-grid">
+        <article v-for="path in involvementPaths" :key="path.title" class="path-card">
+          <span class="path-label">{{ path.label }}</span>
+          <h3>{{ path.title }}</h3>
+          <p>{{ path.body }}</p>
+          <RouterLink :to="path.to" class="text-link">{{ path.cta }} -&gt;</RouterLink>
         </article>
       </div>
     </section>
 
-    <section class="donation-section">
-      <div class="donation-inner">
-        <span class="eyebrow">Your gift, in villages</span>
-        <h2>What a donation actually does.</h2>
-        <div class="tier-grid">
-          <article v-for="tier in tiers" :key="tier.amount" class="tier-card">
-            <strong>{{ tier.amount }}</strong>
-            <p>{{ tier.impact }}</p>
-          </article>
-        </div>
+    <section class="field-section" aria-labelledby="field-heading">
+      <div class="field-intro">
+        <p class="eyebrow">What support strengthens</p>
+        <h2 id="field-heading">Where your action can go.</h2>
+      </div>
+
+      <div class="field-grid">
+        <article v-for="card in fieldCards" :key="card.title" class="field-card" tabindex="0">
+          <img :src="card.image" :alt="card.title" loading="lazy" />
+          <div class="field-card-copy">
+            <span>{{ card.theme }}</span>
+            <h3>{{ card.title }}</h3>
+            <p>{{ card.summary }}</p>
+          </div>
+          <div class="field-card-hover">
+            <strong>Field detail</strong>
+            <p>{{ card.detail }}</p>
+          </div>
+        </article>
       </div>
     </section>
 
-    <section class="monthly-section">
-      <h2>Become a monthly companion.</h2>
-      <p>
-        Recurring donors give Santi Sena the steady ground we need to plan multi-year programs with
-        communities. Even a small monthly gift sustains the slow, patient work of development.
-      </p>
-      <RouterLink to="/contact" class="primary-link">Start monthly giving</RouterLink>
+    <section class="cta-section" aria-label="Get involved next step">
+      <div class="cta-media" aria-hidden="true"></div>
+      <div class="cta-content">
+        <p class="eyebrow">Next step</p>
+        <h2>Choose your path.</h2>
+        <div class="cta-actions">
+          <RouterLink to="/get-involved/donate" class="button button-primary">Donate</RouterLink>
+          <RouterLink to="/get-involved/partner" class="button button-secondary">
+            Partner
+          </RouterLink>
+          <RouterLink to="/get-involved/volunteer" class="button button-secondary">
+            Volunteer
+          </RouterLink>
+        </div>
+      </div>
     </section>
   </main>
 </template>
 
 <style scoped>
 .get-involved-page {
+  --panel: var(--color-white);
+  --ink: var(--color-ink);
+  --muted: var(--color-ink-soft);
+  --line: var(--color-border);
+  --green: var(--primary-color);
+  --green-dark: var(--primary-dark);
+  --green-light: var(--primary-light);
+
   min-height: 100vh;
   background: var(--color-cream);
-  color: var(--color-ink);
+  color: var(--ink);
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(3, 47, 48, 0.88) 0%, rgba(3, 47, 48, 0.58) 42%, rgba(3, 47, 48, 0.22) 70%, transparent 100%);
+  background:
+    linear-gradient(90deg, rgba(6, 18, 13, 0.85) 0%, rgba(6, 18, 13, 0.55) 42%, rgba(6, 18, 13, 0.22) 70%, transparent 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.34) 0%, transparent 42%);
 }
 
-.hero-inner {
+.hero-content {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  width: 100%;
-  max-width: 720px;
+  max-width: 700px;
   margin: 0;
-  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   text-align: left;
   animation: fadeInUp 0.8s ease-out;
 }
@@ -118,6 +217,7 @@ const tiers = [
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -125,190 +225,397 @@ const tiers = [
 }
 
 .eyebrow {
-  color: var(--primary-color);
-  font-size: 0.75rem;
+  margin: 0 0 0.75rem;
+  color: var(--green);
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.15em;
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
-.hero-inner h1 {
-  max-width: 896px;
-  margin: 1rem 0 0;
-  color: #fff7e9;
+.hero-content .eyebrow,
+.cta-section .eyebrow {
+  color: var(--primary-light);
+}
+
+.hero-content h1,
+.section-heading h2,
+.field-intro h2,
+.cta-content h2 {
+  margin: 0;
   font-weight: 600;
+  line-height: 1.2;
   text-wrap: balance;
 }
 
-.hero-inner p {
-  max-width: 672px;
-  margin: 1.5rem 0 0;
-  color: rgba(255, 247, 233, 0.85);
-  line-height: 1.55;
+.hero-content h1 {
+  max-width: 48rem;
+  margin: 0 0 1rem;
+  color: var(--color-white);
 }
 
-.ways-section {
-  width: 100%;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 6rem 1.5rem;
-  background: var(--color-cream);
-}
-
-.monthly-section {
-  width: 100%;
-  max-width: 896px;
-  margin: 0 auto;
-  padding: 6rem 1.5rem;
-}
-
-.ways-grid {
-  display: grid;
-  gap: 2rem;
-}
-
-.way-card {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #e2d4bd;
-  border-radius: 1.5rem;
-  background: rgba(255, 251, 243, 0.78);
-  padding: 2.5rem;
-  box-shadow: 0 1px 2px rgba(54, 38, 17, 0.08);
-}
-
-.way-card h2 {
+.hero-content .lead {
+  max-width: 42rem;
   margin: 0;
-  color: var(--color-ink);
-  font-weight: 600;
-  line-height: 2.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.05rem;
+  line-height: 1.7;
 }
 
-.way-card p {
-  flex: 1;
-  margin: 1rem 0 0;
-  color: var(--color-ink-soft);
-  line-height: 1.5;
+.hero-actions,
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2rem;
 }
 
-.action-link,
-.primary-link {
+.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  align-self: flex-start;
-  margin-top: 2rem;
-  border: 0;
+  min-height: 3.2rem;
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--primary-color);
-  color: #fffaf0;
-  font-size: 0.875rem;
-  font-weight: 700;
-  padding: 0.625rem 1.25rem;
+  padding: 0.85rem 1.45rem;
+  color: inherit;
+  font-weight: 850;
+  line-height: 1.1;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button-primary {
+  background: var(--green);
+  color: var(--color-white);
   box-shadow: 0 18px 34px rgba(27, 163, 79, 0.2);
 }
 
-.donation-section {
-  background: var(--primary-dark);
-  color: #fff7e9;
-  padding: 6rem 0;
+.button-primary:hover {
+  background: var(--green-dark);
+  box-shadow: 0 20px 38px rgba(20, 129, 62, 0.28);
 }
 
-.donation-inner {
-  width: 100%;
-  max-width: 1152px;
+.button-secondary {
+  border-color: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+}
+
+.button-secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.path-section,
+.field-section {
+  max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding-inline: var(--container-padding);
 }
 
-.donation-inner h2 {
-  margin: 1rem 0 0;
-  line-height: 2.5rem;
-  font-weight: 600;
+.path-section {
+  padding-block: 6rem 5rem;
 }
 
-.monthly-section h2 {
-  margin: 0;
-  color: var(--color-ink);
-  line-height: 1.1;
-  font-weight: 600;
+.section-heading,
+.field-intro {
+  max-width: 760px;
 }
 
-.tier-grid {
+.section-heading h2,
+.field-intro h2,
+.cta-content h2 {
+  margin-top: 0.75rem;
+  color: var(--ink);
+}
+
+.path-grid {
   display: grid;
-  gap: 1.5rem;
-  margin-top: 3rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.2rem;
+  margin-top: 2.5rem;
 }
 
-.tier-card {
-  border: 1px solid rgba(255, 247, 233, 0.16);
-  border-radius: 1rem;
-  padding: 2rem;
+.path-card {
+  display: flex;
+  min-height: 240px;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 1.7rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
-.tier-card strong {
-  display: block;
-  color: var(--primary-color);
-  font-size: 2.25rem;
-  font-weight: 500;
-  line-height: 2.5rem;
+.path-label {
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--green-light);
+  color: var(--green-dark);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
-.tier-card p {
+.path-card h3 {
+  margin: 1.2rem 0 0;
+  color: var(--ink);
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.path-card p {
+  flex: 1;
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.text-link {
+  width: fit-content;
+  margin-top: 1.4rem;
+  color: var(--green-dark);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  color: var(--green);
+}
+
+.field-section {
+  padding-block: 5rem 6rem;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2.4rem;
+}
+
+.field-card {
+  position: relative;
+  min-height: 460px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--primary-dark);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  isolation: isolate;
+}
+
+.field-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    filter 0.28s ease,
+    transform 0.35s ease;
+}
+
+.field-card::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(6, 18, 13, 0.05) 0%, rgba(6, 18, 13, 0.88) 100%);
+  content: '';
+}
+
+.field-card-copy,
+.field-card-hover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 1.35rem;
+}
+
+.field-card-copy {
+  bottom: 0;
+  color: var(--color-white);
+  transition:
+    opacity 0.18s ease,
+    transform 0.24s ease;
+}
+
+.field-card-copy span {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.field-card h3 {
+  margin: 0.9rem 0 0;
+  color: var(--color-white);
+  font-size: 1.45rem;
+  line-height: 1.14;
+}
+
+.field-card-copy p {
   margin: 0.75rem 0 0;
-  color: rgba(255, 247, 233, 0.8);
-  line-height: 1.25rem;
-}
-
-.monthly-section {
-  text-align: center;
-}
-
-.monthly-section p {
-  margin: 1rem auto 0;
-  color: var(--color-ink-soft);
+  color: rgba(255, 255, 255, 0.86);
   line-height: 1.5;
 }
 
-.monthly-section .primary-link {
-  align-self: center;
-  margin-top: 2rem;
-  padding: 0.875rem 1.75rem;
+.field-card-hover {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 18, 13, 0.04) 0%,
+    rgba(6, 18, 13, 0.26) 48%,
+    rgba(6, 18, 13, 0.58) 100%
+  );
+  color: var(--color-white);
+  transform: translateY(100%);
+  transition: transform 0.28s ease;
 }
 
-@media (min-width: 768px) {
-  .ways-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.field-card-hover strong {
+  color: var(--primary-light);
+  font-size: 0.85rem;
+  text-transform: uppercase;
 }
 
-@media (min-width: 640px) {
-  .donation-inner h2 {
-    line-height: 1;
-  }
+.field-card-hover p {
+  margin: 0;
+  line-height: 1.5;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
 
-  .tier-grid {
+.field-card:hover img,
+.field-card:focus-within img,
+.field-card:focus img {
+  filter: blur(1.6px);
+  transform: scale(1.06);
+}
+
+.field-card:hover .field-card-hover,
+.field-card:focus-within .field-card-hover,
+.field-card:focus .field-card-hover {
+  transform: translateY(0);
+}
+
+.field-card:hover .field-card-copy,
+.field-card:focus-within .field-card-copy,
+.field-card:focus .field-card-copy {
+  opacity: 0;
+  transform: translateY(-0.75rem);
+}
+
+.cta-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--green-dark);
+  padding: 5rem 0;
+}
+
+.cta-media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: url('/images/programs/hero-4.jpg') center / cover;
+}
+
+.cta-section::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(6, 18, 13, 0.9), rgba(6, 18, 13, 0.6));
+  content: '';
+}
+
+.cta-content {
+  width: min(100% - 3rem, 900px);
+  margin: 0 auto;
+  padding-inline: var(--container-padding);
+  text-align: center;
+}
+
+.cta-content h2 {
+  margin-right: auto;
+  margin-left: auto;
+  color: var(--color-white);
+}
+
+.cta-actions {
+  justify-content: center;
+}
+
+.cta-actions .button-secondary {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 1120px) {
+  .field-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .field-card {
+    min-height: 390px;
+  }
 }
 
-@media (max-width: 699px) {
-  .hero-inner {
+@media (max-width: 900px) {
+  .path-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .path-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 680px) {
+  .hero-content {
     padding: 2rem 1.5rem;
   }
 
-  .ways-section {
-    padding: 4rem 1rem;
+  .hero-content .lead {
+    font-size: 1rem;
   }
 
-  .way-card {
-    padding: 2rem;
+  .hero-actions,
+  .cta-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
-}
 
-@media (min-width: 1024px) {
-  .tier-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .button {
+    width: 100%;
+  }
+
+  .path-section,
+  .field-section {
+    padding-inline: var(--container-padding);
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-card {
+    min-height: 380px;
   }
 }
 </style>

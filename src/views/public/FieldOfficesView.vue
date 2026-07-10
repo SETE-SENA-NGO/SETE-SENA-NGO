@@ -135,7 +135,8 @@ onMounted(() => {
   justify-content: center;
   text-align: left;
   max-width: 720px;
-  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   animation: fadeInUp 0.8s ease-out;
 }
 

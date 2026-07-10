@@ -168,26 +168,26 @@ onMounted(() => {
  * Aliased to the shared global design tokens (see src/assets/base.css).
  */
 .org-page {
-  --green-deep:      var(--primary-dark);
-  --green:           var(--primary-color);
-  --green-mid:       var(--primary-color);
-  --green-soft:      var(--primary-light);
+  --green-deep: var(--primary-dark);
+  --green: var(--primary-color);
+  --green-mid: var(--primary-color);
+  --green-soft: var(--primary-light);
 
-  --gold:            var(--primary-color);
-  --gold-light:      var(--primary-light);
-  --gold-soft:       var(--primary-light);
+  --gold: var(--primary-color);
+  --gold-light: var(--primary-light);
+  --gold-soft: var(--primary-light);
 
-  --warm-bg:         var(--color-cream-soft);
-  --warm-card:       var(--color-white);
-  --warm-card-alt:   var(--color-cream);
-  --warm-border:     var(--color-border);
+  --warm-bg: var(--color-cream-soft);
+  --warm-card: var(--color-white);
+  --warm-card-alt: var(--color-cream);
+  --warm-border: var(--color-border);
 
   /* Text — warm neutral tones with personality */
-  --text-heading:    var(--color-ink);
-  --text-body:       var(--color-ink);
-  --text-secondary:  var(--color-ink-soft);
-  --text-on-hero:    rgba(255, 255, 255, 0.88);
-  --text-on-green:   rgba(255, 255, 255, 0.92);
+  --text-heading: var(--color-ink);
+  --text-body: var(--color-ink);
+  --text-secondary: var(--color-ink-soft);
+  --text-on-hero: rgba(255, 255, 255, 0.88);
+  --text-on-green: rgba(255, 255, 255, 0.92);
 }
 
 /* ─── Shared ─── */
@@ -237,7 +237,8 @@ onMounted(() => {
   text-align: left;
   max-width: 720px;
   margin: 0;
-  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   animation: fadeInUp 0.8s ease-out;
 }
 
@@ -246,6 +247,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

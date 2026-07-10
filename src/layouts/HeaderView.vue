@@ -66,8 +66,12 @@ const menus: Menu[] = [
   },
   {
     label: 'Get Involved',
-    to: '/get-involved',
     items: [
+      {
+        title: 'Overview',
+        desc: 'Choose the best way to support village-led change.',
+        to: '/get-involved',
+      },
       {
         title: 'Support Us',
         desc: 'Support community programs in Svay Rieng and Prey Veng.',
@@ -99,6 +103,7 @@ const flagIcons = { en: FlagUK, km: FlagKH }
 const openMenu = ref<string | null>(null)
 const langOpen = ref(false)
 const mobileOpen = ref(false)
+const isScrolled = ref(false)
 const currentLang = ref<Language>({ code: 'en', label: 'English' })
 const rootEl = ref<HTMLElement | null>(null)
 const route = useRoute()
@@ -110,20 +115,6 @@ function isMenuActive(menu: Menu) {
     const itemPath = to.split('#')[0]
     return route.path === itemPath || route.path.startsWith(`${itemPath}/`)
   })
-}
-
-function menuLabel(menu: Menu): string {
-  // When on one of this menu's child pages, show that page's name instead
-  // of the menu label. Longest matching path wins so `/about/vision`
-  // resolves to "Vision & Mission" rather than "Our Story" (`/about`).
-  let best: { title: string; len: number } | null = null
-  for (const item of menu.items) {
-    const itemPath = item.to.split('#')[0] ?? item.to
-    if (route.path === itemPath || route.path.startsWith(`${itemPath}/`)) {
-      if (!best || itemPath.length > best.len) best = { title: item.title, len: itemPath.length }
-    }
-  }
-  return best ? best.title : menu.label
 }
 
 function activateMenu(label: string) {
@@ -162,12 +153,23 @@ function onDocClick(event: MouseEvent) {
   }
 }
 
-onMounted(() => document.addEventListener('click', onDocClick))
-onUnmounted(() => document.removeEventListener('click', onDocClick))
+function onScroll() {
+  isScrolled.value = window.scrollY > 8
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+onUnmounted(() => {
+  document.removeEventListener('click', onDocClick)
+  window.removeEventListener('scroll', onScroll)
+})
 </script>
 
 <template>
-  <header ref="rootEl" class="site-header">
+  <header ref="rootEl" class="site-header" :class="{ 'is-scrolled': isScrolled }">
     <div class="header-inner">
       <RouterLink to="/" class="brand" @click="closeAll">
         <span class="brand-mark">
@@ -195,7 +197,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
               :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
               @click="closeAll"
             >
-              {{ menuLabel(menu) }}
+              {{ menu.label }}
               <svg class="chevron" viewBox="0 0 12 8" fill="none">
                 <path
                   d="M1 1.5L6 6.5L11 1.5"
@@ -213,7 +215,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
               :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
               @click.stop="activateMenu(menu.label)"
             >
-              {{ menuLabel(menu) }}
+              {{ menu.label }}
               <svg class="chevron" viewBox="0 0 12 8" fill="none">
                 <path
                   d="M1 1.5L6 6.5L11 1.5"
@@ -341,9 +343,23 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--cream);
-  border-bottom: 1px solid var(--hdr-border);
+  /* Light glass look at all times: page content stays visible through the
+     header while the blur keeps nav text readable. */
+  background: rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(232, 228, 223, 0.4);
   color: var(--ink);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* Once content scrolls underneath, add a soft shadow so the header still
+   reads as its own layer. */
+.site-header.is-scrolled {
+  border-bottom-color: rgba(20, 129, 62, 0.18);
+  box-shadow: 0 10px 30px rgba(31, 61, 46, 0.12);
 }
 
 .header-inner {
@@ -367,11 +383,17 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .brand-mark {
   flex-shrink: 0;
+  /* Solid white disc behind the seal so it always sits on a clean
+     background, whatever shows through the translucent navbar. */
+  background: var(--color-white);
+  border-radius: 50%;
+  padding: 0.3rem;
+  box-shadow: 0 2px 8px rgba(31, 61, 46, 0.1);
 }
 
 .brand-mark img {
-  width: 4.6rem;
-  height: 4.6rem;
+  width: 4rem;
+  height: 4rem;
   display: block;
   object-fit: contain;
 }

@@ -4,13 +4,14 @@ import AboutVisionView from '@/views/AboutVisionView.vue'
 import ProgramEnviromentView from '@/views/ProgramEnviromentView.vue'
 import OrganizationView from '@/views/public/OrganizationView.vue'
 import EducationView from '@/views/public/EducationView.vue'
-import ServicesView from '@/views/public/ServicesView.vue'
 import ImpactView from '@/views/public/ImpactView.vue'
 import ImpactPartnersView from '@/views/ImpactPartnersView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
 import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
+
 import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
+
 import DonateView from '@/views/public/Getinvolved.donat.vue'
 import VolunteerView from '@/views/public/Getinvolved.volunteer.vue'
 import PartnerView from '@/views/public/Getinvolved.partner.vue'
@@ -28,15 +29,14 @@ export const publicRoutes = [
   { path: '/about/organization', component: OrganizationView },
   { path: '/programs/education', component: EducationView },
   { path: '/about/aboutview', component: AboutView },
-  { path: '/services', component: ServicesView },
   { path: '/impact', component: ImpactView },
-   { path: '/impact/partners', component: ImpactPartnersView },
   { path: '/impact/numbers', component: ImpactNumbersView },
-  { path: '/impact/timeline', component: ImpactTimelineView },
   { path: '/impact/partners', component: ImpactPartnersView },
 
+  { path: '/impact/timeline', component: ImpactTimelineView },
+
   { path: '/get-involved', component: GetInvolvedView },
-  { path: '/impact/partners', component: ImpactPartnersView },
+
   { path: '/get-involved/donate', component: DonateView },
   { path: '/get-involved/volunteer', component: VolunteerView },
   { path: '/get-involved/partner', component: PartnerView },
