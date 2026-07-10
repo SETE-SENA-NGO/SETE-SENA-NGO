@@ -21,37 +21,56 @@ import ProgramsView from '@/views/public/ProgramsView.vue'
 import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
 import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
 import QrDonateView from '@/views/public/DonateView.vue'
+import ManagedPublicPageView from '@/views/public/ManagedPublicPageView.vue'
+
+function managedRoute(
+  path: string,
+  contentSlug: string,
+  fallbackComponent: unknown,
+  options: Record<string, unknown> = {},
+) {
+  return {
+    path,
+    component: ManagedPublicPageView,
+    meta: { contentSlug, fallbackComponent },
+    ...options,
+  }
+}
 
 export const publicRoutes = [
-  { path: '/', component: HomeView },
-  { path: '/about/vision', component: AboutVisionView },
-  { path: '/programs/environment', component: ProgramEnviromentView },
-  { path: '/about', component: AboutView },
-  { path: '/about/organization', component: OrganizationView },
-  { path: '/programs/education', component: EducationView },
-  { path: '/about/aboutview', component: AboutView },
-  { path: '/services', component: ServicesView },
-  { path: '/impact', component: ImpactView },
-   { path: '/impact/partners', component: ImpactPartnersView },
-  { path: '/impact/numbers', component: ImpactNumbersView },
-  { path: '/impact/timeline', component: ImpactTimelineView },
-  { path: '/impact/partners', component: ImpactPartnersView },
-
-  { path: '/get-involved', component: GetInvolvedView },
-  { path: '/impact/partners', component: ImpactPartnersView },
-  { path: '/get-involved/donate', component: DonateView },
-  { path: '/get-involved/volunteer', component: VolunteerView },
-  { path: '/get-involved', component: GetInvolvedView },
-  { path: '/get-involved/partner', component: PartnerView },
-  { path: '/contact', component: ContactView },
-  { path: '/contact/headoffice', component: HeadOfficeView },
-  { path: '/contact/fieldoffice', component: FieldOfficeView },
-  { path: '/programs', component: ProgramsView, name: 'programs' },
-  { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
-  {
-    path: '/programs/child-protection',
-    component: ProgramsChildProtectionView,
-    name: 'programs-child-protection',
-  },
-  { path: '/qr-donate', component: QrDonateView },
+  managedRoute('/', 'home', HomeView),
+  managedRoute('/about', 'about', AboutView, { alias: ['/about/aboutview'] }),
+  managedRoute('/about/vision', 'about-vision', AboutVisionView),
+  managedRoute('/about/organization', 'about-organization', OrganizationView),
+  managedRoute('/programs', 'programs', ProgramsView, { name: 'programs' }),
+  managedRoute('/programs/environment', 'programs-environment', ProgramEnviromentView),
+  managedRoute('/programs/education', 'programs-education', EducationView),
+  managedRoute('/programs/livelihood', 'programs-livelihood', ProgramsLivelihoodView, {
+    name: 'programs-livelihood',
+  }),
+  managedRoute(
+    '/programs/child-protection',
+    'programs-child-protection',
+    ProgramsChildProtectionView,
+    {
+      name: 'programs-child-protection',
+    },
+  ),
+  managedRoute('/services', 'services', ServicesView),
+  managedRoute('/impact', 'impact', ImpactView),
+  managedRoute('/impact/numbers', 'impact-numbers', ImpactNumbersView),
+  managedRoute('/impact/timeline', 'impact-timeline', ImpactTimelineView),
+  managedRoute('/impact/partners', 'impact-partners', ImpactPartnersView),
+  managedRoute('/get-involved', 'get-involved', GetInvolvedView),
+  managedRoute('/get-involved/donate', 'get-involved-donate', DonateView),
+  managedRoute('/get-involved/volunteer', 'get-involved-volunteer', VolunteerView),
+  managedRoute('/get-involved/partner', 'get-involved-partner', PartnerView),
+  managedRoute('/qr-donate', 'qr-donate', QrDonateView),
+  managedRoute('/contact', 'contact', ContactView),
+  managedRoute('/contact/headoffice', 'contact-head-office', HeadOfficeView, {
+    alias: ['/contact/head-office'],
+  }),
+  managedRoute('/contact/fieldoffice', 'contact-field-offices', FieldOfficeView, {
+    alias: ['/contact/field-offices'],
+  }),
 ]

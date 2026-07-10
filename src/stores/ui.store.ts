@@ -1,8 +1,39 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+type ToastType = 'success' | 'error' | 'warning' | 'info'
+
+function getInitialDarkMode() {
+  if (typeof window === 'undefined') return false
+
+  const savedTheme = window.localStorage.getItem('admin-theme')
+  if (savedTheme) return savedTheme === 'dark'
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
+function applyTheme(darkMode: boolean) {
+  if (typeof document === 'undefined') return
+
+  document.documentElement.classList.toggle('admin-dark', darkMode)
+  document.documentElement.classList.toggle('dark', darkMode)
+  window.localStorage.setItem('admin-theme', darkMode ? 'dark' : 'light')
+}
+
+function applySidebarState(open: boolean) {
+  if (typeof document === 'undefined') return
+
+  document.documentElement.classList.toggle('admin-sidebar-open', open)
+}
+
+function getInitialSidebarOpen() {
+  if (typeof window === 'undefined') return false
+
+  return window.innerWidth >= 900
+}
+
 export const useUiStore = defineStore('ui', () => {
-  const toasts = ref<{ id: number; message: string; type: 'success' | 'error' | 'info' }[]>([])
+  const toasts = ref<{ id: number; message: string; type: ToastType }[]>([])
   const modal = ref({
     open: false,
     title: '',
@@ -10,9 +41,13 @@ export const useUiStore = defineStore('ui', () => {
     onConfirm: undefined as (() => void) | undefined,
   })
   const loading = ref(false)
-  const sidebarOpen = ref(false)
+  const sidebarOpen = ref(getInitialSidebarOpen())
+  const darkMode = ref(getInitialDarkMode())
 
-  function addToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
+  applyTheme(darkMode.value)
+  applySidebarState(sidebarOpen.value)
+
+  function addToast(message: string, type: ToastType = 'info') {
     const id = Date.now()
     toasts.value.push({ id, message, type })
     setTimeout(() => {
@@ -33,11 +68,30 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   function toggleSidebar() {
-    sidebarOpen.value = !sidebarOpen.value
+    setSidebarOpen(!sidebarOpen.value)
   }
 
   function closeSidebar() {
-    sidebarOpen.value = false
+    setSidebarOpen(false)
+  }
+
+  function closeSidebarForNavigation() {
+    if (typeof window !== 'undefined' && window.innerWidth >= 900) return
+    closeSidebar()
+  }
+
+  function setSidebarOpen(state: boolean) {
+    sidebarOpen.value = state
+    applySidebarState(state)
+  }
+
+  function setDarkMode(state: boolean) {
+    darkMode.value = state
+    applyTheme(state)
+  }
+
+  function toggleDarkMode() {
+    setDarkMode(!darkMode.value)
   }
 
   return {
@@ -45,11 +99,16 @@ export const useUiStore = defineStore('ui', () => {
     modal,
     loading,
     sidebarOpen,
+    darkMode,
     addToast,
     openModal,
     closeModal,
     setLoading,
     toggleSidebar,
     closeSidebar,
+    closeSidebarForNavigation,
+    setSidebarOpen,
+    setDarkMode,
+    toggleDarkMode,
   }
 })
