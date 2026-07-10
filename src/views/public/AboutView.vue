@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpact from '@/assets/hero-impact.jpg'
+import logoUrl from '@/assets/logo.png'
 
 const slideItems = [
   { image: heroImpact, caption: '' },
@@ -14,7 +15,7 @@ const values = [
   { name: 'Non-discrimination', body: 'we do not have any discrimination for the disabled, religions, colors, races, respect to target group, and political factions. ' },
   { name: 'Collective Benefits', body: 'we do not utilize property of organization for any private benefit, working tirelessly, sharing information and knowledge. ' },
   { name: 'Flexibility', body: 'we respect and accept good comments from target groups, development partners which response to goal and resources existed.' },
-  { name: 'Empowerment', body: 'We do not deliver development; we hand it back to the community.' },
+  // { name: 'Empowerment', body: 'We do not deliver development; we hand it back to the community.' },
 ]
 
 const team = [
@@ -106,7 +107,7 @@ onMounted(() => {
         <h2 class="values-title">Five values that shape every program</h2>
         <div class="values-grid">
           <div v-for="v in values" :key="v.name" class="value-card">
-            <div class="value-name">{{ v.name }}</div>
+            <h2 class="value-name">{{ v.name }}</h2>
             <p class="value-body">{{ v.body }}</p>
           </div>
         </div>
@@ -123,10 +124,13 @@ onMounted(() => {
             From the Board of Directors to the field staff in Kratie, every level of Santi Sena is
             accountable to the villagers we serve and the donors who trust us.
           </p>
+          <figure class="org-visual" aria-label="Santi Sena organization seal">
+            <img class="org-logo" :src="logoUrl" alt="Santi Sena seal" loading="lazy" />
+          </figure>
         </div>
         <ul class="team-list">
           <li v-for="t in team" :key="t.role" class="team-card">
-            <div class="team-role">{{ t.role }}</div>
+            <h3 class="team-role">{{ t.role }}</h3>
             <p class="team-desc">{{ t.desc }}</p>
           </li>
         </ul>
@@ -229,6 +233,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -306,7 +311,8 @@ onMounted(() => {
 .values-grid {
   margin-top: 3.5rem;
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
 }
 
 .value-card {
@@ -330,6 +336,7 @@ onMounted(() => {
   font-size: 1.125rem;
   color: var(--about-saffron);
   margin-bottom: 0.5rem;
+
 }
 
 .value-body {
@@ -349,6 +356,11 @@ onMounted(() => {
 .org-grid {
   display: grid;
   gap: 3rem;
+  align-items: center;
+}
+
+.org-text {
+  min-width: 0;
 }
 
 .org-heading {
@@ -361,6 +373,37 @@ onMounted(() => {
   color: var(--about-muted);
   line-height: 1.75;
   font-size: 1rem;
+}
+
+.org-visual {
+  /* position: relative; */
+  display: grid;
+  place-items: center;
+  margin-top: 2rem;
+  /* padding: clamp(1.25rem, 4vw, 2.5rem); */
+  /* overflow: hidden; */
+  /* border: 1px solid color-mix(in srgb, var(--about-primary) 18%, transparent); */
+  /* border-radius: 0.75rem; */
+
+  /* box-shadow: 0 16px 40px rgba(31, 61, 46, 0.1); */
+}
+
+/* .org-visual::before {
+  content: '';
+  position: absolute;
+  inset: 1rem;
+  border: 1px solid color-mix(in srgb, var(--about-saffron) 20%, transparent);
+  border-radius: 0.55rem;
+  pointer-events: none;
+} */
+
+.org-logo {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 300px);
+  max-height: clamp(180px, 30vw, 320px);
+  object-fit: contain;
+  filter: drop-shadow(0 14px 22px rgba(31, 61, 46, 0.16));
 }
 
 .team-list {
@@ -427,6 +470,7 @@ onMounted(() => {
   text-align: center;
 }
 
+
 .geo-card {
   border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--about-primary) 25%, transparent);
@@ -435,10 +479,19 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
+.geo-card:hover {
+  color: var(--about-primary);
+  transform: translateY(-2px);
+  border-color: var(--about-saffron);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  background: var(--about-panel);
+}
+
 .geo-name {
   font-size: 1.5rem;
   color: var(--about-saffron);
 }
+
 
 .geo-label {
   margin-top: 0.5rem;
@@ -462,6 +515,10 @@ onMounted(() => {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .org-visual {
+    margin-top: 2.5rem;
+  }
+
   .geo-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -469,7 +526,53 @@ onMounted(() => {
 
 @media (min-width: 1024px) {
   .values-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .org-visual {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-content {
+    padding-block: 2.5rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 11vw, 2.6rem);
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .org-section,
+  .values-section,
+  .geo-section {
+    padding-block: 4rem;
+  }
+
+  .org-visual {
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-label.saffron {
+    max-width: 100%;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+  }
+
+  .org-visual {
+    padding: 1rem;
+  }
+
+  .org-logo {
+    width: min(100%, 230px);
+    max-height: 220px;
   }
 }
 </style>
