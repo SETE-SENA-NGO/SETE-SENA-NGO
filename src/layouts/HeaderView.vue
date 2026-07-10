@@ -66,8 +66,12 @@ const menus: Menu[] = [
   },
   {
     label: 'Get Involved',
-    to: '/get-involved',
     items: [
+      {
+        title: 'Overview',
+        desc: 'Choose the best way to support village-led change.',
+        to: '/get-involved',
+      },
       {
         title: 'Support Us',
         desc: 'Support community programs in Svay Rieng and Prey Veng.',
@@ -83,15 +87,6 @@ const menus: Menu[] = [
         desc: 'Bring your skills to a field project.',
         to: '/get-involved/volunteer',
       },
-    ],
-  },
-  {
-    label: 'Contact',
-    to: '/contact',
-    items: [
-      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact/headoffice' },
-      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact/fieldoffice' },
-      { title: 'Write to Us', desc: 'Send a message - we read every letter.', to: '/contact#write' },
     ],
   },
 ]
@@ -120,20 +115,6 @@ function isMenuActive(menu: Menu) {
     const itemPath = to.split('#')[0]
     return route.path === itemPath || route.path.startsWith(`${itemPath}/`)
   })
-}
-
-function menuLabel(menu: Menu): string {
-  // When on one of this menu's child pages, show that page's name instead
-  // of the menu label. Longest matching path wins so `/about/vision`
-  // resolves to "Vision & Mission" rather than "Our Story" (`/about`).
-  let best: { title: string; len: number } | null = null
-  for (const item of menu.items) {
-    const itemPath = item.to.split('#')[0] ?? item.to
-    if (route.path === itemPath || route.path.startsWith(`${itemPath}/`)) {
-      if (!best || itemPath.length > best.len) best = { title: item.title, len: itemPath.length }
-    }
-  }
-  return best ? best.title : menu.label
 }
 
 function activateMenu(label: string) {
@@ -216,7 +197,7 @@ onUnmounted(() => {
               :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
               @click="closeAll"
             >
-              {{ menuLabel(menu) }}
+              {{ menu.label }}
               <svg class="chevron" viewBox="0 0 12 8" fill="none">
                 <path
                   d="M1 1.5L6 6.5L11 1.5"
@@ -234,7 +215,7 @@ onUnmounted(() => {
               :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
               @click.stop="activateMenu(menu.label)"
             >
-              {{ menuLabel(menu) }}
+              {{ menu.label }}
               <svg class="chevron" viewBox="0 0 12 8" fill="none">
                 <path
                   d="M1 1.5L6 6.5L11 1.5"
@@ -263,6 +244,8 @@ onUnmounted(() => {
             </div>
           </div>
         </template>
+
+        <RouterLink to="/contact" class="nav-link" @click="closeAll">Contact us</RouterLink>
       </nav>
 
       <div class="header-actions">
@@ -334,6 +317,7 @@ onUnmounted(() => {
           {{ item.title }}
         </RouterLink>
       </div>
+      <RouterLink to="/contact" class="mobile-link" @click="closeAll">Contact us</RouterLink>
       <RouterLink
         to="/get-involved/donate"
         class="btn-support btn-support--mobile"
