@@ -274,16 +274,19 @@ onMounted(() => {
 }
 
 .hero-content {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    max-width: 720px;
-    padding: 3rem clamp(1.5rem, 5vw, 4rem);
-    animation: fadeInUp 0.7s ease-out;
-    color: #fffdf8;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
+  animation: fadeInUp 0.8s ease-out;
+  color: #fffdf8;
 }
 
 @keyframes fadeInUp {

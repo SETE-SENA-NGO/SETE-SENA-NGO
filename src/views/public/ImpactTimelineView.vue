@@ -236,8 +236,10 @@ const slideItems = [
   align-items: flex-start;
   justify-content: center;
   max-width: 720px;
-  padding: 3rem clamp(1.5rem, 5vw, 4rem);
-  animation: fadeInUp 0.7s ease-out;
+  margin: 0;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
+  animation: fadeInUp 0.8s ease-out;
   color: #fffdf8;
 }
 
@@ -635,8 +637,8 @@ const slideItems = [
 }
 
 @media (max-width: 640px) {
-  .history-section {
-    padding: 60px 0 40px;
+  .hero-content {
+    padding: 3.5rem 1.5rem;
   }
 
   .section-heading {

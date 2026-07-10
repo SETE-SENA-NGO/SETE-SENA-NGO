@@ -23,10 +23,6 @@ function next() {
   activeIndex.value = (activeIndex.value + 1) % props.slides.length
 }
 
-function prev() {
-  activeIndex.value = (activeIndex.value - 1 + props.slides.length) % props.slides.length
-}
-
 function goTo(index: number) {
   activeIndex.value = index
   restartAutoplay()
@@ -78,25 +74,6 @@ onUnmounted(stopAutoplay)
     <div v-if="$slots.default" class="slideshow-overlay">
       <slot />
     </div>
-
-    <button
-      v-if="slides.length > 1"
-      type="button"
-      class="slideshow-arrow slideshow-arrow--prev"
-      aria-label="Previous slide"
-      @click="prev"
-    >
-      &#8249;
-    </button>
-    <button
-      v-if="slides.length > 1"
-      type="button"
-      class="slideshow-arrow slideshow-arrow--next"
-      aria-label="Next slide"
-      @click="next"
-    >
-      &#8250;
-    </button>
 
     <div v-if="slides.length > 1" class="slideshow-dots">
       <button
@@ -191,7 +168,7 @@ onUnmounted(stopAutoplay)
   right: 0;
   bottom: 0;
   margin: 0;
-  padding: 1.25rem clamp(1rem, 4vw, 3rem) 2.5rem;
+  padding: 1.25rem calc(var(--container-offset) + 1.5rem) 2.5rem;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
   color: #fff;
   font-size: 1.1rem;
@@ -208,38 +185,6 @@ onUnmounted(stopAutoplay)
 
 .slideshow-overlay > :deep(*) {
   pointer-events: auto;
-}
-
-.slideshow-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: none;
-  border-radius: 999px;
-  background: var(--primary-color);
-  color: #fff;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease;
-}
-
-.slideshow-arrow:hover {
-  background: var(--primary-dark);
-}
-
-.slideshow-arrow--prev {
-  left: 1rem;
-}
-
-.slideshow-arrow--next {
-  right: 1rem;
 }
 
 .slideshow-dots {
@@ -268,15 +213,9 @@ onUnmounted(stopAutoplay)
 }
 
 @media (max-width: 640px) {
-  .slideshow-arrow {
-    width: 2rem;
-    height: 2rem;
-    font-size: 1.2rem;
-  }
-
   .slideshow-caption {
     font-size: 0.95rem;
-    padding: 1rem 1rem 2.25rem;
+    padding: 1rem 1.5rem 2.25rem;
   }
 
   .slideshow-dots {
