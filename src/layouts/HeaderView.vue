@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import FlagUK from '@/components/icons/FlagUK.vue'
 import FlagKH from '@/components/icons/FlagKH.vue'
 import logoUrl from '@/assets/logo.png'
@@ -12,28 +12,54 @@ const menus: Menu[] = [
   {
     label: 'About',
     items: [
-      { title: 'Our Story', desc: 'Founded 1994 — three decades walking with villages.', to: '/about#story' },
-      { title: 'Vision & Mission', desc: 'Peace, sustainability, and dignified livelihoods.', to: '/about#vision' },
-      { title: 'Organization', desc: 'Board, staff and field structure.', to: '/about#organization' },
+      {
+        title: 'Our Story',
+        desc: 'Founded 1994 — three decades walking with villages.',
+        to: '/about#story',
+      },
+      {
+        title: 'Vision & Mission',
+        desc: 'Peace, sustainability, and dignified livelihoods.',
+        to: '/about/vision',
+      },
+      {
+        title: 'Organization',
+        desc: 'Board, staff and field structure.',
+        to: '/about/organization',
+      },
     ],
   },
   {
     label: 'Programs',
+    to: '/programs',
     items: [
-      { title: 'Education', desc: 'Pre-schools, scholarships and youth learning.', to: '/services#education' },
-      { title: 'Environment', desc: 'Reforestation, biogas and climate resilience.', to: '/services#environment' },
-      { title: 'Livelihood', desc: 'Saving-for-Change groups and rural enterprise.', to: '/services#livelihood' },
+      {
+        title: 'Education',
+        desc: 'Pre-schools, scholarships and youth learning.',
+        to: '/programs/education',
+      },
+      {
+        title: 'Environment',
+        desc: 'Reforestation, biogas and climate resilience.',
+        to: '/programs/environment',
+      },
+      {
+        title: 'Livelihood',
+        desc: 'Saving-for-Change groups and rural enterprise.',
+        to: '/programs/livelihood',
+      },
       {
         title: 'Child Protection',
         desc: 'Safeguarding and community-led care.',
-        to: '/services#child-protection',
+        to: '/programs/child-protection',
       },
     ],
   },
   {
     label: 'Impact',
+    to: '/impact',
     items: [
-      { title: 'Overview', desc: '293 villages reached since 1994.', to: '/impact' },
+      { title: 'Numbers', desc: '293 villages reached since 1994.', to: '/impact/numbers' },
       { title: 'Timeline', desc: 'Milestones from 1994 to 2024.', to: '/impact/timeline' },
       { title: 'Partners', desc: 'UNDP, ADB, Oxfam and more.', to: '/impact/partners' },
     ],
@@ -42,17 +68,29 @@ const menus: Menu[] = [
     label: 'Get Involved',
     to: '/get-involved',
     items: [
-      { title: 'Support Us', desc: 'Support community programs in Svay Rieng and Prey Veng.', to: '/get-involved/donate' },
-      { title: 'Partner', desc: 'Co-design multi-year community programs.', to: '/get-involved#partner' },
-      { title: 'Volunteer', desc: 'Bring your skills to a field project.', to: '/get-involved#volunteer' },
+      {
+        title: 'Support Us',
+        desc: 'Support community programs in Svay Rieng and Prey Veng.',
+        to: '/get-involved/donate',
+      },
+      {
+        title: 'Partner',
+        desc: 'Co-design multi-year community programs.',
+        to: '/get-involved/partner',
+      },
+      {
+        title: 'Volunteer',
+        desc: 'Bring your skills to a field project.',
+        to: '/get-involved/volunteer',
+      },
     ],
   },
   {
     label: 'Contact',
     items: [
-      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact#head-office' },
-      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact#field-offices' },
-      { title: 'Write to Us', desc: 'Send a message — we read every letter.', to: '/contact#write' },
+      { title: 'Head Office', desc: 'Svay Rieng Province, Cambodia.', to: '/contact/headoffice' },
+      { title: 'Field Offices', desc: 'Prey Veng and Kratie provinces.', to: '/contact/fieldoffice' },
+      { title: 'Write to Us', desc: 'Send a message - we read every letter.', to: '/contact#write' },
     ],
   },
 ]
@@ -61,7 +99,7 @@ type Language = { code: 'en' | 'km'; label: string }
 
 const languages: Language[] = [
   { code: 'en', label: 'English' },
-  { code: 'km', label: 'ខ្មែរ' },
+  { code: 'km', label: 'Khmer' },
 ]
 
 const flagIcons = { en: FlagUK, km: FlagKH }
@@ -71,6 +109,30 @@ const langOpen = ref(false)
 const mobileOpen = ref(false)
 const currentLang = ref<Language>({ code: 'en', label: 'English' })
 const rootEl = ref<HTMLElement | null>(null)
+const route = useRoute()
+
+function isMenuActive(menu: Menu) {
+  const paths = menu.items.map((item) => item.to)
+  if (menu.to) paths.push(menu.to)
+  return paths.some((to) => {
+    const itemPath = to.split('#')[0]
+    return route.path === itemPath || route.path.startsWith(`${itemPath}/`)
+  })
+}
+
+function menuLabel(menu: Menu): string {
+  // When on one of this menu's child pages, show that page's name instead
+  // of the menu label. Longest matching path wins so `/about/vision`
+  // resolves to "Vision & Mission" rather than "Our Story" (`/about`).
+  let best: { title: string; len: number } | null = null
+  for (const item of menu.items) {
+    const itemPath = item.to.split('#')[0] ?? item.to
+    if (route.path === itemPath || route.path.startsWith(`${itemPath}/`)) {
+      if (!best || itemPath.length > best.len) best = { title: item.title, len: itemPath.length }
+    }
+  }
+  return best ? best.title : menu.label
+}
 
 function activateMenu(label: string) {
   openMenu.value = label
@@ -121,7 +183,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
         </span>
         <span class="brand-text">
           <span class="brand-name">Santi Sena</span>
-          <span class="brand-tag">Peace Army · Cambodia</span>
+          <span class="brand-tag">Peace Army . Cambodia</span>
         </span>
       </RouterLink>
 
@@ -138,10 +200,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
               v-if="menu.to"
               :to="menu.to"
               class="nav-link nav-link--trigger"
-              :class="{ 'is-open': openMenu === menu.label }"
+              :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
               @click="closeAll"
             >
-              {{ menu.label }}
+              {{ menuLabel(menu) }}
               <svg class="chevron" viewBox="0 0 12 8" fill="none">
                 <path
                   d="M1 1.5L6 6.5L11 1.5"
@@ -156,10 +218,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
               v-else
               type="button"
               class="nav-link nav-link--trigger"
-              :class="{ 'is-open': openMenu === menu.label }"
+              :class="{ 'is-open': openMenu === menu.label, 'is-active': isMenuActive(menu) }"
               @click.stop="activateMenu(menu.label)"
             >
-              {{ menu.label }}
+              {{ menuLabel(menu) }}
               <svg class="chevron" viewBox="0 0 12 8" fill="none">
                 <path
                   d="M1 1.5L6 6.5L11 1.5"
@@ -220,12 +282,16 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           </div>
         </div>
 
-        <RouterLink to="/get-involved/donate" class="btn-support btn-support--desktop" @click="closeAll">
+        <RouterLink to="/qr-donate" class="btn-support btn-support--desktop" @click="closeAll">
           Support Us
-          <span aria-hidden="true">→</span>
         </RouterLink>
 
-        <button type="button" class="mobile-toggle" aria-label="Toggle menu" @click="mobileOpen = !mobileOpen">
+        <button
+          type="button"
+          class="mobile-toggle"
+          aria-label="Toggle menu"
+          @click="mobileOpen = !mobileOpen"
+        >
           <span />
           <span />
           <span />
@@ -255,7 +321,11 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
           {{ item.title }}
         </RouterLink>
       </div>
-      <RouterLink to="/get-involved/donate" class="btn-support btn-support--mobile" @click="closeAll">
+      <RouterLink
+        to="/get-involved/donate"
+        class="btn-support btn-support--mobile"
+        @click="closeAll"
+      >
         Support Us →
       </RouterLink>
     </div>
@@ -264,38 +334,30 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 <style scoped>
 .site-header {
-  --cream: #faf3e6;
-  --cream-soft: #fdf8ef;
-  --green: #1f3d2e;
-  --green-soft: #3f5f52;
-  --orange: #dd7a2b;
-  --ink: #2b2b28;
-  --ink-soft: #6b6558;
-  --hdr-border: rgba(31, 61, 46, 0.14);
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --cream: var(--color-cream-soft);
+  --cream-soft: var(--color-white);
+  --green: var(--primary-dark);
+  --green-soft: var(--primary-color);
+  --orange: var(--primary-color);
+  --ink: var(--color-ink);
+  --ink-soft: var(--color-ink-soft);
+  --hdr-border: var(--color-border);
 
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--cream);
   border-bottom: 1px solid var(--hdr-border);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    sans-serif;
   color: var(--ink);
 }
 
 .header-inner {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 0.85rem 1.5rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .brand {
@@ -303,13 +365,18 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   align-items: center;
   gap: 0.65rem;
   margin-right: auto;
+  flex-shrink: 0;
   text-decoration: none;
   color: inherit;
 }
 
+.brand-mark {
+  flex-shrink: 0;
+}
+
 .brand-mark img {
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 4.6rem;
+  height: 4.6rem;
   display: block;
   object-fit: contain;
 }
@@ -321,14 +388,14 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .brand-name {
-  font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: var(--green);
+  white-space: nowrap;
 }
 
 .brand-tag {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -338,7 +405,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .main-nav {
   display: none;
   align-items: center;
-  gap: 1.65rem;
+  gap: 1.1rem;
 }
 
 .nav-item {
@@ -353,12 +420,13 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 0.4rem 0.55rem;
+  padding: 0.5rem 0.45rem;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--ink);
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     color 0.2s ease,
@@ -367,6 +435,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 
 .nav-link:hover,
 .nav-link.is-open,
+.nav-link.is-active,
 .nav-link.router-link-exact-active {
   color: var(--orange);
   border-bottom-color: var(--orange);
@@ -418,7 +487,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .mega-item:hover {
-  background: rgba(221, 122, 43, 0.1);
+  background: var(--primary-light);
 }
 
 .mega-item-title {
@@ -495,7 +564,7 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 }
 
 .lang-option:hover {
-  background: rgba(221, 122, 43, 0.1);
+  background: var(--primary-light);
   color: var(--orange);
 }
 
@@ -504,10 +573,10 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
   align-items: center;
   gap: 0.4rem;
   background: var(--orange);
-  color: #211a12;
+  color: var(--color-white);
   font-weight: 600;
-  font-size: 0.9rem;
-  padding: 0.6rem 1.3rem;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.5rem;
   border-radius: 999px;
   text-decoration: none;
   white-space: nowrap;
@@ -582,6 +651,19 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
 .btn-support--mobile {
   justify-content: center;
   margin-top: 0.75rem;
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
+  /* The active-page nav label can get long; give it room on narrow desktops. */
+  .brand-text {
+    display: none;
+  }
+  .main-nav {
+    gap: 0.75rem;
+  }
+  .btn-support {
+    padding: 0.7rem 1.1rem;
+  }
 }
 
 @media (min-width: 1024px) {

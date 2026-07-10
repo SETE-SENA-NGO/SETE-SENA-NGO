@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
+import heroImpact from '@/assets/hero-impact.jpg'
+
+const slideItems = [
+  { image: heroImpact, caption: '' },
+  { image: '/images/programs/hero-1.jpg', caption: '' },
+  { image: '/images/programs/hero-2.jpg', caption: '' },
+]
 
 const values = [
   { name: 'Honesty', body: 'we have honesty with our donors, target group, operational partners and working group.' },
@@ -51,9 +59,9 @@ onMounted(() => {
 
 <template>
   <div class="about-page">
-    <!-- Hero Section -->
-    <section class="hero-section">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
+
       <div class="hero-content">
         <span class="section-label saffron">About Santi Sena</span>
         <h1 class="hero-title">
@@ -65,7 +73,7 @@ onMounted(() => {
           not signed in distant offices.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- Vision / Mission / Goal -->
     <section class="vmg-section">
@@ -143,15 +151,19 @@ onMounted(() => {
 
 <style scoped>
 /* ─── About page color tokens ───
- * Green + Gold palette to match the logo.
- * Green (#3A7D44) represents nature, growth, and rural Cambodia.
- * Gold (#D4A017 / saffron) represents Buddhism, wisdom, and the Dharma.
+ * Aliased to the shared global design tokens (see src/assets/base.css).
  */
 .about-page {
-  --about-primary: #3A7D44;
-  --about-primary-foreground: #FFFFFF;
-  --about-saffron: #D4A017;
-  --about-cream: #4A7C5E;
+  --about-primary: var(--primary-color);
+  --about-primary-foreground: var(--color-white);
+  --about-saffron: var(--primary-dark);
+  --about-white: var(--color-white);
+  --about-muted: var(--color-ink-soft);
+  --about-border: var(--color-border);
+  --about-panel: var(--color-white);
+  --about-bg-alt: var(--primary-light);
+  --about-surface: color-mix(in srgb, var(--about-primary) 90%, white);
+  --about-surface-strong: color-mix(in srgb, var(--about-primary) 82%, white);
 }
 
 /* ─── Shared ─── */
@@ -164,39 +176,58 @@ onMounted(() => {
 
 .section-label.saffron {
   color: var(--about-saffron);
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 2rem;
+  background: color-mix(in srgb, var(--about-saffron) 15%, transparent);
+  color: var(--about-saffron);
 }
 
-/* ─── Hero ─── */
-.hero-section {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-bottom: 1px solid color-mix(in srgb, var(--about-primary) 40%, transparent);
-}
-
+/* ─── Hero (overlaid on the slideshow via its default slot) ─── */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: -10;
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--about-primary) 85%, transparent) 0%,
-    color-mix(in srgb, var(--about-primary) 65%, transparent) 50%,
-    color-mix(in srgb, var(--about-primary) 35%, transparent) 100%);
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.2) 65%, transparent 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.15) 100%);
 }
 
 .hero-content {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 8rem 1.5rem;
-  color: var(--white);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  animation: fadeInUp 0.8s ease-out;
+  color: var(--about-white);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-title {
   margin-top: 1rem;
   max-width: 48rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2.75rem;
   line-height: 1.1;
+  font-weight: 700;
+  color: var(--about-white);
 }
 
 .hero-subtitle {
@@ -204,12 +235,12 @@ onMounted(() => {
   max-width: 42rem;
   font-size: 1.05rem;
   line-height: 1.75;
-  color: color-mix(in srgb, var(--white) 80%, transparent);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* ─── Vision / Mission / Goal ─── */
 .vmg-section {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   display: grid;
   gap: 3rem;
@@ -219,17 +250,20 @@ onMounted(() => {
 .vmg-card {
   display: flex;
   flex-direction: column;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: var(--about-surface);
+  color: var(--about-primary-foreground);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .vmg-heading {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 1.5rem;
-  color: var(--about-primary);
+  color: var(--about-primary-foreground);
   margin: 0 0 0.5rem;
 }
 
 .vmg-body {
-  color: var(--muted);
+  color: var(--about-primary-foreground);
   line-height: 1.75;
   margin: 0;
   font-size: 1rem;
@@ -237,12 +271,12 @@ onMounted(() => {
 
 /* ─── Core Values ─── */
 .values-section {
-  background: color-mix(in srgb, var(--about-cream) 60%, transparent);
+  background: var(--about-bg-alt);
   padding: 6rem 0;
 }
 
 .values-container {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 1.5rem;
   text-align: center;
@@ -250,8 +284,6 @@ onMounted(() => {
 
 .values-title {
   margin-top: 1.5rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   color: var(--about-primary);
 }
 
@@ -263,15 +295,22 @@ onMounted(() => {
 
 .value-card {
   border-radius: 1rem;
-  border: 1px solid var(--border);
-  background: var(--panel);
+  border: 1px solid var(--about-border);
+  background: var(--about-panel);
   padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.value-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--about-saffron);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  background: var(--about-panel);
 }
 
 .value-name {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.125rem;
   color: var(--about-saffron);
   margin-bottom: 0.5rem;
@@ -279,14 +318,14 @@ onMounted(() => {
 
 .value-body {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--about-muted);
   line-height: 1.65;
   margin: 0;
 }
 
 /* ─── Organizational Structure ─── */
 .org-section {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 6rem 1.5rem;
 }
@@ -298,14 +337,12 @@ onMounted(() => {
 
 .org-heading {
   margin-top: 1rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   color: var(--about-primary);
 }
 
 .org-body {
   margin-top: 1.5rem;
-  color: var(--muted);
+  color: var(--about-muted);
   line-height: 1.75;
   font-size: 1rem;
 }
@@ -322,13 +359,20 @@ onMounted(() => {
 .team-card {
   border-radius: 0.75rem;
   border-left: 4px solid var(--about-saffron);
-  background: var(--panel);
+  background: var(--about-panel);
   padding: 1.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.team-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  background: var(--about-panel);
+  border-color: var(--about-saffron);
 }
 
 .team-role {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.125rem;
   color: var(--about-primary);
 }
@@ -336,15 +380,15 @@ onMounted(() => {
 .team-desc {
   margin-top: 0.25rem;
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--about-muted);
   line-height: 1.65;
 }
 
 /* ─── Geographical Reach ─── */
 .geo-section {
-  background: var(--about-primary);
+  background: var(--about-bg-alt);
   padding: 6rem 0;
-  color: var(--about-primary-foreground);
+  color: var(--color-ink);
 }
 
 .geo-container {
@@ -356,9 +400,8 @@ onMounted(() => {
 
 .geo-heading {
   margin-top: 1rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   line-height: 1.2;
+  color: var(--about-primary);
 }
 
 .geo-grid {
@@ -369,13 +412,15 @@ onMounted(() => {
 
 .geo-card {
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--about-primary-foreground) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--about-primary) 25%, transparent);
+  background: var(--about-panel);
   padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .geo-name {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.5rem;
+  color: var(--about-saffron);
 }
 
 .geo-label {
@@ -383,15 +428,11 @@ onMounted(() => {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: color-mix(in srgb, var(--about-primary-foreground) 55%, transparent);
+  color: var(--about-muted);
 }
 
 /* ─── Responsive ─── */
 @media (min-width: 768px) {
-  .hero-title {
-    font-size: 3.75rem;
-  }
-
   .vmg-section {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -402,10 +443,6 @@ onMounted(() => {
 
   .org-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .geo-heading {
-    font-size: 2.5rem;
   }
 
   .geo-grid {

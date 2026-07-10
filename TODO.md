@@ -1,8 +1,11 @@
 # TODO
 
-- [x] Replace single hero background image in `src/views/public/ImpactNumbersView.vue` with a slideshow.
-- [x] Add 2-4 image sources and implement auto-advance (with optional fade transition).
-- [x] Update scoped CSS to support slideshow positioning, crossfade, and reduced motion.
-- [x] Run `npm run build` (or `npm run dev` if preferred) to ensure no TypeScript/Vue template errors.
+- [ ] Review current ImpactNumbersView.vue map/card positioning and province label coordinates.
+- [ ] Update CSS to vertically center the map in the operation section.
+- [ ] Reposition the statistics card to the upper-right of the map area and overlap the map slightly.
+- [ ] Adjust responsive behavior: on <=1024px stack card below map and center.
+- [x] Fix Kratie label/highlight coordinates to better match the northeast location.
+
+- [x] Ensure no broken styles (scoped CSS) and app builds.
 
 

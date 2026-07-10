@@ -129,20 +129,9 @@ onUnmounted(() => {
 
 <style scoped>
 .donate-page {
-  --cream: #fbf4e6;
-  --cream-soft: #fffaf0;
-  --border: #e1d4bf;
-  --primary: #073f3a;
-  --text-soft: #244c46;
-  --clay: #b85b1f;
-  --orange: #f47d24;
-  --font-display: Cambria, Georgia, 'Times New Roman', serif;
-  --font-body: Aptos, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-
   min-height: 100vh;
-  background: var(--cream);
-  color: var(--primary);
-  font-family: var(--font-body);
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .donate-hero {
@@ -158,14 +147,14 @@ onUnmounted(() => {
 }
 
 .donate-hero__content {
-  width: min(100% - 3rem, 1220px);
+  width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
   padding: 7rem 0;
 }
 
 .eyebrow {
   margin: 0;
-  color: var(--orange);
+  color: var(--primary-color);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.42em;
@@ -176,8 +165,6 @@ onUnmounted(() => {
   max-width: 980px;
   margin: 1.4rem 0 0;
   color: #fff8eb;
-  font-family: var(--font-display);
-  font-size: clamp(3.25rem, 6vw, 5.2rem);
   font-weight: 600;
   line-height: 0.95;
 }
@@ -186,13 +173,12 @@ onUnmounted(() => {
   max-width: 780px;
   margin: 2rem 0 0;
   color: rgba(255, 248, 235, 0.92);
-  font-size: clamp(1.1rem, 1.7vw, 1.45rem);
   font-weight: 500;
   line-height: 1.55;
 }
 
 .donate-content {
-  width: min(100% - 3rem, 1220px);
+  width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
   padding: 6.25rem 0 4rem;
 }
@@ -200,9 +186,7 @@ onUnmounted(() => {
 .donate-content h2,
 .cta-band h2 {
   margin: 0;
-  color: var(--primary);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 3vw, 2.75rem);
+  color: var(--color-ink);
   font-weight: 600;
   line-height: 1.1;
 }
@@ -216,7 +200,7 @@ onUnmounted(() => {
 
 .tier-card {
   min-height: 200px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   border-radius: 1.1rem;
   background: rgba(255, 251, 243, 0.72);
   padding: 2.6rem;
@@ -225,8 +209,7 @@ onUnmounted(() => {
 
 .tier-card strong {
   display: block;
-  color: var(--clay);
-  font-family: var(--font-display);
+  color: var(--primary-dark);
   font-size: clamp(2.4rem, 3.4vw, 3.2rem);
   font-weight: 500;
   line-height: 1;
@@ -235,8 +218,7 @@ onUnmounted(() => {
 .tier-card p {
   max-width: 280px;
   margin: 1.35rem 0 0;
-  color: var(--text-soft);
-  font-size: 1.05rem;
+  color: var(--color-ink-soft);
   line-height: 1.45;
 }
 
@@ -247,8 +229,7 @@ onUnmounted(() => {
 .text-section p {
   max-width: 1120px;
   margin: 1.35rem 0 0;
-  color: var(--text-soft);
-  font-size: 1.14rem;
+  color: var(--color-ink-soft);
   line-height: 1.55;
 }
 
@@ -258,8 +239,7 @@ onUnmounted(() => {
   margin: 1.8rem 0 0;
   padding: 0;
   list-style: none;
-  color: var(--text-soft);
-  font-size: 1.08rem;
+  color: var(--color-ink-soft);
   line-height: 1.5;
 }
 
@@ -276,7 +256,7 @@ onUnmounted(() => {
   width: 0.42rem;
   height: 0.42rem;
   border-radius: 50%;
-  background: var(--orange);
+  background: var(--primary-color);
 }
 
 .cta-band {
@@ -286,7 +266,7 @@ onUnmounted(() => {
 }
 
 .cta-band__inner {
-  width: min(100% - 3rem, 1220px);
+  width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -300,20 +280,21 @@ onUnmounted(() => {
   justify-content: center;
   min-height: 3.45rem;
   border-radius: 999px;
-  background: var(--orange);
+  background: var(--primary-color);
   color: #fffaf0;
   font-weight: 800;
   padding: 0.95rem 1.9rem;
   text-decoration: none;
-  box-shadow: 0 18px 34px rgba(244, 125, 36, 0.24);
+  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.24);
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease;
 }
 
 .cta-button:hover {
+  background: var(--primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 20px 38px rgba(244, 125, 36, 0.3);
+  box-shadow: 0 20px 38px rgba(20, 129, 62, 0.3);
 }
 
 @media (max-width: 980px) {
@@ -339,7 +320,7 @@ onUnmounted(() => {
   .donate-hero__content,
   .donate-content,
   .cta-band__inner {
-    width: min(100% - 2rem, 1220px);
+    width: min(100% - 2rem, var(--container-max-width));
   }
 
   .donate-hero__content {

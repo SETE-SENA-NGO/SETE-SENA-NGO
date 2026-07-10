@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import Slideshow from '@/components/shared/Slideshow.vue'
+
+const slideItems = [
+  { image: '/images/programs/hero-1.jpg', caption: '' },
+  { image: '/images/programs/hero-2.jpg', caption: '' },
+  { image: '/images/programs/hero-3.jpg', caption: '' },
+]
 
 const ways = [
   {
@@ -10,15 +17,15 @@ const ways = [
   },
   {
     title: 'Partner',
-    body: 'Institutions, faith groups and foundations: co-design multi-year programs in environment, education or livelihoods.',
+    body: 'Cooperate with Santi Sena through community-rooted programs, local authorities, provincial departments and field teams.',
     cta: 'Explore partnership',
-    to: '/contact',
+    to: '/get-involved/partner',
   },
   {
     title: 'Volunteer',
     body: 'Bring your skills - agronomy, education, communications, evaluation - to a community-led project in the field.',
     cta: 'Apply to volunteer',
-    to: '/contact',
+    to: '/get-involved/volunteer',
   },
 ]
 
@@ -32,7 +39,7 @@ const tiers = [
 
 <template>
   <main class="get-involved-page">
-    <section class="hero">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay"></div>
       <div class="hero-inner">
         <span class="eyebrow">Get involved</span>
@@ -42,7 +49,7 @@ const tiers = [
           tending for thirty years.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <section class="ways-section" aria-label="Ways to get involved">
       <div class="ways-grid">
@@ -80,74 +87,72 @@ const tiers = [
 
 <style scoped>
 .get-involved-page {
-  --font-display: Cambria, Georgia, 'Times New Roman', serif;
-  --font-body: Aptos, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   min-height: 100vh;
-  background: #fbf4e6;
-  color: #073f3a;
-  font-family: var(--font-body);
-  font-size: 16px;
-}
-
-.hero {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background:
-    linear-gradient(90deg, rgba(4, 59, 56, 0.82), rgba(4, 59, 56, 0.5)),
-    url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80')
-      center 42% / cover;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: -1;
-  background: linear-gradient(90deg, rgba(3, 47, 48, 0.85), rgba(3, 47, 48, 0.18));
+  background: linear-gradient(90deg, rgba(3, 47, 48, 0.88) 0%, rgba(3, 47, 48, 0.58) 42%, rgba(3, 47, 48, 0.22) 70%, transparent 100%);
 }
 
 .hero-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 8rem 1.5rem;
+  max-width: 720px;
+  margin: 0;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
   text-align: left;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
-  color: #ff7a1a;
-  font-family: var(--font-body);
+  color: var(--primary-color);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.3em;
   text-transform: uppercase;
 }
 
-.hero h1 {
+.hero-inner h1 {
   max-width: 896px;
   margin: 1rem 0 0;
   color: #fff7e9;
-  font-family: var(--font-display);
-  font-size: 3rem;
-  line-height: 1;
   font-weight: 600;
   text-wrap: balance;
 }
 
-.hero p {
+.hero-inner p {
   max-width: 672px;
   margin: 1.5rem 0 0;
   color: rgba(255, 247, 233, 0.85);
-  font-size: 1.125rem;
   line-height: 1.55;
 }
 
 .ways-section {
   width: 100%;
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 6rem 1.5rem;
-  background: #fbf4e6;
+  background: var(--color-cream);
 }
 
 .monthly-section {
@@ -174,9 +179,7 @@ const tiers = [
 
 .way-card h2 {
   margin: 0;
-  color: #073f3a;
-  font-family: var(--font-display);
-  font-size: 1.875rem;
+  color: var(--color-ink);
   font-weight: 600;
   line-height: 2.25rem;
 }
@@ -184,8 +187,7 @@ const tiers = [
 .way-card p {
   flex: 1;
   margin: 1rem 0 0;
-  color: #234b45;
-  font-size: 1rem;
+  color: var(--color-ink-soft);
   line-height: 1.5;
 }
 
@@ -198,16 +200,16 @@ const tiers = [
   margin-top: 2rem;
   border: 0;
   border-radius: 999px;
-  background: #ff7a1a;
+  background: var(--primary-color);
   color: #fffaf0;
   font-size: 0.875rem;
   font-weight: 700;
   padding: 0.625rem 1.25rem;
-  box-shadow: 0 18px 34px rgba(255, 122, 26, 0.2);
+  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.2);
 }
 
 .donation-section {
-  background: #094239;
+  background: var(--primary-dark);
   color: #fff7e9;
   padding: 6rem 0;
 }
@@ -221,17 +223,13 @@ const tiers = [
 
 .donation-inner h2 {
   margin: 1rem 0 0;
-  font-family: var(--font-display);
-  font-size: 2.25rem;
   line-height: 2.5rem;
   font-weight: 600;
 }
 
 .monthly-section h2 {
   margin: 0;
-  color: #073f3a;
-  font-family: var(--font-display);
-  font-size: 2.25rem;
+  color: var(--color-ink);
   line-height: 1.1;
   font-weight: 600;
 }
@@ -250,8 +248,7 @@ const tiers = [
 
 .tier-card strong {
   display: block;
-  color: #ff7a1a;
-  font-family: var(--font-display);
+  color: var(--primary-color);
   font-size: 2.25rem;
   font-weight: 500;
   line-height: 2.5rem;
@@ -260,7 +257,6 @@ const tiers = [
 .tier-card p {
   margin: 0.75rem 0 0;
   color: rgba(255, 247, 233, 0.8);
-  font-size: 0.875rem;
   line-height: 1.25rem;
 }
 
@@ -270,8 +266,7 @@ const tiers = [
 
 .monthly-section p {
   margin: 1rem auto 0;
-  color: #234b45;
-  font-size: 1rem;
+  color: var(--color-ink-soft);
   line-height: 1.5;
 }
 
@@ -288,12 +283,7 @@ const tiers = [
 }
 
 @media (min-width: 640px) {
-  .hero h1 {
-    font-size: 3.75rem;
-  }
-
   .donation-inner h2 {
-    font-size: 3rem;
     line-height: 1;
   }
 
@@ -304,7 +294,7 @@ const tiers = [
 
 @media (max-width: 699px) {
   .hero-inner {
-    padding: 8rem 1.5rem;
+    padding: 2rem 1.5rem;
   }
 
   .ways-section {
@@ -313,10 +303,6 @@ const tiers = [
 
   .way-card {
     padding: 2rem;
-  }
-
-  .get-involved-page {
-    font-size: 16px;
   }
 }
 
