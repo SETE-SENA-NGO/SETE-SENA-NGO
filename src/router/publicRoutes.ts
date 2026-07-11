@@ -1,19 +1,56 @@
-import HomeView from '@/views/public/HomeView.vue'
+import HomeView from '@/views/HomeView.vue'
 import AboutView from '@/views/public/AboutView.vue'
-import ServicesView from '@/views/public/ServicesView.vue'
+import AboutVisionView from '@/views/AboutVisionView.vue'
+import ProgramEnviromentView from '@/views/ProgramEnviromentView.vue'
+import OrganizationView from '@/views/public/OrganizationView.vue'
+import EducationView from '@/views/public/EducationView.vue'
+import ImpactView from '@/views/public/ImpactView.vue'
+import ImpactPartnersView from '@/views/ImpactPartnersView.vue'
 import ContactView from '@/views/public/ContactView.vue'
+import HeadOfficeView from '@/views/public/HeadOfficeView.vue'
+import FieldOfficeView from '@/views/public/FieldOfficesView.vue'
+import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
+import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
+
+import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
+
+import DonateView from '@/views/public/Getinvolved.donat.vue'
+import VolunteerView from '@/views/public/Getinvolved.volunteer.vue'
+import PartnerView from '@/views/public/Getinvolved.partner.vue'
+
 import ProgramsView from '@/views/public/ProgramsView.vue'
-import ProgramsEducationView from '@/views/public/ProgramsEducationView.vue'
-import ProgramsEnvironmentView from '@/views/public/ProgramsEnvironmentView.vue'
 import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
+import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
+import QrDonateView from '@/views/public/DonateView.vue'
 
 export const publicRoutes = [
   { path: '/', component: HomeView },
+  { path: '/about/vision', component: AboutVisionView },
+  { path: '/programs/environment', component: ProgramEnviromentView },
   { path: '/about', component: AboutView },
-  { path: '/services', component: ServicesView },
+  { path: '/about/organization', component: OrganizationView },
+  { path: '/programs/education', component: EducationView },
+  { path: '/about/aboutview', component: AboutView },
+  { path: '/impact', component: ImpactView },
+  { path: '/impact/numbers', component: ImpactNumbersView },
+  { path: '/impact/partners', component: ImpactPartnersView },
+
+  { path: '/impact/timeline', component: ImpactTimelineView },
+
+  { path: '/get-involved', component: GetInvolvedView },
+
+  { path: '/get-involved/donate', component: DonateView },
+  { path: '/get-involved/volunteer', component: VolunteerView },
+  { path: '/get-involved/partner', component: PartnerView },
   { path: '/contact', component: ContactView },
+  { path: '/contact/headoffice', component: HeadOfficeView },
+  { path: '/contact/fieldoffice', component: FieldOfficeView },
   { path: '/programs', component: ProgramsView, name: 'programs' },
-  { path: '/programs/education', component: ProgramsEducationView, name: 'programs-education' },
-  { path: '/programs/environment', component: ProgramsEnvironmentView, name: 'programs-environment' },
   { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
+  {
+    path: '/programs/child-protection',
+    component: ProgramsChildProtectionView,
+    name: 'programs-child-protection',
+  },
+  { path: '/qr-donate', component: QrDonateView },
 ]
