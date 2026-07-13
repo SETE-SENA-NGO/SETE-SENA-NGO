@@ -235,43 +235,45 @@ function barWidth(value: number, total: number) {
 
 <style scoped>
 .admin-page {
-  --admin-bg: #f4f7fb;
-  --admin-bg-deep: #e8edf7;
+  /* ---- Professional green & white admin theme ---- */
+  --admin-bg: #f4faf6;
+  --admin-bg-deep: #e7f5ec;
   --admin-surface: #ffffff;
-  --admin-surface-soft: #f8fafc;
-  --admin-contrast: #172033;
-  --admin-contrast-soft: #334155;
-  --admin-text: #334155;
-  --admin-muted: #667085;
-  --admin-border: #dbe3ef;
-  --admin-border-strong: #c7d2e5;
-  --admin-blue: #2563eb;
+  --admin-surface-soft: #f3faf5;
+  --admin-contrast: #123524;
+  --admin-contrast-soft: #235c3f;
+  --admin-text: #33473c;
+  --admin-muted: #6b8578;
+  --admin-border: #d6ebde;
+  --admin-border-strong: #b9dcc5;
+  --admin-blue: #0d9488;      /* teal-green accent, kept var name for logic compatibility */
   --admin-pink: #dc2626;
-  --admin-violet: #7c3aed;
-  --admin-gold: #f97316;
+  --admin-violet: #0d9488;
+  --admin-gold: #ca8a04;
   --admin-green: #16a34a;
-  --admin-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --admin-shadow: 0 18px 44px rgba(16, 88, 51, 0.09);
 
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   transition: padding-left 0.25s ease;
 }
 
 :global(.admin-dark) .admin-page {
-  --admin-bg: #0b1120;
-  --admin-bg-deep: #111827;
-  --admin-surface: #111827;
-  --admin-surface-soft: #0f172a;
-  --admin-contrast: #f8fafc;
-  --admin-contrast-soft: #dbeafe;
-  --admin-text: #cbd5e1;
-  --admin-muted: #a6b0c3;
-  --admin-border: #293548;
-  --admin-border-strong: #3b475d;
-  --admin-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  --admin-bg: #0a1611;
+  --admin-bg-deep: #0f1f18;
+  --admin-surface: #0f1f18;
+  --admin-surface-soft: #0c1a14;
+  --admin-contrast: #eafff2;
+  --admin-contrast-soft: #bdf0d1;
+  --admin-text: #cfe7d9;
+  --admin-muted: #8fb7a0;
+  --admin-border: #1e3a2b;
+  --admin-border-strong: #2c5540;
+  --admin-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
 .admin-layout {
@@ -283,20 +285,21 @@ function barWidth(value: number, total: number) {
 .main {
   flex: 1;
   width: 100%;
-  padding: 1.25rem 2rem 2rem;
+  padding: 1.5rem 2.25rem 2.5rem;
   background: var(--admin-bg);
 }
 
 .dashboard-overview {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .eyebrow {
-  margin: 0 0 0.45rem;
-  color: var(--admin-blue);
+  margin: 0 0 0.5rem;
+  color: #0f7d38;
   font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -314,8 +317,9 @@ h1 {
 h2 {
   margin-bottom: 0.35rem;
   color: var(--admin-contrast);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .overview-header {
@@ -376,17 +380,17 @@ h2 {
 }
 
 .button {
-  min-height: 42px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  padding: 0.62rem 1rem;
-  font-weight: 800;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  padding: 0.65rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.92rem;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
 }
 
 .button:hover {
@@ -395,51 +399,59 @@ h2 {
 
 .button:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.5;
   transform: none;
 }
 
 .button-primary {
-  border: 1px solid var(--admin-blue);
-  background: var(--admin-blue);
+  border: 1px solid var(--admin-green);
+  background: linear-gradient(180deg, #22c55e, #0f7d38);
   color: #ffffff;
-  box-shadow: 0 10px 22px rgba(89, 104, 243, 0.26);
+  box-shadow: 0 12px 24px rgba(15, 125, 56, 0.28);
 }
 
 .button-primary:hover {
-  background: #4958df;
-  border-color: #4958df;
+  background: linear-gradient(180deg, #1fb356, #0c6b30);
+  border-color: #0c6b30;
 }
 
 .button-secondary {
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-border-strong);
   background: var(--admin-surface);
-  color: var(--admin-contrast);
+  color: var(--admin-contrast-soft);
 }
 
 .button-secondary:hover {
-  border-color: var(--admin-border-strong);
+  border-color: var(--admin-green);
   background: var(--admin-surface-soft);
-  box-shadow: 0 8px 18px rgba(47, 52, 86, 0.08);
+  color: #0f7d38;
+  box-shadow: 0 8px 18px rgba(16, 88, 51, 0.1);
 }
 
 /* Stats Cards */
 .dashboard-cards {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.1rem;
 }
 
 .dashboard-card {
   min-height: 154px;
   display: grid;
   align-content: start;
-  gap: 0.4rem;
-  padding: 1.15rem;
+  gap: 0.5rem;
+  padding: 1.25rem;
   border: 1px solid var(--admin-border);
   border-radius: 16px;
   background: var(--admin-surface);
   box-shadow: var(--admin-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--card-accent) 40%, var(--admin-border));
+  box-shadow: 0 20px 40px rgba(16, 88, 51, 0.12);
 }
 
 .dashboard-card::before {
@@ -463,26 +475,38 @@ h2 {
   color: var(--admin-muted);
   padding: 0.18rem 0.42rem;
   font-size: 0.7rem;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .stat-icon {
-  width: 0.7rem;
-  height: 0.7rem;
-  border-radius: 999px;
-  background: var(--card-accent);
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--card-accent) 16%, transparent);
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card-accent) 16%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--card-accent) 28%, transparent);
+  position: relative;
+}
+
+.stat-icon::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--card-accent);
+  font-size: 1.05rem;
+  font-weight: 800;
+  content: '●';
 }
 
 .dashboard-card span {
   color: var(--admin-muted);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .dashboard-card strong {
   color: var(--admin-contrast);
-  font-size: 2rem;
-  font-weight: 900;
+  font-size: 2.1rem;
+  font-weight: 800;
   line-height: 1;
 }
 
@@ -490,7 +514,7 @@ h2 {
   margin: 0;
   color: var(--admin-muted);
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.55;
 }
 
@@ -504,12 +528,12 @@ h2 {
 .analytics-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.9fr);
-  gap: 1rem;
+  gap: 1.1rem;
 }
 
 .dashboard-panel {
   min-height: 300px;
-  padding: 1.2rem;
+  padding: 1.3rem;
   border: 1px solid var(--admin-border);
   border-radius: 16px;
   background: var(--admin-surface);
@@ -521,9 +545,10 @@ h2 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin: -1.2rem -1.2rem 1.2rem;
-  padding: 1rem 1.2rem;
+  margin: -1.3rem -1.3rem 1.3rem;
+  padding: 1.1rem 1.3rem;
   border-bottom: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, #ecfdf3, transparent);
 }
 
 .dashboard-panel h2,
@@ -534,7 +559,7 @@ h2 {
 .dashboard-panel header strong {
   color: var(--admin-muted);
   font-size: 0.82rem;
-  font-weight: 900;
+  font-weight: 700;
   text-align: right;
 }
 
@@ -564,13 +589,18 @@ h2 {
   min-height: 2rem;
   align-self: end;
   border-radius: 999px 999px 8px 8px;
-  background: linear-gradient(180deg, var(--admin-blue), #60a5fa);
-  box-shadow: 0 14px 24px rgba(37, 99, 235, 0.18);
+  background: linear-gradient(180deg, #22c55e, #0f7d38);
+  box-shadow: 0 14px 24px rgba(15, 125, 56, 0.22);
+  transition: transform 0.15s ease;
+}
+
+.visitor-bar:hover span {
+  transform: scaleY(1.02);
 }
 
 .visitor-bar small {
   color: var(--admin-muted);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .publish-panel {
@@ -588,7 +618,7 @@ h2 {
   border-radius: 999px;
   background:
     radial-gradient(circle at center, var(--admin-surface) 0 53%, transparent 54%),
-    conic-gradient(var(--admin-blue) var(--saved), var(--admin-surface-soft) 0);
+    conic-gradient(#16a34a var(--saved), var(--admin-surface-soft) 0);
   box-shadow: inset 0 0 0 10px var(--admin-bg-deep);
 }
 
@@ -599,47 +629,60 @@ h2 {
 
 .publish-chart strong {
   transform: translateY(-0.5rem);
-  color: var(--admin-blue);
-  font-size: 2rem;
-  font-weight: 900;
+  color: var(--admin-green);
+  font-size: 2.1rem;
+  font-weight: 800;
 }
 
 .publish-chart span {
   transform: translateY(1.2rem);
   color: var(--admin-muted);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .quick-action-list {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.85rem;
 }
 
 .quick-action {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.75rem;
   border: 1px solid var(--admin-border);
   border-radius: 14px;
   background: var(--admin-surface-soft);
   color: var(--admin-text);
-  padding: 0.78rem;
+  padding: 0.85rem;
   text-decoration: none;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .quick-action:hover {
-  border-color: color-mix(in srgb, var(--action-color) 38%, var(--admin-border));
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  border-color: color-mix(in srgb, var(--action-color) 45%, var(--admin-border));
+  box-shadow: 0 14px 26px rgba(16, 88, 51, 0.12);
   transform: translateY(-1px);
 }
 
 .quick-action > span {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--action-color) 14%, transparent);
+  background: color-mix(in srgb, var(--action-color) 16%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--action-color) 30%, transparent);
+  position: relative;
+}
+
+.quick-action > span::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--action-color);
+  font-size: 1.1rem;
+  font-weight: 800;
+  content: '→';
 }
 
 .action-blue { --action-color: var(--admin-blue); }
@@ -649,14 +692,14 @@ h2 {
 
 .quick-action strong {
   color: var(--admin-contrast);
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .quick-action small {
   display: block;
   color: var(--admin-muted);
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 @media (min-width: 900px) {
