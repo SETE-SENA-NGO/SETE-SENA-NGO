@@ -149,7 +149,6 @@ const methods: PayMethod[] = [
   text-align: center;
 }
 .donate-header h1 {
-  font-size: 2.25rem;
   margin: 0 0 0.75rem;
 }
 .subtitle {

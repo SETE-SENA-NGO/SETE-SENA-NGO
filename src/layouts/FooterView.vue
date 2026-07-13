@@ -4,7 +4,7 @@ import logoUrl from '@/assets/logo.png'
 
 const exploreLinks = [
   { label: 'About', to: '/about' },
-  { label: 'Programs', to: '/services' },
+  { label: 'Programs', to: '/programs' },
   { label: 'Impact', to: '/impact' },
   { label: 'Get Involved', to: '/get-involved' },
   { label: 'Contact', to: '/contact' },
@@ -27,7 +27,7 @@ const year = new Date().getFullYear()
           A Buddhist NGO founded in 1994, walking with Cambodian communities toward peace,
           sustainability and dignified livelihoods.
         </p>
-        <p class="footer-provinces">Svay Rieng &middot; Prey Veng &middot; Kratie</p>
+        <p class="footer-provinces">Prey Chlak pagoda &middot; Svay Rieng</p>
       </div>
 
       <nav class="footer-col">
@@ -40,8 +40,8 @@ const year = new Date().getFullYear()
       <div class="footer-col">
         <p class="footer-heading">Contact</p>
         <p class="footer-line">Svay Rieng Province, Cambodia</p>
-        <a href="mailto:info@santisena.org" class="footer-line footer-link-inline">info@santisena.org</a>
-        <a href="tel:+855012345678" class="footer-line footer-link-inline">+855 (0) 12 345 678</a>
+        <a href="mailto:info@santisena.org" class="footer-line footer-link-inline">SANTISENAMONK@GMAIL.COM</a>
+        <a href="tel:+855012345678" class="footer-line footer-link-inline">(+855-77) 65 54 64</a>
       </div>
     </div>
 
@@ -54,27 +54,19 @@ const year = new Date().getFullYear()
 
 <style scoped>
 .site-footer {
-  --green: #1f3d2e;
-  --green-deep: #16302a;
-  --cream: #faf3e6;
-  --cream-soft: rgba(250, 243, 230, 0.85);
-  --cream-muted: rgba(250, 243, 230, 0.6);
-  --border: rgba(250, 243, 230, 0.14);
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --green: var(--primary-color);
+  --green-deep: var(--primary-dark);
+  --cream: var(--color-white);
+  --cream-soft: rgba(255, 255, 255, 0.85);
+  --cream-muted: rgba(255, 255, 255, 0.6);
+  --border: rgba(255, 255, 255, 0.14);
 
   background: var(--green-deep);
   color: var(--cream-soft);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    sans-serif;
 }
 
 .footer-inner {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 3.5rem 1.5rem 2.5rem;
   display: grid;
@@ -107,7 +99,6 @@ const year = new Date().getFullYear()
 }
 
 .footer-name {
-  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.4rem;
   color: var(--cream);
@@ -138,7 +129,6 @@ const year = new Date().getFullYear()
 
 .footer-heading {
   margin: 0 0 0.3rem;
-  font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--cream);
@@ -173,7 +163,7 @@ const year = new Date().getFullYear()
 }
 
 .footer-bottom {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--border);

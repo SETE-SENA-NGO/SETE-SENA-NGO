@@ -4,15 +4,13 @@ import AboutVisionView from '@/views/AboutVisionView.vue'
 import ProgramEnviromentView from '@/views/ProgramEnviromentView.vue'
 import OrganizationView from '@/views/public/OrganizationView.vue'
 import EducationView from '@/views/public/EducationView.vue'
-import ServicesView from '@/views/public/ServicesView.vue'
-import ImpactView from '@/views/public/ImpactView.vue'
 import ImpactPartnersView from '@/views/ImpactPartnersView.vue'
 import ContactView from '@/views/public/ContactView.vue'
-import HeadOfficeView from '@/views/public/HeadOfficeView.vue'
-import FieldOfficeView from '@/views/public/FieldOfficesView.vue'
 import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
 import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
+
 import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
+
 import DonateView from '@/views/public/Getinvolved.donat.vue'
 import VolunteerView from '@/views/public/Getinvolved.volunteer.vue'
 import PartnerView from '@/views/public/Getinvolved.partner.vue'
@@ -38,39 +36,27 @@ function managedRoute(
 }
 
 export const publicRoutes = [
-  managedRoute('/', 'home', HomeView),
-  managedRoute('/about', 'about', AboutView, { alias: ['/about/aboutview'] }),
-  managedRoute('/about/vision', 'about-vision', AboutVisionView),
-  managedRoute('/about/organization', 'about-organization', OrganizationView),
-  managedRoute('/programs', 'programs', ProgramsView, { name: 'programs' }),
-  managedRoute('/programs/environment', 'programs-environment', ProgramEnviromentView),
-  managedRoute('/programs/education', 'programs-education', EducationView),
-  managedRoute('/programs/livelihood', 'programs-livelihood', ProgramsLivelihoodView, {
-    name: 'programs-livelihood',
-  }),
-  managedRoute(
-    '/programs/child-protection',
-    'programs-child-protection',
-    ProgramsChildProtectionView,
-    {
-      name: 'programs-child-protection',
-    },
-  ),
-  managedRoute('/services', 'services', ServicesView),
-  managedRoute('/impact', 'impact', ImpactView),
-  managedRoute('/impact/numbers', 'impact-numbers', ImpactNumbersView),
-  managedRoute('/impact/timeline', 'impact-timeline', ImpactTimelineView),
-  managedRoute('/impact/partners', 'impact-partners', ImpactPartnersView),
-  managedRoute('/get-involved', 'get-involved', GetInvolvedView),
-  managedRoute('/get-involved/donate', 'get-involved-donate', DonateView),
-  managedRoute('/get-involved/volunteer', 'get-involved-volunteer', VolunteerView),
-  managedRoute('/get-involved/partner', 'get-involved-partner', PartnerView),
-  managedRoute('/qr-donate', 'qr-donate', QrDonateView),
-  managedRoute('/contact', 'contact', ContactView),
-  managedRoute('/contact/headoffice', 'contact-head-office', HeadOfficeView, {
-    alias: ['/contact/head-office'],
-  }),
-  managedRoute('/contact/fieldoffice', 'contact-field-offices', FieldOfficeView, {
-    alias: ['/contact/field-offices'],
-  }),
+  { path: '/', component: HomeView },
+  { path: '/about/vision', component: AboutVisionView },
+  { path: '/programs/environment', component: ProgramEnviromentView },
+  { path: '/about', component: AboutView },
+  { path: '/about/organization', component: OrganizationView },
+  { path: '/programs/education', component: EducationView },
+  { path: '/about/aboutview', component: AboutView },
+  { path: '/impact/numbers', component: ImpactNumbersView },
+  { path: '/impact/partners', component: ImpactPartnersView },
+  { path: '/impact/timeline', component: ImpactTimelineView },
+  { path: '/get-involved', component: GetInvolvedView },
+  { path: '/get-involved/donate', component: DonateView },
+  { path: '/get-involved/volunteer', component: VolunteerView },
+  { path: '/get-involved/partner', component: PartnerView },
+  { path: '/contact', component: ContactView },
+  { path: '/programs', component: ProgramsView, name: 'programs' },
+  { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
+  {
+    path: '/programs/child-protection',
+    component: ProgramsChildProtectionView,
+    name: 'programs-child-protection',
+  },
+  { path: '/qr-donate', component: QrDonateView },
 ]

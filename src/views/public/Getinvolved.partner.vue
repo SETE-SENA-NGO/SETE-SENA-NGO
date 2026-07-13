@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import planLogo from '@/assets/image.png'
@@ -12,25 +12,12 @@ import germanCoopLogo from '@/assets/image copy 6.png'
 import riversLifeLogo from '@/assets/image copy 7.png'
 import educoLogo from '@/assets/image copy 8.png'
 import heiferLogo from '@/assets/image copy 9.png'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
-const heroSlides = [
-  {
-    image:
-      'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1800&q=82',
-    alt: 'Community partners meeting outside',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1800&q=82',
-    alt: 'Children learning together in a rural community',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1800&q=82',
-    alt: 'Volunteers working together in a village setting',
-  },
+const slideItems = [
+  { image: '/images/programs/hero-4.jpg', caption: '' },
+  { image: '/images/programs/hero-1.jpg', caption: '' },
 ]
-
 
 const partnershipSteps = [
   {
@@ -159,8 +146,6 @@ const commitments = [
   'Transparency, accountability and consistency through finance, child protection, anti-corruption and grievance policies',
 ]
 
-const activeSlide = ref(0)
-
 const description =
   'Partner with Santi Sena through community-rooted programs in natural resources, livelihoods, WASH, education, Buddhist preservation and child protection.'
 
@@ -168,11 +153,6 @@ let previousTitle = ''
 let descriptionMeta: HTMLMetaElement | null = null
 let previousDescription: string | null = null
 let createdDescriptionMeta = false
-let slideTimer: number | undefined
-
-const setSlide = (index: number) => {
-  activeSlide.value = index
-}
 
 onMounted(() => {
   previousTitle = document.title
@@ -189,18 +169,10 @@ onMounted(() => {
   }
 
   descriptionMeta.setAttribute('content', description)
-
-  slideTimer = window.setInterval(() => {
-    activeSlide.value = (activeSlide.value + 1) % heroSlides.length
-  }, 5200)
 })
 
 onUnmounted(() => {
   document.title = previousTitle
-
-  if (slideTimer !== undefined) {
-    window.clearInterval(slideTimer)
-  }
 
   if (descriptionMeta && createdDescriptionMeta) {
     descriptionMeta.remove()
@@ -212,19 +184,8 @@ onUnmounted(() => {
 
 <template>
   <main class="partner-page">
-    <section class="partner-hero" aria-label="Partner with Santi Sena">
-      <div class="partner-hero__slides" aria-hidden="true">
-        <img
-          v-for="(slide, index) in heroSlides"
-          :key="slide.image"
-          :src="slide.image"
-          :alt="slide.alt"
-          class="partner-hero__slide"
-          :class="{ 'is-active': activeSlide === index }"
-        />
-      </div>
-      <div class="partner-hero__shade"></div>
-
+    <Slideshow :slides="slideItems">
+      <div class="hero-overlay" />
       <div class="partner-hero__content">
         <p class="eyebrow">Get involved - Partner</p>
         <h1>Partner with Santi Sena</h1>
@@ -237,20 +198,7 @@ onUnmounted(() => {
           <a href="#partnership-practice" class="secondary-link">See how partnership works</a>
         </div>
       </div>
-
-      <div class="hero-dots" aria-label="Choose hero image">
-        <button
-          v-for="(_, index) in heroSlides"
-          :key="index"
-          type="button"
-          class="hero-dot"
-          :class="{ 'is-active': activeSlide === index }"
-          :aria-label="`Show partnership image ${index + 1}`"
-          :aria-current="activeSlide === index ? 'true' : undefined"
-          @click="setSlide(index)"
-        ></button>
-      </div>
-    </section>
+    </Slideshow>
 
     <section class="partner-content" aria-labelledby="intro-heading">
       <div class="intro-section">
@@ -388,82 +336,54 @@ onUnmounted(() => {
 
 <style scoped>
 .partner-page {
-  --page: #f7f3ea;
-  --paper: #fffdf8;
-  --ink: #073f3a;
-  --muted: #315a55;
-  --line: #ddd1c0;
-  --orange: #e86f1d;
   --blue: #2f6f8f;
-  --green: #0a463d;
-  --font-display: Cambria, Georgia, 'Times New Roman', serif;
-  --font-body: Aptos, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   min-height: 100vh;
-  background: var(--page);
-  color: var(--ink);
-  font-family: var(--font-body);
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
-.partner-hero {
-  position: relative;
-  isolation: isolate;
-  min-height: min(650px, 82vh);
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  background: #0b332f;
-}
-
-.partner-hero__slides,
-.partner-hero__shade,
-.partner-hero__slide {
+.hero-overlay {
   position: absolute;
   inset: 0;
+  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
 }
 
-.partner-hero__slides {
-  z-index: -2;
-}
-
-.partner-hero__slide {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transform: scale(1.04);
-  transition:
-    opacity 900ms ease,
-    transform 6500ms ease;
-}
-
-.partner-hero__slide.is-active {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.partner-hero__shade {
-  z-index: -1;
-  background:
-    linear-gradient(90deg, rgba(4, 42, 38, 0.92), rgba(4, 42, 38, 0.62), rgba(4, 42, 38, 0.16)),
-    linear-gradient(0deg, rgba(4, 42, 38, 0.32), transparent 46%);
-}
-
-.partner-hero__content,
 .partner-content,
 .cta-band__inner {
-  width: min(100% - 3rem, 1220px);
+  width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
 }
 
 .partner-hero__content {
-  padding: 6.25rem 0;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow,
 .section-kicker {
   margin: 0;
-  color: var(--orange);
+  color: var(--primary-color);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.22em;
@@ -471,12 +391,10 @@ onUnmounted(() => {
   text-transform: uppercase;
 }
 
-.partner-hero h1 {
+.partner-hero__content h1 {
   max-width: 760px;
   margin: 1.2rem 0 0;
   color: #fffaf0;
-  font-family: var(--font-display);
-  font-size: clamp(3.1rem, 7vw, 6.6rem);
   font-weight: 600;
   line-height: 0.94;
   text-wrap: balance;
@@ -486,7 +404,6 @@ onUnmounted(() => {
   max-width: 720px;
   margin: 1.8rem 0 0;
   color: rgba(255, 250, 240, 0.9);
-  font-size: clamp(1.05rem, 1.55vw, 1.35rem);
   font-weight: 500;
   line-height: 1.6;
 }
@@ -511,18 +428,19 @@ onUnmounted(() => {
 
 .primary-button {
   border-radius: 999px;
-  background: var(--orange);
+  background: var(--primary-color);
   color: #fffaf0;
   padding: 0.85rem 1.55rem;
-  box-shadow: 0 18px 34px rgba(232, 111, 29, 0.25);
+  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.25);
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease;
 }
 
 .primary-button:hover {
+  background: var(--primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 20px 38px rgba(232, 111, 29, 0.32);
+  box-shadow: 0 20px 38px rgba(20, 129, 62, 0.32);
 }
 
 .secondary-link {
@@ -534,34 +452,6 @@ onUnmounted(() => {
   opacity: 1;
 }
 
-.hero-dots {
-  position: absolute;
-  left: 50%;
-  bottom: 2rem;
-  display: flex;
-  gap: 0.65rem;
-  transform: translateX(-50%);
-}
-
-.hero-dot {
-  width: 0.72rem;
-  height: 0.72rem;
-  border: 1px solid rgba(255, 250, 240, 0.7);
-  border-radius: 999px;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease,
-    width 0.2s ease;
-}
-
-.hero-dot.is-active {
-  width: 2rem;
-  background: #fffaf0;
-}
-
 .partner-content {
   padding: 5.5rem 0;
 }
@@ -569,9 +459,7 @@ onUnmounted(() => {
 .partner-content h2,
 .cta-band h2 {
   margin: 0;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 3.2vw, 3.1rem);
+  color: var(--color-ink);
   font-weight: 600;
   line-height: 1.08;
   text-wrap: balance;
@@ -595,8 +483,7 @@ onUnmounted(() => {
 .section-heading p,
 .logo-section__header p {
   margin: 1.25rem 0 0;
-  color: var(--muted);
-  font-size: 1.08rem;
+  color: var(--color-ink-soft);
   line-height: 1.65;
 }
 
@@ -628,8 +515,7 @@ onUnmounted(() => {
 .intro-image figcaption {
   max-width: 520px;
   margin-top: 0.85rem;
-  color: var(--muted);
-  font-size: 0.95rem;
+  color: var(--color-ink-soft);
   line-height: 1.5;
 }
 
@@ -658,7 +544,7 @@ onUnmounted(() => {
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--color-border);
 }
 
 .step-list li {
@@ -666,19 +552,18 @@ onUnmounted(() => {
   grid-template-columns: 4.5rem minmax(0, 1fr);
   gap: 1.6rem;
   padding: 1.7rem 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .step-number {
   color: var(--blue);
-  font-family: var(--font-display);
   font-size: 2.4rem;
   line-height: 1;
 }
 
 .step-label {
   display: block;
-  color: var(--orange);
+  color: var(--primary-color);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -688,9 +573,7 @@ onUnmounted(() => {
 .step-list h3,
 .area-list h3 {
   margin: 0.45rem 0 0;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 1.45rem;
+  color: var(--color-ink);
   font-weight: 600;
   line-height: 1.15;
 }
@@ -698,7 +581,7 @@ onUnmounted(() => {
 .step-list p,
 .area-list p {
   margin: 0.65rem 0 0;
-  color: var(--muted);
+  color: var(--color-ink-soft);
   line-height: 1.55;
 }
 
@@ -713,9 +596,9 @@ onUnmounted(() => {
 
 .media-note {
   margin-top: 1rem;
-  border-left: 4px solid var(--orange);
+  border-left: 4px solid var(--primary-color);
   padding-left: 1rem;
-  color: var(--muted);
+  color: var(--color-ink-soft);
 }
 
 .media-note strong,
@@ -724,9 +607,7 @@ onUnmounted(() => {
 }
 
 .media-note strong {
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 1.35rem;
+  color: var(--color-ink);
   font-weight: 600;
 }
 
@@ -751,12 +632,12 @@ onUnmounted(() => {
   margin: 2rem 0 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--color-border);
 }
 
 .area-list li {
   padding: 1.35rem 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .logo-section {
@@ -767,7 +648,7 @@ onUnmounted(() => {
 }
 
 .logo-section__header {
-  width: min(100% - 3rem, 1220px);
+  width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.72fr);
@@ -826,7 +707,7 @@ onUnmounted(() => {
 
 .commitment-list li {
   position: relative;
-  color: var(--muted);
+  color: var(--color-ink-soft);
   line-height: 1.5;
 }
 
@@ -844,7 +725,7 @@ onUnmounted(() => {
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
   align-items: start;
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(47, 111, 143, 0.2), transparent 42%), var(--green);
+  background: linear-gradient(135deg, rgba(47, 111, 143, 0.2), transparent 42%), var(--primary-dark);
   padding: clamp(2rem, 5vw, 3.5rem);
 }
 
@@ -855,7 +736,7 @@ onUnmounted(() => {
 }
 
 .commitments-section .section-kicker {
-  color: #ffb06e;
+  color: var(--primary-light);
 }
 
 .commitment-list {
@@ -878,8 +759,7 @@ onUnmounted(() => {
 
 .commitment-list li::before {
   content: counter(commitments, decimal-leading-zero);
-  color: #ffb06e;
-  font-family: var(--font-display);
+  color: var(--primary-light);
   font-size: 1.55rem;
   line-height: 1;
 }
@@ -888,7 +768,7 @@ onUnmounted(() => {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: #0b332f;
+  background: var(--primary-dark);
   padding: 5rem 0;
 }
 
@@ -910,7 +790,7 @@ onUnmounted(() => {
 
 .cta-band__inner {
   max-width: min(100% - 3rem, 920px);
-  margin-left: max(1.5rem, calc((100vw - 1220px) / 2));
+  margin-left: max(1.5rem, calc((100vw - var(--container-max-width)) / 2));
 }
 
 .cta-band h2 {
@@ -949,27 +829,18 @@ onUnmounted(() => {
 }
 
 @media (max-width: 760px) {
-  .partner-hero {
-    min-height: min(570px, 86vh);
-  }
-
-  .partner-hero__content,
   .partner-content,
   .cta-band__inner {
-    width: min(100% - 2rem, 1220px);
+    width: min(100% - 2rem, var(--container-max-width));
   }
 
   .partner-hero__content {
-    padding: 5.2rem 0 5.8rem;
+    padding: 2rem 1.5rem;
   }
 
   .hero-actions {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .hero-dots {
-    bottom: 1.35rem;
   }
 
   .area-list {

@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import Slideshow from '@/components/shared/Slideshow.vue'
+import { useScrollReveal } from '@/composables/useScrollReveal'
+import environmentImg from '@/assets/home-image/environtment.jpg'
+import educationImg from '@/assets/home-image/education.jpg'
+import livelihoodImg from '@/assets/home-image/livelihood.jpg'
+import childImg from '@/assets/home-image/child.jpg'
 
 const stats = [
   { value: '293', label: 'Villages Reached' },
@@ -9,45 +14,19 @@ const stats = [
   { value: '10+', label: 'International Partners' },
 ]
 
-const heroSlides = [
-  { label: 'Natural Resource & Environment', gradient: 'linear-gradient(135deg, #4a7a5c 0%, #1e3d2c 100%)' },
-  { label: 'Access to Education', gradient: 'linear-gradient(135deg, #c98a4a 0%, #7a4a22 100%)' },
-  { label: 'Livelihood & Economic Improvement', gradient: 'linear-gradient(135deg, #b0522c 0%, #6b2f18 100%)' },
-  { label: 'Child Protection', gradient: 'linear-gradient(135deg, #3a6b7a 0%, #1c3540 100%)' },
+const slideItems: { image: string; caption: string }[] = [
+  { image: '/images/programs/hero-1.jpg', caption: '' },
+  { image: '/images/programs/hero-2.jpg', caption: '' },
+  { image: '/images/programs/hero-3.jpg', caption: '' },
+  { image: '/images/programs/hero-4.jpg', caption: '' },
 ]
 
-const activeSlide = ref(0)
-let heroTimer: ReturnType<typeof setInterval> | undefined
-
-function goToSlide(index: number) {
-  activeSlide.value = index
-}
-
-function nextSlide() {
-  activeSlide.value = (activeSlide.value + 1) % heroSlides.length
-}
-
-onMounted(() => {
-  heroTimer = setInterval(nextSlide, 5000)
-})
-
-onUnmounted(() => {
-  if (heroTimer) clearInterval(heroTimer)
-})
+useScrollReveal()
 </script>
 
 <template>
   <div class="home-view">
-    <section class="hero">
-      <div class="hero-slides">
-        <div
-          v-for="(slide, index) in heroSlides"
-          :key="slide.label"
-          class="hero-slide"
-          :class="{ active: index === activeSlide }"
-          :style="{ background: slide.gradient }"
-        />
-      </div>
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
 
       <div class="hero-inner">
@@ -61,27 +40,20 @@ onUnmounted(() => {
           livelihoods and safeguarding families.
         </p>
         <div class="hero-actions">
-          <RouterLink to="/contact" class="btn btn--primary">Support Us</RouterLink>
+          <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
           <RouterLink to="/about" class="btn btn--outline">Stand with us</RouterLink>
         </div>
       </div>
-
-      <div class="hero-dots">
-        <button
-          v-for="(slide, index) in heroSlides"
-          :key="'dot-' + slide.label"
-          type="button"
-          class="hero-dot"
-          :class="{ active: index === activeSlide }"
-          :aria-label="`Go to slide: ${slide.label}`"
-          @click="goToSlide(index)"
-        />
-      </div>
-    </section>
+    </Slideshow>
 
     <section class="stats">
       <div class="stats-inner">
-        <div v-for="stat in stats" :key="stat.label" class="stat">
+        <div
+          v-for="(stat, index) in stats"
+          :key="stat.label"
+          class="stat reveal"
+          :style="{ animationDelay: `${index * 0.12}s` }"
+        >
           <div class="stat-number">{{ stat.value }}</div>
           <div class="stat-label">{{ stat.label }}</div>
         </div>
@@ -89,13 +61,15 @@ onUnmounted(() => {
     </section>
 
     <section class="mission">
-      <div class="eyebrow-rule">
+      <div class="eyebrow-rule reveal">
         <span class="rule" />
         <span class="eyebrow">Our Mission</span>
         <span class="rule" />
       </div>
-      <h2 class="mission-title">Peace is planted, not declared.</h2>
-      <p class="mission-text">
+      <h2 class="mission-title reveal" style="animation-delay: 0.12s">
+        Peace is planted, not declared.
+      </h2>
+      <p class="mission-text reveal" style="animation-delay: 0.24s">
         Santi Sena — the <em>Peace Army</em> — was founded by Cambodian Buddhist monks in
         1994 to alleviate poverty and rebuild moral, environmental and economic life after
         decades of conflict. Today our 30+ staff serve 293 villages with programs that
@@ -104,24 +78,19 @@ onUnmounted(() => {
     </section>
 
     <section class="pillars">
-      <div class="pillars-header">
+      <div class="pillars-header reveal">
         <div>
           <p class="eyebrow">Four Pillars</p>
           <h2 class="pillars-title">Strategic goals</h2>
         </div>
-        <RouterLink to="/services" class="pillars-link">Explore all programs →</RouterLink>
+        <RouterLink to="/programs" class="pillars-link">Explore all programs</RouterLink>
       </div>
 
       <div class="pillars-grid">
-        <article class="pillar-card">
+        <article class="pillar-card reveal">
           <div class="pillar-image pillar-image--forest">
-            <svg viewBox="0 0 24 24" class="pillar-icon" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M12 22V13M12 13C12 13 5 12 5 6C5 6 12 4 12 10C12 4 19 6 19 6C19 12 12 13 12 13Z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img :src="environmentImg" alt="Community forestry in a Cambodian village" class="pillar-photo" />
+
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 01</p>
@@ -133,20 +102,10 @@ onUnmounted(() => {
           </div>
         </article>
 
-        <article class="pillar-card">
+        <article class="pillar-card reveal" style="animation-delay: 0.12s">
           <div class="pillar-image pillar-image--education">
-            <svg viewBox="0 0 24 24" class="pillar-icon" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M4 6.5C4 5.67157 4.67157 5 5.5 5H10C11.1046 5 12 5.89543 12 7V19C12 18.1716 11.3284 17.5 10.5 17.5H4V6.5Z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M20 6.5C20 5.67157 19.3284 5 18.5 5H14C12.8954 5 12 5.89543 12 7V19C12 18.1716 12.6716 17.5 13.5 17.5H20V6.5Z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img :src="educationImg" alt="Children learning at a community pre-school" class="pillar-photo" />
+
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 02</p>
@@ -158,15 +117,10 @@ onUnmounted(() => {
           </div>
         </article>
 
-        <article class="pillar-card">
+        <article class="pillar-card reveal" style="animation-delay: 0.12s">
           <div class="pillar-image pillar-image--livelihood">
-            <svg viewBox="0 0 24 24" class="pillar-icon" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M3 12L7 8M7 8L11 12M7 8V19M21 12L17 16M17 16L13 12M17 16V5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img :src="livelihoodImg" alt="Villagers working on rural livelihood activities" class="pillar-photo" />
+
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 03</p>
@@ -178,15 +132,10 @@ onUnmounted(() => {
           </div>
         </article>
 
-        <article class="pillar-card">
+        <article class="pillar-card reveal" style="animation-delay: 0.24s">
           <div class="pillar-image pillar-image--protection">
-            <svg viewBox="0 0 24 24" class="pillar-icon" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path
-                d="M12 3L19 6V11C19 15.4183 16.0523 19.4183 12 21C7.94772 19.4183 5 15.4183 5 11V6L12 3Z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+            <img :src="childImg" alt="Children protected and cared for in their community" class="pillar-photo" />
+            
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 04</p>
@@ -200,7 +149,7 @@ onUnmounted(() => {
       </div>
     </section>
 
-    <section class="quote">
+    <section class="quote reveal">
       <p class="quote-text">
         &ldquo;When we plant a tree, we plant peace. When we teach a child, we end a war that has
         not yet begun.&rdquo;
@@ -208,14 +157,14 @@ onUnmounted(() => {
       <p class="quote-attrib">— Founding Spirit of Santi Sena</p>
     </section>
 
-    <section class="cta">
+    <section class="cta reveal">
       <div class="cta-card">
         <div class="cta-text">
           <h2 class="cta-title">Join the Peace Army.</h2>
           <p class="cta-desc">Donate, partner, volunteer — every act seeds another village with hope.</p>
         </div>
         <div class="cta-actions">
-          <RouterLink to="/contact" class="btn btn--primary">Support Us</RouterLink>
+          <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
           <RouterLink to="/about" class="btn btn--outline">Partner with us</RouterLink>
         </div>
       </div>
@@ -225,18 +174,39 @@ onUnmounted(() => {
 
 <style scoped>
 .home-view {
-  --cream: #faf3e6;
-  --cream-soft: #fdf8ef;
-  --green: #16302a;
-  --green-muted: #3f5f52;
-  --orange: #dd7a2b;
-  --ink: #2b2b28;
-  --ink-soft: #5b564c;
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-
   font-family: inherit;
-  color: var(--ink);
-  background: var(--cream);
+  color: var(--color-ink);
+  background: var(--color-cream);
+}
+
+/* Scroll reveal: elements start hidden; useScrollReveal() adds
+   .reveal--visible when they enter the viewport. An animation (not a
+   transition) is used so it never fights hover transforms, and the
+   `backwards` fill keeps staggered items hidden during their delay. */
+.reveal {
+  opacity: 0;
+}
+
+.reveal--visible {
+  opacity: 1;
+  animation: revealUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal--visible {
+    animation: none;
+  }
 }
 
 .eyebrow {
@@ -245,11 +215,11 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--primary-color);
 }
 
 .eyebrow--light {
-  color: #f0a95f;
+  color: var(--primary-light);
 }
 
 .eyebrow-rule {
@@ -263,85 +233,47 @@ onUnmounted(() => {
 .eyebrow-rule .rule {
   width: 2.5rem;
   height: 1px;
-  background: var(--orange);
+  background: var(--primary-color);
 }
 
-/* Hero */
-.hero {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  min-height: 640px;
-  padding: 4rem 1.5rem;
-  overflow: hidden;
-  background: linear-gradient(180deg, #3a5847 0%, #1e3327 60%, #12201a 100%);
-}
-
-.hero-slides {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 1.2s ease;
-}
-
-.hero-slide.active {
-  opacity: 1;
-}
-
+/* Hero (overlaid on the slideshow via its default slot) */
 .hero-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(115deg, rgba(8, 22, 16, 0.93) 0%, rgba(8, 22, 16, 0.6) 45%, rgba(8, 22, 16, 0.2) 78%),
-    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.55) 0%, transparent 55%);
+    linear-gradient(90deg, rgba(6, 18, 13, 0.92) 0%, rgba(6, 18, 13, 0.68) 38%, rgba(6, 18, 13, 0.3) 65%, rgba(6, 18, 13, 0.05) 100%),
+    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.4) 0%, transparent 55%);
 }
 
 .hero-inner {
-  position: relative;
-  z-index: 1;
-  max-width: 760px;
-  margin: 0 auto 2rem 0;
-  width: 100%;
-}
-
-.hero-dots {
   position: absolute;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  z-index: 2;
+  inset: 0;
+  z-index: 1;
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 760px;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
+  width: 100%;
+  animation: fadeInUp 0.8s ease-out;
 }
 
-.hero-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: rgba(253, 248, 239, 0.4);
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.hero-dot.active {
-  background: var(--orange);
-  transform: scale(1.3);
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero-title {
   margin: 0.75rem 0 1.25rem;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
-  line-height: 1.15;
   color: #fdf8ef;
 }
 
@@ -373,12 +305,12 @@ onUnmounted(() => {
 }
 
 .btn--primary {
-  background: var(--orange);
-  color: #211a12;
+  background: var(--primary-color);
+  color: var(--color-white);
 }
 
 .btn--primary:hover {
-  opacity: 0.9;
+  background: var(--primary-dark);
 }
 
 .btn--outline {
@@ -392,38 +324,44 @@ onUnmounted(() => {
 
 /* Stats */
 .stats {
-  background: var(--cream);
-  border-bottom: 1px solid rgba(22, 48, 42, 0.1);
+  background: var(--color-cream);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .stats-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: 3.5rem 1.5rem;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  gap: 2.5rem 1rem;
   text-align: center;
 }
 
 .stat-number {
-  font-family: var(--font-serif);
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  font-weight: 600;
-  color: #b0522c;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--primary-dark);
 }
 
 .stat-label {
-  margin-top: 0.35rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
 }
 
 @media (min-width: 720px) {
   .stats-inner {
     grid-template-columns: repeat(4, 1fr);
+  }
+  /* Thin dividers between the four columns, like a classic stats band. */
+  .stat + .stat {
+    border-left: 1px solid var(--color-border);
   }
 }
 
@@ -437,21 +375,18 @@ onUnmounted(() => {
 
 .mission-title {
   margin: 0 0 1.5rem;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 .mission-text {
   font-size: 1.05rem;
   line-height: 1.8;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
 }
 
 .mission-text em {
   font-style: italic;
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 /* Pillars */
@@ -472,14 +407,11 @@ onUnmounted(() => {
 
 .pillars-title {
   margin: 0.5rem 0 0;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 .pillars-link {
-  color: var(--green);
+  color: var(--primary-dark);
   font-weight: 600;
   text-decoration: none;
   border-bottom: 1px solid transparent;
@@ -503,10 +435,10 @@ onUnmounted(() => {
 }
 
 .pillar-card {
-  background: var(--cream-soft);
+  background: var(--color-cream-soft);
   border-radius: 1rem;
   overflow: hidden;
-  border: 1px solid rgba(22, 48, 42, 0.08);
+  border: 1px solid var(--color-border);
   transition:
     transform 0.35s ease,
     box-shadow 0.35s ease,
@@ -516,10 +448,11 @@ onUnmounted(() => {
 .pillar-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 20px 40px rgba(22, 48, 42, 0.14);
-  border-color: rgba(221, 122, 43, 0.35);
+  border-color: var(--primary-color);
 }
 
 .pillar-image {
+  position: relative;
   aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
@@ -527,10 +460,33 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.pillar-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.pillar-card:hover .pillar-photo {
+  transform: scale(1.06);
+}
+
+/* Color tint over the photo keeps each pillar's hue and the icon readable. */
+.pillar-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
 .pillar-icon {
+  position: relative;
+  z-index: 1;
   width: 3rem;
   height: 3rem;
   color: rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
   transition: transform 0.35s ease;
 }
 
@@ -538,21 +494,6 @@ onUnmounted(() => {
   transform: scale(1.12);
 }
 
-.pillar-image--forest {
-  background: linear-gradient(135deg, #4a7a5c, #1e3d2c);
-}
-
-.pillar-image--education {
-  background: linear-gradient(135deg, #c98a4a, #7a4a22);
-}
-
-.pillar-image--livelihood {
-  background: linear-gradient(135deg, #b0522c, #6b2f18);
-}
-
-.pillar-image--protection {
-  background: linear-gradient(135deg, #3a6b7a, #1c3540);
-}
 
 .pillar-body {
   padding: 1.5rem;
@@ -564,25 +505,22 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--orange);
+  color: var(--primary-color);
 }
 
 .pillar-title {
   margin: 0 0 0.6rem;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: 1.25rem;
-  color: var(--green);
+  color: var(--primary-dark);
   transition: color 0.25s ease;
 }
 
 .pillar-card:hover .pillar-title {
-  color: var(--orange);
+  color: var(--primary-color);
 }
 
 .pillar-desc {
   margin: 0;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -597,12 +535,10 @@ onUnmounted(() => {
 
 .quote-text {
   margin: 0 0 1rem;
-  font-family: var(--font-serif);
   font-style: italic;
   font-weight: 500;
-  font-size: clamp(1.4rem, 3vw, 1.9rem);
   line-height: 1.4;
-  color: var(--green);
+  color: var(--primary-dark);
 }
 
 .quote-attrib {
@@ -611,7 +547,7 @@ onUnmounted(() => {
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--color-ink-soft);
 }
 
 /* CTA */
@@ -627,15 +563,12 @@ onUnmounted(() => {
   gap: 2rem;
   padding: clamp(2rem, 4vw, 3rem);
   border-radius: 1.5rem;
-  background: linear-gradient(135deg, #1e3d2c 0%, var(--green) 60%, #0f231a 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 60%, var(--color-ink) 100%);
   box-shadow: 0 24px 48px rgba(15, 35, 26, 0.28);
 }
 
 .cta-title {
   margin: 0 0 0.75rem;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  font-size: clamp(1.9rem, 4vw, 2.5rem);
   color: #fdf8ef;
 }
 

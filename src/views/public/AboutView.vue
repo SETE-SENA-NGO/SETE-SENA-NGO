@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
+import heroImpact from '@/assets/hero-impact.jpg'
+import logoUrl from '@/assets/logo.png'
+
+const slideItems = [
+  { image: heroImpact, caption: '' },
+  { image: '/images/programs/hero-1.jpg', caption: '' },
+  { image: '/images/programs/hero-2.jpg', caption: '' },
+]
 
 const values = [
   { name: 'Honesty', body: 'we have honesty with our donors, target group, operational partners and working group.' },
   { name: 'Non-discrimination', body: 'we do not have any discrimination for the disabled, religions, colors, races, respect to target group, and political factions. ' },
   { name: 'Collective Benefits', body: 'we do not utilize property of organization for any private benefit, working tirelessly, sharing information and knowledge. ' },
   { name: 'Flexibility', body: 'we respect and accept good comments from target groups, development partners which response to goal and resources existed.' },
-  { name: 'Empowerment', body: 'We do not deliver development; we hand it back to the community.' },
+  // { name: 'Empowerment', body: 'We do not deliver development; we hand it back to the community.' },
 ]
 
 const team = [
@@ -18,32 +27,6 @@ const team = [
 ]
 
 const provinces = ['Svay Rieng', 'Prey Veng', 'Kratie']
-
-// ── Slideshow ──
-
-const imageUrls: string[] = [
-  'https://images.pexels.com/photos/5905476/pexels-photo-5905476.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/5905470/pexels-photo-5905470.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/5905493/pexels-photo-5905493.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-  'https://images.pexels.com/photos/5905700/pexels-photo-5905700.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-]
-
-const currentSlide = ref(0)
-let slideTimer: number | undefined
-
-const startSlideshow = () => {
-  stopSlideshow()
-  slideTimer = window.setInterval(() => {
-    currentSlide.value = (currentSlide.value + 1) % imageUrls.length
-  }, 5000)
-}
-
-const stopSlideshow = () => {
-  if (slideTimer) {
-    clearInterval(slideTimer)
-    slideTimer = undefined
-  }
-}
 
 onMounted(() => {
   document.title = 'About Santi Sena — Buddhist NGO in Cambodia'
@@ -72,28 +55,16 @@ onMounted(() => {
 
   setOgMeta('og:title', 'About Santi Sena')
   setOgMeta('og:description', 'Our story, vision, values and the team carrying the Peace Army forward.')
-
-  startSlideshow()
-})
-
-onUnmounted(() => {
-  stopSlideshow()
 })
 </script>
 
 <template>
   <div class="about-page">
-    <!-- Hero Section with Background Slideshow -->
-    <section class="hero-section" @mouseenter="stopSlideshow" @mouseleave="startSlideshow">
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
 
-      <div class="slides" aria-live="polite">
-        <div v-for="(url, i) in imageUrls" :key="i" class="slide" :class="{ 'is-active': currentSlide === i }"
-          :style="{ backgroundImage: `url(${url})` }" />
-      </div>
-
       <div class="hero-content">
-        <span class="section-label saffron">About Santi Sena</span>
+        <span class="badge">About Santi Sena</span>
         <h1 class="hero-title">
           A peace army born from the Dharma, raised by villages.
         </h1>
@@ -103,7 +74,7 @@ onUnmounted(() => {
           not signed in distant offices.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <!-- Vision / Mission / Goal -->
     <section class="vmg-section">
@@ -133,10 +104,10 @@ onUnmounted(() => {
     <section class="values-section">
       <div class="values-container">
         <span class="section-label saffron">Core Values</span>
-        <h2 class="values-title">Five vows that shape every program</h2>
+        <h2 class="values-title">Five values that shape every program</h2>
         <div class="values-grid">
           <div v-for="v in values" :key="v.name" class="value-card">
-            <div class="value-name">{{ v.name }}</div>
+            <h2 class="value-name">{{ v.name }}</h2>
             <p class="value-body">{{ v.body }}</p>
           </div>
         </div>
@@ -153,10 +124,13 @@ onUnmounted(() => {
             From the Board of Directors to the field staff in Kratie, every level of Santi Sena is
             accountable to the villagers we serve and the donors who trust us.
           </p>
+          <figure class="org-visual" aria-label="Santi Sena organization seal">
+            <img class="org-logo" :src="logoUrl" alt="Santi Sena seal" loading="lazy" />
+          </figure>
         </div>
         <ul class="team-list">
           <li v-for="t in team" :key="t.role" class="team-card">
-            <div class="team-role">{{ t.role }}</div>
+            <h3 class="team-role">{{ t.role }}</h3>
             <p class="team-desc">{{ t.desc }}</p>
           </li>
         </ul>
@@ -181,20 +155,17 @@ onUnmounted(() => {
 
 <style scoped>
 /* ─── About page color tokens ───
- * Green + Gold palette to match the logo.
- * Green (#3A7D44) represents nature, growth, and rural Cambodia.
- * Gold (#D4A017 / saffron) represents Buddhism, wisdom, and the Dharma.
+ * Aliased to the shared global design tokens (see src/assets/base.css).
  */
 .about-page {
-  --about-primary: #1F472F;
-  --about-primary-foreground: #FFFFFF;
-  --about-saffron: #D4A017;
-  --about-white: #FFFFFF;
-  --about-muted: #4B5563;
-  --about-border: #E5E7EB;
-  --about-panel: #FFFFFF;
-  --about-bg-alt: #F3F7F4;
-  --about-cream: #0e311c;
+  --about-primary: var(--primary-color);
+  --about-primary-foreground: var(--color-white);
+  --about-saffron: var(--primary-dark);
+  --about-white: var(--color-white);
+  --about-muted: var(--color-ink-soft);
+  --about-border: var(--color-border);
+  --about-panel: var(--color-white);
+  --about-bg-alt: var(--primary-light);
   --about-surface: color-mix(in srgb, var(--about-primary) 90%, white);
   --about-surface-strong: color-mix(in srgb, var(--about-primary) 82%, white);
 }
@@ -202,14 +173,14 @@ onUnmounted(() => {
 /* ─── Shared ─── */
 .section-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.3em;
 }
 
 .section-label.saffron {
   color: var(--about-saffron);
-  font-weight: 700;
+  font-weight: 900;
   letter-spacing: 0.4em;
   display: inline-flex;
   align-items: center;
@@ -217,84 +188,84 @@ onUnmounted(() => {
   padding: 0.35rem 0.85rem;
   border-radius: 2rem;
   background: color-mix(in srgb, var(--about-saffron) 15%, transparent);
-  color: var(--about-saffron);
 }
 
-/* ─── Hero ─── */
-.hero-section {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-bottom: 1px solid color-mix(in srgb, var(--about-primary) 40%, transparent);
-  background: var(--about-primary);
+.badge {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
 }
 
-.slides {
-  position: absolute;
-  inset: 0;
-}
-
-.slide {
-  position: absolute;
-  inset: -10px;
-  opacity: 0;
-  transition: opacity 1500ms ease-in-out;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #5a7d5e;
-  filter: blur(4px);
-  transform: scale(1.05);
-}
-
-.slide.is-active {
-  opacity: 1;
-}
-
+/* ─── Hero (overlaid on the slideshow via its default slot) ─── */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1;
   background:
-    linear-gradient(to right, rgba(0, 0, 0, 0.50) 0%, rgba(0, 0, 0, 0.20) 45%, rgba(0, 0, 0, 0.05) 70%, transparent 100%),
-    linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 40%, rgba(0, 0, 0, 0.10) 100%);
-  z-index: -10;
-  /* darker subtle gradient overlay to keep the hero firmly dark green */
-  background: linear-gradient(135deg,
-      rgba(0, 0, 0, 0.28) 0%,
-      rgba(0, 0, 0, 0.18) 50%,
-      rgba(0, 0, 0, 0.08) 100%);
+    linear-gradient(to right, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.2) 65%, transparent 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.15) 100%);
 }
 
 .hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 8rem 1.5rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 760px;
+  padding: 3rem var(--container-padding);
+  max-width: 720px;
+  margin: 0;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
+  animation: fadeInUp 0.8s ease-out;
   color: var(--about-white);
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .hero-title {
-  margin-top: 1rem;
+  margin-top: 1.25rem;
   max-width: 48rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2.75rem;
   line-height: 1.1;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--about-white);
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
 }
 
 .hero-subtitle {
   margin-top: 1.5rem;
   max-width: 42rem;
-  font-size: 1.05rem;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* ─── Vision / Mission / Goal ─── */
 .vmg-section {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   display: grid;
   gap: 3rem;
@@ -312,14 +283,11 @@ onUnmounted(() => {
 }
 
 .vmg-heading {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 1.5rem;
-  color: var(--about-primary);
+  color: var(--about-primary-foreground);
   margin: 0 0 0.5rem;
 }
 
 .vmg-body {
-  color: var(--about-muted);
   color: var(--about-primary-foreground);
   line-height: 1.75;
   margin: 0;
@@ -333,22 +301,21 @@ onUnmounted(() => {
 }
 
 .values-container {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 1.5rem;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .values-title {
   margin-top: 1.5rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   color: var(--about-primary);
 }
 
 .values-grid {
   margin-top: 3.5rem;
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
 }
 
@@ -370,10 +337,10 @@ onUnmounted(() => {
 }
 
 .value-name {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.125rem;
   color: var(--about-saffron);
   margin-bottom: 0.5rem;
+
 }
 
 .value-body {
@@ -385,7 +352,7 @@ onUnmounted(() => {
 
 /* ─── Organizational Structure ─── */
 .org-section {
-  max-width: 1280px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 6rem 1.5rem;
 }
@@ -393,21 +360,54 @@ onUnmounted(() => {
 .org-grid {
   display: grid;
   gap: 3rem;
+  align-items: center;
+}
+
+.org-text {
+  min-width: 0;
 }
 
 .org-heading {
   margin-top: 1rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   color: var(--about-primary);
 }
 
 .org-body {
   margin-top: 1.5rem;
   color: var(--about-muted);
-  color: var(--about-primary-foreground);
   line-height: 1.75;
   font-size: 1rem;
+}
+
+.org-visual {
+  /* position: relative; */
+  display: grid;
+  place-items: center;
+  margin-top: 2rem;
+  /* padding: clamp(1.25rem, 4vw, 2.5rem); */
+  /* overflow: hidden; */
+  /* border: 1px solid color-mix(in srgb, var(--about-primary) 18%, transparent); */
+  /* border-radius: 0.75rem; */
+
+  /* box-shadow: 0 16px 40px rgba(31, 61, 46, 0.1); */
+}
+
+/* .org-visual::before {
+  content: '';
+  position: absolute;
+  inset: 1rem;
+  border: 1px solid color-mix(in srgb, var(--about-saffron) 20%, transparent);
+  border-radius: 0.55rem;
+  pointer-events: none;
+} */
+
+.org-logo {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 300px);
+  max-height: clamp(180px, 30vw, 320px);
+  object-fit: contain;
+  filter: drop-shadow(0 14px 22px rgba(31, 61, 46, 0.16));
 }
 
 .team-list {
@@ -436,7 +436,6 @@ onUnmounted(() => {
 }
 
 .team-role {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.125rem;
   color: var(--about-primary);
 }
@@ -450,56 +449,64 @@ onUnmounted(() => {
 
 /* ─── Geographical Reach ─── */
 .geo-section {
-  background: var(--about-primary);
+  background: var(--about-bg-alt);
   padding: 6rem 0;
-  color: var(--about-primary-foreground);
+  color: var(--color-ink);
 }
 
 .geo-container {
   max-width: 1024px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .geo-heading {
   margin-top: 1rem;
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  font-size: 2rem;
   line-height: 1.2;
+  color: var(--about-primary);
 }
 
 .geo-grid {
   margin-top: 2.5rem;
   display: grid;
   gap: 1.5rem;
+  text-align: center;
 }
+
 
 .geo-card {
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--about-primary-foreground) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--about-primary) 25%, transparent);
+  background: var(--about-panel);
   padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.geo-card:hover {
+  color: var(--about-primary);
+  transform: translateY(-2px);
+  border-color: var(--about-saffron);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  background: var(--about-panel);
 }
 
 .geo-name {
-  font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
   font-size: 1.5rem;
+  color: var(--about-saffron);
 }
+
 
 .geo-label {
   margin-top: 0.5rem;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: color-mix(in srgb, var(--about-primary-foreground) 55%, transparent);
+  color: var(--about-muted);
 }
 
 /* ─── Responsive ─── */
 @media (min-width: 768px) {
-  .hero-title {
-    font-size: 3.75rem;
-  }
-
   .vmg-section {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -512,8 +519,8 @@ onUnmounted(() => {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .geo-heading {
-    font-size: 2.5rem;
+  .org-visual {
+    margin-top: 2.5rem;
   }
 
   .geo-grid {
@@ -523,7 +530,53 @@ onUnmounted(() => {
 
 @media (min-width: 1024px) {
   .values-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .org-visual {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-content {
+    padding-block: 2.5rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 11vw, 2.6rem);
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .org-section,
+  .values-section,
+  .geo-section {
+    padding-block: 4rem;
+  }
+
+  .org-visual {
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-label.saffron {
+    max-width: 100%;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+  }
+
+  .org-visual {
+    padding: 1rem;
+  }
+
+  .org-logo {
+    width: min(100%, 230px);
+    max-height: 220px;
   }
 }
 </style>
