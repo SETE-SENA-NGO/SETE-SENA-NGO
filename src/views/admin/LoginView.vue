@@ -164,35 +164,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Eye, EyeOff } from 'lucide-vue-next'
 
 import santiSenaLogo from '../../assets/santi-sena-logo.ico'
 import leftBgLogo from '../../assets/logo.png'
+import { useAuthStore } from '@/stores/auth.store'
 
 const bgStyle = {
   backgroundImage: `url(${leftBgLogo})`,
 }
 
-
+const router = useRouter()
+const route = useRoute()
+const auth = useAuthStore()
 
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
 const loading = ref(false)
 const showPassword = ref(false)
+const errorMessage = ref<string | null>(null)
+
+const redirectPath = computed(() => {
+  const redirect = route.query.redirect
+  return typeof redirect === 'string' && redirect.length > 0 ? redirect : '/admin'
+})
 
 const handleLogin = async () => {
+  errorMessage.value = null
   loading.value = true
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  console.log('Login attempted', {
-    email: email.value,
-    password: password.value,
-    remember: remember.value,
-  })
-  loading.value = false
+
+  try {
+    const trimmedEmail = email.value.trim()
+    const pw = password.value
+
+    await auth.login(trimmedEmail, pw)
+
+    // If your app later adds a route guard, it can pass through redirect automatically.
+    await router.push(redirectPath.value)
+  } catch (err) {
+    errorMessage.value = (err as Error)?.message ?? 'Login failed'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
+
 
 <style scoped>
 /* ── Reset & Base ── */
