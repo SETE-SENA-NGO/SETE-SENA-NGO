@@ -166,11 +166,12 @@ function goToSite() {
 
 <style scoped>
 .admin-header {
-  --hdr-primary: #2563eb;
+  --hdr-primary: #16a34a;
+  --hdr-primary-deep: #0f7d38;
   --hdr-surface: #ffffff;
-  --hdr-border: #dbe3ef;
-  --hdr-text: #172033;
-  --hdr-muted: #667085;
+  --hdr-border: #d6ebde;
+  --hdr-text: #123524;
+  --hdr-muted: #6b8578;
   --hdr-bg: rgba(255, 255, 255, 0.92);
 
   position: sticky;
@@ -181,6 +182,7 @@ function goToSite() {
   color: var(--hdr-text);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .admin-header-inner {
@@ -220,7 +222,7 @@ function goToSite() {
   margin: 0;
   color: var(--hdr-text);
   font-size: 1.05rem;
-  font-weight: 850;
+  font-weight: 800;
   line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
@@ -236,7 +238,7 @@ function goToSite() {
 .section-label {
   color: var(--hdr-muted);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -252,7 +254,7 @@ function goToSite() {
   width: 36px;
   height: 36px;
   border: 1px solid var(--hdr-border);
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--hdr-surface);
   color: var(--hdr-text);
   cursor: pointer;
@@ -266,13 +268,13 @@ function goToSite() {
 
 .sidebar-toggle:hover,
 .sidebar-toggle.active {
-  background: #f1f5f9;
-  border-color: #c7d2e5;
-  color: var(--hdr-primary);
+  background: #ecfdf3;
+  border-color: #b9dcc5;
+  color: var(--hdr-primary-deep);
 }
 
 .sidebar-toggle.active {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14);
 }
 
 .toggle-icon {
@@ -307,9 +309,9 @@ function goToSite() {
 }
 
 .icon-btn:hover {
-  border-color: #c7d2e5;
-  color: var(--hdr-primary);
-  background: #f1f5f9;
+  border-color: #b9dcc5;
+  color: var(--hdr-primary-deep);
+  background: #ecfdf3;
 }
 
 .icon-btn-label {
@@ -325,13 +327,13 @@ function goToSite() {
   padding: 0 0.75rem;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #3b82f6;
+  color: var(--hdr-primary-deep);
 }
 
 .view-site-btn:hover {
-  color: #2563eb;
-  border-color: #93c5fd;
-  background: #eff6ff;
+  color: #0c6b30;
+  border-color: #86d6a6;
+  background: #ecfdf3;
 }
 
 /* User profile */
@@ -351,7 +353,7 @@ function goToSite() {
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: linear-gradient(180deg, #22c55e, var(--hdr-primary-deep));
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 900;
@@ -371,32 +373,32 @@ function goToSite() {
 
 /* Dark mode */
 :global(.admin-dark) .admin-header {
-  --hdr-surface: #0f172a;
-  --hdr-border: #293548;
-  --hdr-text: #f1f5f9;
-  --hdr-muted: #94a3b8;
-  --hdr-bg: rgba(15, 23, 42, 0.92);
+  --hdr-surface: #0f1f18;
+  --hdr-border: #1e3a2b;
+  --hdr-text: #eafff2;
+  --hdr-muted: #8fb7a0;
+  --hdr-bg: rgba(10, 22, 17, 0.92);
 }
 
 :global(.admin-dark) .sidebar-toggle:hover,
 :global(.admin-dark) .sidebar-toggle.active,
 :global(.admin-dark) .icon-btn:hover {
-  background: #1e293b;
-  border-color: #334155;
+  background: #133424;
+  border-color: #235c3f;
 }
 
 :global(.admin-dark) .view-site-btn {
-  color: #60a5fa;
+  color: #4ade80;
 }
 
 :global(.admin-dark) .view-site-btn:hover {
-  color: #93bbfd;
-  border-color: #3b82f6;
-  background: #1e3a5f;
+  color: #86efac;
+  border-color: #16a34a;
+  background: #133424;
 }
 
 :global(.admin-dark) .brand-dot {
-  background: #60a5fa;
+  background: #4ade80;
 }
 
 @media (max-width: 800px) {
