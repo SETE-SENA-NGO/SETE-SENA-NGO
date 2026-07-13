@@ -6,7 +6,8 @@
         <span class="badge">Impact · Partners</span>
         <h1>Trusted by ten+ international donors and every government line ministry we touch.</h1>
         <p class="hero-subtitle">
-          Multi-year grants, audited books and thirty years of unbroken village presence — that's why partners return.
+          Multi-year grants, audited books and thirty years of unbroken village presence — that's
+          why partners return.
         </p>
       </div>
     </Slideshow>
@@ -18,8 +19,8 @@
           <span class="section-label">Our Network</span>
           <h2 class="section-title">Partners & Supporters</h2>
           <p class="section-intro">
-            These organizations and institutions make our work possible through funding,
-            technical expertise, and shared commitment to sustainable development.
+            These organizations and institutions make our work possible through funding, technical
+            expertise, and shared commitment to sustainable development.
           </p>
         </div>
 
@@ -57,11 +58,26 @@
         <div class="government-grid">
           <div v-for="item in governmentItems" :key="item.title" class="gov-card">
             <div class="gov-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <!-- Building / Capitol -->
-                <path v-if="item.icon === 'building'" d="M3 21h18M3 10h18M5 6l7-4 7 4M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
+                <path
+                  v-if="item.icon === 'building'"
+                  d="M3 21h18M3 10h18M5 6l7-4 7 4M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"
+                />
                 <!-- Tree / Leaf -->
-                <path v-if="item.icon === 'tree'" d="M12 22V12M12 12a6 6 0 0 0-6 6M12 12a6 6 0 0 1 6 6M12 2v4" />
+                <path
+                  v-if="item.icon === 'tree'"
+                  d="M12 22V12M12 12a6 6 0 0 0-6 6M12 12a6 6 0 0 1 6 6M12 2v4"
+                />
                 <path v-if="item.icon === 'tree'" d="M8 8a4 4 0 0 1 8 0" />
                 <!-- Women / People -->
                 <path v-if="item.icon === 'users'" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -70,10 +86,16 @@
                 <path v-if="item.icon === 'users'" d="M16 3.13a4 4 0 0 1 0 7.75" />
                 <!-- Book / Education -->
                 <path v-if="item.icon === 'book'" d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                <path v-if="item.icon === 'book'" d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                <path
+                  v-if="item.icon === 'book'"
+                  d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                />
                 <path v-if="item.icon === 'book'" d="M8 7h8M8 11h6" />
                 <!-- Map Pin -->
-                <path v-if="item.icon === 'map-pin'" d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <path
+                  v-if="item.icon === 'map-pin'"
+                  d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                />
                 <circle v-if="item.icon === 'map-pin'" cx="12" cy="10" r="3" />
               </svg>
             </div>
@@ -91,8 +113,8 @@
           <span class="section-label">Community Roots</span>
           <h2 class="section-title">Local Partners</h2>
           <p class="section-intro">
-            Sustainable change is built from the ground up. These local institutions and
-            networks are the backbone of every program we run.
+            Sustainable change is built from the ground up. These local institutions and networks
+            are the backbone of every program we run.
           </p>
         </div>
         <div class="local-grid">
@@ -112,23 +134,44 @@
           <span class="section-label">Why Partners Trust Us</span>
           <h2 class="section-title">Why Partners Stay</h2>
           <p class="section-intro">
-            Long-term partnerships don't happen by chance. Here's what keeps our partners
-            committed year after year.
+            Long-term partnerships don't happen by chance. Here's what keeps our partners committed
+            year after year.
           </p>
         </div>
         <div class="why-grid">
           <div v-for="item in whyItems" :key="item.title" class="why-card">
             <div class="why-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <!-- Building / History -->
-                <path v-if="item.icon === 'building'" d="M3 21h18M3 10h18M5 6l7-4 7 4M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
+                <path
+                  v-if="item.icon === 'building'"
+                  d="M3 21h18M3 10h18M5 6l7-4 7 4M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"
+                />
                 <!-- Bar Chart / Audit -->
                 <path v-if="item.icon === 'bar-chart'" d="M18 20V10M12 20V4M6 20v-6" />
                 <!-- Handshake / Trust -->
-                <path v-if="item.icon === 'handshake'" d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z" />
+                <path
+                  v-if="item.icon === 'handshake'"
+                  d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"
+                />
                 <!-- Rocket / Scale -->
-                <path v-if="item.icon === 'rocket'" d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-                <path v-if="item.icon === 'rocket'" d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                <path
+                  v-if="item.icon === 'rocket'"
+                  d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"
+                />
+                <path
+                  v-if="item.icon === 'rocket'"
+                  d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"
+                />
                 <path v-if="item.icon === 'rocket'" d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
                 <path v-if="item.icon === 'rocket'" d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
               </svg>
@@ -163,41 +206,97 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
-import Slideshow from '@/components/shared/Slideshow.vue';
-import heroImpact from '@/assets/hero-impact.jpg';
-import heroImpactForest from '@/assets/hero-impact-forest.jpg';
-import heroImpactVillage from '@/assets/hero-impact-village.jpg';
-import logoUndp from '@/assets/image.png';
-import logoAdb from '@/assets/image copy.png';
-import logoOxfam from '@/assets/image copy 2.png';
-import logoBfw from '@/assets/image copy 3.png';
-import logoMisereor from '@/assets/image copy 4.png';
-import logoEu from '@/assets/image copy 5.png';
-import logoUsaid from '@/assets/image copy 6.png';
-import logoDiakonia from '@/assets/image copy 7.png';
-import logoHbs from '@/assets/image copy 8.png';
-import logoCaritas from '@/assets/image copy 9.png';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 
-const slideItems = [
-  { image: heroImpact, caption: '' },
-  { image: heroImpactForest, caption: '' },
-  { image: heroImpactVillage, caption: '' },
+// Slideshow background images (Unsplash - free to use)
+const slides = [
+  'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80', // community
+  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80', // hands together
+  'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&q=80', // children education
+  'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=1600&q=80', // nature/sustainability
 ]
+
+const currentSlide = ref(0)
+const isTransitioning = ref(false)
+let intervalId: ReturnType<typeof setInterval> | null = null
+
+function nextSlide() {
+  if (isTransitioning.value) return
+  isTransitioning.value = true
+  currentSlide.value = (currentSlide.value + 1) % slides.length
+  setTimeout(() => {
+    isTransitioning.value = false
+  }, 1200)
+}
+
+function startSlideshow() {
+  intervalId = setInterval(nextSlide, 5000)
+}
+
+function stopSlideshow() {
+  if (intervalId) {
+    clearInterval(intervalId)
+    intervalId = null
+  }
+}
+
+onMounted(() => {
+  startSlideshow()
+})
+
+onUnmounted(() => {
+  stopSlideshow()
+})
 
 // Partner data
 const partners = [
-  { name: 'UNDP', logo: 'UNDP', image: logoUndp },
-  { name: 'Asian Development Bank', logo: 'ADB', image: logoAdb },
-  { name: 'Oxfam', logo: 'OXFAM', image: logoOxfam },
-  { name: 'Bread for the World', logo: 'BFW', image: logoBfw },
-  { name: 'Misereor', logo: 'MIS', image: logoMisereor },
-  { name: 'European Union', logo: 'EU', image: logoEu },
-  { name: 'USAID / Winrock', logo: 'USAID', image: logoUsaid },
-  { name: 'Diakonia', logo: 'DIA', image: logoDiakonia },
-  { name: 'Heinrich Böll Stiftung', logo: 'HBS', image: logoHbs },
-  { name: 'Caritas', logo: 'CAR', image: logoCaritas },
-];
+  { name: 'UNDP', logo: 'UNDP', image: new URL('@/assets/image.png', import.meta.url).href },
+  {
+    name: 'Asian Development Bank',
+    logo: 'ADB',
+    image: new URL('@/assets/image copy.png', import.meta.url).href,
+  },
+  {
+    name: 'Oxfam',
+    logo: 'OXFAM',
+    image: new URL('@/assets/image copy 2.png', import.meta.url).href,
+  },
+  {
+    name: 'Bread for the World',
+    logo: 'BFW',
+    image: new URL('@/assets/image copy 3.png', import.meta.url).href,
+  },
+  {
+    name: 'Misereor',
+    logo: 'MIS',
+    image: new URL('@/assets/image copy 4.png', import.meta.url).href,
+  },
+  {
+    name: 'European Union',
+    logo: 'EU',
+    image: new URL('@/assets/image copy 5.png', import.meta.url).href,
+  },
+  {
+    name: 'USAID / Winrock',
+    logo: 'USAID',
+    image: new URL('@/assets/image copy 6.png', import.meta.url).href,
+  },
+  {
+    name: 'Diakonia',
+    logo: 'DIA',
+    image: new URL('@/assets/image copy 7.png', import.meta.url).href,
+  },
+  {
+    name: 'Heinrich Böll Stiftung',
+    logo: 'HBS',
+    image: new URL('@/assets/image copy 8.png', import.meta.url).href,
+  },
+  {
+    name: 'Caritas',
+    logo: 'CAR',
+    image: new URL('@/assets/image copy 9.png', import.meta.url).href,
+  },
+]
 
 const governmentItems = [
   {
@@ -225,7 +324,7 @@ const governmentItems = [
     title: 'Provincial Departments',
     desc: 'Svay Rieng, Prey Veng and Kratie — our three focal provinces.',
   },
-];
+]
 
 const localItems = [
   {
@@ -253,7 +352,7 @@ const localItems = [
     title: 'Social Enterprises',
     desc: 'Local social enterprises buying cooperative produce at fair prices, creating sustainable markets.',
   },
-];
+]
 
 const whyItems = [
   {
@@ -276,54 +375,55 @@ const whyItems = [
     title: 'Proven ability to scale',
     desc: 'pilots into province-wide programs with measurable outcomes.',
   },
-];
+]
 
 // Carousel state
-const isPaused = ref(false);
-const trackRef = ref<HTMLElement | null>(null);
-let animationFrameId = 0;
-let scrollPos = 0;
-const speed = 0.9; // pixels per frame (~30px/sec at 60fps)
+const isPaused = ref(false)
+const trackRef = ref<HTMLElement | null>(null)
+let animationFrameId = 0
+let scrollPos = 0
+const speed = 0.9 // pixels per frame (~30px/sec at 60fps)
 
 // Duplicate partners 4x for more buffer (avoids ever reaching the end)
 const duplicatedPartners = computed(() => {
-  return [...partners, ...partners, ...partners, ...partners];
-});
+  return [...partners, ...partners, ...partners, ...partners]
+})
 
 function startSmoothScroll() {
-  const track = trackRef.value;
-  if (!track) return;
+  const track = trackRef.value
+  if (!track) return
+  const scrollTrack = track
 
   function step() {
     if (!track) return;
     if (!isPaused.value) {
-      scrollPos -= speed;
+      scrollPos -= speed
       // When we've scrolled past one full set of partners, reset position
       // without visual jump by moving back by one set width
-      const singleSetWidth = track.scrollWidth / 4;
+      const singleSetWidth = scrollTrack.scrollWidth / 4
       if (Math.abs(scrollPos) >= singleSetWidth) {
-        scrollPos += singleSetWidth;
+        scrollPos += singleSetWidth
       }
-      track.style.transform = `translate3d(${scrollPos}px, 0, 0)`;
+      scrollTrack.style.transform = `translate3d(${scrollPos}px, 0, 0)`
     }
-    animationFrameId = requestAnimationFrame(step);
+    animationFrameId = requestAnimationFrame(step)
   }
-  animationFrameId = requestAnimationFrame(step);
+  animationFrameId = requestAnimationFrame(step)
 }
 
 function stopSmoothScroll() {
   if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = 0;
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = 0
   }
 }
 
 onMounted(() => {
   // Wait for DOM, then start smooth scroll
   nextTick(() => {
-    startSmoothScroll();
-  });
-});
+    startSmoothScroll()
+  })
+})
 
 onUnmounted(() => {
   stopSmoothScroll();
@@ -464,13 +564,7 @@ onUnmounted(() => {
   overflow: hidden;
   position: relative;
   padding: 2rem 0;
-  mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 4%,
-    black 96%,
-    transparent 100%
-  );
+  mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
@@ -764,7 +858,11 @@ onUnmounted(() => {
   font-size: 0.95rem;
   text-decoration: none;
   border: 1px solid transparent;
-  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .btn--primary {
@@ -876,7 +974,5 @@ onUnmounted(() => {
     max-height: 40px;
     max-width: 120px;
   }
-
 }
-
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
+import { useScrollReveal } from '@/composables/useScrollReveal'
 import environmentImg from '@/assets/home-image/environtment.jpg'
 import educationImg from '@/assets/home-image/education.jpg'
 import livelihoodImg from '@/assets/home-image/livelihood.jpg'
@@ -19,6 +20,8 @@ const slideItems: { image: string; caption: string }[] = [
   { image: '/images/programs/hero-3.jpg', caption: '' },
   { image: '/images/programs/hero-4.jpg', caption: '' },
 ]
+
+useScrollReveal()
 </script>
 
 <template>
@@ -45,7 +48,12 @@ const slideItems: { image: string; caption: string }[] = [
 
     <section class="stats">
       <div class="stats-inner">
-        <div v-for="stat in stats" :key="stat.label" class="stat">
+        <div
+          v-for="(stat, index) in stats"
+          :key="stat.label"
+          class="stat reveal"
+          :style="{ animationDelay: `${index * 0.12}s` }"
+        >
           <div class="stat-number">{{ stat.value }}</div>
           <div class="stat-label">{{ stat.label }}</div>
         </div>
@@ -53,13 +61,15 @@ const slideItems: { image: string; caption: string }[] = [
     </section>
 
     <section class="mission">
-      <div class="eyebrow-rule">
+      <div class="eyebrow-rule reveal">
         <span class="rule" />
         <span class="eyebrow">Our Mission</span>
         <span class="rule" />
       </div>
-      <h2 class="mission-title">Peace is planted, not declared.</h2>
-      <p class="mission-text">
+      <h2 class="mission-title reveal" style="animation-delay: 0.12s">
+        Peace is planted, not declared.
+      </h2>
+      <p class="mission-text reveal" style="animation-delay: 0.24s">
         Santi Sena — the <em>Peace Army</em> — was founded by Cambodian Buddhist monks in
         1994 to alleviate poverty and rebuild moral, environmental and economic life after
         decades of conflict. Today our 30+ staff serve 293 villages with programs that
@@ -68,7 +78,7 @@ const slideItems: { image: string; caption: string }[] = [
     </section>
 
     <section class="pillars">
-      <div class="pillars-header">
+      <div class="pillars-header reveal">
         <div>
           <p class="eyebrow">Four Pillars</p>
           <h2 class="pillars-title">Strategic goals</h2>
@@ -77,7 +87,7 @@ const slideItems: { image: string; caption: string }[] = [
       </div>
 
       <div class="pillars-grid">
-        <article class="pillar-card">
+        <article class="pillar-card reveal">
           <div class="pillar-image pillar-image--forest">
             <img :src="environmentImg" alt="Community forestry in a Cambodian village" class="pillar-photo" />
 
@@ -92,7 +102,7 @@ const slideItems: { image: string; caption: string }[] = [
           </div>
         </article>
 
-        <article class="pillar-card">
+        <article class="pillar-card reveal" style="animation-delay: 0.12s">
           <div class="pillar-image pillar-image--education">
             <img :src="educationImg" alt="Children learning at a community pre-school" class="pillar-photo" />
 
@@ -107,7 +117,7 @@ const slideItems: { image: string; caption: string }[] = [
           </div>
         </article>
 
-        <article class="pillar-card">
+        <article class="pillar-card reveal" style="animation-delay: 0.12s">
           <div class="pillar-image pillar-image--livelihood">
             <img :src="livelihoodImg" alt="Villagers working on rural livelihood activities" class="pillar-photo" />
 
@@ -122,7 +132,7 @@ const slideItems: { image: string; caption: string }[] = [
           </div>
         </article>
 
-        <article class="pillar-card">
+        <article class="pillar-card reveal" style="animation-delay: 0.24s">
           <div class="pillar-image pillar-image--protection">
             <img :src="childImg" alt="Children protected and cared for in their community" class="pillar-photo" />
             
@@ -139,7 +149,7 @@ const slideItems: { image: string; caption: string }[] = [
       </div>
     </section>
 
-    <section class="quote">
+    <section class="quote reveal">
       <p class="quote-text">
         &ldquo;When we plant a tree, we plant peace. When we teach a child, we end a war that has
         not yet begun.&rdquo;
@@ -147,7 +157,7 @@ const slideItems: { image: string; caption: string }[] = [
       <p class="quote-attrib">— Founding Spirit of Santi Sena</p>
     </section>
 
-    <section class="cta">
+    <section class="cta reveal">
       <div class="cta-card">
         <div class="cta-text">
           <h2 class="cta-title">Join the Peace Army.</h2>
@@ -167,6 +177,36 @@ const slideItems: { image: string; caption: string }[] = [
   font-family: inherit;
   color: var(--color-ink);
   background: var(--color-cream);
+}
+
+/* Scroll reveal: elements start hidden; useScrollReveal() adds
+   .reveal--visible when they enter the viewport. An animation (not a
+   transition) is used so it never fights hover transforms, and the
+   `backwards` fill keeps staggered items hidden during their delay. */
+.reveal {
+  opacity: 0;
+}
+
+.reveal--visible {
+  opacity: 1;
+  animation: revealUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal--visible {
+    animation: none;
+  }
 }
 
 .eyebrow {
