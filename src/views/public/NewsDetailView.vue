@@ -10,7 +10,8 @@ const articles = [
   {
     id: 1,
     title: 'New community pre‑school opens in Svay Rieng',
-    summary: 'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+    summary:
+      'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
     content: `
       <p>The new pre‑school, located in the village of Thmor Kor, was built with funding from the Australian Embassy and local community contributions. It features two classrooms, a play area, and a kitchen for preparing nutritious meals.</p>
       <p>Over 60 children are now enrolled, with three trained teachers providing early childhood education. The school also serves as a hub for parent education sessions on nutrition and child development.</p>
@@ -68,14 +69,14 @@ const articles = [
 const article = ref<any>(null)
 
 onMounted(() => {
-  article.value = articles.find(a => a.id === articleId) || null
+  article.value = articles.find((a) => a.id === articleId) || null
 })
 
 // Related news: articles with same category, excluding current
 const relatedArticles = computed(() => {
   if (!article.value) return []
   return articles
-    .filter(a => a.id !== article.value.id && a.category === article.value.category)
+    .filter((a) => a.id !== article.value.id && a.category === article.value.category)
     .slice(0, 2)
 })
 </script>
@@ -83,11 +84,7 @@ const relatedArticles = computed(() => {
 <template>
   <div class="news-detail">
     <!-- Hero with background image -->
-    <section
-      v-if="article"
-      class="page-hero"
-      :style="{ backgroundImage: `url(${article.image})` }"
-    >
+    <section v-if="article" class="page-hero" :style="{ backgroundImage: `url(${article.image})` }">
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <RouterLink to="/news" class="back-link">← Back to all news</RouterLink>
@@ -96,7 +93,13 @@ const relatedArticles = computed(() => {
         <p class="hero-subtitle">{{ article.summary }}</p>
         <div class="hero-meta">
           <span class="meta-item">By {{ article.author }}</span>
-          <span class="meta-item">{{ new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</span>
+          <span class="meta-item">{{
+            new Date(article.date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })
+          }}</span>
           <span class="meta-item">{{ article.readTime }}</span>
         </div>
       </div>
@@ -135,7 +138,13 @@ const relatedArticles = computed(() => {
               <div class="related-content">
                 <span class="related-category">{{ item.category }}</span>
                 <h4 class="related-headline">{{ item.title }}</h4>
-                <span class="related-date">{{ new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}</span>
+                <span class="related-date">{{
+                  new Date(item.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                }}</span>
               </div>
             </RouterLink>
           </div>
@@ -218,7 +227,7 @@ const relatedArticles = computed(() => {
   background: rgba(255, 255, 255, 0.08);
   padding: 0.3rem 1.2rem;
   border-radius: 999px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: none;
   margin-bottom: 0.75rem;
 }
 
@@ -356,7 +365,9 @@ const relatedArticles = computed(() => {
   text-decoration: none;
   color: inherit;
   border: 1px solid var(--color-border);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
 }
 
 .related-card:hover {
@@ -423,7 +434,9 @@ const relatedArticles = computed(() => {
   color: var(--primary-color);
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.25s, color 0.25s;
+  transition:
+    background 0.25s,
+    color 0.25s;
 }
 
 .btn--read:hover {

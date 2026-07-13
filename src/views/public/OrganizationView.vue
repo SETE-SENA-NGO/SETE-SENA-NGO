@@ -16,12 +16,30 @@ interface TeamMember {
 }
 
 const team: TeamMember[] = [
-  { role: 'Board of Directors', desc: 'Policy and oversight, including senior Buddhist leadership and respected community elders. Meets quarterly to approve strategy, budgets and audits.' },
-  { role: 'Executive Director', desc: 'Leads daily operations and strategic execution, accountable to the Board and to the communities Santi Sena serves.' },
-  { role: 'Management Committee', desc: 'Senior managers coordinating programs across the three provinces, finance, HR and external partnerships.' },
-  { role: 'Technical Coordination Unit', desc: 'Cross-cutting expertise — monitoring & evaluation, gender, environment, child safeguarding — supporting every field team.' },
-  { role: 'Professional Staff', desc: '30+ full-time and project-based staff: agronomists, teachers, social workers, accountants and community organizers.' },
-  { role: 'Field Facilitators & Volunteers', desc: 'Trained villagers and youth who carry programs the last mile, from biogas installation to mobile library visits.' },
+  {
+    role: 'Board of Directors',
+    desc: 'Policy and oversight, including senior Buddhist leadership and respected community elders. Meets quarterly to approve strategy, budgets and audits.',
+  },
+  {
+    role: 'Executive Director',
+    desc: 'Leads daily operations and strategic execution, accountable to the Board and to the communities Santi Sena serves.',
+  },
+  {
+    role: 'Management Committee',
+    desc: 'Senior managers coordinating programs across the three provinces, finance, HR and external partnerships.',
+  },
+  {
+    role: 'Technical Coordination Unit',
+    desc: 'Cross-cutting expertise — monitoring & evaluation, gender, environment, child safeguarding — supporting every field team.',
+  },
+  {
+    role: 'Professional Staff',
+    desc: '30+ full-time and project-based staff: agronomists, teachers, social workers, accountants and community organizers.',
+  },
+  {
+    role: 'Field Facilitators & Volunteers',
+    desc: 'Trained villagers and youth who carry programs the last mile, from biogas installation to mobile library visits.',
+  },
 ]
 
 const priorities: string[] = [
@@ -45,7 +63,10 @@ onMounted(() => {
     el.content = content
   }
 
-  setMeta('description', 'Board, executive team and field staff structure of Santi Sena across Svay Rieng, Prey Veng and Kratie provinces.')
+  setMeta(
+    'description',
+    'Board, executive team and field staff structure of Santi Sena across Svay Rieng, Prey Veng and Kratie provinces.',
+  )
 
   const setOgMeta = (property: string, content: string) => {
     let el = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`)
@@ -58,7 +79,10 @@ onMounted(() => {
   }
 
   setOgMeta('og:title', 'Organization — Santi Sena')
-  setOgMeta('og:description', 'How the Peace Army is organized — from the Board of Directors to village field staff.')
+  setOgMeta(
+    'og:description',
+    'How the Peace Army is organized — from the Board of Directors to village field staff.',
+  )
 })
 </script>
 
@@ -86,7 +110,9 @@ onMounted(() => {
         <div class="fact-card">
           <span class="fact-value">30+</span>
           <span class="fact-label">Full-time staff</span>
-          <p class="fact-desc">Advanced degrees in management, agriculture, education and rural development.</p>
+          <p class="fact-desc">
+            Advanced degrees in management, agriculture, education and rural development.
+          </p>
         </div>
         <div class="fact-card">
           <span class="fact-value">3</span>
@@ -157,16 +183,24 @@ onMounted(() => {
         <div class="accountability-card">
           <div class="accountability-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" />
-              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor"
-                stroke-width="2" />
+              <path
+                d="M9 12l2 2 4-4"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+                stroke="currentColor"
+                stroke-width="2"
+              />
             </svg>
           </div>
           <p class="accountability-text">
-            Santi Sena is registered with Cambodia's Ministry of Interior and produces annual audited
-            financial statements. Every project is monitored quarterly against pre-agreed indicators,
-            with village-level feedback sessions built into each program cycle.
+            Santi Sena is registered with Cambodia's Ministry of Interior and produces annual
+            audited financial statements. Every project is monitored quarterly against pre-agreed
+            indicators, with village-level feedback sessions built into each program cycle.
           </p>
         </div>
       </div>
@@ -235,7 +269,13 @@ onMounted(() => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6, 18, 13, 0.85) 0%, rgba(6, 18, 13, 0.55) 42%, rgba(6, 18, 13, 0.22) 70%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 42%,
+    rgba(6, 18, 13, 0.22) 70%,
+    transparent 100%
+  );
 }
 
 .hero-content {
@@ -327,7 +367,7 @@ onMounted(() => {
 
 .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.40);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* ─── Key Facts ─── */
@@ -341,7 +381,7 @@ onMounted(() => {
   padding: 3rem 1.5rem 4.5rem;
   display: grid;
   gap: 1.5rem;
-  margin-top: 0.5rem
+  margin-top: 0.5rem;
 }
 
 .fact-card {
@@ -352,7 +392,10 @@ onMounted(() => {
   background: var(--warm-card);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--warm-border);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .fact-card:hover {
@@ -388,8 +431,11 @@ onMounted(() => {
 
 /* ─── Team Structure ─── */
 .team-section {
-  background:
-    linear-gradient(180deg, var(--warm-card) 0%, color-mix(in srgb, var(--green-soft) 45%, white) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--warm-card) 0%,
+    color-mix(in srgb, var(--green-soft) 45%, white) 100%
+  );
 }
 
 .team-container {
@@ -456,8 +502,7 @@ onMounted(() => {
   border: 1px solid color-mix(in srgb, var(--green) 16%, var(--warm-border));
   border-radius: 1rem;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9)),
-    var(--warm-card);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9)), var(--warm-card);
   box-shadow: 0 14px 34px rgba(31, 61, 46, 0.07);
   transition:
     transform 0.25s ease,
@@ -550,7 +595,7 @@ onMounted(() => {
   border-radius: 0.85rem;
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 20px 48px rgba(31, 61, 46, 0.08);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 .priorities-intro .section-title {
@@ -585,8 +630,7 @@ onMounted(() => {
   border: 1px solid color-mix(in srgb, var(--green) 14%, var(--warm-border));
   border-radius: 0.85rem;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86)),
-    var(--warm-card);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86)), var(--warm-card);
   box-shadow: 0 10px 28px rgba(31, 61, 46, 0.06);
   transition:
     transform 0.25s ease,
@@ -645,7 +689,12 @@ onMounted(() => {
   gap: 1.5rem;
   padding: 3rem;
   border-radius: 1rem;
-  background: linear-gradient(145deg, var(--green-deep) 0%, var(--green) 60%, var(--green-mid) 100%);
+  background: linear-gradient(
+    145deg,
+    var(--green-deep) 0%,
+    var(--green) 60%,
+    var(--green-mid) 100%
+  );
   box-shadow: 0 14px 36px color-mix(in srgb, var(--green-deep) 20%, transparent);
   align-items: flex-start;
 }

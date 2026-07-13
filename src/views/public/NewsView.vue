@@ -3,13 +3,13 @@ import { RouterLink } from 'vue-router'
 import { ref, computed } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
-
 // Dummy news data – replace with API call later
 const newsItems = ref([
   {
     id: 1,
     title: 'New community pre‑school opens in Svay Rieng',
-    summary: 'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+    summary:
+      'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
     image: 'src/assets/maps/student.png',
     date: '2025-03-15',
     category: 'Education',
@@ -20,7 +20,8 @@ const newsItems = ref([
   {
     id: 2,
     title: 'Forest Guardians celebrate 500 hectares of protected land',
-    summary: 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
+    summary:
+      'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
     image: 'src/assets/maps/wash.png',
 
     date: '2025-02-28',
@@ -32,7 +33,8 @@ const newsItems = ref([
   {
     id: 3,
     title: 'Youth leaders trained in child protection advocacy',
-    summary: 'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
+    summary:
+      'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
     image: 'src/assets/maps/certi.png',
 
     date: '2025-02-10',
@@ -44,7 +46,8 @@ const newsItems = ref([
   {
     id: 4,
     title: 'Saving‑for‑Change groups reach 10,000 members',
-    summary: 'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
+    summary:
+      'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
     image: 'src/assets/maps/pre-school.png',
 
     date: '2025-01-20',
@@ -56,8 +59,9 @@ const newsItems = ref([
   {
     id: 5,
     title: 'New partnership to expand clean water access',
-    summary: 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
-        image: 'src/assets/maps/water.png',
+    summary:
+      'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
+    image: 'src/assets/maps/water.png',
 
     date: '2025-01-05',
     category: 'WASH',
@@ -81,17 +85,19 @@ const selectedCategory = ref('All')
 const searchQuery = ref('')
 
 const filteredNews = computed(() => {
-  return newsItems.value.filter(item => {
-    const matchesCategory = selectedCategory.value === 'All' || item.category === selectedCategory.value
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                          item.summary.toLowerCase().includes(searchQuery.value.toLowerCase())
+  return newsItems.value.filter((item) => {
+    const matchesCategory =
+      selectedCategory.value === 'All' || item.category === selectedCategory.value
+    const matchesSearch =
+      item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      item.summary.toLowerCase().includes(searchQuery.value.toLowerCase())
     return matchesCategory && matchesSearch
   })
 })
 
 // Featured article (the first featured one, or none)
-const featuredArticle = computed(() => newsItems.value.find(item => item.featured))
-const regularArticles = computed(() => filteredNews.value.filter(item => !item.featured))
+const featuredArticle = computed(() => newsItems.value.find((item) => item.featured))
+const regularArticles = computed(() => filteredNews.value.filter((item) => !item.featured))
 </script>
 
 <template>
@@ -102,12 +108,9 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
       <div class="hero-content">
         <span class="eyebrow">News & Stories</span>
         <h1>News & Stories Latest updates from the field</h1>
-        <p class="hero-subtitle">
-          Stay informed about our work with communities across Cambodia.
-        </p>
+        <p class="hero-subtitle">Stay informed about our work with communities across Cambodia.</p>
       </div>
     </Slideshow>
-
 
     <!-- Filter & Search Bar -->
     <div class="container">
@@ -143,7 +146,13 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
           <div class="featured-content">
             <div class="news-meta">
               <span class="news-category">{{ featuredArticle.category }}</span>
-              <time class="news-date">{{ new Date(featuredArticle.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</time>
+              <time class="news-date">{{
+                new Date(featuredArticle.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              }}</time>
             </div>
             <h2 class="featured-title">{{ featuredArticle.title }}</h2>
             <p class="featured-summary">{{ featuredArticle.summary }}</p>
@@ -166,7 +175,13 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
             <div class="news-content">
               <div class="news-meta">
                 <span class="news-category">{{ item.category }}</span>
-                <time class="news-date">{{ new Date(item.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</time>
+                <time class="news-date">{{
+                  new Date(item.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                }}</time>
               </div>
               <h2 class="news-title">{{ item.title }}</h2>
               <p class="news-summary">{{ item.summary }}</p>
@@ -188,11 +203,10 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
   </div>
 </template>
 
-
 <style scoped>
 /* ── Global Reset & Colors ── */
 .news-view {
-  min-height:90vh;
+  min-height: 90vh;
   background: var(--color-cream);
 }
 
@@ -221,10 +235,9 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
   background: rgba(120, 255, 1, 0.08);
   padding: 0.3rem 1.2rem;
   border-radius: 999px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: none;
   margin-bottom: 0.75rem;
   margin-top: 6rem;
-
 }
 
 .hero-content h1 {
@@ -233,7 +246,6 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
   color: #ffffff;
   margin: 0.75rem 0 0.75rem;
   letter-spacing: -0.02em;
-
 }
 
 .hero-subtitle {
@@ -243,7 +255,6 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
   max-width: 600px;
   margin: 0 auto;
 }
-
 
 /* ── Filter & Search ── */
 .filter-section {
@@ -272,7 +283,10 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
 }
 
 .filter-btn:hover {
@@ -346,7 +360,9 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
   border: 1px solid rgba(47, 36, 29, 0.05);
   text-decoration: none;
   color: inherit;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
 }
 
 .featured-card:hover {
@@ -422,8 +438,10 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
   background: #fff;
   border-radius: 1.25rem;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
-  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
   border: 1px solid var(--color-border);
 }
 
@@ -521,7 +539,9 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
   font-weight: 700;
   text-decoration: none;
   box-shadow: 0 10px 26px rgba(22, 90, 69, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
 }
 
 .back-home:hover {
@@ -531,7 +551,6 @@ const regularArticles = computed(() => filteredNews.value.filter(item => !item.f
 
 /* ── Responsive ── */
 @media (max-width: 992px) {
-
   .featured-card {
     grid-template-columns: 1fr;
   }

@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import Slideshow from '@/components/shared/Slideshow.vue'
 import { useContentStore } from '@/stores/content.store'
 
 interface ActionLink {
@@ -75,16 +76,16 @@ const fallbackContent: GetInvolvedPageContent = {
     secondaryCta: { label: 'View options', to: '#ways-to-help' },
     images: [
       {
-        src: '/images/programs/hero-1.jpg',
-        alt: 'Santi Sena community activity in rural Cambodia',
+        src: '/images/programs/hero-2.jpg',
+        alt: 'Santi Sena community activity with local families',
+      },
+      {
+        src: '/images/programs/environment.jpg',
+        alt: 'Community environment work in rural Cambodia',
       },
       {
         src: '/images/programs/livelihood-hero2.jpg',
-        alt: 'Community members working on rural livelihood activity',
-      },
-      {
-        src: '/images/programs/education-hero.jpg',
-        alt: 'Children learning with education support',
+        alt: 'Rural livelihood activity with community members',
       },
     ],
   },
@@ -165,6 +166,13 @@ const heroImages = computed(() => pageContent.value.hero.images)
 const defaultHeroImage = fallbackContent.hero.images[0]!
 const heroImage = computed(() => heroImages.value[0] ?? defaultHeroImage)
 const waysImage = computed(() => heroImages.value[1] ?? heroImage.value)
+const slideItems = computed(() =>
+  heroImages.value.map((image) => ({
+    image: image.src,
+    caption: '',
+    alt: image.alt,
+  })),
+)
 
 const description =
   'Get involved with Santi Sena through giving, partnership or volunteering in community-led work for livelihoods, education, child protection and environmental preservation.'
@@ -270,38 +278,29 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 <template>
   <main class="get-involved-page">
-    <section class="hub-hero" aria-labelledby="get-involved-title">
-      <div class="hero-inner">
-        <div class="hero-copy">
-          <p class="eyebrow">{{ pageContent.hero.eyebrow }}</p>
-          <h1 id="get-involved-title">{{ pageContent.hero.title }}</h1>
-          <p class="lead">{{ pageContent.hero.description }}</p>
-          <div class="hero-actions" aria-label="Get involved actions">
-            <RouterLink :to="pageContent.hero.primaryCta.to" class="button button-primary">
-              {{ pageContent.hero.primaryCta.label }}
-            </RouterLink>
-            <a
-              v-if="isHashLink(pageContent.hero.secondaryCta.to)"
-              :href="pageContent.hero.secondaryCta.to"
-              class="button button-secondary"
-            >
-              {{ pageContent.hero.secondaryCta.label }}
-            </a>
-            <RouterLink
-              v-else
-              :to="pageContent.hero.secondaryCta.to"
-              class="button button-secondary"
-            >
-              {{ pageContent.hero.secondaryCta.label }}
-            </RouterLink>
-          </div>
+    <Slideshow :slides="slideItems" :interval-ms="5600" aria-labelledby="get-involved-title">
+      <div class="hero-shade" />
+      <div class="hero-content">
+        <p class="eyebrow">{{ pageContent.hero.eyebrow }}</p>
+        <h1 id="get-involved-title">{{ pageContent.hero.title }}</h1>
+        <p class="lead">{{ pageContent.hero.description }}</p>
+        <div class="hero-actions" aria-label="Get involved actions">
+          <RouterLink :to="pageContent.hero.primaryCta.to" class="button button-primary">
+            {{ pageContent.hero.primaryCta.label }}
+          </RouterLink>
+          <a
+            v-if="isHashLink(pageContent.hero.secondaryCta.to)"
+            :href="pageContent.hero.secondaryCta.to"
+            class="button button-secondary"
+          >
+            {{ pageContent.hero.secondaryCta.label }}
+          </a>
+          <RouterLink v-else :to="pageContent.hero.secondaryCta.to" class="button button-secondary">
+            {{ pageContent.hero.secondaryCta.label }}
+          </RouterLink>
         </div>
-
-        <figure class="hero-media">
-          <img :src="heroImage.src" :alt="heroImage.alt" />
-        </figure>
       </div>
-    </section>
+    </Slideshow>
 
     <section id="ways-to-help" class="ways-section" aria-labelledby="ways-heading">
       <div class="section-heading">
@@ -389,16 +388,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   color: var(--color-ink);
 }
 
-.hub-hero {
-  overflow: hidden;
-  border-bottom: 1px solid var(--hub-line);
-  background:
-    radial-gradient(circle at top right, rgba(27, 163, 79, 0.12), transparent 34rem),
-    linear-gradient(135deg, #fffaf0 0%, var(--color-cream) 58%, var(--color-cream-soft) 100%);
-  padding: 5.5rem 0 4.75rem;
-}
-
-.hero-inner,
 .ways-section,
 .journey-section,
 .focus-section,
@@ -407,15 +396,46 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   margin: 0 auto;
 }
 
-.hero-inner {
-  display: grid;
-  grid-template-columns: minmax(0, 0.88fr) minmax(360px, 1fr);
-  gap: 3rem;
-  align-items: center;
+.hero-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(6, 18, 13, 0.74) 0%,
+      rgba(6, 18, 13, 0.44) 42%,
+      rgba(6, 18, 13, 0.1) 78%,
+      rgba(6, 18, 13, 0.04) 100%
+    ),
+    linear-gradient(0deg, rgba(6, 18, 13, 0.16), transparent 48%);
 }
 
-.hero-copy {
-  max-width: 640px;
+.hero-content {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  width: min(100% - 3rem, var(--container-max-width));
+  max-width: 760px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  margin-left: var(--container-offset);
+  padding: 3rem 1.5rem 3rem 0;
+  text-align: left;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
@@ -428,7 +448,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   text-transform: uppercase;
 }
 
-.hero-copy h1,
+.hero-content h1,
 .section-heading h2,
 .journey-copy h2,
 .focus-copy h2,
@@ -440,14 +460,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   text-wrap: balance;
 }
 
-.hero-copy h1 {
-  font-size: 2.7rem;
+.hero-content .eyebrow {
+  color: var(--primary-light);
+}
+
+.hero-content h1 {
+  max-width: 720px;
+  margin-top: 0.85rem;
+  color: #fffaf0;
+  font-size: 2.9rem;
 }
 
 .lead {
   max-width: 600px;
   margin: 1.2rem 0 0;
-  color: var(--hub-muted);
+  color: rgba(255, 250, 240, 0.9);
   font-size: 1.05rem;
   line-height: 1.75;
 }
@@ -504,18 +531,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   background: var(--color-white);
 }
 
-.hero-media {
-  overflow: hidden;
-  border-radius: 8px;
-  background: var(--color-white);
-  box-shadow: var(--hub-shadow);
+.hero-content .button-secondary {
+  border-color: rgba(255, 250, 240, 0.62);
+  background: rgba(255, 250, 240, 0.08);
+  color: #fffaf0;
 }
 
-.hero-media img {
-  width: 100%;
-  height: min(58vw, 520px);
-  min-height: 420px;
-  object-fit: cover;
+.hero-content .button-secondary:hover {
+  border-color: rgba(255, 250, 240, 0.82);
+  background: rgba(255, 250, 240, 0.16);
 }
 
 .ways-section {
@@ -751,7 +775,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 @media (max-width: 1000px) {
-  .hero-inner,
   .ways-panel,
   .journey-section,
   .focus-panel,
@@ -759,18 +782,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     grid-template-columns: 1fr;
   }
 
-  .hero-media img,
   .ways-media img {
     min-height: 360px;
   }
 }
 
 @media (max-width: 700px) {
-  .hub-hero {
-    padding: 4rem 0 3.5rem;
-  }
-
-  .hero-inner,
   .ways-section,
   .journey-section,
   .focus-section,
@@ -778,7 +795,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     width: min(100% - 2rem, var(--container-max-width));
   }
 
-  .hero-copy h1 {
+  .hero-content {
+    width: min(100% - 2rem, var(--container-max-width));
+    margin-left: 1rem;
+    padding: 2rem 0;
+  }
+
+  .hero-content h1 {
     font-size: 2.1rem;
   }
 
@@ -795,7 +818,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     width: 100%;
   }
 
-  .hero-media img,
   .ways-media img {
     height: 240px;
     min-height: 240px;

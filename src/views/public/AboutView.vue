@@ -11,19 +11,37 @@ const slideItems = [
 ]
 
 const values = [
-  { name: 'Honesty', body: 'we have honesty with our donors, target group, operational partners and working group.' },
-  { name: 'Non-discrimination', body: 'we do not have any discrimination for the disabled, religions, colors, races, respect to target group, and political factions. ' },
-  { name: 'Collective Benefits', body: 'we do not utilize property of organization for any private benefit, working tirelessly, sharing information and knowledge. ' },
-  { name: 'Flexibility', body: 'we respect and accept good comments from target groups, development partners which response to goal and resources existed.' },
+  {
+    name: 'Honesty',
+    body: 'we have honesty with our donors, target group, operational partners and working group.',
+  },
+  {
+    name: 'Non-discrimination',
+    body: 'we do not have any discrimination for the disabled, religions, colors, races, respect to target group, and political factions. ',
+  },
+  {
+    name: 'Collective Benefits',
+    body: 'we do not utilize property of organization for any private benefit, working tirelessly, sharing information and knowledge. ',
+  },
+  {
+    name: 'Flexibility',
+    body: 'we respect and accept good comments from target groups, development partners which response to goal and resources existed.',
+  },
   // { name: 'Empowerment', body: 'We do not deliver development; we hand it back to the community.' },
 ]
 
 const team = [
-  { role: 'Board of Directors', desc: 'Policy and oversight, including senior Buddhist leadership.' },
+  {
+    role: 'Board of Directors',
+    desc: 'Policy and oversight, including senior Buddhist leadership.',
+  },
   { role: 'Executive Director', desc: 'Daily operations and strategic execution.' },
   { role: 'Management Committee', desc: 'Coordinates programs across provinces.' },
   { role: 'Technical Coordination', desc: 'Provides inputs across thematic areas.' },
-  { role: 'Professional Staff', desc: '30+ full-time and project-based experts in agriculture, education and rural development.' },
+  {
+    role: 'Professional Staff',
+    desc: '30+ full-time and project-based experts in agriculture, education and rural development.',
+  },
 ]
 
 const provinces = ['Svay Rieng', 'Prey Veng', 'Kratie']
@@ -41,7 +59,10 @@ onMounted(() => {
     el.content = content
   }
 
-  setMeta('description', "Santi Sena ('Peace Army') was founded in 1994 to alleviate poverty and rebuild moral, environmental and economic life across rural Cambodia.")
+  setMeta(
+    'description',
+    "Santi Sena ('Peace Army') was founded in 1994 to alleviate poverty and rebuild moral, environmental and economic life across rural Cambodia.",
+  )
 
   const setOgMeta = (property: string, content: string) => {
     let el = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`)
@@ -54,7 +75,10 @@ onMounted(() => {
   }
 
   setOgMeta('og:title', 'About Santi Sena')
-  setOgMeta('og:description', 'Our story, vision, values and the team carrying the Peace Army forward.')
+  setOgMeta(
+    'og:description',
+    'Our story, vision, values and the team carrying the Peace Army forward.',
+  )
 })
 </script>
 
@@ -65,9 +89,7 @@ onMounted(() => {
 
       <div class="hero-content">
         <span class="badge">About Santi Sena</span>
-        <h1 class="hero-title">
-          A peace army born from the Dharma, raised by villages.
-        </h1>
+        <h1 class="hero-title">A peace army born from the Dharma, raised by villages.</h1>
         <p class="hero-subtitle">
           Founded in 1994 by Cambodian Buddhist monks, Santi Sena emerged from the ashes of conflict
           with a quiet conviction: that lasting peace is grown in soil, schools and dignified work,
@@ -141,7 +163,9 @@ onMounted(() => {
     <section class="geo-section">
       <div class="geo-container">
         <span class="section-label saffron">Geographical reach</span>
-        <h2 class="geo-heading">Three provinces. Forty-three communes. Two hundred and ninety-three villages.</h2>
+        <h2 class="geo-heading">
+          Three provinces. Forty-three communes. Two hundred and ninety-three villages.
+        </h2>
         <div class="geo-grid">
           <div v-for="p in provinces" :key="p" class="geo-card">
             <div class="geo-name">{{ p }}</div>
@@ -202,7 +226,7 @@ onMounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(4px);
+  backdrop-filter: none;
 }
 
 /* ─── Hero (overlaid on the slideshow via its default slot) ─── */
@@ -210,7 +234,13 @@ onMounted(() => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.2) 65%, transparent 100%),
+    linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.78) 0%,
+      rgba(0, 0, 0, 0.5) 38%,
+      rgba(0, 0, 0, 0.2) 65%,
+      transparent 100%
+    ),
     linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.15) 100%);
 }
 
@@ -326,7 +356,9 @@ onMounted(() => {
   padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   text-align: left;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .value-card:hover {
@@ -340,7 +372,6 @@ onMounted(() => {
   font-size: 1.125rem;
   color: var(--about-saffron);
   margin-bottom: 0.5rem;
-
 }
 
 .value-body {
@@ -425,7 +456,10 @@ onMounted(() => {
   background: var(--about-panel);
   padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .team-card:hover {
@@ -474,7 +508,6 @@ onMounted(() => {
   text-align: center;
 }
 
-
 .geo-card {
   border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--about-primary) 25%, transparent);
@@ -495,7 +528,6 @@ onMounted(() => {
   font-size: 1.5rem;
   color: var(--about-saffron);
 }
-
 
 .geo-label {
   margin-top: 0.5rem;
