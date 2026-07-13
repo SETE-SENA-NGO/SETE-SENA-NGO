@@ -26,7 +26,10 @@ async function onSubmit() {
   <form class="content-editor" @submit.prevent="onSubmit">
     <div class="editor-heading">
       <h2>{{ draft.id ? 'Edit page' : 'Create page' }}</h2>
-      <p>Use slug <strong>get-involved-partner</strong> for partner page JSON.</p>
+      <p>
+        Use slug <strong>get-involved</strong> or <strong>get-involved-partner</strong> for page
+        JSON.
+      </p>
     </div>
     <label>
       Slug
