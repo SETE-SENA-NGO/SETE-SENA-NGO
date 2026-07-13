@@ -5,6 +5,8 @@ import heroImage3 from '@/assets/hero-impact-forest.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { ref } from 'vue'
 
+
+
 const milestones = [
   {
     year: '2024',
@@ -105,12 +107,16 @@ const slideItems = [
 ]
 
 // State for expanded cards
-const expanded = ref<boolean[]>(new Array(milestones.length).fill(false))
+const expanded = ref<boolean[]>(Array.from({ length: milestones.length }, () => false))
+
 
 function toggleExpand(index: number) {
   expanded.value[index] = !expanded.value[index]
 }
+
+
 </script>
+
 
 <template>
   <div class="timeline-page">
@@ -543,7 +549,25 @@ function toggleExpand(index: number) {
   height: 100%;
   top: -50%;
   z-index: 0;
+  transform-origin: center;
+  animation: timelineWave 3.6s ease-in-out infinite;
 }
+
+@keyframes timelineWave {
+  0% {
+    transform: scaleY(0.98);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scaleY(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.98);
+    opacity: 0.92;
+  }
+}
+
 
 /* ── Intro Section ── */
 .intro-section {
