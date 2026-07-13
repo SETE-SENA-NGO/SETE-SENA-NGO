@@ -28,7 +28,6 @@ useScrollReveal()
   <div class="home-view">
     <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
-
       <div class="hero-inner">
         <p class="eyebrow eyebrow--light">Buddhist NGO · Cambodia · Since 1994</p>
         <h1 class="hero-title">
@@ -46,6 +45,7 @@ useScrollReveal()
       </div>
     </Slideshow>
 
+    <!-- Stats + News button -->
     <section class="stats">
       <div class="stats-inner">
         <div
@@ -57,6 +57,12 @@ useScrollReveal()
           <div class="stat-number">{{ stat.value }}</div>
           <div class="stat-label">{{ stat.label }}</div>
         </div>
+      </div>
+      <!-- 👇 NEW: button row under stats -->
+      <div class="stats-news-row">
+        <RouterLink to="/news" class="btn btn--news">
+          📰 See all news
+        </RouterLink>
       </div>
     </section>
 
@@ -90,7 +96,6 @@ useScrollReveal()
         <article class="pillar-card reveal">
           <div class="pillar-image pillar-image--forest">
             <img :src="environmentImg" alt="Community forestry in a Cambodian village" class="pillar-photo" />
-
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 01</p>
@@ -105,7 +110,6 @@ useScrollReveal()
         <article class="pillar-card reveal" style="animation-delay: 0.12s">
           <div class="pillar-image pillar-image--education">
             <img :src="educationImg" alt="Children learning at a community pre-school" class="pillar-photo" />
-
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 02</p>
@@ -120,7 +124,6 @@ useScrollReveal()
         <article class="pillar-card reveal" style="animation-delay: 0.12s">
           <div class="pillar-image pillar-image--livelihood">
             <img :src="livelihoodImg" alt="Villagers working on rural livelihood activities" class="pillar-photo" />
-
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 03</p>
@@ -135,7 +138,6 @@ useScrollReveal()
         <article class="pillar-card reveal" style="animation-delay: 0.24s">
           <div class="pillar-image pillar-image--protection">
             <img :src="childImg" alt="Children protected and cared for in their community" class="pillar-photo" />
-            
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 04</p>
@@ -326,12 +328,13 @@ useScrollReveal()
 .stats {
   background: var(--color-cream);
   border-bottom: 1px solid var(--color-border);
+  padding-bottom: 2rem;
 }
 
 .stats-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3.5rem 1.5rem;
+  padding: 3.5rem 1.5rem 1.5rem;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 2.5rem 1rem;
@@ -359,10 +362,32 @@ useScrollReveal()
   .stats-inner {
     grid-template-columns: repeat(4, 1fr);
   }
-  /* Thin dividers between the four columns, like a classic stats band. */
   .stat + .stat {
     border-left: 1px solid var(--color-border);
   }
+}
+
+/* 👇 NEW: news button row */
+.stats-news-row {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.btn--news {
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 0.65rem 2rem;
+  font-weight: 600;
+  transition: background 0.25s, color 0.25s;
+}
+
+.btn--news:hover {
+  background: var(--primary-color);
+  color: #fff;
 }
 
 /* Mission */
@@ -473,27 +498,11 @@ useScrollReveal()
   transform: scale(1.06);
 }
 
-/* Color tint over the photo keeps each pillar's hue and the icon readable. */
 .pillar-image::after {
   content: '';
   position: absolute;
   inset: 0;
 }
-
-.pillar-icon {
-  position: relative;
-  z-index: 1;
-  width: 3rem;
-  height: 3rem;
-  color: rgba(255, 255, 255, 0.92);
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
-  transition: transform 0.35s ease;
-}
-
-.pillar-card:hover .pillar-icon {
-  transform: scale(1.12);
-}
-
 
 .pillar-body {
   padding: 1.5rem;
