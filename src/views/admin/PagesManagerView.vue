@@ -26,6 +26,18 @@ function createPage() {
   selectedPage.value = null
 }
 
+function editGetInvolvedPage() {
+  selectedPage.value =
+    store.pages['get-involved'] ??
+    ({
+      id: '',
+      slug: 'get-involved',
+      title: 'Get Involved',
+      body: '',
+      updated_at: '',
+    } satisfies PageContent)
+}
+
 function editPartnerPage() {
   selectedPage.value =
     store.pages['get-involved-partner'] ??
@@ -52,6 +64,7 @@ function onSaved(page: PageContent) {
         <h1>Pages</h1>
         <div class="toolbar">
           <button type="button" @click="createPage">New page</button>
+          <button type="button" @click="editGetInvolvedPage">Get involved JSON</button>
           <button type="button" @click="editPartnerPage">Partner page JSON</button>
         </div>
         <div class="grid">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import buddhistEducationImage from '@/assets/volunteer/buddhist-education.png'
@@ -12,101 +12,96 @@ import washSchoolImage from '@/assets/volunteer/wash-school.png'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 const slideItems = [
-  { image: '/images/programs/hero-3.jpg', caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
+  { image: volunteerHeroImage, caption: '' },
+  { image: communityForestryImage, caption: '' },
+  { image: mobileLibraryImage, caption: '' },
 ]
 
 const volunteerPathways = [
   {
     tag: 'Environment',
-    title: 'Community forestry and climate action',
+    title: 'Community forestry',
     image: communityForestryImage,
     alt: 'Volunteers and villagers planting tree seedlings in rural Cambodia',
     stat: '27,810 seedlings',
-    summary: 'Support tree nurseries, planting days and community forest learning.',
-    detail:
-      'The report describes community forests, tree nurseries, National Tree Day and ecological child-right campaigns. Volunteers can help with field documentation, planting activities, learning materials and practical climate awareness.',
+    summary: 'Support planting, nurseries and climate learning.',
+    detail: 'Useful tasks include field notes, activity support and learning materials.',
   },
   {
     tag: 'Livelihoods',
-    title: 'Home gardens and farmer groups',
+    title: 'Home gardens',
     image: livelihoodImage,
     alt: 'Volunteer and farmers reviewing a Cambodian home garden',
-    stat: '114 self-help groups',
-    summary: 'Work beside savings groups, agriculture cooperatives and home-garden families.',
-    detail:
-      'Santi Sena worked with Saving for Change groups, agriculture cooperatives and 1,200 farmers trained in vegetable, animal, rice and fish production. Volunteers can support training notes, market stories and simple monitoring.',
+    stat: '114 groups',
+    summary: 'Work with savings groups, cooperatives and farmers.',
+    detail: 'Help with training notes, market stories and simple monitoring.',
   },
   {
     tag: 'WASH',
-    title: 'Safe water and hygiene in schools',
+    title: 'Safe water in schools',
     image: washSchoolImage,
     alt: 'Children washing hands at a rural Cambodian school',
-    stat: '75 school sessions',
-    summary: 'Help school committees make safe water and handwashing practical.',
-    detail:
-      'School WASH committees promoted safe water, handwashing and hygiene behavior with children. Volunteers can assist awareness sessions, visual materials, activity facilitation and clean-water follow-up.',
+    stat: '75 sessions',
+    summary: 'Support clean water, handwashing and hygiene practice.',
+    detail: 'Assist awareness sessions, visual materials and follow-up activities.',
   },
   {
     tag: 'Education',
-    title: 'Pre-schools and mobile libraries',
+    title: 'Mobile libraries',
     image: mobileLibraryImage,
     alt: 'Volunteer reading with children in a Cambodian school setting',
     stat: '3,400 readers',
-    summary: 'Support reading, storytelling, classroom materials and attendance encouragement.',
-    detail:
-      'The report names community pre-schools, parenting groups, scholarships and 120 mobile library sessions. Volunteers can help children practice reading, prepare story activities and document learning progress.',
+    summary: 'Help children read, tell stories and enjoy books.',
+    detail: 'Support story activities, classroom materials and attendance encouragement.',
   },
   {
     tag: 'Protection',
-    title: 'Child rights and safe migration',
+    title: 'Child rights',
     image: childProtectionImage,
     alt: 'Children and youth peer educators meeting in a Cambodian village',
     stat: '150 sessions',
-    summary: 'Strengthen child-friendly awareness with peer educators and CCWCs.',
-    detail:
-      'Child protection networks worked on trafficking, labor exploitation, migration risk and abuse prevention. Volunteers can support safe facilitation, campaign materials, referral mapping and youth participation.',
+    summary: 'Strengthen safe, child-friendly awareness.',
+    detail: 'Support campaigns, referral mapping and youth participation.',
   },
   {
     tag: 'Buddhist education',
-    title: 'Learning through pagodas and values',
+    title: 'Pagoda learning',
     image: buddhistEducationImage,
     alt: 'Young monks and volunteers organizing books in a Cambodian monastery classroom',
     stat: '20 schools',
-    summary: 'Contribute to Buddhist primary school support, books and community values.',
-    detail:
-      'Santi Sena supported Buddhist primary schools in 20 monasteries, Dharma conversation and learning resources. Volunteers can help organize materials, document stories and support respectful education activities.',
+    summary: 'Support Buddhist primary schools and learning resources.',
+    detail: 'Help organize materials, document stories and support respectful activities.',
   },
 ]
+
+const defaultPathway = volunteerPathways[0]!
+const activePathwayIndex = ref(0)
+const activePathway = computed(() => volunteerPathways[activePathwayIndex.value] ?? defaultPathway)
 
 const skillCards = [
   {
     title: 'Facilitation',
     image: childProtectionImage,
     alt: 'Youth and children in a community learning circle',
-    detail:
-      'Help prepare participatory sessions with children, youth, parents, farmers and commune groups.',
+    detail: 'Prepare simple participatory sessions with children, youth and parents.',
   },
   {
     title: 'Education support',
     image: mobileLibraryImage,
     alt: 'Children reading with a volunteer',
-    detail:
-      'Bring reading, storytelling, classroom organization or early-learning skills to rural schools.',
+    detail: 'Bring reading, storytelling or classroom organization skills.',
   },
   {
     title: 'Agriculture and environment',
     image: livelihoodImage,
     alt: 'Farmers and volunteer looking at vegetable beds',
-    detail:
-      'Support home gardens, tree planting, climate adaptation learning and farmer group documentation.',
+    detail: 'Support home gardens, tree planting and field documentation.',
   },
   {
     title: 'Monitoring and communication',
     image: communityForestryImage,
     alt: 'Community members planting seedlings',
-    detail:
-      'Help collect field notes, photos, case stories and simple evidence for reflection and reporting.',
+    detail: 'Collect field notes, photos, case stories and simple evidence.',
   },
 ]
 
@@ -116,50 +111,47 @@ const fieldSteps = [
     title: 'Prepare with staff',
     image: volunteerHeroImage,
     alt: 'Volunteer team walking on a rural Cambodian road',
-    detail:
-      'Volunteers align with Santi Sena staff, child protection policy, gender and minority policy, anti-corruption policy and grievance procedures before joining field work.',
+    detail: 'Align on safeguarding, policies and the field role before joining activities.',
   },
   {
     number: '02',
     title: 'Listen locally',
     image: washSchoolImage,
     alt: 'Teacher and children practicing handwashing',
-    detail:
-      'Field work starts with communities, schools, pagodas, local authorities and technical departments already cooperating with Santi Sena.',
+    detail: 'Start with communities, schools, pagodas and local authorities.',
   },
   {
     number: '03',
     title: 'Work practically',
     image: buddhistEducationImage,
     alt: 'Young monks and volunteers in a classroom',
-    detail:
-      'Volunteer time is best used in concrete tasks: learning activities, field documentation, campaign support, training logistics and follow-up visits.',
+    detail: 'Focus on learning activities, documentation, campaigns and logistics.',
   },
   {
     number: '04',
     title: 'Reflect and improve',
     image: childProtectionImage,
     alt: 'Community child-right learning circle',
-    detail:
-      'Santi Sena uses staff reflection, monitoring and partner-supported capacity building to turn field learning into the next action plan.',
+    detail: 'Turn field learning into better plans with the Santi Sena team.',
   },
 ]
 
 const contactDetails = [
-  'Address: Prey Chlak pagoda, Svay Rieng City, Svay Rieng province',
-  'Telephone: +855 77 65 54 64, +855 87 67 57 57, +855 71 877 55 33',
-  'Email: santisenamonk@gmail.com, santisena@santisenacambodia.org',
+  'Prey Chlak pagoda, Svay Rieng City, Svay Rieng province',
+  '+855 77 65 54 64, +855 87 67 57 57, +855 71 877 55 33',
+  'santisenamonk@gmail.com, santisena@santisenacambodia.org',
 ]
 
 const description =
-  'Volunteer with Santi Sena in Cambodia through community forestry, livelihoods, WASH, education, Buddhist education and child protection programs.'
+  'Volunteer with Santi Sena through community forestry, livelihoods, WASH, education, Buddhist education and child protection programs.'
 
 let previousTitle = ''
 let descriptionMeta: HTMLMetaElement | null = null
 let previousDescription: string | null = null
 let createdDescriptionMeta = false
+let revealObserver: IntersectionObserver | null = null
 
-onMounted(() => {
+onMounted(async () => {
   previousTitle = document.title
   document.title = 'Volunteer with Santi Sena'
 
@@ -174,6 +166,9 @@ onMounted(() => {
   }
 
   descriptionMeta.setAttribute('content', description)
+
+  await nextTick()
+  setupRevealAnimations()
 })
 
 onUnmounted(() => {
@@ -184,89 +179,120 @@ onUnmounted(() => {
   } else if (descriptionMeta && previousDescription !== null) {
     descriptionMeta.setAttribute('content', previousDescription)
   }
+
+  revealObserver?.disconnect()
+  revealObserver = null
 })
+
+function setActivePathway(index: number) {
+  activePathwayIndex.value = index
+}
+
+function setupRevealAnimations() {
+  const elements = Array.from(document.querySelectorAll<HTMLElement>('.pop-reveal'))
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (!('IntersectionObserver' in window) || prefersReducedMotion) {
+    elements.forEach((element) => element.classList.add('is-visible'))
+    return
+  }
+
+  revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+
+        entry.target.classList.add('is-visible')
+        revealObserver?.unobserve(entry.target)
+      })
+    },
+    { rootMargin: '0px 0px -12% 0px', threshold: 0.16 },
+  )
+
+  elements.forEach((element) => revealObserver?.observe(element))
+}
 </script>
 
 <template>
   <main class="volunteer-page">
-    <Slideshow :slides="slideItems">
+    <Slideshow :slides="slideItems" :interval-ms="5600">
       <div class="hero-shade"></div>
-      <div class="hero-content">
+      <div class="hero-content pop-reveal pop-content is-visible">
         <p class="eyebrow">Get involved - Volunteer</p>
-        <h1>Bring your skills to community-led work in Cambodia.</h1>
+        <h1>Volunteer with community-led work.</h1>
         <p>
-          Santi Sena works through village groups, schools, pagodas, commune committees and
-          technical departments. Volunteers strengthen the patient work already happening in Svay
-          Rieng and Prey Veng.
+          Share useful skills with village groups, schools, pagodas and local teams in Svay Rieng
+          and Prey Veng.
         </p>
         <RouterLink to="/contact" class="primary-link">Apply to volunteer</RouterLink>
       </div>
     </Slideshow>
 
-    <section class="stats-band" aria-label="Volunteer context from the Santi Sena report">
-      <div>
-        <span class="stat-icon stat-icon--village" aria-hidden="true"></span>
-        <strong>293</strong>
-        <span>Villages reached in 2016</span>
-      </div>
-      <div>
-        <span class="stat-icon stat-icon--commune" aria-hidden="true"></span>
-        <strong>43</strong>
-        <span>Communes across two provinces</span>
-      </div>
-      <div>
-        <span class="stat-icon stat-icon--staff" aria-hidden="true"></span>
-        <strong>34</strong>
-        <span>Staff with project-specific skills</span>
-      </div>
-      <div>
-        <span class="stat-icon stat-icon--pathways" aria-hidden="true"></span>
-        <strong>6</strong>
-        <span>Practical volunteer pathways</span>
-      </div>
-    </section>
-
-    <section class="content-section" aria-labelledby="pathways-heading">
-      <div class="section-heading">
-        <p class="section-kicker">Where volunteers can help</p>
-        <h2 id="pathways-heading">Choose a field area connected to the report.</h2>
-      </div>
-
-      <div class="card-grid card-grid--large">
-        <article
-          v-for="pathway in volunteerPathways"
-          :key="pathway.title"
-          class="image-card image-card--large"
-          tabindex="0"
-        >
-          <img :src="pathway.image" :alt="pathway.alt" />
-          <div class="image-card__base">
-            <span>{{ pathway.tag }}</span>
-            <h3>{{ pathway.title }}</h3>
-            <strong>{{ pathway.stat }}</strong>
+    <section class="content-section pathway-section" aria-labelledby="pathways-heading">
+      <div class="pathway-layout">
+        <div class="pathway-copy">
+          <div class="section-heading pop-reveal pop-content">
+            <p class="section-kicker">Where volunteers can help</p>
+            <h2 id="pathways-heading">Choose a practical field area.</h2>
           </div>
-          <div class="image-card__detail">
-            <p>{{ pathway.summary }}</p>
-            <small>{{ pathway.detail }}</small>
+
+          <div class="pathway-list" aria-label="Volunteer field areas">
+            <article
+              v-for="(pathway, index) in volunteerPathways"
+              :key="pathway.title"
+              class="pathway-row pop-reveal pop-card"
+              :class="{ 'is-active': activePathway.title === pathway.title }"
+              tabindex="0"
+              @click="setActivePathway(index)"
+              @focusin="setActivePathway(index)"
+              @mouseenter="setActivePathway(index)"
+            >
+              <div class="card-meta">
+                <span>{{ pathway.tag }}</span>
+                <strong>{{ pathway.stat }}</strong>
+              </div>
+              <h3>{{ pathway.title }}</h3>
+              <p>{{ pathway.summary }}</p>
+              <small>{{ pathway.detail }}</small>
+            </article>
           </div>
-        </article>
+        </div>
+
+        <figure class="pathway-preview pop-reveal pop-card">
+          <img
+            :key="activePathway.title"
+            :src="activePathway.image"
+            :alt="activePathway.alt"
+            class="pop-reveal pop-image is-visible"
+            loading="lazy"
+          />
+          <figcaption class="pop-reveal pop-content is-visible">
+            <div class="card-meta">
+              <span>{{ activePathway.tag }}</span>
+              <strong>{{ activePathway.stat }}</strong>
+            </div>
+            <h3>{{ activePathway.title }}</h3>
+            <p>{{ activePathway.summary }}</p>
+          </figcaption>
+        </figure>
       </div>
     </section>
 
     <section class="content-section skill-section" aria-labelledby="skills-heading">
-      <div class="section-heading">
+      <div class="section-heading pop-reveal pop-content">
         <p class="section-kicker">Useful skills</p>
         <h2 id="skills-heading">Volunteer work is practical, local and team-based.</h2>
       </div>
 
-      <div class="card-grid card-grid--small">
-        <article v-for="skill in skillCards" :key="skill.title" class="image-card" tabindex="0">
-          <img :src="skill.image" :alt="skill.alt" />
-          <div class="image-card__base">
-            <span>Skill</span>
+      <div class="skill-grid">
+        <article
+          v-for="skill in skillCards"
+          :key="skill.title"
+          class="skill-card pop-reveal pop-card"
+        >
+          <img :src="skill.image" :alt="skill.alt" class="pop-reveal pop-image" loading="lazy" />
+          <div class="pop-reveal pop-content">
             <h3>{{ skill.title }}</h3>
-          </div>
-          <div class="image-card__detail">
             <p>{{ skill.detail }}</p>
           </div>
         </article>
@@ -274,35 +300,41 @@ onUnmounted(() => {
     </section>
 
     <section class="content-section" aria-labelledby="steps-heading">
-      <div class="section-heading">
+      <div class="section-heading pop-reveal pop-content">
         <p class="section-kicker">How it works</p>
-        <h2 id="steps-heading">
-          A volunteer placement should protect dignity and strengthen local capacity.
-        </h2>
+        <h2 id="steps-heading">A simple, respectful placement process.</h2>
       </div>
 
       <div class="step-grid">
-        <article v-for="step in fieldSteps" :key="step.number" class="step-card" tabindex="0">
-          <img :src="step.image" :alt="step.alt" />
-          <div class="step-card__content">
+        <article
+          v-for="step in fieldSteps"
+          :key="step.number"
+          class="step-card pop-reveal pop-card"
+        >
+          <img :src="step.image" :alt="step.alt" class="pop-reveal pop-image" loading="lazy" />
+          <div class="step-card__body pop-reveal pop-content">
             <span>{{ step.number }}</span>
             <h3>{{ step.title }}</h3>
+            <p>{{ step.detail }}</p>
           </div>
-          <p>{{ step.detail }}</p>
         </article>
       </div>
     </section>
 
     <section class="contact-band" aria-label="Volunteer contact details">
-      <div class="contact-band__image">
-        <img :src="volunteerHeroImage" alt="Volunteer team in rural Cambodia" />
+      <div class="contact-band__image pop-reveal pop-card">
+        <img
+          :src="volunteerHeroImage"
+          alt="Volunteer team in rural Cambodia"
+          class="pop-reveal pop-image"
+          loading="lazy"
+        />
       </div>
-      <div class="contact-band__content">
+      <div class="contact-band__content pop-reveal pop-content">
         <p class="section-kicker">Start with a conversation</p>
         <h2>Tell Santi Sena what you can bring.</h2>
         <p>
           Share your skills, available dates, language ability and the program area you care about.
-          The team can match your support to work that communities already prioritize.
         </p>
         <ul>
           <li v-for="item in contactDetails" :key="item">{{ item }}</li>
@@ -315,8 +347,6 @@ onUnmounted(() => {
 
 <style scoped>
 .volunteer-page {
-  --blue: #2f6f8f;
-
   min-height: 100vh;
   background: var(--color-cream);
   color: var(--color-ink);
@@ -326,12 +356,16 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(4, 42, 38, 0.88) 0%, rgba(4, 42, 38, 0.58) 42%, rgba(4, 42, 38, 0.22) 70%, transparent 100%),
-    linear-gradient(0deg, rgba(4, 42, 38, 0.3), transparent 45%);
+    linear-gradient(
+      90deg,
+      rgba(6, 18, 13, 0.86) 0%,
+      rgba(6, 18, 13, 0.58) 44%,
+      rgba(6, 18, 13, 0.18) 76%
+    ),
+    linear-gradient(0deg, rgba(6, 18, 13, 0.28), transparent 45%);
 }
 
 .content-section,
-.stats-band,
 .contact-band {
   width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
@@ -344,10 +378,10 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  text-align: left;
-  max-width: 720px;
+  max-width: 680px;
   left: var(--container-offset);
   padding: 3rem 1.5rem;
+  text-align: left;
   animation: fadeInUp 0.8s ease-out;
 }
 
@@ -356,10 +390,77 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.pop-reveal {
+  opacity: 0;
+  transform: translateY(28px) scale(0.98);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease,
+    filter 0.5s ease;
+  will-change: opacity, transform;
+}
+
+.pop-card {
+  transform: translateY(34px) scale(0.96);
+}
+
+.pop-image {
+  filter: saturate(0.9);
+  transform: translateY(22px) scale(1.035);
+}
+
+.pop-content {
+  transform: translateY(20px);
+}
+
+.pop-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.pop-image.is-visible {
+  filter: saturate(1);
+}
+
+.skill-card .pop-image,
+.step-card .pop-image,
+.contact-band__image .pop-image {
+  transition-delay: 0.08s;
+}
+
+.skill-card .pop-content,
+.step-card .pop-content {
+  transition-delay: 0.14s;
+}
+
+.pathway-row:nth-child(2),
+.skill-card:nth-child(2),
+.step-card:nth-child(2) {
+  transition-delay: 0.05s;
+}
+
+.pathway-row:nth-child(3),
+.skill-card:nth-child(3),
+.step-card:nth-child(3) {
+  transition-delay: 0.1s;
+}
+
+.pathway-row:nth-child(4),
+.skill-card:nth-child(4),
+.step-card:nth-child(4) {
+  transition-delay: 0.15s;
+}
+
+.pathway-row:nth-child(5),
+.pathway-row:nth-child(6) {
+  transition-delay: 0.2s;
 }
 
 .eyebrow,
@@ -368,465 +469,271 @@ onUnmounted(() => {
   color: var(--primary-color);
   font-size: 0.75rem;
   font-weight: 900;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
-.hero-content h1 {
-  max-width: 760px;
-  margin: 1.25rem 0 0;
-  color: #fffaf0;
+.hero-content .eyebrow {
+  color: var(--primary-light);
+}
+
+.hero-content h1,
+.section-heading h2,
+.contact-band h2 {
+  margin: 0;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.15;
   text-wrap: balance;
 }
 
+.hero-content h1 {
+  max-width: 680px;
+  margin-top: 1rem;
+  color: #fffaf0;
+}
+
 .hero-content p:not(.eyebrow) {
-  max-width: 760px;
-  margin: 1.75rem 0 0;
+  max-width: 640px;
+  margin: 1.25rem 0 0;
   color: rgba(255, 250, 240, 0.9);
   line-height: 1.6;
 }
 
 .primary-link {
   display: inline-flex;
+  min-height: 3.15rem;
   align-items: center;
   justify-content: center;
-  min-height: 3.25rem;
-  margin-top: 2rem;
+  margin-top: 1.8rem;
   border-radius: 999px;
   background: var(--primary-color);
-  color: #fffaf0;
+  color: var(--color-white);
   font-weight: 850;
-  padding: 0.85rem 1.55rem;
+  padding: 0.8rem 1.45rem;
   text-decoration: none;
-  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.22);
+  box-shadow: 0 16px 32px rgba(27, 163, 79, 0.2);
   transition:
     transform 0.18s ease,
-    box-shadow 0.18s ease;
+    box-shadow 0.18s ease,
+    background 0.18s ease;
 }
 
 .primary-link:hover {
   background: var(--primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 20px 38px rgba(20, 129, 62, 0.3);
-}
-
-.stats-band {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.9rem;
-  padding: 1.15rem 0;
-}
-
-.stats-band div {
-  min-height: 128px;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas:
-    'icon value'
-    'icon label';
-  column-gap: 1rem;
-  align-items: center;
-  border: 1px solid rgba(221, 209, 192, 0.86);
-  border-radius: 8px;
-  background: rgba(255, 253, 248, 0.74);
-  padding: 1.35rem;
-  box-shadow: 0 1px 2px rgba(54, 38, 17, 0.06);
-}
-
-.stats-band div:first-child {
-  padding-left: 1.35rem;
-}
-
-.stats-band strong {
-  grid-area: value;
-  display: block;
-  color: var(--blue);
-  font-size: clamp(2.45rem, 4vw, 3.85rem);
-  font-weight: 500;
-  line-height: 0.9;
-}
-
-.stats-band div > span:not(.stat-icon) {
-  grid-area: label;
-  display: block;
-  max-width: 220px;
-  margin-top: 0.55rem;
-  color: var(--color-ink-soft);
-  line-height: 1.35;
-}
-
-.stat-icon {
-  position: relative;
-  grid-area: icon;
-  width: 3.35rem;
-  height: 3.35rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: start;
-  border: 1px solid rgba(47, 111, 143, 0.22);
-  border-radius: 8px;
-  background: rgba(47, 111, 143, 0.08);
-  color: var(--blue);
-}
-
-.stat-icon::before,
-.stat-icon::after {
-  content: '';
-  position: absolute;
-}
-
-.stat-icon--village::before {
-  bottom: 0.82rem;
-  width: 1.62rem;
-  height: 1rem;
-  border-radius: 0.12rem;
-  background: currentColor;
-}
-
-.stat-icon--village::after {
-  top: 0.75rem;
-  width: 1.25rem;
-  height: 1.25rem;
-  background: currentColor;
-  transform: rotate(45deg);
-}
-
-.stat-icon--commune::before {
-  inset: 0.72rem;
-  border: 3px solid currentColor;
-  border-radius: 50%;
-}
-
-.stat-icon--commune::after {
-  width: 0.52rem;
-  height: 0.52rem;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow:
-    -0.88rem 0 currentColor,
-    0.88rem 0 currentColor,
-    0 -0.88rem currentColor,
-    0 0.88rem currentColor;
-}
-
-.stat-icon--staff::before {
-  top: 0.66rem;
-  width: 0.82rem;
-  height: 0.82rem;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow:
-    -0.78rem 0.34rem 0 -0.08rem currentColor,
-    0.78rem 0.34rem 0 -0.08rem currentColor;
-}
-
-.stat-icon--staff::after {
-  bottom: 0.68rem;
-  width: 1.84rem;
-  height: 0.82rem;
-  border-radius: 999px 999px 0 0;
-  background: currentColor;
-  box-shadow:
-    -0.82rem 0.18rem 0 -0.18rem currentColor,
-    0.82rem 0.18rem 0 -0.18rem currentColor;
-}
-
-.stat-icon--pathways::before {
-  width: 1.62rem;
-  height: 1.62rem;
-  border: 3px solid currentColor;
-  border-radius: 0.28rem;
-  transform: rotate(45deg);
-}
-
-.stat-icon--pathways::after {
-  width: 0.44rem;
-  height: 0.44rem;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow:
-    -0.6rem -0.6rem currentColor,
-    0.6rem -0.6rem currentColor,
-    -0.6rem 0.6rem currentColor,
-    0.6rem 0.6rem currentColor;
+  box-shadow: 0 18px 36px rgba(20, 129, 62, 0.28);
 }
 
 .content-section {
-  padding: 5.5rem 0 0;
+  padding: 5rem 0 0;
 }
 
 .section-heading {
-  max-width: 820px;
+  max-width: 760px;
 }
 
 .section-heading h2,
 .contact-band h2 {
-  margin: 0.85rem 0 0;
+  margin-top: 0.8rem;
   color: var(--color-ink);
-  font-weight: 600;
-  line-height: 1.12;
-  text-wrap: balance;
 }
 
 .section-heading p:not(.section-kicker),
 .contact-band__content p {
-  margin: 1.1rem 0 0;
+  margin: 1rem 0 0;
   color: var(--color-ink-soft);
   line-height: 1.65;
 }
 
-.card-grid {
+.pathway-layout {
   display: grid;
-  gap: 1.25rem;
-  margin-top: 2.5rem;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: start;
 }
 
-.card-grid--large {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.pathway-list {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 2rem;
 }
 
-.card-grid--small,
-.step-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.image-card {
-  position: relative;
-  min-height: 330px;
-  display: flex;
-  align-items: flex-end;
-  overflow: hidden;
+.pathway-row {
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: var(--primary-dark);
-  color: #fffaf0;
-  isolation: isolate;
-  outline: 0;
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  padding: 1rem;
+  box-shadow: 0 4px 14px rgba(20, 129, 62, 0.05);
+  outline: none;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
 }
 
-.image-card--large {
-  min-height: 410px;
+.pathway-row:hover,
+.pathway-row:focus-visible,
+.pathway-row.is-active {
+  border-color: color-mix(in srgb, var(--primary-color) 32%, var(--color-border));
+  background: var(--color-white);
+  box-shadow: 0 14px 30px rgba(20, 129, 62, 0.1);
+  transform: translateY(-2px);
 }
 
-.image-card img,
-.step-card img,
-.contact-band__image img {
-  display: block;
+.pathway-preview {
+  position: sticky;
+  top: 6rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  box-shadow: 0 18px 42px rgba(43, 43, 40, 0.1);
+}
+
+.pathway-preview img {
   width: 100%;
-  height: 100%;
+  height: clamp(430px, 50vw, 620px);
   object-fit: cover;
+  animation: imagePop 0.24s ease;
 }
 
-.image-card img {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  transition:
-    transform 0.45s ease,
-    filter 0.45s ease;
+@keyframes imagePop {
+  from {
+    opacity: 0.72;
+    transform: scale(1.015);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.image-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    linear-gradient(180deg, transparent 12%, rgba(4, 42, 38, 0.26) 42%, rgba(4, 42, 38, 0.92)),
-    linear-gradient(90deg, rgba(4, 42, 38, 0.26), transparent);
-  transition: background 0.35s ease;
+.pathway-preview figcaption {
+  padding: 1.15rem;
+  border-top: 1px solid var(--color-border);
 }
 
-.image-card__base,
-.image-card__detail {
-  width: 100%;
-  padding: 1.4rem;
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
 }
 
-.image-card__base {
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
-}
-
-.image-card__base span {
-  display: block;
-  color: var(--primary-color);
+.card-meta span,
+.card-meta strong {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
   font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
-.image-card__base h3 {
-  margin: 0.55rem 0 0;
-  color: #fffaf0;
-  font-weight: 600;
-  line-height: 1.15;
-}
-
-.image-card__base strong {
-  display: block;
-  margin-top: 0.8rem;
-  color: var(--primary-color);
-  font-size: 0.86rem;
+.card-meta span {
+  border: 1px solid color-mix(in srgb, var(--primary-color) 22%, transparent);
+  color: var(--primary-dark);
+  padding: 0.3rem 0.6rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.image-card__detail {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  opacity: 0;
-  transform: translateY(1rem);
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
+.card-meta strong {
+  color: var(--color-ink-soft);
 }
 
-.image-card__detail p,
-.image-card__detail small {
+.pathway-row h3,
+.pathway-preview h3,
+.skill-card h3,
+.step-card h3 {
+  margin: 0.75rem 0 0;
+  color: var(--color-ink);
+  font-size: 1.12rem;
+  line-height: 1.28;
+}
+
+.pathway-row p,
+.pathway-preview p,
+.skill-card p,
+.step-card p {
+  margin: 0.5rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.pathway-row small {
   display: block;
-  margin: 0;
-  color: #fffaf0;
+  margin-top: 0.7rem;
+  color: var(--color-ink-soft);
+  font-size: 0.86rem;
   line-height: 1.5;
 }
 
-.image-card__detail p {
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.image-card__detail small {
-  margin-top: 0.8rem;
-  color: rgba(255, 250, 240, 0.84);
-}
-
-.image-card:hover img,
-.image-card:focus-visible img,
-.image-card:focus-within img {
-  transform: scale(1.06);
-  filter: saturate(0.95) brightness(0.78);
-}
-
-.image-card:hover::after,
-.image-card:focus-visible::after,
-.image-card:focus-within::after {
-  background: rgba(4, 42, 38, 0.82);
-}
-
-.image-card:hover .image-card__base,
-.image-card:focus-visible .image-card__base,
-.image-card:focus-within .image-card__base {
-  opacity: 0;
-  transform: translateY(-0.8rem);
-}
-
-.image-card:hover .image-card__detail,
-.image-card:focus-visible .image-card__detail,
-.image-card:focus-within .image-card__detail {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .skill-section {
-  padding-top: 6rem;
+  padding-top: 5rem;
+}
+
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.skill-card {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  box-shadow: 0 4px 14px rgba(20, 129, 62, 0.05);
+}
+
+.skill-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.skill-card div {
+  padding: 1rem;
 }
 
 .step-grid {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
-  margin-top: 2.4rem;
+  margin-top: 2rem;
 }
 
 .step-card {
-  position: relative;
-  min-height: 340px;
   overflow: hidden;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-white);
-  outline: 0;
+  box-shadow: 0 4px 14px rgba(20, 129, 62, 0.05);
 }
 
 .step-card img {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  filter: saturate(0.92);
-  transition:
-    transform 0.45s ease,
-    filter 0.45s ease;
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
 }
 
-.step-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(180deg, transparent 18%, rgba(4, 42, 38, 0.9));
+.step-card__body {
+  padding: 1rem;
 }
 
-.step-card__content,
-.step-card p {
-  position: absolute;
-  left: 1.2rem;
-  right: 1.2rem;
-  z-index: 2;
-}
-
-.step-card__content {
-  bottom: 1.2rem;
-  color: #fffaf0;
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
-}
-
-.step-card__content span {
-  color: var(--primary-color);
-  font-size: 1.55rem;
-  line-height: 1;
-}
-
-.step-card__content h3 {
-  margin: 0.4rem 0 0;
-  color: #fffaf0;
-  font-weight: 600;
-  line-height: 1.15;
-}
-
-.step-card p {
-  bottom: 1.2rem;
-  margin: 0;
-  color: rgba(255, 250, 240, 0.9);
-  line-height: 1.5;
-  opacity: 0;
-  transform: translateY(1rem);
-  transition:
-    opacity 0.28s ease,
-    transform 0.28s ease;
-}
-
-.step-card:hover img,
-.step-card:focus-visible img {
-  transform: scale(1.06);
-  filter: saturate(0.9) brightness(0.72);
-}
-
-.step-card:hover .step-card__content,
-.step-card:focus-visible .step-card__content {
-  opacity: 0;
-  transform: translateY(-0.8rem);
-}
-
-.step-card:hover p,
-.step-card:focus-visible p {
-  opacity: 1;
-  transform: translateY(0);
+.step-card__body span {
+  display: inline-flex;
+  color: var(--primary-dark);
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
 }
 
 .contact-band {
@@ -843,10 +750,16 @@ onUnmounted(() => {
   border-radius: 8px;
 }
 
+.contact-band__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .contact-band ul {
   display: grid;
   gap: 0.75rem;
-  margin: 1.5rem 0 0;
+  margin: 1.4rem 0 0;
   padding: 0;
   list-style: none;
 }
@@ -870,18 +783,21 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1060px) {
-  .card-grid--large,
-  .card-grid--small,
+  .skill-grid,
   .step-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .stats-band {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .pathway-layout {
+    grid-template-columns: 1fr;
   }
 
-  .stats-band div {
-    min-height: 118px;
+  .pathway-preview {
+    position: static;
+  }
+
+  .pathway-preview img {
+    height: 420px;
   }
 
   .contact-band {
@@ -895,7 +811,6 @@ onUnmounted(() => {
 
 @media (max-width: 700px) {
   .content-section,
-  .stats-band,
   .contact-band {
     width: min(100% - 2rem, var(--container-max-width));
   }
@@ -904,37 +819,17 @@ onUnmounted(() => {
     padding: 2rem 1.5rem;
   }
 
-  .stats-band,
-  .card-grid--large,
-  .card-grid--small,
+  .skill-grid,
   .step-grid {
     grid-template-columns: 1fr;
   }
 
-  .stats-band div,
-  .stats-band div:first-child,
-  .stats-band div:nth-child(odd) {
-    min-height: auto;
-    padding: 1.15rem;
-  }
-
-  .stats-band div:first-child {
-    padding-left: 1.15rem;
-  }
-
-  .stat-icon {
-    width: 3rem;
-    height: 3rem;
+  .pathway-preview img {
+    height: 260px;
   }
 
   .content-section {
-    padding-top: 4.2rem;
-  }
-
-  .image-card,
-  .image-card--large,
-  .step-card {
-    min-height: 360px;
+    padding-top: 4rem;
   }
 
   .contact-band {
@@ -942,21 +837,17 @@ onUnmounted(() => {
   }
 }
 
-@media (hover: none) {
-  .image-card::after,
-  .step-card::after {
-    background: rgba(4, 42, 38, 0.76);
+@media (prefers-reduced-motion: reduce) {
+  .hero-content {
+    animation: none;
   }
 
-  .image-card__base,
-  .step-card__content {
-    opacity: 0;
-  }
-
-  .image-card__detail,
-  .step-card p {
+  .pop-reveal,
+  .pathway-preview img {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+    animation: none;
+    transition: none;
   }
 }
 </style>
