@@ -2,6 +2,9 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import heroImpact from '@/assets/hero-impact.jpg'
+import heroImpactForest from '@/assets/hero-impact-forest.jpg'
+import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { useContentStore } from '@/stores/content.store'
 
@@ -86,9 +89,9 @@ const fallbackContent: PartnerPageContent = {
     primaryCta: { label: 'Start a partnership', to: '/contact' },
     secondaryCta: { label: 'View portfolio', to: '#portfolio' },
     slides: [
-      { image: '/images/programs/environment-hero2.jpg', caption: '' },
-      { image: '/images/programs/livelihood-hero4.jpg', caption: '' },
-      { image: '/images/programs/education-hero.jpg', caption: '' },
+      { image: heroImpactVillage, caption: '' },
+      { image: heroImpactForest, caption: '' },
+      { image: heroImpact, caption: '' },
     ],
   },
   activeProjects: [
@@ -277,9 +280,14 @@ function mergePartnerContent(
   override: Partial<PartnerPageContent> | null,
 ): PartnerPageContent {
   if (!override) return base
+  const mergedHero = { ...base.hero, ...override.hero }
+  const overrideSlides = override.hero?.slides
 
   return {
-    hero: { ...base.hero, ...override.hero },
+    hero: {
+      ...mergedHero,
+      slides: normalizeSlides(overrideSlides, base.hero.slides),
+    },
     activeProjects: Array.isArray(override.activeProjects)
       ? override.activeProjects
       : base.activeProjects,
@@ -299,6 +307,17 @@ function mergePartnerContent(
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function normalizeSlides(value: unknown, fallback: PartnerSlide[]) {
+  if (!Array.isArray(value)) return fallback
+
+  const slides = value.filter(
+    (slide): slide is PartnerSlide =>
+      isObject(slide) && typeof slide.image === 'string' && slide.image.trim().length > 0,
+  )
+
+  return slides.length ? slides : fallback
 }
 
 async function loadCmsContent() {
