@@ -20,28 +20,44 @@ import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
 import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
 import QrDonateView from '@/views/public/DonateView.vue'
 
+// 👇 NEW: import news views
+import NewsView from '@/views/public/NewsView.vue'
+import NewsDetailView from '@/views/public/NewsDetailView.vue'
+
 export const publicRoutes = [
+  // Home
   { path: '/', component: HomeView },
-  { path: '/about/vision', component: AboutVisionView },
-  { path: '/programs/environment', component: ProgramEnviromentView },
+
+  // About
   { path: '/about', component: AboutView },
+  { path: '/about/vision', component: AboutVisionView },
   { path: '/about/organization', component: OrganizationView },
+
+  // Programs
+  { path: '/programs', component: ProgramsView, name: 'programs' },
+  { path: '/programs/environment', component: ProgramEnviromentView },
   { path: '/programs/education', component: EducationView },
-  { path: '/about/aboutview', component: AboutView },
+  { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
+  { path: '/programs/child-protection', component: ProgramsChildProtectionView, name: 'programs-child-protection' },
+
+  // Impact
   { path: '/impact/numbers', component: ImpactNumbersView },
   { path: '/impact/partners', component: ImpactPartnersView },
   { path: '/impact/timeline', component: ImpactTimelineView },
+
+  // Get Involved
   { path: '/get-involved', component: GetInvolvedView },
   { path: '/get-involved/donate', component: DonateView },
   { path: '/get-involved/volunteer', component: VolunteerView },
   { path: '/get-involved/partner', component: PartnerView },
+
+  // Contact
   { path: '/contact', component: ContactView },
-  { path: '/programs', component: ProgramsView, name: 'programs' },
-  { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
-  {
-    path: '/programs/child-protection',
-    component: ProgramsChildProtectionView,
-    name: 'programs-child-protection',
-  },
+
+  // Donation (QR)
   { path: '/qr-donate', component: QrDonateView },
+
+  // 👇 NEW: News routes
+  { path: '/news', component: NewsView, name: 'news' },
+  { path: '/news/:id', component: NewsDetailView, name: 'news-detail' },
 ]
