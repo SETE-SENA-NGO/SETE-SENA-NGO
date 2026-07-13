@@ -211,8 +211,16 @@ async function logout() {
 
 <style scoped>
 .admin-sidebar {
+  --sb-primary: #16a34a;
+  --sb-primary-deep: #0f7d38;
+  --sb-bg: #ffffff;
+  --sb-border: #d6ebde;
+  --sb-text: #123524;
+  --sb-muted: #6b8578;
+  --sb-hover-bg: #ecfdf3;
+
   width: 260px;
-  background: #100d2c;
+  background: var(--sb-bg);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -220,18 +228,20 @@ async function logout() {
   z-index: 60;
   transform: translateX(-100%);
   box-shadow: none;
+  border-right: 1px solid var(--sb-border);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .admin-sidebar.open {
   transform: translateX(0);
-  box-shadow: 18px 0 38px rgba(5, 8, 22, 0.24);
+  box-shadow: 18px 0 38px rgba(16, 88, 51, 0.1);
 }
 
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 20, 0.58);
+  background: rgba(10, 22, 17, 0.4);
   z-index: 55;
 }
 
@@ -240,8 +250,8 @@ async function logout() {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  color: #2fa2ff;
+  border-bottom: 1px solid var(--sb-border);
+  color: var(--sb-primary-deep);
   padding: 1rem 1.25rem;
   text-decoration: none;
   flex-shrink: 0;
@@ -252,12 +262,13 @@ async function logout() {
   height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  background: rgba(47, 162, 255, 0.14);
-  color: #65c7ff;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #22c55e, var(--sb-primary-deep));
+  color: #ffffff;
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: 900;
   flex-shrink: 0;
+  box-shadow: 0 10px 20px rgba(15, 125, 56, 0.22);
 }
 
 .brand-text {
@@ -274,15 +285,15 @@ async function logout() {
 }
 
 .brand-text strong {
-  color: #f8fbff;
+  color: var(--sb-text);
   font-size: 1rem;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .brand-text small {
-  color: #8f91bc;
+  color: var(--sb-muted);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 nav {
@@ -294,9 +305,9 @@ nav {
 
 .nav-heading {
   margin: 0.85rem 0 0.45rem;
-  color: #8f91bc;
+  color: var(--sb-muted);
   font-size: 0.7rem;
-  font-weight: 900;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -306,12 +317,13 @@ nav {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  border-radius: 6px;
-  color: #a9abd0;
+  border-radius: 8px;
+  color: var(--sb-text);
   padding: 0.5rem 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: none;
   font-size: 0.9rem;
+  opacity: 0.85;
 }
 
 .link > span:last-child {
@@ -323,12 +335,13 @@ nav {
 
 .link:hover,
 .link.active {
-  background: rgba(37, 99, 235, 0.18);
-  color: #ffffff;
+  background: var(--sb-hover-bg);
+  color: var(--sb-primary-deep);
+  opacity: 1;
 }
 
 .link.active {
-  box-shadow: inset 3px 0 0 #2563eb;
+  box-shadow: inset 3px 0 0 var(--sb-primary);
 }
 
 .link-icon {
@@ -459,8 +472,8 @@ nav {
   width: 0.42rem;
   height: 0.42rem;
   margin: 0 0.6rem 0 auto;
-  border-right: 2px solid #8f91bc;
-  border-bottom: 2px solid #8f91bc;
+  border-right: 2px solid var(--sb-muted);
+  border-bottom: 2px solid var(--sb-muted);
   transform: rotate(-45deg);
   transition: transform 0.18s ease;
   content: '';
@@ -481,13 +494,13 @@ nav {
   gap: 0.1rem;
   padding: 0.1rem 0 0.35rem 1.4rem;
   margin-left: 0.35rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 1px solid var(--sb-border);
 }
 
 .sub-link {
   display: block;
-  border-radius: 5px;
-  color: #7b7ea8;
+  border-radius: 6px;
+  color: var(--sb-muted);
   padding: 0.38rem 0.6rem;
   font-size: 0.84rem;
   font-weight: 700;
@@ -496,59 +509,60 @@ nav {
 }
 
 .sub-link:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #e0e2ff;
+  background: var(--sb-hover-bg);
+  color: var(--sb-primary-deep);
 }
 
 .sub-link.active {
-  background: rgba(37, 99, 235, 0.15);
-  color: #ffffff;
-  box-shadow: inset 2px 0 0 #2563eb;
+  background: var(--sb-hover-bg);
+  color: var(--sb-primary-deep);
+  box-shadow: inset 2px 0 0 var(--sb-primary);
 }
 
 .bottom {
   display: grid;
   gap: 0.45rem;
   padding: 0.75rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--sb-border);
   flex-shrink: 0;
 }
 
 .bottom-divider {
   height: 1px;
   margin: 0.25rem 0.5rem;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, var(--sb-border), transparent);
 }
 
 .settings-link {
-  color: #2dd4bf;
+  color: var(--sb-primary-deep);
   transition: all 0.2s ease;
 }
 
 .settings-link:hover {
-  color: #ffffff;
-  background: rgba(45, 212, 191, 0.2) !important;
-  box-shadow: inset 3px 0 0 #2dd4bf;
+  color: var(--sb-primary-deep);
+  background: var(--sb-hover-bg) !important;
+  box-shadow: inset 3px 0 0 var(--sb-primary);
 }
 
 .logout-link {
   width: 100%;
   min-height: 58px;
   align-items: center;
-  border: 1px solid rgba(251, 113, 133, 0.32);
-  background: rgba(251, 113, 133, 0.1);
-  color: #fecdd3;
+  border: 1px solid rgba(220, 38, 38, 0.22);
+  background: #fef2f2;
+  color: #991b1b;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
+  border-radius: 8px;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .logout-link:hover {
   color: #ffffff;
-  border-color: rgba(251, 113, 133, 0.68);
-  background: rgba(220, 38, 38, 0.28) !important;
-  box-shadow: inset 3px 0 0 #fb7185, 0 10px 24px rgba(220, 38, 38, 0.18);
+  border-color: #dc2626;
+  background: #dc2626 !important;
+  box-shadow: 0 10px 24px rgba(220, 38, 38, 0.22);
 }
 
 .logout-link:disabled {
@@ -563,13 +577,14 @@ nav {
 
 .logout-copy strong {
   font-size: 0.9rem;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .logout-copy small {
-  color: rgba(254, 205, 211, 0.72);
+  color: inherit;
+  opacity: 0.75;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 @media (min-width: 900px) {
