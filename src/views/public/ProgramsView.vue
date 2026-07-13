@@ -117,9 +117,12 @@ const cardRefs = ref<HTMLElement[]>([])
 const priorityWaveRef = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
-function setCardRef(el: Element | null, index: number) {
-  if (el) cardRefs.value[index] = el as HTMLElement
+function setCardRef(el: unknown | null, index: number) {
+  if (el && el instanceof Element) {
+    cardRefs.value[index] = el as HTMLElement
+  }
 }
+
 
 onMounted(() => {
   observer = new IntersectionObserver(
