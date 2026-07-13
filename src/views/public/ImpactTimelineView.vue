@@ -5,8 +5,6 @@ import heroImage3 from '@/assets/hero-impact-forest.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { ref } from 'vue'
 
-
-
 const milestones = [
   {
     year: '2024',
@@ -29,8 +27,7 @@ const milestones = [
   {
     year: '2020',
     title: 'COVID-19 Response',
-    description:
-      'Emergency food, hygiene and remote-learning kits reach more than 200 villages.',
+    description: 'Emergency food, hygiene and remote-learning kits reach more than 200 villages.',
     detail:
       'In partnership with local authorities, we distributed 3,500 food packs, 5,000 hygiene kits, and 2,000 radio‑based learning materials to keep children learning despite school closures.',
     image: new URL('@/assets/maps/2019.png', import.meta.url).href,
@@ -38,8 +35,7 @@ const milestones = [
   {
     year: '2018',
     title: 'Child Protection Networks',
-    description:
-      'CPNs become active across 43 communes with 24/7 referral pathways.',
+    description: 'CPNs become active across 43 communes with 24/7 referral pathways.',
     detail:
       'Each network includes trained volunteers, social workers, and local police. They have handled over 1,200 cases, ensuring vulnerable children receive immediate care and legal support.',
     image: new URL('@/assets/maps/2018.png', import.meta.url).href,
@@ -56,8 +52,7 @@ const milestones = [
   {
     year: '2011',
     title: 'Biogas program launched',
-    description:
-      'Household biogas units begin replacing firewood in remote kitchens.',
+    description: 'Household biogas units begin replacing firewood in remote kitchens.',
     detail:
       'By 2015, we had installed over 400 biogas units, reducing deforestation and improving indoor air quality. The program also trains local technicians to maintain the systems.',
     image: new URL('@/assets/maps/2011.png', import.meta.url).href,
@@ -65,8 +60,7 @@ const milestones = [
   {
     year: '2007',
     title: 'Expansion to Prey Veng',
-    description:
-      'Education and child protection programming reaches a second province.',
+    description: 'Education and child protection programming reaches a second province.',
     detail:
       'We partnered with the provincial government to replicate the Svay Rieng model, focusing on school enrolment and community‑based child protection committees.',
     image: new URL('@/assets/maps/2007.png', import.meta.url).href,
@@ -83,8 +77,7 @@ const milestones = [
   {
     year: '1998',
     title: 'First community forestry site',
-    description:
-      'Village committees take legal stewardship of 120 hectares of degraded forest.',
+    description: 'Village committees take legal stewardship of 120 hectares of degraded forest.',
     detail:
       'The site has since become a model for community‑led reforestation, with over 50,000 trees planted and a thriving biodiversity corridor. It now serves as a learning hub for other villages.',
     image: new URL('@/assets/maps/1998.png', import.meta.url).href,
@@ -109,14 +102,10 @@ const slideItems = [
 // State for expanded cards
 const expanded = ref<boolean[]>(Array.from({ length: milestones.length }, () => false))
 
-
 function toggleExpand(index: number) {
   expanded.value[index] = !expanded.value[index]
 }
-
-
 </script>
-
 
 <template>
   <div class="timeline-page">
@@ -127,8 +116,8 @@ function toggleExpand(index: number) {
         <span class="eyebrow">Impact · Timeline</span>
         <h1>Thirty years of walking with villages.</h1>
         <p>
-          From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones that shaped
-          Santi Sena.
+          From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones
+          that shaped Santi Sena.
         </p>
       </div>
     </Slideshow>
@@ -140,8 +129,8 @@ function toggleExpand(index: number) {
           <span class="label">Milestones</span>
           <h2>Progress built through patient partnership.</h2>
           <p>
-            Each step reflects a commitment to long-term, community-led change
-            grounded in trust, dignity and local stewardship.
+            Each step reflects a commitment to long-term, community-led change grounded in trust,
+            dignity and local stewardship.
           </p>
         </div>
 
@@ -188,26 +177,24 @@ function toggleExpand(index: number) {
             <h2>Santi Sena Cambodia</h2>
 
             <p>
-              For more than <strong>30 years</strong>, Santi Sena Cambodia has
-              partnered with rural communities to build peaceful, resilient and
-              sustainable livelihoods through community-led development.
+              For more than <strong>30 years</strong>, Santi Sena Cambodia has partnered with rural
+              communities to build peaceful, resilient and sustainable livelihoods through
+              community-led development.
             </p>
 
             <p>
               Working across
               <span class="highlight">293 villages</span>,
-              <span class="highlight">43 communes</span>,
-              and
-              <span class="highlight">3 provinces</span>,
-              we empower children, youth and families through education, child
-              protection, environmental conservation, sustainable livelihoods and
-              local leadership.
+              <span class="highlight">43 communes</span>, and
+              <span class="highlight">3 provinces</span>, we empower children, youth and families
+              through education, child protection, environmental conservation, sustainable
+              livelihoods and local leadership.
             </p>
 
             <p>
-              Our approach is rooted in dignity, trust and long-term partnership,
-              ensuring communities have the opportunities and capacity to create
-              lasting change for future generations.
+              Our approach is rooted in dignity, trust and long-term partnership, ensuring
+              communities have the opportunities and capacity to create lasting change for future
+              generations.
             </p>
           </div>
 
@@ -261,7 +248,7 @@ function toggleExpand(index: number) {
     105deg,
     rgba(6, 18, 13, 0.88) 0%,
     rgba(6, 18, 13, 0.55) 42%,
-    rgba(6, 18, 13, 0.20) 70%,
+    rgba(6, 18, 13, 0.2) 70%,
     transparent 100%
   );
 }
@@ -303,7 +290,7 @@ function toggleExpand(index: number) {
   background: rgba(255, 255, 255, 0.06);
   padding: 0.25rem 1rem;
   border-radius: 999px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: none;
 }
 
 .hero-content h1 {
@@ -399,7 +386,9 @@ function toggleExpand(index: number) {
   border-radius: 1.5rem;
   box-shadow: 0 8px 30px rgba(47, 36, 29, 0.06);
   border: 1px solid rgba(47, 36, 29, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   overflow: hidden;
   cursor: pointer;
 }
@@ -568,7 +557,6 @@ function toggleExpand(index: number) {
   }
 }
 
-
 /* ── Intro Section ── */
 .intro-section {
   padding: 90px 0;
@@ -672,7 +660,9 @@ function toggleExpand(index: number) {
   background: #f99f02;
   color: #fff;
   box-shadow: 0 8px 24px rgba(30, 122, 85, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
 }
 
 .cta-button:hover {

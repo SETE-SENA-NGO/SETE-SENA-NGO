@@ -712,7 +712,7 @@ onUnmounted(() => {
   background: rgba(20, 129, 62, 0.42);
   padding: 1.15rem;
   color: #fffaf0;
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 .hero-brief span {
@@ -1176,18 +1176,17 @@ onUnmounted(() => {
 
 .pop-reveal {
   opacity: 0;
-  filter: blur(8px);
+  filter: none;
   transform: translateY(58px) scale(0.92);
   transition:
     opacity 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
-    filter 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
     transform 0.72s cubic-bezier(0.2, 0.8, 0.2, 1);
   transition-delay: var(--pop-delay, 0ms);
 }
 
 .pop-reveal.is-visible {
   opacity: 1;
-  filter: blur(0);
+  filter: none;
   transform: translateY(0) scale(1);
 }
 
