@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import acledaLogo from '@/assets/acleda-logo.png'
 
 type Tab = 'qr' | 'card'
 const activeTab = ref<Tab>('qr')
@@ -15,6 +16,10 @@ interface PayMethod {
   currency: string
   steps: string[]
   headerColor: string
+  badgeColor: string
+  badgeTextColor: string
+  logo?: string
+  logoAlt?: string
   panelColor: string
   numberColor: string
 }
@@ -31,6 +36,8 @@ const methods: PayMethod[] = [
     currency: 'KHR / USD',
     steps: ['Open ABA Mobile app', 'Tap ABA PAY or Scan', 'Scan the QR code above', 'Confirm amount & payment'],
     headerColor: '#0d2c63',
+    badgeColor: '#294f8f',
+    badgeTextColor: '#ffffff',
     panelColor: '#eef1f6',
     numberColor: '#0d2c63',
   },
@@ -44,9 +51,13 @@ const methods: PayMethod[] = [
     accountNo: '0000 0000 000',
     currency: 'KHR / USD',
     steps: ['Open ACLEDA Mobile app', 'Tap QR Payment or Scan', 'Scan the QR code above', 'Confirm amount & payment'],
-    headerColor: '#d81f2b',
-    panelColor: '#fcebec',
-    numberColor: '#d81f2b',
+    headerColor: '#1d3d5c',
+    badgeColor: '#d9ad2f',
+    badgeTextColor: '#1d3d5c',
+    logo: acledaLogo,
+    logoAlt: 'ACLEDA Bank logo',
+    panelColor: '#fff4d4',
+    numberColor: '#d9ad2f',
   },
 ]
 </script>
@@ -73,7 +84,16 @@ const methods: PayMethod[] = [
     <section v-if="activeTab === 'qr'" class="cards">
       <article v-for="m in methods" :key="m.key" class="pay-card">
         <div class="card-header" :style="{ background: m.headerColor }">
-          <div class="badge">{{ m.badge }}</div>
+          <div
+            v-if="!m.logo"
+            class="badge"
+            :style="{ background: m.badgeColor, color: m.badgeTextColor }"
+          >
+            {{ m.badge }}
+          </div>
+          <div v-else class="logo-badge">
+            <img :src="m.logo" :alt="m.logoAlt" />
+          </div>
           <div>
             <div class="bank-name">{{ m.bank }}</div>
             <div class="bank-subtitle">{{ m.subtitle }}</div>
@@ -137,8 +157,8 @@ const methods: PayMethod[] = [
 
 <style scoped>
 .donate-page {
-  background: #f4f5fa;
-  color: #1f2430;
+  background: var(--color-cream);
+  color: var(--color-ink);
   min-height: 100vh;
   padding: 3rem 1.5rem 4rem;
 }
@@ -152,7 +172,7 @@ const methods: PayMethod[] = [
   margin: 0 0 0.75rem;
 }
 .subtitle {
-  color: #6b7280;
+  color: var(--color-ink-soft);
   margin: 0 auto 1.5rem;
   max-width: 640px;
   line-height: 1.5;
@@ -160,20 +180,41 @@ const methods: PayMethod[] = [
 
 .tabs {
   display: inline-flex;
-  gap: 1.5rem;
-  border-bottom: 1px solid #e1e3ec;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
 }
 .tab {
-  background: none;
-  border: none;
-  padding: 0.6rem 0.2rem;
+  min-height: 3rem;
+  border: 1px solid #1d3d5c;
+  border-radius: 999px;
+  background: transparent;
+  padding: 0.75rem 1.45rem;
   font-weight: 600;
-  color: #9ca3af;
-  border-bottom: 2px solid transparent;
+  line-height: 1.1;
+  color: #1d3d5c;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease;
+}
+.tab:hover {
+  border-color: #d9ad2f;
+  color: #1d3d5c;
+  transform: translateY(-1px);
 }
 .tab.active {
-  color: #1f2430;
-  border-bottom-color: #1f2430;
+  background: #1d3d5c;
+  color: var(--color-white);
+  border-color: #1d3d5c;
+  box-shadow: 0 12px 24px rgba(29, 61, 92, 0.18);
+}
+.tab.active:hover {
+  background: #17314a;
+  color: var(--color-white);
+  border-color: #17314a;
 }
 
 .cards {
@@ -185,10 +226,11 @@ const methods: PayMethod[] = [
 }
 
 .pay-card {
-  background: #fff;
+  background: linear-gradient(145deg, var(--color-white) 0%, var(--color-cream-soft) 100%);
+  border: 1px solid var(--color-border);
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(20, 20, 40, 0.08);
+  box-shadow: 0 14px 34px rgba(43, 43, 40, 0.08);
 }
 
 .card-header {
@@ -202,12 +244,26 @@ const methods: PayMethod[] = [
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 0.6rem;
-  background: rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 0.75rem;
+}
+.logo-badge {
+  width: 7.5rem;
+  height: 2.75rem;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 0.35rem 0.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 .bank-name {
   font-weight: 700;
@@ -246,7 +302,7 @@ const methods: PayMethod[] = [
 }
 .qr-file {
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: var(--color-ink-soft);
 }
 .mini-badge {
   position: absolute;
@@ -264,12 +320,12 @@ const methods: PayMethod[] = [
   align-items: baseline;
   justify-content: space-between;
   padding: 0.65rem 0;
-  border-bottom: 1px solid #eef0f5;
+  border-bottom: 1px solid var(--color-border);
 }
 .details dt {
   font-size: 0.7rem;
   letter-spacing: 0.05em;
-  color: #9ca3af;
+  color: var(--color-ink-soft);
   text-transform: uppercase;
 }
 .details dd {
@@ -321,28 +377,34 @@ const methods: PayMethod[] = [
 .card-payment {
   max-width: 700px;
   margin: 0 auto;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  background: linear-gradient(145deg, var(--color-white) 0%, var(--color-cream-soft) 100%);
+  padding: 1.5rem;
   text-align: center;
-  color: #6b7280;
+  color: var(--color-ink-soft);
+  box-shadow: 0 10px 24px rgba(43, 43, 40, 0.06);
 }
 
 .notice {
   max-width: 900px;
   margin: 2.5rem auto 0;
-  background: #fff;
+  background: linear-gradient(145deg, var(--color-white) 0%, var(--color-cream-soft) 100%);
+  border: 1px solid var(--color-border);
   border-radius: 0.9rem;
   padding: 1.25rem 1.5rem;
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  box-shadow: 0 6px 20px rgba(20, 20, 40, 0.06);
+  box-shadow: 0 10px 24px rgba(43, 43, 40, 0.06);
 }
 .notice-icon {
   flex-shrink: 0;
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: #eef1f6;
-  color: #0d2c63;
+  background: #fff4d4;
+  color: #1d3d5c;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -351,12 +413,12 @@ const methods: PayMethod[] = [
   margin: 0;
 }
 .notice a {
-  color: #0d2c63;
+  color: #1d3d5c;
   font-weight: 600;
 }
 .notice-sub {
   margin-top: 0.35rem;
-  color: #9ca3af;
+  color: var(--color-ink-soft);
   font-size: 0.9rem;
 }
 </style>
