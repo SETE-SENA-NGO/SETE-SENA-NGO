@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 
+defineOptions({ name: 'SharedSlideshow' })
+
 interface SlideItem {
   image: string
   caption: string
 }
+
 
 const props = withDefaults(
   defineProps<{
@@ -98,6 +101,34 @@ onUnmounted(stopAutoplay)
   background: var(--color-ink);
 }
 
+/* Background “header” overlay (used when pages want consistent hero styling)
+   without needing to create their own overlay in each page. */
+.slideshow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(6, 18, 13, 0.88) 0%,
+    rgba(6, 18, 13, 0.55) 45%,
+    rgba(6, 18, 13, 0.28) 70%,
+    rgba(6, 18, 13, 0.06) 100%
+  );
+  z-index: 0;
+}
+
+/* Keep images above the background overlay */
+.slideshow-track {
+  position: relative;
+  z-index: 1;
+}
+
+.slideshow-slide {
+  z-index: 1;
+}
+
+
+
 @media (min-width: 640px) {
   .slideshow {
     height: 360px;
@@ -160,6 +191,8 @@ onUnmounted(stopAutoplay)
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: blur(2px);
+  transform: scale(1.04);
 }
 
 .slideshow-caption {
