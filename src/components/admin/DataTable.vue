@@ -1,15 +1,35 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{
-  columns: { key: string; label: string }[]
-  data: unknown[]
+const props = withDefaults(
+  defineProps<{
+    columns: { key: string; label: string }[]
+    data: unknown[]
+    selectable?: boolean
+  }>(),
+  {
+    selectable: false,
+  },
+)
+
+const emit = defineEmits<{
+  'row-select': [row: unknown]
 }>()
 
 const rows = computed(() => props.data)
 
 function cell(row: unknown, key: string) {
   return (row as Record<string, unknown>)[key]
+}
+
+function rowKey(row: unknown, index: number) {
+  const record = row as Record<string, unknown>
+  return String(record.id ?? record.slug ?? index)
+}
+
+function selectRow(row: unknown) {
+  if (!props.selectable) return
+  emit('row-select', row)
 }
 </script>
 
@@ -22,7 +42,14 @@ function cell(row: unknown, key: string) {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(row, idx) in rows" :key="idx">
+        <tr
+          v-for="(row, idx) in rows"
+          :key="rowKey(row, idx)"
+          :class="{ 'is-selectable': selectable }"
+          :tabindex="selectable ? 0 : undefined"
+          @click="selectRow(row)"
+          @keydown.enter.prevent="selectRow(row)"
+        >
           <td v-for="col in columns" :key="col.key">{{ cell(row, col.key) }}</td>
         </tr>
       </tbody>
@@ -50,5 +77,13 @@ td {
 }
 th {
   background: #0c0c0e;
+}
+.is-selectable {
+  cursor: pointer;
+}
+.is-selectable:hover,
+.is-selectable:focus {
+  background: rgba(255, 255, 255, 0.04);
+  outline: none;
 }
 </style>

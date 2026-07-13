@@ -1,18 +1,33 @@
 <script setup lang="ts">
+import { watch } from 'vue'
 import { useContentEditor } from '@/composables/useContentEditor'
 import type { PageContent } from '@/types/content'
 
 const props = defineProps<{ page?: PageContent | null }>()
-const { draft, save, reset } = useContentEditor(props.page || undefined)
+const emit = defineEmits<{
+  saved: [page: PageContent]
+}>()
+
+const { draft, save, reset } = useContentEditor()
+
+watch(
+  () => props.page,
+  (page) => reset(page || undefined),
+  { immediate: true },
+)
 
 async function onSubmit() {
-  await save()
-  reset(props.page || undefined)
+  const savedPage = await save()
+  emit('saved', savedPage)
 }
 </script>
 
 <template>
   <form class="content-editor" @submit.prevent="onSubmit">
+    <div class="editor-heading">
+      <h2>{{ draft.id ? 'Edit page' : 'Create page' }}</h2>
+      <p>Use slug <strong>get-involved-partner</strong> for partner page JSON.</p>
+    </div>
     <label>
       Slug
       <input v-model="draft.slug" required />
@@ -23,7 +38,7 @@ async function onSubmit() {
     </label>
     <label>
       Body
-      <textarea v-model="draft.body" rows="6" />
+      <textarea v-model="draft.body" rows="12" />
     </label>
     <button type="submit" class="primary">Save</button>
   </form>
@@ -34,6 +49,18 @@ async function onSubmit() {
   display: grid;
   gap: 0.75rem;
   max-width: 800px;
+}
+.editor-heading {
+  display: grid;
+  gap: 0.25rem;
+}
+.editor-heading h2,
+.editor-heading p {
+  margin: 0;
+}
+.editor-heading p {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 label {
   display: flex;
