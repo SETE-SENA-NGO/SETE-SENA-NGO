@@ -354,7 +354,7 @@ onMounted(() => {
 .section-header h2 {
     font-size: clamp(1.8rem, 2.5vw, 2.8rem);
     font-weight: 700;
-    color: var(--primary-dark, #1e4d3a);
+    color:  #1a3d2e;
     letter-spacing: -0.02em;
     margin: 0 0 0.75rem;
 }
