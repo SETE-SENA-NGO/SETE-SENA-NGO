@@ -1,11 +1,7 @@
 # TODO
 
-- [ ] Review current ImpactNumbersView.vue map/card positioning and province label coordinates.
-- [ ] Update CSS to vertically center the map in the operation section.
-- [ ] Reposition the statistics card to the upper-right of the map area and overlap the map slightly.
-- [ ] Adjust responsive behavior: on <=1024px stack card below map and center.
-- [x] Fix Kratie label/highlight coordinates to better match the northeast location.
-
-- [x] Ensure no broken styles (scoped CSS) and app builds.
-
+- [ ] Update `src/views/public/ImpactTimelineView.vue` timeline year positioning so the `.node-year` always appears on the opposite side of the card/image relative to the center dot (desktop).
+- [ ] Ensure CSS has no duplicate conflicting `.node-year` rules.
+- [ ] Keep existing mobile/responsive behavior intact.
+- [ ] Run build/dev server (or at least `npm run dev`) to visually verify alignment.
 
