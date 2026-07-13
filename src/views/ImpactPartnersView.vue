@@ -207,46 +207,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
-// Slideshow background images (Unsplash - free to use)
-const slides = [
-  'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80', // community
-  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80', // hands together
-  'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&q=80', // children education
-  'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=1600&q=80', // nature/sustainability
+const slideItems = [
+  { image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80', caption: '' },
+  {
+    image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80',
+    caption: '',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&q=80',
+    caption: '',
+  },
+  { image: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=1600&q=80', caption: '' },
 ]
-
-const currentSlide = ref(0)
-const isTransitioning = ref(false)
-let intervalId: ReturnType<typeof setInterval> | null = null
-
-function nextSlide() {
-  if (isTransitioning.value) return
-  isTransitioning.value = true
-  currentSlide.value = (currentSlide.value + 1) % slides.length
-  setTimeout(() => {
-    isTransitioning.value = false
-  }, 1200)
-}
-
-function startSlideshow() {
-  intervalId = setInterval(nextSlide, 5000)
-}
-
-function stopSlideshow() {
-  if (intervalId) {
-    clearInterval(intervalId)
-    intervalId = null
-  }
-}
-
-onMounted(() => {
-  startSlideshow()
-})
-
-onUnmounted(() => {
-  stopSlideshow()
-})
 
 // Partner data
 const partners = [
@@ -395,7 +369,7 @@ function startSmoothScroll() {
   const scrollTrack = track
 
   function step() {
-    if (!track) return;
+    if (!track) return
     if (!isPaused.value) {
       scrollPos -= speed
       // When we've scrolled past one full set of partners, reset position
@@ -426,8 +400,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  stopSmoothScroll();
-});
+  stopSmoothScroll()
+})
 </script>
 
 <style scoped>
@@ -491,7 +465,13 @@ onUnmounted(() => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(6, 18, 13, 0.82) 0%,
+    rgba(6, 18, 13, 0.5) 42%,
+    rgba(6, 18, 13, 0.18) 72%,
+    transparent 100%
+  );
 }
 
 .hero-content {
@@ -672,7 +652,9 @@ onUnmounted(() => {
   border-radius: 12px;
   margin-bottom: 0.75rem;
   color: var(--primary-color);
-  transition: transform 0.3s ease, background 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
 }
 
 .gov-card:hover .gov-icon {
@@ -785,7 +767,9 @@ onUnmounted(() => {
   border-radius: 50%;
   margin: 0 auto 1rem;
   color: var(--primary-color);
-  transition: transform 0.3s ease, background 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
 }
 
 .why-card:hover .why-icon {

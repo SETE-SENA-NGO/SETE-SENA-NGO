@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
 interface ProgramGoal {
@@ -37,7 +37,8 @@ const goals: ProgramGoal[] = [
       'Set up village pre-schools, train local teachers, stock small libraries, and support scholarships for at-risk children — especially girls.',
     whyItMatters:
       'In the districts we work in, many hamlets are more than an hour is walk from the nearest school. Early learning centres change that.',
-    quote: 'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
+    quote:
+      'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
     image: '/images/programs/education.jpg',
   },
   {
@@ -50,7 +51,8 @@ const goals: ProgramGoal[] = [
       'Train Saving-for-Change facilitators, seed household enterprises and link cooperatives to fair-price buyers.',
     whyItMatters:
       'Cash predictability is what lets a family send their child to school this term instead of to a garment factory.',
-    quote: 'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
+    quote:
+      'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
     image: '/images/programs/livelihood.jpg',
   },
   {
@@ -99,8 +101,7 @@ const priorityIcons: Record<string, string> = {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20a4 4 0 0 0-8 0"/><circle cx="13" cy="10" r="3.5"/><path d="M3 20a3.5 3.5 0 0 1 5.2-3.05"/><circle cx="6.5" cy="9" r="2.5"/></svg>',
   sprout:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c0-3 2-5 6-5-1 3-3 5-6 5z"/><path d="M12 13c0-3-2-5-6-5 1 3 3 5 6 5z"/></svg>',
-  book:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M20 18H6.5a2.5 2.5 0 0 0-2.5 2.5"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M20 18H6.5a2.5 2.5 0 0 0-2.5 2.5"/></svg>',
   megaphone:
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l2 5h2l-1-5h2l8 4V6l-8 4H6a2 2 0 0 0-2 2z"/><path d="M13 10V6"/></svg>',
 }
@@ -117,8 +118,18 @@ const cardRefs = ref<HTMLElement[]>([])
 const priorityWaveRef = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
-function setCardRef(el: Element | null, index: number) {
-  if (el) cardRefs.value[index] = el as HTMLElement
+function setCardRef(el: Element | ComponentPublicInstance | null, index: number) {
+  let element: unknown = null
+
+  if (el instanceof HTMLElement) {
+    element = el
+  } else if (el instanceof Element) {
+    element = null
+  } else if (el) {
+    element = el.$el
+  }
+
+  if (element instanceof HTMLElement) cardRefs.value[index] = element
 }
 
 onMounted(() => {
@@ -157,9 +168,8 @@ function getNodeLeft(idx: number) {
         <p class="eyebrow">OUR PROGRAMS</p>
         <h1>Four roots. One tree of peace.</h1>
         <p class="lead">
-          Santi Sena's work follows four interwoven strategic goals — environment,
-          education, livelihoods and child protection — each delivered with and by
-          the communities themselves.
+          Santi Sena's work follows four interwoven strategic goals — environment, education,
+          livelihoods and child protection — each delivered with and by the communities themselves.
         </p>
       </div>
     </Slideshow>
@@ -309,7 +319,8 @@ function getNodeLeft(idx: number) {
   /* scroll-reveal: card fades/rises in, image is clipped by overflow:hidden above */
   opacity: 0;
   transform: translateY(56px);
-  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .goal-card.is-visible {
@@ -364,7 +375,9 @@ function getNodeLeft(idx: number) {
   /* text settles in just after the image starts revealing */
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 0.7s ease 0.25s, transform 0.7s ease 0.25s;
+  transition:
+    opacity 0.7s ease 0.25s,
+    transform 0.7s ease 0.25s;
 }
 .goal-card.is-visible .goal-content {
   opacity: 1;
@@ -463,7 +476,9 @@ function getNodeLeft(idx: number) {
   align-items: center;
   text-align: center;
   opacity: 0;
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
 }
 .priorities-wave.is-visible .wave-node {
   opacity: 1;
@@ -495,7 +510,9 @@ function getNodeLeft(idx: number) {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 .wave-node:hover .node-icon {
   transform: translateY(-4px);
