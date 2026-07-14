@@ -342,12 +342,12 @@
 }
 
 .section {
-  padding: 5rem 0;
+  padding: 4rem 0;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 3.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .overview-section,
@@ -684,7 +684,7 @@
    Quote
    ===================== */
 .quote-section {
-  padding: 5rem 0;
+  padding: 4rem 0;
   background: linear-gradient(180deg, var(--color-cream-soft) 0%, #f0e6d8 100%);
   border-top: 1px solid rgba(27, 163, 79, 0.08);
   border-bottom: 1px solid rgba(27, 163, 79, 0.08);
@@ -733,7 +733,7 @@
    CTA
    ===================== */
 .cta-section {
-  padding: 5rem 0;
+  padding: 4rem 0;
   background: linear-gradient(135deg, var(--color-cream-soft) 0%, #f0e6d8 100%);
   position: relative;
 }

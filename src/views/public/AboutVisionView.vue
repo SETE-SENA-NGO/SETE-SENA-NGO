@@ -301,12 +301,12 @@
 }
 
 .section {
-  padding: 5rem 0;
+  padding: 4rem 0;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 3.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .vision-section,
@@ -589,7 +589,7 @@
    Quote
    ===================== */
 .quote-section {
-  padding: 5rem 0;
+  padding: 4rem 0;
   background: var(--color-cream-soft);
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
@@ -630,7 +630,7 @@
    CTA
    ===================== */
 .cta-section {
-  padding: 5rem 0;
+  padding: 4rem 0;
   background: var(--color-cream-soft);
 }
 

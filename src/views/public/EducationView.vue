@@ -209,17 +209,37 @@ onBeforeUnmount(() => {
     <!-- ════════════════════ INTRO ════════════════════ -->
     <section class="section intro-section">
       <div class="container">
-        <div
-          :ref="(el) => setRevealRef(el, 0)"
-          class="reveal intro-inner"
-        >
-          <div class="intro-rule" aria-hidden="true"></div>
-          <p class="intro-text">
-            Most rural Cambodian children miss the critical years before primary school. Santi Sena
-            fills that gap with low-cost community pre-schools, then keeps walking with families
-            through scholarships, libraries and youth groups that sustain a child's journey from
-            early learning through adolescence.
-          </p>
+        <div class="intro-grid">
+          <div
+            :ref="(el) => setRevealRef(el, 0)"
+            class="reveal intro-content"
+          >
+            <p class="section-eyebrow">Our Mission</p>
+            <h2 class="section-title">Learning that starts at three years old</h2>
+            <p class="intro-text">
+              Most rural Cambodian children miss the critical years before primary school. Santi Sena
+              fills that gap with low-cost community pre-schools, then keeps walking with families
+              through scholarships, libraries and youth groups that sustain a child's journey from
+              early learning through adolescence.
+            </p>
+          </div>
+          <div
+            :ref="(el) => setRevealRef(el, 1)"
+            class="reveal intro-image-wrap"
+          >
+            <div class="intro-image-frame">
+              <img
+                src="https://images.unsplash.com/photo-1588072432836-e10032774350?w=700&q=80"
+                alt="Young children learning in a Cambodian pre-school classroom"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div class="intro-image-accent">
+              <span class="accent-number">30+</span>
+              <span class="accent-label">Years serving rural communities</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -229,7 +249,7 @@ onBeforeUnmount(() => {
       <div class="container">
         <div class="two-col-grid">
           <div
-            :ref="(el) => setRevealRef(el, 1)"
+            :ref="(el) => setRevealRef(el, 2)"
             class="reveal col-text"
           >
             <p class="section-eyebrow">Our Work</p>
@@ -252,7 +272,7 @@ onBeforeUnmount(() => {
             </ul>
           </div>
           <div
-            :ref="(el) => setRevealRef(el, 2)"
+            :ref="(el) => setRevealRef(el, 3)"
             class="reveal col-image"
           >
             <div class="photo-duo">
@@ -284,7 +304,7 @@ onBeforeUnmount(() => {
       <div class="approach-overlay" />
       <div class="container approach-inner">
         <div
-          :ref="(el) => setRevealRef(el, 3)"
+          :ref="(el) => setRevealRef(el, 4)"
           class="reveal"
         >
           <p class="section-eyebrow section-eyebrow--light text-center">Methodology</p>
@@ -298,7 +318,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div
-          :ref="(el) => setRevealRef(el, 4)"
+          :ref="(el) => setRevealRef(el, 5)"
           class="reveal testimonial-block"
         >
           <svg
@@ -326,7 +346,7 @@ onBeforeUnmount(() => {
     <section class="section team-section">
       <div class="container">
         <div
-          :ref="(el) => setRevealRef(el, 5)"
+          :ref="(el) => setRevealRef(el, 6)"
           class="reveal text-center"
         >
           <p class="section-eyebrow">Organizational Structure</p>
@@ -337,7 +357,7 @@ onBeforeUnmount(() => {
           <div
             v-for="(member, index) in teamCards"
             :key="member.role"
-            :ref="(el) => setRevealRef(el, 6 + index)"
+            :ref="(el) => setRevealRef(el, 7 + index)"
             class="reveal team-card"
             :style="{ transitionDelay: `${index * 0.08}s` }"
           >
@@ -411,35 +431,57 @@ onBeforeUnmount(() => {
     <!-- ════════════════════ WHY IT MATTERS ════════════════════ -->
     <section class="section impact-section">
       <div class="container">
-        <div
-          :ref="(el) => setRevealRef(el, 10)"
-          class="reveal text-center"
-        >
-          <p class="section-eyebrow">Impact</p>
-          <h2 class="section-title">Why it matters</h2>
-        </div>
-
-        <div class="impact-grid">
+        <div class="impact-layout">
           <div
-            v-for="(item, index) in whyItems"
-            :key="item"
-            :ref="(el) => setRevealRef(el, 11 + index)"
-            class="reveal impact-card"
-            :style="{ transitionDelay: `${index * 0.1}s` }"
+            :ref="(el) => setRevealRef(el, 11)"
+            class="reveal impact-image-wrap"
           >
-            <div class="impact-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6" />
-                <path
-                  d="M8 12.5l2.5 2.5 5-5"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
+            <div class="impact-image-frame">
+              <img
+                src="https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?w=700&q=80"
+                alt="Children studying together in a rural school"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
-            <p class="impact-text">{{ item }}</p>
+            <div class="impact-image-badge">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+              <span>Every child deserves an education</span>
+            </div>
+          </div>
+          <div class="impact-text-wrap">
+            <div
+              :ref="(el) => setRevealRef(el, 12)"
+              class="reveal"
+            >
+              <p class="section-eyebrow">Impact</p>
+              <h2 class="section-title">Why it matters</h2>
+            </div>
+            <div class="impact-card-grid">
+              <div
+                v-for="(item, index) in whyItems"
+                :key="item"
+                :ref="(el) => setRevealRef(el, 13 + index)"
+                class="reveal impact-card"
+                :style="{ transitionDelay: `${index * 0.1}s` }"
+              >
+                <div class="impact-icon">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6" />
+                    <path
+                      d="M8 12.5l2.5 2.5 5-5"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <p class="impact-text">{{ item }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -447,10 +489,11 @@ onBeforeUnmount(() => {
 
     <!-- ════════════════════ CTA ════════════════════ -->
     <section class="cta-section">
-      <div class="cta-glow" aria-hidden="true"></div>
+      <div class="cta-bg" />
+      <div class="cta-overlay" />
       <div class="container cta-inner">
         <div
-          :ref="(el) => setRevealRef(el, 15)"
+          :ref="(el) => setRevealRef(el, 17)"
           class="reveal text-center"
         >
           <p class="cta-eyebrow">Get Involved</p>
@@ -549,7 +592,7 @@ onBeforeUnmount(() => {
 }
 
 /* ═══════════════════════════════════════════
-   PAGE HEADER
+   PAGE HEADER — Clean & simple
    ═══════════════════════════════════════════ */
 
 .page-header {
@@ -653,7 +696,7 @@ onBeforeUnmount(() => {
 }
 
 /* ═══════════════════════════════════════════
-   INTRO
+   INTRO — Two column with image
    ═══════════════════════════════════════════ */
 
 .intro-section {
@@ -661,25 +704,79 @@ onBeforeUnmount(() => {
   padding-top: 3.5rem;
 }
 
-.intro-inner {
-  text-align: center;
-  max-width: 780px;
-  margin: 0 auto;
+.intro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5rem;
+  align-items: center;
 }
 
-.intro-rule {
-  width: 56px;
-  height: 3px;
-  border-radius: 999px;
-  background: var(--primary-color);
-  margin: 0 auto 1.75rem;
+.intro-content {
+  order: 1;
 }
 
 .intro-text {
-  font-size: 1.08rem;
+  font-size: 1.05rem;
   line-height: 1.8;
   color: var(--color-ink-soft);
   margin: 0;
+}
+
+.intro-image-wrap {
+  order: 2;
+  position: relative;
+}
+
+.intro-image-frame {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 44px -16px rgba(22, 52, 42, 0.3);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.intro-image-frame:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 28px 56px -18px rgba(22, 52, 42, 0.4);
+}
+
+.intro-image-frame img {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.intro-image-frame:hover img {
+  transform: scale(1.06);
+}
+
+.intro-image-accent {
+  position: absolute;
+  bottom: -1.25rem;
+  left: -1.25rem;
+  background: var(--primary-color);
+  color: #ffffff;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px -8px rgba(22, 52, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  z-index: 2;
+}
+
+.accent-number {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.accent-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.9;
 }
 
 /* ═══════════════════════════════════════════
@@ -951,26 +1048,87 @@ onBeforeUnmount(() => {
 }
 
 /* ═══════════════════════════════════════════
-   WHY IT MATTERS — Impact
+   WHY IT MATTERS — Two column with image
    ═══════════════════════════════════════════ */
 
 .impact-section {
   background: var(--color-cream);
 }
 
-.impact-grid {
+.impact-layout {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  max-width: 800px;
-  margin: 0 auto;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+
+.impact-image-wrap {
+  position: relative;
+}
+
+.impact-image-frame {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 44px -16px rgba(22, 52, 42, 0.3);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.impact-image-frame:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 56px -18px rgba(22, 52, 42, 0.4);
+}
+
+.impact-image-frame img {
+  width: 100%;
+  height: 480px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.impact-image-frame:hover img {
+  transform: scale(1.06);
+}
+
+.impact-image-badge {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.impact-image-badge svg {
+  width: 18px;
+  height: 18px;
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.impact-text-wrap {
+  order: 1;
+}
+
+.impact-card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 .impact-card {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   background: #ffffff;
   border-radius: 16px;
   border: 1px solid rgba(22, 52, 42, 0.06);
@@ -982,7 +1140,7 @@ onBeforeUnmount(() => {
 }
 
 .impact-card:hover {
-  transform: translateY(-4px);
+  transform: translateX(6px);
   box-shadow: 0 16px 32px -14px rgba(22, 52, 42, 0.2);
   border-color: var(--primary-color);
 }
@@ -1013,34 +1171,32 @@ onBeforeUnmount(() => {
 }
 
 /* ═══════════════════════════════════════════
-   CTA
+   CTA — with background image
    ═══════════════════════════════════════════ */
 
 .cta-section {
   position: relative;
-  background: linear-gradient(
-    135deg,
-    var(--color-cream-soft) 0%,
-    var(--primary-light) 100%
-  );
   padding: 5rem 0;
   overflow: hidden;
 }
 
-.cta-glow {
+.cta-bg {
   position: absolute;
-  top: -40%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(27, 163, 79, 0.08) 0%,
-    transparent 70%
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1544717302-de2939b7ef71?w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.cta-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(6, 18, 13, 0.88) 0%,
+    rgba(6, 18, 13, 0.75) 100%
   );
-  pointer-events: none;
 }
 
 .cta-inner {
@@ -1050,7 +1206,7 @@ onBeforeUnmount(() => {
 }
 
 .cta-eyebrow {
-  color: var(--primary-color);
+  color: var(--primary-light);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1060,12 +1216,13 @@ onBeforeUnmount(() => {
 
 .cta-title {
   font-weight: 700;
-  color: var(--primary-dark);
+  color: #ffffff;
   margin-bottom: 0.75rem;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 .cta-desc {
-  color: var(--color-ink-soft);
+  color: rgba(255, 255, 255, 0.85);
   line-height: 1.7;
   margin-bottom: 2rem;
   max-width: 520px;
@@ -1100,12 +1257,12 @@ onBeforeUnmount(() => {
     box-shadow 0.25s ease;
   white-space: nowrap;
   cursor: pointer;
+  border: 1px solid transparent;
 }
 
 .btn--primary {
   background: var(--primary-color);
   color: #ffffff;
-  border: 1px solid transparent;
 }
 
 .btn--primary:hover {
@@ -1115,16 +1272,15 @@ onBeforeUnmount(() => {
 }
 
 .btn--outline {
-  background: transparent;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }
 
 .btn--outline:hover {
-  background: var(--primary-color);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px -8px rgba(22, 52, 42, 0.3);
 }
 
 .btn--large {
@@ -1134,8 +1290,6 @@ onBeforeUnmount(() => {
 
 .btn-arrow {
   display: inline-block;
-  width: 18px;
-  height: 18px;
   transition: transform 0.25s ease;
 }
 
@@ -1154,6 +1308,29 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
+  .intro-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .intro-content {
+    order: 2;
+  }
+
+  .intro-image-wrap {
+    order: 1;
+  }
+
+  .intro-image-frame img {
+    height: 300px;
+  }
+
+  .intro-image-accent {
+    bottom: -1rem;
+    left: -1rem;
+    padding: 1rem 1.25rem;
+  }
+
   .two-col-grid {
     grid-template-columns: 1fr;
     gap: 2.5rem;
@@ -1172,9 +1349,22 @@ onBeforeUnmount(() => {
     width: 58%;
     height: 190px;
   }
+
+  .impact-layout {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .impact-image-frame img {
+    height: 360px;
+  }
 }
 
 @media (max-width: 768px) {
+  .page-header {
+    padding: 2.5rem 0 1.5rem;
+  }
+
   .stats-band-wrap {
     padding-top: 1.25rem;
   }
@@ -1197,10 +1387,6 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr 1fr;
   }
 
-  .impact-grid {
-    grid-template-columns: 1fr;
-  }
-
   .approach-section {
     padding: 4rem 0;
     background-attachment: scroll;
@@ -1213,6 +1399,14 @@ onBeforeUnmount(() => {
   .cta-section {
     padding: 3.5rem 0;
   }
+
+  .cta-bg {
+    background-attachment: scroll;
+  }
+
+  .cta-bg {
+    background-attachment: scroll;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1222,6 +1416,14 @@ onBeforeUnmount(() => {
 
   .page-header-desc {
     font-size: 0.95rem;
+  }
+
+  .intro-image-frame img {
+    height: 260px;
+  }
+
+  .impact-image-frame img {
+    height: 280px;
   }
 
   .team-grid {
