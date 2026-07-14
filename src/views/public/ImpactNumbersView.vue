@@ -2,18 +2,6 @@
 import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue'
 import cambodiaMap from '@/assets/maps/cambodia.png'
 
-import heroImage from '@/assets/hero-impact.jpg'
-import heroImpactForest from '@/assets/hero-impact-forest.jpg'
-import heroImpactVillage from '@/assets/hero-impact-village.jpg'
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-// ─── SLIDESHOW ──────────────────────────────────────────────────────
-const slideItems = [
-    { image: heroImage, caption: '' },
-    { image: heroImpactForest, caption: '' },
-    { image: heroImpactVillage, caption: '' },
-]
-
 type StatItem = {
   value: string
   label: string
@@ -26,7 +14,7 @@ const overviewItems: StatItem[] = [
   { value: '3', label: 'Provinces', desc: 'Continuous field presence since 1994.' },
 ]
 
-// ─── FLIP CARD DATA (icons removed) ──────────────────────────────
+// ─── FLIP CARD DATA ──────────────────────────────────────────────
 const sections = [{
     title: 'Environment',
     icon: 'tree',
@@ -62,51 +50,18 @@ const sections = [{
 },
 ]
 
-const countingMethods = [
-  'Quarterly field monitoring against pre-agreed indicators for every project',
-  'Annual audited financial statements available on request',
-  'Village-level feedback sessions built into every program cycle',
-  'External evaluations commissioned at the close of major grants',
-]
-
-const heroImages = [heroImage, heroImpactForest, heroImpactVillage]
-const activeHeroIndex = ref(0)
-let slideTimer: number | undefined
-
-const isReducedMotion = () => {
-    if (typeof window === 'undefined') return false
-    return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
-}
-
-const startSlideshow = () => {
-    if (isReducedMotion()) return
-    stopSlideshow()
-    slideTimer = window.setInterval(() => {
-        activeHeroIndex.value = (activeHeroIndex.value + 1) % heroImages.length
-    }, 5000)
-}
-
-const stopSlideshow = () => {
-    if (slideTimer) {
-        window.clearInterval(slideTimer)
-        slideTimer = undefined
-    }
-}
-
 // ─── SCROLL‑TRIGGERED POP‑UP (Intersection Observer) ──────────────
 let observers: IntersectionObserver[] = []
 
 const setupObservers = () => {
-    // Clean up old observers
     observers.forEach(obs => obs.disconnect())
     observers = []
 
-    // Target all cards that should pop up
     const selectors = [
         '.stat-card',
         '.flip-card-wrapper',
         '.bullet-list li',
-        '.cta-content',          // CTA section
+        '.cta-content',
     ]
 
     const elements = document.querySelectorAll(selectors.join(','))
@@ -151,39 +106,42 @@ onMounted(() => {
     el.content = content
   }
 
-    setMeta('description', "Villages, hectares, students, savings groups and biogas units — the measurable footprint of Santi Sena's 30 years in Cambodia.")
-    setOgMeta('og:title', 'Impact by the Numbers — Santi Sena')
-    setOgMeta('og:description', '293 villages, 570+ hectares of forest, and counting.')
+  setMeta('description', "Villages, hectares, students, savings groups and biogas units — the measurable footprint of Santi Sena's 30 years in Cambodia.")
+  setOgMeta('og:title', 'Impact by the Numbers — Santi Sena')
+  setOgMeta('og:description', '293 villages, 570+ hectares of forest, and counting.')
 
-    startSlideshow()
-
-    // Set up observers after DOM render
-    nextTick(() => {
-        setupObservers()
-    })
+  nextTick(() => {
+    setupObservers()
+  })
 })
 
 onBeforeUnmount(() => {
-    stopSlideshow()
-    observers.forEach(obs => obs.disconnect())
+  observers.forEach(obs => obs.disconnect())
 })
 </script>
 
 <template>
     <div class="numbers-page">
-        <!-- HERO -->
-        <Slideshow :slides="slideItems">
-            <div class="hero-overlay" />
-            <div class="hero-content">
-                <span class="eyebrow">Impact · By the Numbers</span>
-                <h1>Thirty years, measured village by village.</h1>
-                <p>
-                    Numbers do not tell the whole story, but they keep us honest. Every figure below is drawn from our
-                    annual
-                    monitoring and audited reports.
-                </p>
+        <!-- ─── NEW CENTERED HEADER WITH LEAF MOTIF ─── -->
+        <header class="hero-centered">
+            <div class="container">
+                <div class="hero-inner">
+
+
+                    <span class="eyebrow">Impact · By the Numbers</span>
+                    <h1>Thirty years, measured village by village.</h1>
+                    <p class="hero-description">
+                        Numbers do not tell the whole story, but they keep us honest. Every figure below is drawn from our
+                        annual monitoring and audited reports.
+                    </p>
+                    <div class="hero-divider">
+                        <span class="line"></span>
+                        <span class="dot"></span>
+                        <span class="line"></span>
+                    </div>
+                </div>
             </div>
-        </Slideshow>
+        </header>
 
         <!-- OPERATION SECTION — STATS + MAP -->
         <div class="operation-section">
@@ -320,76 +278,91 @@ onBeforeUnmount(() => {
   padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 
-/* ─── hero ─── */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    rgba(6, 18, 13, 0.88) 0%,
-    rgba(6, 18, 13, 0.55) 42%,
-    rgba(6, 18, 13, 0.2) 70%,
-    transparent 100%
-  );
+/* ════════════════════════════════════════════
+   CENTERED HEADER – Light background, leaf icon
+   ════════════════════════════════════════════ */
+.hero-centered {
+  padding: 4rem 0 3rem;
+  background: #f0f7f4; /* light mint background */
+  border-bottom: 1px solid rgba(45, 122, 90, 0.06);
 }
 
-.hero-content {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    text-align: left;
-    max-width: 720px;
-    margin: 0;
-    left: var(--container-offset);
-    padding: 3rem 1.5rem;
-    animation: fadeInUp 0.8s ease-out;
-    color: #fffdf8;
+.hero-inner {
+  max-width: 780px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(32px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.hero-icon {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 1.5rem;
+  animation: floatLeaf 6s ease-in-out infinite;
 }
 
-.eyebrow {
+@keyframes floatLeaf {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(4deg); }
+}
+
+.hero-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hero-centered .eyebrow {
   display: inline-block;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.35em;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #aad6c7;
-  background: rgba(255, 255, 255, 0.06);
+  color: #2d7a5a;
+  background: rgba(45, 122, 90, 0.08);
   padding: 0.25rem 1rem;
   border-radius: 999px;
-  backdrop-filter: none;
 }
 
-.hero-content h1 {
-  font-size: clamp(1.2rem, 3vw, 3.8rem);
+.hero-centered h1 {
+  font-size: clamp(2rem, 4vw, 3.8rem);
   font-weight: 700;
   line-height: 1.08;
   letter-spacing: -0.02em;
-  max-width: 720px;
-  color: #fffdf8;
-  margin: 0;
+  color: #1a3d2e;
+  margin: 0 0 0.75rem;
 }
 
-.hero-content p {
-  max-width: 600px;
-  margin-top: 1.25rem;
+.hero-description {
   font-size: 1.05rem;
   line-height: 1.75;
-  color: rgba(255, 253, 248, 0.82);
+  color: #554d47;
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+}
+
+.hero-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hero-divider .line {
+  width: 40px;
+  height: 2px;
+  background: rgba(45, 122, 90, 0.2);
+  border-radius: 2px;
+}
+
+.hero-divider .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2d7a5a;
+  opacity: 0.5;
 }
 
 /* ─── section header (shared) ─── */
@@ -414,7 +387,7 @@ onBeforeUnmount(() => {
 .section-header h2 {
     font-size: clamp(1.8rem, 2.5vw, 2.8rem);
     font-weight: 700;
-    color: #1a3d2e;
+    color: #0f7324;
     letter-spacing: -0.02em;
     margin: 0 0 0.75rem;
 }
@@ -694,62 +667,7 @@ onBeforeUnmount(() => {
     margin-bottom: 20px;
 }
 
-/* ─── methodology section ─── */
-.methodology-section {
-  padding: 4rem 0 3rem;
-  background: #ffffff;
-}
-
-.bullet-list {
-  margin: 0 auto;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 1rem;
-  max-width: 800px;
-}
-
-.bullet-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.8rem;
-    font-size: 1rem;
-    line-height: 1.6;
-    color: var(--color-ink-soft, #554d47);
-    background: #f3f7f5;
-    padding: 0.9rem 1.25rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(30, 80, 60, 0.05);
-    transition: opacity 0.4s ease,
-        transform 0.4s ease,
-        background 0.2s ease,
-        border-color 0.2s ease;
-
-    /* Pop-up initial state */
-    opacity: 0;
-    transform: translateX(-15px);
-}
-
-.bullet-list li.card-visible {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-.bullet-list li:hover {
-    background: #e9f0ed;
-    border-color: rgba(30, 80, 60, 0.1);
-    transform: translateX(4px);
-}
-
-.bullet-marker {
-  display: inline-block;
-  color: #2d7a5a;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-  margin-top: 0.15rem;
-}
-
-/* ─── cta section ─── */
+/* ─── CTA ─── */
 .cta-section {
   padding: 3rem 0 4rem;
   background: var(--color-cream, #f9f6f0);
@@ -813,7 +731,7 @@ onBeforeUnmount(() => {
   font-weight: 600;
   font-size: 0.95rem;
   text-decoration: none;
-  background: rgb(255, 115, 0);
+  background: rgb(18, 141, 73);
   color: #fff;
   box-shadow: 0 8px 20px rgba(30, 122, 85, 0.25);
   transition:
@@ -865,15 +783,6 @@ onBeforeUnmount(() => {
         grid-template-columns: 1fr 1fr;
     }
 
-  .hero-content {
-    padding-top: 5rem;
-    padding-bottom: 5rem;
-  }
-
-  .hero-content h1 {
-    font-size: clamp(1.8rem, 7vw, 2.8rem);
-  }
-
   .cta-content {
     flex-direction: column;
     align-items: flex-start;
@@ -910,21 +819,12 @@ onBeforeUnmount(() => {
         padding: 2.5rem 0 2rem;
     }
 
-  .methodology-section {
-    padding: 2.5rem 0 2rem;
-  }
-
   .cta-section {
     padding: 2rem 0 3rem;
   }
 
   .cta-content {
     padding: 1.5rem 1.25rem;
-  }
-
-  .bullet-list li {
-    padding: 0.75rem 1rem;
-    font-size: 0.92rem;
   }
 
   .map-wrapper {
@@ -939,17 +839,29 @@ onBeforeUnmount(() => {
     .flip-card-front,
     .flip-card-back {
         padding: 3.5rem 3.25rem;
-
     }
+
+  .hero-centered {
+    padding: 3rem 0 2rem;
+  }
+
+  .hero-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .hero-centered h1 {
+    font-size: 2.2rem;
+  }
+
+  .hero-description {
+    font-size: 0.95rem;
+  }
 }
 
 @media (max-width: 420px) {
-  .hero-content h1 {
-    font-size: 1.6rem;
-  }
-
-  .hero-content p {
-    font-size: 0.92rem;
+  .hero-centered h1 {
+    font-size: 1.8rem;
   }
 
   .section-header h2 {
@@ -972,13 +884,17 @@ onBeforeUnmount(() => {
     padding: 0.6rem 1.4rem;
     font-size: 0.88rem;
   }
+
+  .hero-icon {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 /* ─── PREFERS‑REDUCED‑MOTION ────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
     .stat-card,
     .flip-card-wrapper,
-    .bullet-list li,
     .cta-content {
         opacity: 1 !important;
         transform: none !important;
@@ -1007,8 +923,8 @@ onBeforeUnmount(() => {
         transform: none;
     }
 
-    .bullet-list li:hover {
-        transform: none;
+    .hero-icon {
+        animation: none;
     }
 }
 </style>

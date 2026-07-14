@@ -14,9 +14,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 <template>
   <section class="w-full border-t border-[#E7E0D2] bg-[#F9F3E8] py-20 px-8 sm:px-10 lg:px-8">
-    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 text-center sm:gap-10 lg:flex-row lg:gap-16 lg:text-left">
+    <div
+      class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 text-center sm:gap-10 lg:flex-row lg:gap-16 lg:text-left"
+    >
       <div class="max-w-2xl">
-        <h2 class="font-serif text-[2rem] font-medium leading-tight text-[#073B4C] sm:text-[2.5rem] lg:text-[3rem]">
+        <h2
+          class="font-serif text-[2rem] font-medium leading-tight text-[#073B4C] sm:text-[2.5rem] lg:text-[3rem]"
+        >
           {{ props.title }}
         </h2>
       </div>
@@ -33,7 +37,13 @@ const props = withDefaults(defineProps<Props>(), {
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
         >
-          <path d="M4.16675 10H15.8334M15.8334 10L10.8334 5M15.8334 10L10.8334 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          <path
+            d="M4.16675 10H15.8334M15.8334 10L10.8334 5M15.8334 10L10.8334 15"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </router-link>
     </div>

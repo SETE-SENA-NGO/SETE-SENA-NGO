@@ -1,6 +1,5 @@
 <template>
   <div class="vision-page">
-
     <!-- Vision Section -->
     <section class="section vision-section">
       <div class="container">
@@ -250,8 +249,8 @@
             />
           </svg>
           <p class="quote-text">
-            "Santi Sena means a group of persons working together for peace, livelihood
-            improvement, social justice and environmental preservation."
+            "Santi Sena means a group of persons working together for peace, livelihood improvement,
+            social justice and environmental preservation."
           </p>
           <cite class="quote-source">Santi Sena profile</cite>
           <p v-if="false" class="quote-text">

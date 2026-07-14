@@ -1,6 +1,5 @@
 <template>
   <div class="environment-page">
-
     <!-- Program Overview Section -->
     <section class="section overview-section">
       <div class="container">

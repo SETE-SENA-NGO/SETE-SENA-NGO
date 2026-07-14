@@ -1,6 +1,5 @@
 <template>
   <div class="partners-page">
-
     <!-- Partners Carousel Section -->
     <section class="section partners-section">
       <div class="container">

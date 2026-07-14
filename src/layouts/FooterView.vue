@@ -32,7 +32,12 @@ const year = new Date().getFullYear()
 
       <nav class="footer-col">
         <p class="footer-heading">Explore</p>
-        <RouterLink v-for="link in exploreLinks" :key="link.label" :to="link.to" class="footer-link">
+        <RouterLink
+          v-for="link in exploreLinks"
+          :key="link.label"
+          :to="link.to"
+          class="footer-link"
+        >
           {{ link.label }}
         </RouterLink>
       </nav>
@@ -40,7 +45,9 @@ const year = new Date().getFullYear()
       <div class="footer-col">
         <p class="footer-heading">Contact</p>
         <p class="footer-line">Svay Rieng Province, Cambodia</p>
-        <a href="mailto:info@santisena.org" class="footer-line footer-link-inline">SANTISENAMONK@GMAIL.COM</a>
+        <a href="mailto:info@santisena.org" class="footer-line footer-link-inline"
+          >SANTISENAMONK@GMAIL.COM</a
+        >
         <a href="tel:+855012345678" class="footer-line footer-link-inline">(+855-77) 65 54 64</a>
       </div>
     </div>

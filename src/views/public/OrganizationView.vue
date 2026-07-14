@@ -81,7 +81,6 @@ onMounted(() => {
 
 <template>
   <div class="org-page">
-
     <!-- ── Key Facts ── -->
     <section class="facts-section">
       <div class="facts-grid">

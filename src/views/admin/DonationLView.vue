@@ -251,11 +251,7 @@ async function save() {
                 <div class="field">
                   <label :for="`${method.id}-color`">Card color</label>
                   <div class="color-field">
-                    <input
-                      :id="`${method.id}-color`"
-                      v-model="method.headerColor"
-                      type="color"
-                    />
+                    <input :id="`${method.id}-color`" v-model="method.headerColor" type="color" />
                     <span class="color-value">{{ method.headerColor }}</span>
                   </div>
                 </div>
@@ -309,7 +305,13 @@ async function save() {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   transition: padding-left 0.25s ease;
 }
 
@@ -382,7 +384,9 @@ h1 {
   font-weight: 800;
   font-size: 0.92rem;
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.12s ease;
+  transition:
+    background 0.18s ease,
+    transform 0.12s ease;
 }
 
 .add-btn:hover {
@@ -527,7 +531,9 @@ h1 {
   font-size: 0.88rem;
   cursor: pointer;
   box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
-  transition: transform 0.12s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
 }
 
 .upload-btn:hover {
@@ -581,7 +587,9 @@ h1 {
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
   font-family: inherit;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .field input:not([type='color']):focus {
@@ -651,7 +659,9 @@ h1 {
   font-size: 0.92rem;
   cursor: pointer;
   box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
-  transition: transform 0.12s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
 }
 
 .save-btn:hover {

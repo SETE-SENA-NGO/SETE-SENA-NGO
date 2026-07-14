@@ -103,7 +103,6 @@ onBeforeUnmount(() => {
   <div class="education-page">
     <!-- Hero -->
     <div class="hero-wrap">
-
       <div class="scroll-cue" aria-hidden="true"><span></span></div>
     </div>
 
@@ -213,47 +212,47 @@ onBeforeUnmount(() => {
 
           <div class="radial-wrap" ref="radialWrap">
             <div class="radial-center">
-<img :src="whatWeDo[0]?.image" alt="" />
-{{ whatWeDo[0]?.text }}
+              <img :src="whatWeDo[0]?.image" alt="" />
+              {{ whatWeDo[0]?.text }}
             </div>
 
             <div class="radial-item radial-item--1">
-<div class="radial-thumb"><img :src="whatWeDo[1]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[1]?.image" alt="" /></div>
               <div class="radial-copy">
-{{ whatWeDo[1]?.title }}
-{{ whatWeDo[1]?.text }}
+                {{ whatWeDo[1]?.title }}
+                {{ whatWeDo[1]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--2">
-<div class="radial-thumb"><img :src="whatWeDo[2]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[2]?.image" alt="" /></div>
               <div class="radial-copy">
-{{ whatWeDo[2]?.title }}
-{{ whatWeDo[2]?.text }}
+                {{ whatWeDo[2]?.title }}
+                {{ whatWeDo[2]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--3">
-<div class="radial-thumb"><img :src="whatWeDo[3]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[3]?.image" alt="" /></div>
               <div class="radial-copy">
-{{ whatWeDo[3]?.title }}
-{{ whatWeDo[3]?.text }}
+                {{ whatWeDo[3]?.title }}
+                {{ whatWeDo[3]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--4">
-<div class="radial-thumb"><img :src="whatWeDo[4]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[4]?.image" alt="" /></div>
               <div class="radial-copy">
-{{ whatWeDo[4]?.title }}
-{{ whatWeDo[4]?.text }}
+                {{ whatWeDo[4]?.title }}
+                {{ whatWeDo[4]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--5">
-<div class="radial-thumb"><img :src="whatWeDo[5]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[5]?.image" alt="" /></div>
               <div class="radial-copy">
-{{ whatWeDo[5]?.title }}
-{{ whatWeDo[5]?.text }}
+                {{ whatWeDo[5]?.title }}
+                {{ whatWeDo[5]?.text }}
               </div>
             </div>
           </div>

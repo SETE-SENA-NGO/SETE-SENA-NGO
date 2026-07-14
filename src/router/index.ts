@@ -3,7 +3,6 @@ import NotFoundView from '@/views/NotFoundView.vue'
 import { publicRoutes } from './publicRoutes'
 import { adminRoutes } from './adminRoutes'
 
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior(to, _from, savedPosition) {

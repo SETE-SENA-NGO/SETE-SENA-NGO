@@ -77,7 +77,6 @@ onMounted(() => {
 
 <template>
   <div class="about-page">
-
     <!-- Vision / Mission / Goal -->
     <section class="vmg-section">
       <div class="vmg-card">

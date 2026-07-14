@@ -87,7 +87,6 @@ onUnmounted(() => {
 
 <template>
   <main class="donate-page">
-
     <section id="gift-use" class="gift-section" aria-labelledby="gift-heading">
       <div class="section-heading">
         <p class="eyebrow">Gift use</p>

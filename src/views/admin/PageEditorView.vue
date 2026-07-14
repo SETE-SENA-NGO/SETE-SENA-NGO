@@ -75,8 +75,7 @@ const defaultPages: PageDraft[] = [
         id: 'home-mission',
         label: 'Mission',
         heading: 'Peace is planted, not declared.',
-        body:
-          'Santi Sena, the Peace Army, was founded by Cambodian Buddhist monks in 1994 to alleviate poverty and rebuild moral, environmental and economic life after decades of conflict.',
+        body: 'Santi Sena, the Peace Army, was founded by Cambodian Buddhist monks in 1994 to alleviate poverty and rebuild moral, environmental and economic life after decades of conflict.',
         items: '',
       },
       {
@@ -113,8 +112,7 @@ const defaultPages: PageDraft[] = [
         id: 'about-vmg',
         label: 'Vision, mission, goal',
         heading: 'Vision, Mission, Goal',
-        body:
-          'Vision: A Cambodia where peace, justice and harmony flourish. Mission: Alleviate poverty through community-led development rooted in Buddhist ethics. Goal: Better work and living situations for vulnerable rural households.',
+        body: 'Vision: A Cambodia where peace, justice and harmony flourish. Mission: Alleviate poverty through community-led development rooted in Buddhist ethics. Goal: Better work and living situations for vulnerable rural households.',
         items:
           'Vision | A Cambodia where peace, justice and harmony flourish across every village and generation.\nMission | To alleviate poverty through community-led development rooted in Buddhist ethics.\nGoal | Better work and living situations for the most vulnerable rural households of southeastern Cambodia.',
       },
@@ -488,8 +486,7 @@ const defaultPages: PageDraft[] = [
     title: 'Impact Timeline',
     eyebrow: 'Timeline',
     headline: 'Thirty years of walking with villages.',
-    intro:
-      'Progress built through patient partnership from founding in Svay Rieng to today.',
+    intro: 'Progress built through patient partnership from founding in Svay Rieng to today.',
     primaryAction: 'Take the next step',
     secondaryAction: '',
     sections: [
@@ -1193,7 +1190,6 @@ function formatDate(value: string) {
     timeStyle: 'short',
   }).format(date)
 }
-
 </script>
 
 <template>
@@ -1204,7 +1200,9 @@ function formatDate(value: string) {
 
       <main class="main">
         <p v-if="notice" class="notice" :class="`notice-${notice.type}`" role="status">
-          <span class="notice-icon" aria-hidden="true">{{ notice.type === 'success' ? '✓' : '!' }}</span>
+          <span class="notice-icon" aria-hidden="true">{{
+            notice.type === 'success' ? '✓' : '!'
+          }}</span>
           {{ notice.message }}
         </p>
 
@@ -1313,7 +1311,11 @@ function formatDate(value: string) {
 
                   <label class="field-block">
                     <span>Hero headline</span>
-                    <textarea v-model="activePage.headline" name="page-headline" rows="2"></textarea>
+                    <textarea
+                      v-model="activePage.headline"
+                      name="page-headline"
+                      rows="2"
+                    ></textarea>
                   </label>
 
                   <label class="field-block">
@@ -1403,13 +1405,20 @@ function formatDate(value: string) {
                         </label>
                         <label>
                           <span>Heading</span>
-                          <input v-model="section.heading" :name="`section-${section.id}-heading`" />
+                          <input
+                            v-model="section.heading"
+                            :name="`section-${section.id}-heading`"
+                          />
                         </label>
                       </div>
 
                       <label class="field-block">
                         <span>Body</span>
-                        <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="4"></textarea>
+                        <textarea
+                          v-model="section.body"
+                          :name="`section-${section.id}-body`"
+                          rows="4"
+                        ></textarea>
                       </label>
 
                       <label class="field-block">
@@ -1452,7 +1461,6 @@ function formatDate(value: string) {
                   </div>
                 </div>
               </div>
-
             </div>
           </section>
         </section>
@@ -1491,7 +1499,13 @@ function formatDate(value: string) {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   transition: padding-left 0.25s ease;
 }
 
@@ -1610,7 +1624,11 @@ h3 {
   font-size: 0.92rem;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
 }
 
 .btn-icon {
@@ -1850,7 +1868,9 @@ textarea {
   padding: 0.78rem 0.9rem;
   line-height: 1.5;
   font-size: 0.95rem;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 textarea {

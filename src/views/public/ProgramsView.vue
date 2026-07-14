@@ -116,7 +116,6 @@ function setCardRef(el: unknown | null, index: number) {
   }
 }
 
-
 onMounted(() => {
   observer = new IntersectionObserver(
     (entries) => {
@@ -147,7 +146,6 @@ function getNodeLeft(idx: number) {
 
 <template>
   <div class="programs-page">
-
     <!-- GOALS -->
     <section class="goals-wrap">
       <article

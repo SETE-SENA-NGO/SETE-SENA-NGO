@@ -208,7 +208,6 @@ function setupRevealAnimations() {
 
 <template>
   <main class="volunteer-page">
-
     <section class="content-section pathway-section" aria-labelledby="pathways-heading">
       <div class="pathway-layout">
         <div class="pathway-copy">
