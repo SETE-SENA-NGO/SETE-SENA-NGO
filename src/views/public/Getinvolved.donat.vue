@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-  { image: '/images/programs/education-hero.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
-]
 
 const giftUses = [
   {
@@ -94,18 +87,6 @@ onUnmounted(() => {
 
 <template>
   <main class="donate-page">
-    <Slideshow :slides="slideItems" :interval-ms="5600">
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <p class="eyebrow">Get involved - Support us</p>
-        <h1>Give practical support.</h1>
-        <p class="lead">Your gift can become school items, clean water, books or farming inputs.</p>
-        <div class="hero-actions" aria-label="Donation actions">
-          <RouterLink to="/qr-donate" class="button button-primary">Donate by QR</RouterLink>
-          <a href="#gift-use" class="button button-secondary">See gift use</a>
-        </div>
-      </div>
-    </Slideshow>
 
     <section id="gift-use" class="gift-section" aria-labelledby="gift-heading">
       <div class="section-heading">

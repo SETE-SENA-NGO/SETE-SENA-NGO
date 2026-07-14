@@ -92,7 +92,7 @@ useScrollReveal()
 
 <template>
   <div class="home-view">
-    <Slideshow :slides="slideItems" :interval-ms="6200" v-slot="{ activeSlide }">
+    <Slideshow :slides="slideItems" :interval-ms="4000" v-slot="{ activeSlide }">
       <div class="hero-overlay" />
       <div class="hero-inner">
         <div :key="activeSlide?.image" class="hero-message">
@@ -137,7 +137,7 @@ useScrollReveal()
         </div>
       </div>
       <!-- 👇 NEW: button row under stats -->
-      <div class="stats-news-row">
+      <div class="stats-news-row reveal" style="animation-delay: 0.48s">
         <RouterLink to="/news" class="btn btn--news"> 📰 See all news </RouterLink>
       </div>
     </section>
@@ -364,7 +364,7 @@ useScrollReveal()
 }
 
 .hero-message {
-  animation: heroMessageIn 0.48s ease-out;
+  animation: heroMessageIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes fadeInUp {
@@ -383,7 +383,6 @@ useScrollReveal()
     opacity: 0;
     transform: translateY(18px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -503,12 +502,16 @@ useScrollReveal()
   font-weight: 600;
   transition:
     background 0.25s,
-    color 0.25s;
+    color 0.25s,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .btn--news:hover {
   background: var(--primary-color);
   color: #fff;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(22, 48, 42, 0.18);
 }
 
 /* Mission */

@@ -4,6 +4,7 @@ import PageEditorView from '@/views/admin/PageEditorView.vue'
 import AdminModuleView from '@/views/admin/AdminModuleView.vue'
 import MediaLibraryView from '@/views/admin/MediaLibraryView.vue'
 import SettingsView from '@/views/admin/SettingsView.vue'
+import DonationLView from '@/views/admin/DonationLView.vue'
 
 export const adminRoutes = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
@@ -12,4 +13,5 @@ export const adminRoutes = [
   { path: '/admin/media', component: MediaLibraryView, meta: { requiresAuth: true } },
   { path: '/admin/modules/:module', component: AdminModuleView, meta: { requiresAuth: true } },
   { path: '/admin/settings', component: SettingsView, meta: { requiresAuth: true } },
+  { path: '/admin/donate', component: DonationLView, meta: { requiresAuth: true } },
 ]

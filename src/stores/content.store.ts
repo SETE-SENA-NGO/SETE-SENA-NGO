@@ -26,14 +26,22 @@ export const useContentStore = defineStore('content', () => {
     loading.value = false
   }
 
-  async function fetchBySlug(slug: string) {
+  async function fetchBySlug(slug: string): Promise<PageContent | null> {
     if (pages.value[slug]) return pages.value[slug]
     loading.value = true
-    const { data, error } = await supabase.from('pages').select('*').eq('slug', slug).single()
+
+    const { data, error } = await supabase.from('pages').select('*').eq('slug', slug).maybeSingle()
+
     if (error) {
       loading.value = false
       throw error
     }
+
+    if (!data) {
+      loading.value = false
+      return null
+    }
+
     pages.value[slug] = data as PageContent
     loading.value = false
     return data as PageContent

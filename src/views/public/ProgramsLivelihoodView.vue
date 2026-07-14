@@ -133,24 +133,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="education-page">
-    <!-- Hero -->
-    <div class="hero-wrap">
-      <Slideshow :slides="slideItems">
-        <div class="hero-overlay"></div>
 
-        <div class="hero-content">
-          <p class="eyebrow">PROGRAMS · GOAL 03 LIVELIHOODS</p>
-          <h1>Dignified work rooted in the village.</h1>
-          <p class="hero-desc">
-            Integrated farming, Saving-for-Change groups, agricultural cooperatives and rural
-            enterprise — livelihoods that keep families together instead of sending parents abroad
-            for wages.
-          </p>
-        </div>
-      </Slideshow>
-
-      <div class="scroll-cue" aria-hidden="true"><span></span></div>
-    </div>
 
     <!-- Stats band — bridges hero into content -->
     <div class="container stats-band-wrap">
@@ -432,7 +415,7 @@ onBeforeUnmount(() => {
 .stats-band-wrap {
   position: relative;
   z-index: 4;
-  margin-top: -64px;
+  margin-top: 1rem;
 }
 .stats-band {
   background: #ffffff;

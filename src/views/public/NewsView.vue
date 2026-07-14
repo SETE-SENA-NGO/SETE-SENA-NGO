@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ref, computed } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
 
 // Dummy news data – replace with API call later
 const newsItems = ref([
@@ -81,13 +80,6 @@ const newsItems = ref([
         trending: false,
     },
 ])
-
-const heroSlides = [
-    { image: '/images/programs/hero-1.jpg', caption: '' },
-    { image: '/images/programs/hero-2.jpg', caption: '' },
-    { image: '/images/programs/hero-3.jpg', caption: '' },
-    { image: '/images/programs/hero-4.jpg', caption: '' },
-]
 
 // Category filter
 const categories = ['All', 'Education', 'Environment', 'Child Protection', 'Livelihood', 'WASH']
@@ -177,34 +169,7 @@ const scrollToTop = () => {
 
 <template>
     <div class="news-view">
-        <!-- Hero with Slideshow -->
-        <Slideshow :slides="heroSlides">
-            <div class="hero-overlay" />
-            <div class="hero-content">
-                <div class="hero-badge">
-                    <span class="pulse-dot"></span>
-                    Latest Stories
-                </div>
-                <h1>Stories that <span class="highlight">matter</span></h1>
-                <p class="hero-subtitle">
-                    Discover the impact of our work with communities across Cambodia.
-                </p>
-                <div class="hero-stats">
-                    <div class="hero-stat">
-                        <span class="stat-number">10K+</span>
-                        <span class="stat-label">Community Members</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="stat-number">45</span>
-                        <span class="stat-label">Active Projects</span>
-                    </div>
-                    <div class="hero-stat">
-                        <span class="stat-number">12</span>
-                        <span class="stat-label">Provinces</span>
-                    </div>
-                </div>
-            </div>
-        </Slideshow>
+        <!-- Static hero -->
 
         <!-- Filter & Search Bar -->
         <div class="container">

@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpact from '@/assets/hero-impact.jpg'
 import logoUrl from '@/assets/logo.png'
-
-const slideItems = [
-  { image: heroImpact, caption: '' },
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-]
 
 const values = [
   {
@@ -84,19 +77,6 @@ onMounted(() => {
 
 <template>
   <div class="about-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-
-      <div class="hero-content">
-        <span class="badge">About Santi Sena</span>
-        <h1 class="hero-title">A peace army born from the Dharma, raised by villages.</h1>
-        <p class="hero-subtitle">
-          Founded in 1994 by Cambodian Buddhist monks, Santi Sena emerged from the ashes of conflict
-          with a quiet conviction: that lasting peace is grown in soil, schools and dignified work,
-          not signed in distant offices.
-        </p>
-      </div>
-    </Slideshow>
 
     <!-- Vision / Mission / Goal -->
     <section class="vmg-section">
@@ -178,9 +158,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* ─── About page color tokens ───
- * Aliased to the shared global design tokens (see src/assets/base.css).
- */
+/* About page color tokens.
+   Aliased to the shared global design tokens (see src/assets/base.css). */
 .about-page {
   --about-primary: var(--primary-color);
   --about-primary-foreground: var(--color-white);
@@ -229,7 +208,7 @@ onMounted(() => {
   backdrop-filter: none;
 }
 
-/* ─── Hero (overlaid on the slideshow via its default slot) ─── */
+/* ─── Hero (overlaid on the static hero via its default slot) ─── */
 .hero-overlay {
   position: absolute;
   inset: 0;

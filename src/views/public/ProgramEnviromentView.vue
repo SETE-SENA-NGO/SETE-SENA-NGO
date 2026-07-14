@@ -1,27 +1,5 @@
-<script setup lang="ts">
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/environment-hero.jpg', caption: '' },
-  { image: '/images/programs/environment-hero1.jpg', caption: '' },
-  { image: '/images/programs/environment-hero2.jpg', caption: '' },
-  { image: '/images/programs/environment-hero3.jpg', caption: '' },
-]
-</script>
-
 <template>
   <div class="environment-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="badge">Environment Program</span>
-        <h1>Protecting Our Planet<br />For Future Generations</h1>
-        <p class="hero-subtitle">
-          We are committed to environmental conservation, sustainable practices, and empowering
-          communities to become stewards of their natural resources.
-        </p>
-      </div>
-    </Slideshow>
 
     <!-- Program Overview Section -->
     <section class="section overview-section">
@@ -410,7 +388,7 @@ const slideItems = [
 /* =====================
    Hero
    ===================== */
-/* Hero (overlaid on the slideshow via its default slot) */
+/* Hero (overlaid on the static hero via its default slot) */
 .hero-overlay {
   position: absolute;
   inset: 0;

@@ -128,19 +128,6 @@ onBeforeUnmount(() => {
 <template>
   <div class="child-protection-page">
     <!-- Hero -->
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay"></div>
-
-      <div class="hero-content">
-        <p class="eyebrow">PROGRAMS · GOAL 04 CHILD PROTECTION</p>
-        <h1>Every child safe. Every child in school.</h1>
-        <p class="hero-desc">
-          Anti-trafficking campaigns, village Child Protection Networks, child rights
-          advocacy and youth peer educators — because peace begins with a safe
-          childhood.
-        </p>
-      </div>
-    </Slideshow>
 
     <!-- Trust bar -->
     <section class="trust-bar">
