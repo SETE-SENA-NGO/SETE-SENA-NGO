@@ -28,6 +28,7 @@ const loggingOut = ref(false)
 
 const workspaceLinks: NavItem[] = [
   { to: '/admin', label: 'Dashboard', icon: 'icon-dashboard' },
+  { to: '/admin/donate', label: 'Donation QR', icon: 'icon-media' },
 ]
 
 const pageGroups: PageGroup[] = [
@@ -73,8 +74,7 @@ const pageGroups: PageGroup[] = [
     label: 'Contact',
     items: [
     ],
-  },
-  { slug: 'site-footer', label: 'Header & Footer', items: [] },
+  }
 ]
 
 function editorPath(slug: string) {
