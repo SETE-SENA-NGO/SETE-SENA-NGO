@@ -15,10 +15,10 @@ const slideItems = [
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="badge">Our Vision</span>
-        <h1>Shaping a Future of<br />Equity & Opportunity</h1>
+        <h1>Peace, justice and harmony across every village.</h1>
         <p class="hero-subtitle">
-          We envision a world where every individual has the power, resources, and dignity to shape
-          their own destiny.
+          Santi Sena works so vulnerable rural families can live with dignity, stronger livelihoods
+          and a safer environment for the next generation.
         </p>
       </div>
     </Slideshow>
@@ -28,7 +28,7 @@ const slideItems = [
       <div class="container">
         <div class="section-header">
           <span class="section-label">Vision</span>
-          <h2>What We Strive For</h2>
+          <h2>What Santi Sena Strives For</h2>
         </div>
         <div class="vision-grid">
           <div class="vision-card">
@@ -48,10 +48,10 @@ const slideItems = [
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
-            <h3>Inclusive Growth</h3>
+            <h3>Peace With Justice</h3>
             <p>
-              Building communities where economic opportunity, education, and healthcare are
-              accessible to every person regardless of background or circumstance.
+              A Cambodia where peace, justice and harmony are lived in daily village life, not only
+              written in plans.
             </p>
           </div>
           <div class="vision-card">
@@ -72,10 +72,10 @@ const slideItems = [
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </div>
-            <h3>Community Empowerment</h3>
+            <h3>Community Ownership</h3>
             <p>
-              Strengthening local leadership and grassroots organizations to drive sustainable
-              change from within communities themselves.
+              Villagers, monks, local authorities, schools and community organizations lead the work
+              together.
             </p>
           </div>
           <div class="vision-card">
@@ -93,10 +93,10 @@ const slideItems = [
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
-            <h3>Sustainable Resilience</h3>
+            <h3>Sustainable Livelihoods</h3>
             <p>
-              Creating lasting environmental and social systems that withstand challenges and ensure
-              long-term wellbeing for future generations.
+              Families build better lives through education, child protection, rural income and care
+              for natural resources.
             </p>
           </div>
         </div>
@@ -109,12 +109,11 @@ const slideItems = [
         <div class="mission-layout">
           <div class="mission-content">
             <span class="section-label">Mission</span>
-            <h2>How We Make It Happen</h2>
+            <h2>How The Mission Becomes Practical</h2>
             <p class="mission-text">
-              We work alongside local partners to design and implement programs that address the
-              root causes of inequality. Through education, healthcare access, economic development,
-              and environmental stewardship, we create holistic solutions that lift entire
-              communities.
+              Santi Sena alleviates poverty through community-led development rooted in Buddhist
+              ethics. Its work connects moral leadership with practical programs in education,
+              livelihoods, environment and child protection.
             </p>
             <ul class="mission-list">
               <li>
@@ -130,7 +129,7 @@ const slideItems = [
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Partner with local organizations for lasting impact
+                Work with monks, villagers, local government and schools
               </li>
               <li>
                 <svg
@@ -145,7 +144,7 @@ const slideItems = [
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Prioritize education and skill-building programs
+                Strengthen education, savings groups and rural livelihoods
               </li>
               <li>
                 <svg
@@ -160,7 +159,7 @@ const slideItems = [
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Advocate for policy changes that protect the vulnerable
+                Protect children from trafficking, unsafe migration and exploitation
               </li>
               <li>
                 <svg
@@ -175,27 +174,27 @@ const slideItems = [
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Promote sustainable practices in all initiatives
+                Preserve community forests, water resources and local resilience
               </li>
             </ul>
           </div>
           <div class="mission-visual">
             <div class="stats-grid">
               <div class="stat-card">
-                <span class="stat-number">15+</span>
-                <span class="stat-label">Years Active</span>
+                <span class="stat-number">1994</span>
+                <span class="stat-label">Founded</span>
               </div>
               <div class="stat-card">
-                <span class="stat-number">120+</span>
-                <span class="stat-label">Communities</span>
+                <span class="stat-number">293</span>
+                <span class="stat-label">Villages</span>
               </div>
               <div class="stat-card">
-                <span class="stat-number">50K+</span>
-                <span class="stat-label">Lives Impacted</span>
+                <span class="stat-number">43</span>
+                <span class="stat-label">Communes</span>
               </div>
               <div class="stat-card">
-                <span class="stat-number">200+</span>
-                <span class="stat-label">Local Partners</span>
+                <span class="stat-number">30+</span>
+                <span class="stat-label">Staff</span>
               </div>
             </div>
           </div>
@@ -208,40 +207,42 @@ const slideItems = [
       <div class="container">
         <div class="section-header">
           <span class="section-label">Core Values</span>
-          <h2>What Guides Us</h2>
-          <p class="section-desc">These principles are the foundation of everything we do.</p>
+          <h2>Values That Guide The Work</h2>
+          <p class="section-desc">
+            These values shape how Santi Sena works with communities, donors and partners.
+          </p>
         </div>
         <div class="values-grid">
           <div class="value-item">
             <div class="value-number">01</div>
-            <h3>Integrity</h3>
+            <h3>Honesty</h3>
             <p>
-              We operate with transparency, honesty, and accountability in all our relationships and
-              programs.
+              Clear communication and transparent relationships with donors, communities, partners
+              and staff.
             </p>
           </div>
           <div class="value-item">
             <div class="value-number">02</div>
-            <h3>Respect</h3>
+            <h3>Non-discrimination</h3>
             <p>
-              We honor the dignity, culture, and autonomy of every community and individual we
-              serve.
+              Respect for people across disability, religion, background, race, community status and
+              political belief.
             </p>
           </div>
           <div class="value-item">
             <div class="value-number">03</div>
-            <h3>Collaboration</h3>
+            <h3>Collective Benefit</h3>
             <p>
-              We believe in the power of partnerships and collective action to achieve meaningful
-              change.
+              Organizational resources and knowledge are used for shared benefit, not private
+              advantage.
             </p>
           </div>
           <div class="value-item">
             <div class="value-number">04</div>
-            <h3>Innovation</h3>
+            <h3>Flexibility</h3>
             <p>
-              We continuously seek creative, adaptive solutions to complex social and environmental
-              challenges.
+              Plans adapt to community feedback, partner advice, available resources and real field
+              needs.
             </p>
           </div>
         </div>
@@ -271,6 +272,11 @@ const slideItems = [
             />
           </svg>
           <p class="quote-text">
+            "Santi Sena means a group of persons working together for peace, livelihood
+            improvement, social justice and environmental preservation."
+          </p>
+          <cite class="quote-source">Santi Sena profile</cite>
+          <p v-if="false" class="quote-text">
             "The future belongs to those who believe in the beauty of their dreams. Our vision is
             not just a destination — it is a promise to every community we serve that we will walk
             alongside them until that future becomes reality."
@@ -284,10 +290,10 @@ const slideItems = [
     <section class="cta-section">
       <div class="container">
         <div class="cta-content">
-          <h2>Join Us in Building This Vision</h2>
+          <h2>Carry This Vision Into Practical Work</h2>
           <p>
-            Whether through partnership, volunteering, or support, your contribution brings us one
-            step closer to a world of equity and opportunity for all.
+            Partnership, volunteering and support all matter when they strengthen local systems that
+            communities can carry forward.
           </p>
           <div class="cta-actions">
             <router-link to="/get-involved" class="btn btn-primary">Get Involved</router-link>
@@ -303,6 +309,13 @@ const slideItems = [
 /* =====================
    Layout Helpers
    ===================== */
+.vision-page {
+  min-height: 100vh;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-family-base);
+}
+
 .container {
   max-width: var(--container-max-width);
   margin: 0 auto;
@@ -345,10 +358,11 @@ const slideItems = [
 }
 
 .section-desc {
-  color: var(--color-ink);
-  font-size: 1.1rem;
+  color: var(--color-ink-soft);
+  font-size: 1rem;
   max-width: 540px;
   margin: 0 auto;
+  line-height: 1.7;
 }
 
 .alt-bg {
@@ -417,7 +431,7 @@ const slideItems = [
   line-height: 1.15;
   color: #ffffff;
   margin-bottom: 1.25rem;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
 }
 
@@ -442,7 +456,7 @@ const slideItems = [
 .vision-card {
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: 1rem;
+  border-radius: 8px;
   padding: 2rem;
   transition:
     border-color 0.3s,
@@ -476,7 +490,7 @@ const slideItems = [
 
 .vision-card p {
   font-size: 0.9rem;
-  color: var(--color-ink);
+  color: var(--color-ink-soft);
   line-height: 1.65;
 }
 
@@ -498,7 +512,7 @@ const slideItems = [
 }
 
 .mission-text {
-  color: var(--color-ink);
+  color: var(--color-ink-soft);
   line-height: 1.7;
   font-size: 1rem;
   margin-bottom: 1.5rem;
@@ -514,7 +528,7 @@ const slideItems = [
 
 .mission-list li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   font-size: 0.95rem;
   color: var(--color-ink);
@@ -534,7 +548,7 @@ const slideItems = [
 .stat-card {
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: 1rem;
+  border-radius: 8px;
   padding: 1.75rem 1.5rem;
   text-align: center;
 }
@@ -549,7 +563,7 @@ const slideItems = [
 
 .stat-label {
   font-size: 0.85rem;
-  color: var(--color-ink);
+  color: var(--color-ink-soft);
 }
 
 /* =====================
@@ -564,7 +578,7 @@ const slideItems = [
 .value-item {
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: 1rem;
+  border-radius: 8px;
   padding: 2rem 1.5rem;
   transition: border-color 0.3s;
 }
@@ -589,7 +603,7 @@ const slideItems = [
 
 .value-item p {
   font-size: 0.88rem;
-  color: var(--color-ink);
+  color: var(--color-ink-soft);
   line-height: 1.6;
 }
 
@@ -627,7 +641,11 @@ const slideItems = [
 .quote-section cite {
   font-style: normal;
   font-size: 0.9rem;
-  color: var(--color-ink);
+  color: var(--color-ink-soft);
+}
+
+.quote-section cite:not(.quote-source) {
+  display: none;
 }
 
 /* =====================
