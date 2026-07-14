@@ -196,6 +196,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
 // Partner data
 const partners = [
