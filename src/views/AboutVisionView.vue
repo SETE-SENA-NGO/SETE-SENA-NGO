@@ -1,27 +1,5 @@
-<script setup lang="ts">
-import Slideshow from '@/components/shared/Slideshow.vue'
-import heroImpactForest from '@/assets/hero-impact-forest.jpg'
-
-const slideItems = [
-  { image: heroImpactForest, caption: '' },
-  { image: '/images/programs/hero-3.jpg', caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
-]
-</script>
-
 <template>
   <div class="vision-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="badge">Our Vision</span>
-        <h1>Shaping a Future of<br />Equity & Opportunity</h1>
-        <p class="hero-subtitle">
-          We envision a world where every individual has the power, resources, and dignity to shape
-          their own destiny.
-        </p>
-      </div>
-    </Slideshow>
 
     <!-- Vision Section -->
     <section class="section vision-section">
@@ -358,7 +336,7 @@ const slideItems = [
 /* =====================
    Hero
    ===================== */
-/* Hero (overlaid on the slideshow via its default slot) */
+/* Hero (overlaid on the static hero via its default slot) */
 .hero-overlay {
   position: absolute;
   inset: 0;

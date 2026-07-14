@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-
-import Slideshow from '@/components/shared/Slideshow.vue'
 import { useContentStore } from '@/stores/content.store'
 
 interface ActionLink {
@@ -166,14 +164,6 @@ const heroImages = computed(() => pageContent.value.hero.images)
 const defaultHeroImage = fallbackContent.hero.images[0]!
 const heroImage = computed(() => heroImages.value[0] ?? defaultHeroImage)
 const waysImage = computed(() => heroImages.value[1] ?? heroImage.value)
-const slideItems = computed(() =>
-  heroImages.value.map((image) => ({
-    image: image.src,
-    caption: '',
-    alt: image.alt,
-  })),
-)
-
 const description =
   'Get involved with Santi Sena through giving, partnership or volunteering in community-led work for livelihoods, education, child protection and environmental preservation.'
 
@@ -278,29 +268,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 <template>
   <main class="get-involved-page">
-    <Slideshow :slides="slideItems" :interval-ms="5600" aria-labelledby="get-involved-title">
-      <div class="hero-shade" />
-      <div class="hero-content">
-        <p class="eyebrow">{{ pageContent.hero.eyebrow }}</p>
-        <h1 id="get-involved-title">{{ pageContent.hero.title }}</h1>
-        <p class="lead">{{ pageContent.hero.description }}</p>
-        <div class="hero-actions" aria-label="Get involved actions">
-          <RouterLink :to="pageContent.hero.primaryCta.to" class="button button-primary">
-            {{ pageContent.hero.primaryCta.label }}
-          </RouterLink>
-          <a
-            v-if="isHashLink(pageContent.hero.secondaryCta.to)"
-            :href="pageContent.hero.secondaryCta.to"
-            class="button button-secondary"
-          >
-            {{ pageContent.hero.secondaryCta.label }}
-          </a>
-          <RouterLink v-else :to="pageContent.hero.secondaryCta.to" class="button button-secondary">
-            {{ pageContent.hero.secondaryCta.label }}
-          </RouterLink>
-        </div>
-      </div>
-    </Slideshow>
 
     <section id="ways-to-help" class="ways-section" aria-labelledby="ways-heading">
       <div class="section-heading">

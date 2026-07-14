@@ -1,13 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero2.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero3.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero4.jpg', caption: '' },
-]
 
 const stats = [
   {
@@ -111,21 +103,6 @@ onBeforeUnmount(() => {
   <div class="education-page">
     <!-- Hero -->
     <div class="hero-wrap">
-<Slideshow :slides="slideItems">
-
-
-        <div class="hero-overlay"></div>
-
-        <div class="hero-content">
-          <p class="eyebrow">PROGRAMS · GOAL 03 LIVELIHOODS</p>
-          <h1>Dignified work rooted in the village.</h1>
-          <p class="hero-desc">
-            Integrated farming, Saving-for-Change groups, agricultural cooperatives and rural
-            enterprise — livelihoods that keep families together instead of sending parents abroad
-            for wages.
-          </p>
-        </div>
-      </Slideshow>
 
       <div class="scroll-cue" aria-hidden="true"><span></span></div>
     </div>

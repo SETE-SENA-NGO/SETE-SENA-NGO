@@ -1,18 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import cambodiaMap from '@/assets/maps/Cambodia Map.png'
 import preyVengMap from '@/assets/maps/Prey_Veng.png'
 import svayRiengMap from '@/assets/maps/Svay_Rieng.png'
 import logoUrl from '@/assets/logo.png'
-
-const slideItems = [
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
-  { image: '/images/programs/environment-hero1.jpg', caption: '' },
-]
 
 const headquarters = {
   name: 'Our headquarters in Svay Rieng',
@@ -119,23 +112,6 @@ onMounted(() => {
 
 <template>
   <main class="contact-page">
-    <Slideshow class="contact-hero" :slides="slideItems" :interval-ms="5600">
-      <div class="hero-overlay" />
-
-      <div class="hero-inner">
-        <p class="eyebrow eyebrow--light">Contact Santi Sena</p>
-        <h1 id="contact-heading">Get in touch with us easily!</h1>
-        <p class="hero-subtitle">
-          Find the right office, arrange a visit, or write to our team about partnership and
-          community programs.
-        </p>
-        <div class="hero-actions">
-          <a href="#head-office" class="btn btn--primary">Head office</a>
-          <a href="#field-offices" class="btn btn--outline">Field offices</a>
-        </div>
-      </div>
-    </Slideshow>
-
     <section id="head-office" class="headquarters-section" aria-labelledby="headquarters-heading">
       <div class="section-intro reveal">
         <p class="section-kicker">Contact us</p>
@@ -624,10 +600,6 @@ onMounted(() => {
   color: var(--color-ink);
 }
 
-.contact-page .contact-hero {
-  height: 680px;
-}
-
 .reveal {
   opacity: 0;
 }
@@ -648,7 +620,6 @@ onMounted(() => {
   }
 }
 
-.eyebrow,
 .section-kicker,
 .office-type {
   display: inline-block;
@@ -660,88 +631,16 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.eyebrow--light,
 .section-kicker--light {
   color: var(--primary-light);
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(6, 18, 13, 0.92) 0%,
-      rgba(6, 18, 13, 0.68) 42%,
-      rgba(6, 18, 13, 0.22) 78%,
-      rgba(6, 18, 13, 0.08) 100%
-    ),
-    radial-gradient(circle at 78% 24%, rgba(27, 163, 79, 0.28) 0%, transparent 52%);
-}
-
-.hero-inner {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: min(100%, var(--container-max-width));
-  margin: 0 auto;
-  padding: 3rem var(--container-padding);
-  text-align: left;
-}
-
-.hero-inner > .eyebrow,
-.hero-inner h1,
-.hero-subtitle,
-.hero-actions {
-  opacity: 0;
-  animation: revealUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.hero-inner > .eyebrow {
-  animation-delay: 0.08s;
-}
-
-.hero-inner h1 {
-  animation-delay: 0.2s;
-}
-
-.hero-subtitle {
-  animation-delay: 0.34s;
-}
-
-.hero-actions {
-  animation-delay: 0.48s;
-}
-
-.hero-inner h1 {
-  max-width: 660px;
-  margin: 0.8rem 0 1rem;
-  color: #fffaf2;
-  font-size: clamp(2.2rem, 5vw, 4rem);
-  font-weight: 700;
-  line-height: 1.05;
-}
-
-.hero-subtitle {
-  max-width: 640px;
-  margin: 0 0 2rem;
-  color: rgba(255, 250, 242, 0.88);
-  font-size: 1.05rem;
-  line-height: 1.65;
-}
-
-.hero-actions,
 .visit-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.btn,
 .email-button,
 .visit-button {
   display: inline-flex;
@@ -759,34 +658,9 @@ onMounted(() => {
     transform 0.2s ease;
 }
 
-.btn:hover,
 .email-button:hover,
 .visit-button:hover {
   transform: translateY(-1px);
-}
-
-.btn {
-  padding: 0.85rem 1.8rem;
-  border: 1px solid transparent;
-}
-
-.btn--primary {
-  background: var(--primary-color);
-  color: var(--color-white);
-  box-shadow: 0 18px 36px rgba(27, 163, 79, 0.22);
-}
-
-.btn--primary:hover {
-  background: var(--primary-dark);
-}
-
-.btn--outline {
-  border-color: rgba(255, 250, 242, 0.62);
-  color: #fffaf2;
-}
-
-.btn--outline:hover {
-  background: rgba(255, 250, 242, 0.12);
 }
 
 .headquarters-section,
@@ -1899,16 +1773,6 @@ onMounted(() => {
 }
 
 @media (max-width: 720px) {
-  .contact-page .contact-hero {
-    height: 440px;
-  }
-
-  .hero-inner h1 {
-    font-size: 2.35rem;
-  }
-
-  .hero-actions,
-  .btn,
   .visit-actions,
   .visit-button {
     width: 100%;
@@ -2045,14 +1909,6 @@ onMounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-inner > .eyebrow,
-  .hero-inner h1,
-  .hero-subtitle,
-  .hero-actions {
-    opacity: 1;
-    animation: none;
-  }
-
   .reveal--visible {
     animation: none;
   }

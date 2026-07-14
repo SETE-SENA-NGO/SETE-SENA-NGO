@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
-
-const slideItems = [
-  { image: heroImpactVillage, caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
-]
 
 const fieldOffices = [
   {
@@ -45,17 +39,6 @@ onMounted(() => {
 
 <template>
   <main class="field-offices-page">
-    <Slideshow :slides="slideItems">
-      <div class="field-hero-overlay" />
-      <div class="field-hero__content">
-        <p class="field-eyebrow">Contact - Field Offices</p>
-        <h1 id="field-heading">Where the work actually happens.</h1>
-        <p>
-          Our two provincial field offices are the daily home of the staff who walk into
-          villages - and the easiest way to reach a program directly.
-        </p>
-      </div>
-    </Slideshow>
 
     <section class="field-details" aria-label="Field office contact details">
       <div class="field-details__inner">

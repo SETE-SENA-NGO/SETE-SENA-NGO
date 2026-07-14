@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
-
-const slideItems = [
-  { image: heroImpactVillage, caption: '' },
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-]
 
 interface TeamMember {
   role: string
@@ -88,21 +81,6 @@ onMounted(() => {
 
 <template>
   <div class="org-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="section-label saffron">About &middot; Organizational Structure</span>
-        <h1 class="hero-title">A team of monks, managers and master practitioners.</h1>
-        <p class="hero-subtitle">
-          From the Board of Directors to the field staff in Kratie, every level of Santi Sena is
-          accountable to the villagers we serve and the donors who trust us.
-        </p>
-        <div class="hero-actions">
-          <RouterLink to="/programs" class="btn btn-primary">See our programs</RouterLink>
-          <RouterLink to="/about" class="btn btn-ghost">&larr; Back to About</RouterLink>
-        </div>
-      </div>
-    </Slideshow>
 
     <!-- ── Key Facts ── -->
     <section class="facts-section">

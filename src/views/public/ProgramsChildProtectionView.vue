@@ -1,12 +1,4 @@
 <script setup lang="ts">
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/child-protection.jpg', caption: '' },
-  { image: '/images/programs/child-protection1.jpg', caption: '' },
-  { image: '/images/programs/child-protection2.jpg', caption: '' },
-  { image: '/images/programs/child-protection3.jpg', caption: '' },
-]
 
 const stats = [
   { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin' },
@@ -47,19 +39,6 @@ const pathway = [
 <template>
   <div class="child-protection-page">
     <!-- Hero -->
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay"></div>
-
-      <div class="hero-content">
-        <p class="eyebrow">PROGRAMS · GOAL 04 CHILD PROTECTION</p>
-        <h1>Every child safe. Every child in school.</h1>
-        <p class="hero-desc">
-          Anti-trafficking campaigns, village Child Protection Networks, child rights
-          advocacy and youth peer educators — because peace begins with a safe
-          childhood.
-        </p>
-      </div>
-    </Slideshow>
 
     <!-- Trust bar -->
     <section class="trust-bar">

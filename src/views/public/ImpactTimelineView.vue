@@ -2,7 +2,6 @@
 import heroImage1 from '@/assets/hero-impact.jpg'
 import heroImage2 from '@/assets/hero-impact-village.jpg'
 import heroImage3 from '@/assets/hero-impact-forest.jpg'
-import Slideshow from '@/components/shared/Slideshow.vue'
 import { ref } from 'vue'
 
 const milestones = [
@@ -93,12 +92,6 @@ const milestones = [
   },
 ]
 
-const slideItems = [
-  { image: heroImage1, caption: '' },
-  { image: heroImage2, caption: '' },
-  { image: heroImage3, caption: '' },
-]
-
 // State for expanded cards
 const expanded = ref<boolean[]>(Array.from({ length: milestones.length }, () => false))
 
@@ -109,18 +102,7 @@ function toggleExpand(index: number) {
 
 <template>
   <div class="timeline-page">
-    <!-- Hero Slideshow -->
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="eyebrow">Impact · Timeline</span>
-        <h1>Thirty years of walking with villages.</h1>
-        <p>
-          From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones
-          that shaped Santi Sena.
-        </p>
-      </div>
-    </Slideshow>
+    <!-- Static hero -->
 
     <!-- Timeline Section -->
     <section class="history-section">
