@@ -61,7 +61,7 @@ useScrollReveal()
       <!-- 👇 NEW: button row under stats -->
       <div class="stats-news-row">
         <RouterLink to="/news" class="btn btn--news">
-          📰 See all news
+          See all news
         </RouterLink>
       </div>
     </section>

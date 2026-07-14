@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
-// Dummy news data – replace with API call later
+// ─── Dummy news data ────────────────────────────────────────────────
 const newsItems = ref([
     {
         id: 1,
         title: 'New community pre‑school opens in Svay Rieng',
-        summary: 'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+        summary:
+            'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
         image: 'src/assets/maps/student.png',
         date: '2025-03-15',
         category: 'Education',
         author: 'Santi Sena Communications Team',
-        authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
+        authorAvatar:
+            'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
         featured: true,
         readTime: '3 min read',
         views: 1247,
@@ -23,12 +25,14 @@ const newsItems = ref([
     {
         id: 2,
         title: 'Forest Guardians celebrate 500 hectares of protected land',
-        summary: 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
+        summary:
+            'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
         image: 'src/assets/maps/wash.png',
         date: '2025-02-28',
         category: 'Environment',
         author: 'Santi Sena Environment Team',
-        authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
+        authorAvatar:
+            'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
         featured: false,
         readTime: '4 min read',
         views: 856,
@@ -38,12 +42,14 @@ const newsItems = ref([
     {
         id: 3,
         title: 'Youth leaders trained in child protection advocacy',
-        summary: 'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
+        summary:
+            'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
         image: 'src/assets/maps/certi.png',
         date: '2025-02-10',
         category: 'Child Protection',
         author: 'Santi Sena Child Protection Team',
-        authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
+        authorAvatar:
+            'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
         featured: false,
         readTime: '2 min read',
         views: 523,
@@ -53,12 +59,14 @@ const newsItems = ref([
     {
         id: 4,
         title: 'Saving‑for‑Change groups reach 10,000 members',
-        summary: 'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
+        summary:
+            'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
         image: 'src/assets/maps/pre-school.png',
         date: '2025-01-20',
         category: 'Livelihood',
         author: 'Santi Sena Livelihood Unit',
-        authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
+        authorAvatar:
+            'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
         featured: false,
         readTime: '3 min read',
         views: 2134,
@@ -68,12 +76,14 @@ const newsItems = ref([
     {
         id: 5,
         title: 'New partnership to expand clean water access',
-        summary: 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
+        summary:
+            'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
         image: 'src/assets/maps/water.png',
         date: '2025-01-05',
         category: 'WASH',
         author: 'Santi Sena WASH Team',
-        authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
+        authorAvatar:
+            'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
         featured: false,
         readTime: '5 min read',
         views: 678,
@@ -89,30 +99,97 @@ const heroSlides = [
     { image: '/images/programs/hero-4.jpg', caption: '' },
 ]
 
-// Category filter
-const categories = ['All', 'Education', 'Environment', 'Child Protection', 'Livelihood', 'WASH']
-
-const selectedCategory = ref('All')
-const searchQuery = ref('')
+// ─── State ──────────────────────────────────────────────────────────
 const savedArticles = ref<number[]>([])
 const likedArticles = ref<number[]>([])
-const showNewsletter = ref(false)
 const newsletterEmail = ref('')
 
-const filteredNews = computed(() => {
-    return newsItems.value.filter(item => {
-        const matchesCategory = selectedCategory.value === 'All' || item.category === selectedCategory.value
-        const matchesSearch = item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            item.summary.toLowerCase().includes(searchQuery.value.toLowerCase())
-        return matchesCategory && matchesSearch
+// Featured + regular articles
+const featuredArticle = computed(() => newsItems.value.find((item) => item.featured))
+const regularArticles = computed(() => newsItems.value.filter((item) => !item.featured))
+
+// ─── Scroll‑triggered animations ──────────────────────────────────
+const articleRefs = ref<HTMLElement[]>([])
+const newsletterRef = ref<HTMLElement | null>(null)
+const newsletterVisible = ref(false)
+
+// Store observers so we can clean them up
+let articleObservers: IntersectionObserver[] = []
+let newsletterObserver: IntersectionObserver | null = null
+
+const setupIntersectionObservers = () => {
+    // Clean up any existing observers
+    articleObservers.forEach((obs) => obs.disconnect())
+    articleObservers = []
+    if (newsletterObserver) {
+        newsletterObserver.disconnect()
+        newsletterObserver = null
+    }
+
+    // ── Article cards: toggle visibility on each intersection ──
+    articleRefs.value.forEach((el) => {
+        if (!el) return
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        el.classList.add('card-visible')
+                    } else {
+                        el.classList.remove('card-visible')
+                    }
+                })
+            },
+            {
+                threshold: 0.15,
+                rootMargin: '0px 0px -40px 0px',
+            }
+        )
+        observer.observe(el)
+        articleObservers.push(observer)
+    })
+
+    // ── Newsletter: scale from small to big when entering, stay big ──
+    if (newsletterRef.value) {
+        newsletterObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        newsletterVisible.value = true
+                    }
+                    // Optionally, you could set to false when leaving to shrink again,
+                    // but typical UX keeps it expanded once seen.
+                    // We keep it true once triggered.
+                })
+            },
+            {
+                threshold: 0.10,
+                rootMargin: '0px 0px -20px 0px',
+            }
+        )
+        newsletterObserver.observe(newsletterRef.value)
+    }
+}
+
+// ─── Lifecycle ──────────────────────────────────────────────────────
+onMounted(() => {
+    nextTick(() => {
+        // Gather article elements
+        const els = document.querySelectorAll('.news-card')
+        articleRefs.value = Array.from(els) as HTMLElement[]
+        setupIntersectionObservers()
     })
 })
 
-// Featured article
-const featuredArticle = computed(() => newsItems.value.find(item => item.featured))
-const regularArticles = computed(() => filteredNews.value.filter(item => !item.featured))
+onBeforeUnmount(() => {
+    articleObservers.forEach((obs) => obs.disconnect())
+    articleObservers = []
+    if (newsletterObserver) {
+        newsletterObserver.disconnect()
+        newsletterObserver = null
+    }
+})
 
-// Actions
+// ─── Actions ───────────────────────────────────────────────────────
 const toggleSave = (id: number) => {
     const index = savedArticles.value.indexOf(id)
     if (index > -1) {
@@ -136,15 +213,20 @@ const isLiked = (id: number) => likedArticles.value.includes(id)
 
 const shareArticle = (title: string) => {
     if (navigator.share) {
-        navigator.share({
-            title: title,
-            text: `Check out this article: ${title}`,
-            url: window.location.href,
-        }).catch(() => {})
+        navigator
+            .share({
+                title,
+                text: `Check out this article: ${title}`,
+                url: window.location.href,
+            })
+            .catch(() => {})
     } else {
-        navigator.clipboard?.writeText(window.location.href).then(() => {
-            alert('Link copied to clipboard!')
-        }).catch(() => {})
+        navigator.clipboard
+            ?.writeText(window.location.href)
+            .then(() => {
+                alert('Link copied to clipboard!')
+            })
+            .catch(() => {})
     }
 }
 
@@ -152,22 +234,25 @@ const subscribeNewsletter = () => {
     if (newsletterEmail.value) {
         alert(`Subscribed with ${newsletterEmail.value}!`)
         newsletterEmail.value = ''
-        showNewsletter.value = false
     }
 }
 
-// Format date
+// ─── Helpers ───────────────────────────────────────────────────────
 const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
     })
 }
 
-// Get initials from name
 const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    return name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
 }
 
 const scrollToTop = () => {
@@ -177,7 +262,7 @@ const scrollToTop = () => {
 
 <template>
     <div class="news-view">
-        <!-- Hero with Slideshow -->
+        <!-- ─── HERO with Slideshow ────────────────────────────────── -->
         <Slideshow :slides="heroSlides">
             <div class="hero-overlay" />
             <div class="hero-content">
@@ -206,29 +291,8 @@ const scrollToTop = () => {
             </div>
         </Slideshow>
 
-        <!-- Filter & Search Bar -->
+        <!-- ─── MAIN CONTENT ───────────────────────────────────────── -->
         <div class="container">
-            <!-- Sticky filter bar -->
-            <div class="filter-section">
-                <div class="filter-left">
-                    <div class="category-filters">
-                        <button v-for="cat in categories" :key="cat" :class="['filter-btn', { active: selectedCategory === cat }]" @click="selectedCategory = cat">
-                            {{ cat }}
-                        </button>
-                    </div>
-                </div>
-                <div class="filter-right">
-                    <div class="search-wrapper">
-                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="M21 21l-4.35-4.35" />
-                        </svg>
-                        <input type="text" v-model="searchQuery" placeholder="Search stories..." class="search-input" />
-                        <kbd class="search-kbd">⌘K</kbd>
-                    </div>
-                </div>
-            </div>
-
             <!-- Featured Article -->
             <div v-if="featuredArticle" class="featured-section">
                 <div class="featured-label">
@@ -239,7 +303,7 @@ const scrollToTop = () => {
                     <div class="featured-image">
                         <img :src="featuredArticle.image" :alt="featuredArticle.title" />
                         <div class="featured-image-overlay">
-                            <span class="trending-badge" v-if="featuredArticle.trending">
+                            <span v-if="featuredArticle.trending" class="trending-badge">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                                     <polyline points="17 6 23 6 23 12" />
@@ -257,8 +321,13 @@ const scrollToTop = () => {
                         <p class="featured-summary">{{ featuredArticle.summary }}</p>
                         <div class="featured-footer">
                             <div class="author-info">
-                                <div class="author-avatar" :style="{ backgroundImage: `url(${featuredArticle.authorAvatar})` }">
-                                    <span v-if="!featuredArticle.authorAvatar">{{ getInitials(featuredArticle.author) }}</span>
+                                <div
+                                    class="author-avatar"
+                                    :style="{ backgroundImage: `url(${featuredArticle.authorAvatar})` }"
+                                >
+                                    <span v-if="!featuredArticle.authorAvatar">{{
+                                        getInitials(featuredArticle.author)
+                                    }}</span>
                                 </div>
                                 <span class="news-author">{{ featuredArticle.author }}</span>
                             </div>
@@ -272,7 +341,9 @@ const scrollToTop = () => {
                                 </span>
                                 <span class="metric">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                        <path
+                                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                        />
                                     </svg>
                                     {{ featuredArticle.likes }}
                                 </span>
@@ -294,17 +365,30 @@ const scrollToTop = () => {
                                 </svg>
                             </button>
                             <div class="action-group">
-                                <button class="action-btn icon-btn" :class="{ active: isSaved(featuredArticle.id) }" @click.prevent="toggleSave(featuredArticle.id)">
+                                <button
+                                    class="action-btn icon-btn"
+                                    :class="{ active: isSaved(featuredArticle.id) }"
+                                    @click.prevent="toggleSave(featuredArticle.id)"
+                                >
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                                     </svg>
                                 </button>
-                                <button class="action-btn icon-btn" :class="{ active: isLiked(featuredArticle.id) }" @click.prevent="toggleLike(featuredArticle.id)">
+                                <button
+                                    class="action-btn icon-btn"
+                                    :class="{ active: isLiked(featuredArticle.id) }"
+                                    @click.prevent="toggleLike(featuredArticle.id)"
+                                >
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                        <path
+                                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                        />
                                     </svg>
                                 </button>
-                                <button class="action-btn icon-btn" @click.prevent="shareArticle(featuredArticle.title)">
+                                <button
+                                    class="action-btn icon-btn"
+                                    @click.prevent="shareArticle(featuredArticle.title)"
+                                >
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <circle cx="18" cy="5" r="3" />
                                         <circle cx="6" cy="12" r="3" />
@@ -319,37 +403,22 @@ const scrollToTop = () => {
                 </RouterLink>
             </div>
 
-            <!-- Section header -->
+            <!-- ─── ALL STORIES ─────────────────────────────────────── -->
             <div class="section-header">
                 <div class="section-header-left">
                     <h2 class="section-title">All Stories</h2>
                     <span class="section-count">{{ regularArticles.length }} articles</span>
                 </div>
-                <div class="section-header-right">
-                    <button class="view-toggle" title="Grid view">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="7" height="7" />
-                            <rect x="14" y="3" width="7" height="7" />
-                            <rect x="3" y="14" width="7" height="7" />
-                            <rect x="14" y="14" width="7" height="7" />
-                        </svg>
-                    </button>
-                    <button class="view-toggle" title="List view">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="8" y1="6" x2="21" y2="6" />
-                            <line x1="8" y1="12" x2="21" y2="12" />
-                            <line x1="8" y1="18" x2="21" y2="18" />
-                            <line x1="3" y1="6" x2="3.01" y2="6" />
-                            <line x1="3" y1="12" x2="3.01" y2="12" />
-                            <line x1="3" y1="18" x2="3.01" y2="18" />
-                        </svg>
-                    </button>
-                </div>
             </div>
 
-            <!-- Regular News Grid -->
+            <!-- News Grid – each card gets a scroll‑triggered pop‑up (re‑appears on each scroll) -->
             <div v-if="regularArticles.length > 0" class="news-grid">
-                <article v-for="item in regularArticles" :key="item.id" class="news-card">
+                <article
+                    v-for="item in regularArticles"
+                    :key="item.id"
+                    class="news-card"
+                    :data-id="item.id"
+                >
                     <RouterLink :to="`/news/${item.id}`" class="card-link">
                         <div class="news-image">
                             <img :src="item.image" :alt="item.title" />
@@ -371,7 +440,10 @@ const scrollToTop = () => {
                             <p class="news-summary">{{ item.summary }}</p>
                             <div class="news-footer">
                                 <div class="author-info compact">
-                                    <div class="author-avatar small" :style="{ backgroundImage: `url(${item.authorAvatar})` }">
+                                    <div
+                                        class="author-avatar small"
+                                        :style="{ backgroundImage: `url(${item.authorAvatar})` }"
+                                    >
                                         <span v-if="!item.authorAvatar">{{ getInitials(item.author) }}</span>
                                     </div>
                                     <span class="news-author">{{ item.author }}</span>
@@ -386,7 +458,9 @@ const scrollToTop = () => {
                                     </span>
                                     <span class="metric">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                            <path
+                                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                            />
                                         </svg>
                                         {{ item.likes }}
                                     </span>
@@ -395,17 +469,30 @@ const scrollToTop = () => {
                         </div>
                     </RouterLink>
                     <div class="card-actions">
-                        <button class="action-btn icon-btn small" :class="{ active: isSaved(item.id) }" @click.prevent="toggleSave(item.id)">
+                        <button
+                            class="action-btn icon-btn small"
+                            :class="{ active: isSaved(item.id) }"
+                            @click.prevent="toggleSave(item.id)"
+                        >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                             </svg>
                         </button>
-                        <button class="action-btn icon-btn small" :class="{ active: isLiked(item.id) }" @click.prevent="toggleLike(item.id)">
+                        <button
+                            class="action-btn icon-btn small"
+                            :class="{ active: isLiked(item.id) }"
+                            @click.prevent="toggleLike(item.id)"
+                        >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                />
                             </svg>
                         </button>
-                        <button class="action-btn icon-btn small" @click.prevent="shareArticle(item.title)">
+                        <button
+                            class="action-btn icon-btn small"
+                            @click.prevent="shareArticle(item.title)"
+                        >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="18" cy="5" r="3" />
                                 <circle cx="6" cy="12" r="3" />
@@ -414,7 +501,10 @@ const scrollToTop = () => {
                                 <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                             </svg>
                         </button>
-                        <RouterLink :to="`/news/${item.id}`" class="action-btn icon-btn small read-link">
+                        <RouterLink
+                            :to="`/news/${item.id}`"
+                            class="action-btn icon-btn small read-link"
+                        >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M5 12h14" />
                                 <path d="M12 5l7 7-7 7" />
@@ -423,32 +513,45 @@ const scrollToTop = () => {
                     </div>
                 </article>
             </div>
+
             <div v-else class="no-results">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <circle cx="11" cy="11" r="8" />
                     <path d="M21 21l-4.35-4.35" />
                 </svg>
-                <p>No articles match your filters. Try a different search or category.</p>
-                <button class="reset-btn" @click="selectedCategory = 'All'; searchQuery = ''">Clear filters</button>
+                <p>No articles found.</p>
             </div>
 
-            <!-- Newsletter CTA -->
-            <div class="newsletter-section">
-                <div class="newsletter-card">
+            <!-- ─── NEWSLETTER – scale from small → big on scroll (stays big) ── -->
+            <div class="newsletter-section" ref="newsletterRef">
+                <div
+                    class="newsletter-card"
+                    :class="{ 'newsletter-visible': newsletterVisible }"
+                >
                     <div class="newsletter-icon">✉</div>
                     <div class="newsletter-content">
                         <h3>Never miss a story</h3>
-                        <p>Subscribe to our newsletter and get the latest updates delivered to your inbox.</p>
+                        <p>
+                            Subscribe to our newsletter and get the latest updates delivered
+                            to your inbox.
+                        </p>
                     </div>
                     <div class="newsletter-form">
-                        <input type="email" v-model="newsletterEmail" placeholder="Enter your email" class="newsletter-input" />
-                        <button class="newsletter-btn" @click="subscribeNewsletter">Subscribe</button>
+                        <input
+                            type="email"
+                            v-model="newsletterEmail"
+                            placeholder="Enter your email"
+                            class="newsletter-input"
+                        />
+                        <button class="newsletter-btn" @click="subscribeNewsletter">
+                            Subscribe
+                        </button>
                     </div>
                 </div>
             </div>
 
-<!-- Bottom actions -->
-            <div class="news-actions">
+            <!-- ─── BOTTOM ACTIONS ──────────────────────────────────── -->
+            <div class="news-actions" aria-label="News page footer">
                 <RouterLink to="/" class="back-home">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 12H5" />
@@ -485,8 +588,8 @@ const scrollToTop = () => {
     --shadow-lg: 0 16px 56px rgba(30, 26, 22, 0.10);
     --shadow-xl: 0 24px 80px rgba(30, 26, 22, 0.14);
     --radius-sm: 8px;
-    --radius-md: 20px;      /* increased for a more premium feel */
-    --radius-lg: 28px;      /* increased for featured cards */
+    --radius-md: 20px;
+    --radius-lg: 28px;
     --radius-xl: 32px;
     --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
@@ -507,7 +610,13 @@ const scrollToTop = () => {
 .hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(6, 18, 13, 0.92) 0%, rgba(6, 18, 13, 0.60) 45%, rgba(6, 18, 13, 0.20) 75%, transparent 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(6, 18, 13, 0.92) 0%,
+        rgba(6, 18, 13, 0.60) 45%,
+        rgba(6, 18, 13, 0.20) 75%,
+        transparent 100%
+    );
 }
 
 .hero-content {
@@ -563,17 +672,16 @@ const scrollToTop = () => {
     }
 }
 
-.hero-content  {
+.hero-content {
     margin: 0 10px 0 60px;
 }
 .hero-content h1 {
     font-size: clamp(2.6rem, 6vw, 4.2rem);
     font-weight: 700;
     color: #f1eaea;
-    margin-right:40px;
+    margin-right: 40px;
     letter-spacing: -0.03em;
     line-height: 1.05;
-    /* padding-right: 30px; */
 }
 
 .hero-content h1 .highlight {
@@ -616,115 +724,9 @@ const scrollToTop = () => {
     letter-spacing: 0.08em;
 }
 
-/* ── Filter Bar ── */
-.filter-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-    align-items: center;
-    justify-content: space-between;
-    padding: 2rem 0 1.5rem;
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: 2.5rem;
-    position: sticky;
-    top: 0;
-    background: rgba(250, 248, 245, 0.85);
-    backdrop-filter: blur(20px);
-    z-index: 20;
-}
-
-.filter-left {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.category-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-}
-
-.filter-btn {
-    padding: 0.4rem 1.2rem;
-    border: none;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--color-ink-soft);
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition);
-}
-
-.filter-btn:hover {
-    background: rgba(45, 122, 90, 0.06);
-    color: var(--primary-color);
-}
-
-.filter-btn.active {
-    background: var(--primary-color);
-    color: #fff;
-    box-shadow: 0 4px 16px rgba(45, 122, 90, 0.25);
-}
-
-.filter-right {
-    display: flex;
-    align-items: center;
-}
-
-.search-wrapper {
-    position: relative;
-    flex: 1 1 220px;
-    min-width: 180px;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.5rem 1rem 0.5rem 2.6rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: #ffffff;
-    font-size: 0.85rem;
-    transition: all var(--transition);
-    font-family: inherit;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(45, 122, 90, 0.08);
-}
-
-.search-icon {
-    position: absolute;
-    left: 0.9rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    color: var(--color-ink-soft);
-    opacity: 0.5;
-}
-
-.search-kbd {
-    position: absolute;
-    right: 0.8rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.6rem;
-    padding: 0.15rem 0.5rem;
-    background: var(--color-cream);
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    color: var(--color-ink-soft);
-    opacity: 0.6;
-    font-family: inherit;
-}
-
 /* ── Featured Section ── */
 .featured-section {
-    margin-bottom: 3.5rem;
+    margin: 2.5rem 0 3.5rem;
 }
 
 .featured-label {
@@ -769,7 +771,7 @@ const scrollToTop = () => {
     aspect-ratio: 16 / 10;
     overflow: hidden;
     background: var(--color-border);
-    border-radius:0 12px  12px 0;
+    border-radius: 0 12px 12px 0;
 }
 
 .featured-image img {
@@ -936,12 +938,10 @@ const scrollToTop = () => {
     width: 16px;
     height: 16px;
     transition: transform 0.3s ease;
-
-
 }
 
 .read-more-btn:hover {
-    background:rgb(6, 127, 61);
+    background: rgb(6, 127, 61);
     box-shadow: 0 8px 24px rgba(19, 237, 146, 0.3);
     transform: translateY(-2px);
     color: white;
@@ -949,7 +949,6 @@ const scrollToTop = () => {
 
 .read-more-btn:hover svg {
     transform: translateX(4px);
-    ;
 }
 
 .action-group {
@@ -1056,36 +1055,6 @@ const scrollToTop = () => {
     font-weight: 500;
 }
 
-.section-header-right {
-    display: flex;
-    gap: 0.25rem;
-}
-
-.view-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border: none;
-    background: transparent;
-    border-radius: var(--radius-sm);
-    color: var(--color-ink-soft);
-    opacity: 0.5;
-    cursor: pointer;
-    transition: all var(--transition);
-}
-
-.view-toggle:hover {
-    opacity: 1;
-    background: rgba(45, 122, 90, 0.06);
-}
-
-.view-toggle svg {
-    width: 18px;
-    height: 18px;
-}
-
 /* ── News Grid ── */
 .news-grid {
     display: grid;
@@ -1094,23 +1063,55 @@ const scrollToTop = () => {
     margin-top: 0.5rem;
 }
 
+/* ── Card: initially hidden, pops when scrolled into view ── */
 .news-card {
     background: #f9e8e8;
     border-radius: var(--radius-md);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
-    transition: all var(--transition);
     border: 1px solid var(--color-border);
     position: relative;
     border-radius: 20px;
     display: flex;
     flex-direction: column;
+
+    /* ── hidden state ── */
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+    transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.4s ease,
+        border-color 0.4s ease;
+    will-change: transform, opacity;
+}
+
+/* ── visible state ── */
+.news-card.card-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
 .news-card:hover {
     transform: translateY(-6px);
     box-shadow: var(--shadow-lg);
     border-color: transparent;
+}
+
+/* stagger delays */
+.news-card:nth-child(2) {
+    transition-delay: 0.06s;
+}
+.news-card:nth-child(3) {
+    transition-delay: 0.12s;
+}
+.news-card:nth-child(4) {
+    transition-delay: 0.18s;
+}
+.news-card:nth-child(5) {
+    transition-delay: 0.24s;
+}
+.news-card:nth-child(6) {
+    transition-delay: 0.30s;
 }
 
 .card-link {
@@ -1268,25 +1269,7 @@ const scrollToTop = () => {
     margin: 0;
 }
 
-.reset-btn {
-    padding: 0.3rem 1.5rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--color-ink-soft);
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all var(--transition);
-    font-family: inherit;
-}
-
-.reset-btn:hover {
-    background: var(--primary-color);
-    color: #fff;
-    border-color: var(--primary-color);
-}
-
-/* ── Newsletter ── */
+/* ── Newsletter – scale from small → big on scroll (stays big) ── */
 .newsletter-section {
     margin: 3.5rem 0 2.5rem;
 }
@@ -1301,6 +1284,22 @@ const scrollToTop = () => {
     border-radius: 20px;
     color: #fff;
     box-shadow: 0 12px 48px rgba(26, 61, 46, 0.20);
+
+    /* ── initial: small ── */
+    transform: scale(0.88);
+    opacity: 0.5;
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.6s ease;
+    will-change: transform, opacity;
+    transform-origin: center center;
+}
+
+/* ── visible: full size ── */
+.newsletter-card.newsletter-visible {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 16px 56px rgba(26, 61, 46, 0.30);
 }
 
 .newsletter-icon {
@@ -1336,7 +1335,7 @@ const scrollToTop = () => {
     padding: 0.5rem 1.2rem;
     border: none;
     border-radius: 999px;
-    background:rgb(224, 227, 226);
+    background: rgb(224, 227, 226);
     color: #050505;
     font-size: 0.85rem;
     min-width: 200px;
@@ -1367,7 +1366,7 @@ const scrollToTop = () => {
 }
 
 .newsletter-btn:hover {
-    background:rgb(255, 255, 255);
+    background: rgb(255, 255, 255);
     transform: translateY(-2px);
     color: rgb(8, 113, 17);
     box-shadow: 0 8px 24px rgba(14, 14, 14, 0.25);
@@ -1459,19 +1458,6 @@ const scrollToTop = () => {
 }
 
 @media (max-width: 768px) {
-    .filter-section {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-        padding: 1.25rem 0;
-        top: 0;
-    }
-    .filter-left {
-        justify-content: center;
-    }
-    .filter-right .search-wrapper {
-        max-width: 100%;
-    }
     .hero-content {
         padding: 2rem 1.5rem;
     }
@@ -1509,9 +1495,6 @@ const scrollToTop = () => {
     }
     .newsletter-btn {
         width: 100%;
-    }
-    .search-kbd {
-        display: none;
     }
 }
 

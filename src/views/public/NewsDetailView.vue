@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 
 const route = useRoute()
 const articleId = Number(route.params.id)
 
-// ── Extended dummy data with more fields ──
+// ── Extended dummy data ──
 const articles = [
   {
     id: 1,
@@ -23,9 +23,7 @@ const articles = [
     author: 'Santi Sena Communications Team',
     authorBio: 'The Communications Team shares stories of impact from the field, highlighting the voices of communities and partners.',
     readTime: '3 min read',
-            authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
-
-
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
     views: 1247,
     likes: 89,
     tags: ['Education', 'Community', 'Early Childhood'],
@@ -39,8 +37,7 @@ const articles = [
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
-            authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
-
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
     authorBio: 'The Environment Team works with communities to protect natural resources and promote sustainable land use.',
     readTime: '4 min read',
     views: 856,
@@ -56,8 +53,7 @@ const articles = [
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
-            authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
-
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
     authorBio: 'The Child Protection Unit works to safeguard children’s rights and empower communities to prevent abuse and exploitation.',
     readTime: '2 min read',
     views: 523,
@@ -73,8 +69,7 @@ const articles = [
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
-           authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
-
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
     authorBio: 'The Livelihood Unit promotes economic empowerment through savings groups, skills training, and enterprise development.',
     readTime: '3 min read',
     views: 2134,
@@ -90,8 +85,7 @@ const articles = [
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
-            authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
-
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
     authorBio: 'The WASH Team focuses on improving water, sanitation, and hygiene practices in underserved communities.',
     readTime: '5 min read',
     views: 678,
@@ -124,9 +118,7 @@ onMounted(() => {
   article.value = found ?? null
 })
 
-
-
-// Related articles: same category, excluding current, up to 3
+// Related articles
 const relatedArticles = computed(() => {
   const current = article.value
   if (!current) return []
@@ -135,8 +127,52 @@ const relatedArticles = computed(() => {
     .slice(0, 3)
 })
 
+// ─── Scroll‑triggered pop‑up for cards ──────────────────────────
+let observers: IntersectionObserver[] = []
 
-// Share functions
+const setupObservers = () => {
+  // Clean up old observers
+  observers.forEach(obs => obs.disconnect())
+  observers = []
+
+  // Target all cards that should pop up
+  const selectors = [
+    '.sidebar-card',          // includes stats, related, newsletter
+    '.author-bio-card',
+    '.share-section',
+    '.related-sidebar-item'   // individual related links
+  ]
+  const elements = document.querySelectorAll(selectors.join(','))
+  elements.forEach(el => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            el.classList.add('card-visible')
+          } else {
+            el.classList.remove('card-visible')
+          }
+        })
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -20px 0px' }
+    )
+    observer.observe(el)
+    observers.push(observer)
+  })
+}
+
+onMounted(() => {
+  nextTick(() => {
+    setupObservers()
+  })
+})
+
+onBeforeUnmount(() => {
+  observers.forEach(obs => obs.disconnect())
+  observers = []
+})
+
+// ─── Share functions ──────────────────────────────────────────────
 const shareOn = (platform: string) => {
   const url = window.location.href
   const title = article.value?.title || ''
@@ -162,34 +198,28 @@ const shareOn = (platform: string) => {
 
 const toastMessage = ref('')
 const showToast = ref(false)
-const toastTimer = ref<number | null>(null)
+let toastTimer: number | null = null
 
 const showAlertToast = (message: string) => {
   toastMessage.value = message
   showToast.value = true
-
-if (toastTimer.value) clearTimeout(toastTimer.value)
-  toastTimer.value = window.setTimeout(() => {
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(() => {
     showToast.value = false
   }, 2200)
 }
 
-
-
 const copyLink = () => {
   navigator.clipboard
     ?.writeText(window.location.href)
-    .then(() => {
-      showAlertToast('Link copied to clipboard!')
-    })
-    .catch(() => {
-      showAlertToast('Could not copy link. Please copy manually.')
-    })
+    .then(() => showAlertToast('Link copied to clipboard!'))
+    .catch(() => showAlertToast('Could not copy link. Please copy manually.'))
 }
 </script>
 
 <template>
 <div class="news-detail">
+    <!-- Toast notification -->
     <transition name="toast">
       <div v-if="showToast" class="toast toast--success" role="status" aria-live="polite">
         <span class="toast__icon">✅</span>
@@ -197,7 +227,7 @@ const copyLink = () => {
       </div>
     </transition>
 
-    <!-- Hero with background image -->
+    <!-- Hero -->
     <section v-if="article" class="page-hero" :style="{ backgroundImage: `url(${article.image})` }">
       <div class="hero-overlay"></div>
       <div class="hero-content">
@@ -262,7 +292,7 @@ const copyLink = () => {
               </div>
             </div>
 
-            <!-- Share -->
+            <!-- Share Section (pop‑up) -->
             <div class="share-section">
               <span class="share-label">Share this story</span>
               <div class="share-buttons">
@@ -298,7 +328,7 @@ const copyLink = () => {
               </div>
             </div>
 
-            <!-- Author Bio -->
+            <!-- Author Bio (pop‑up) -->
             <div class="author-bio-card">
               <div class="author-avatar-large" :style="{ backgroundImage: `url(${article.authorAvatar})` }">
                 <span v-if="!article.authorAvatar">{{ article.author.split(' ').map(n=>n[0]).join('').slice(0,2) }}</span>
@@ -312,28 +342,24 @@ const copyLink = () => {
 
           <!-- Right: Sidebar -->
           <aside class="detail-sidebar">
-            <!-- Quick stats -->
+            <!-- Article stats (without icons) – now with pop‑up -->
             <div class="sidebar-card stats-card">
               <h4>Article stats</h4>
               <div class="stat-row">
-                <span class="stat-icon">👁️</span>
                 <span>{{ article.views }} views</span>
               </div>
               <div class="stat-row">
-                <span class="stat-icon">❤️</span>
                 <span>{{ article.likes }} likes</span>
               </div>
               <div class="stat-row">
-                <span class="stat-icon">⏱️</span>
                 <span>{{ article.readTime }}</span>
               </div>
               <div class="stat-row">
-                <span class="stat-icon">📅</span>
                 <span>{{ new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</span>
               </div>
             </div>
 
-            <!-- Related articles -->
+            <!-- Related articles (pop‑up) -->
             <div v-if="relatedArticles.length > 0" class="sidebar-card related-sidebar">
               <h4>More from {{ article.category }}</h4>
               <RouterLink v-for="item in relatedArticles" :key="item.id" :to="`/news/${item.id}`" class="related-sidebar-item">
@@ -348,7 +374,7 @@ const copyLink = () => {
               </RouterLink>
             </div>
 
-            <!-- Newsletter CTA -->
+            <!-- Newsletter mini (pop‑up) -->
             <div class="sidebar-card newsletter-mini">
               <h4>📬 Never miss a story</h4>
               <p>Get the latest updates delivered to your inbox.</p>
@@ -369,9 +395,8 @@ const copyLink = () => {
             </svg>
             All news
           </RouterLink>
-<button class="scroll-top-btn" @click="$el?.ownerDocument?.defaultView?.scrollTo({ top: 0, behavior: 'smooth' })">
+          <button class="scroll-top-btn" @click="$el?.ownerDocument?.defaultView?.scrollTo({ top: 0, behavior: 'smooth' })">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-
               <path d="M18 15l-6-6-6 6" />
             </svg>
           </button>
@@ -467,7 +492,6 @@ const copyLink = () => {
   box-shadow: 0 10px 30px rgba(0,0,0,0.12);
 }
 
-/* Education: make it more prominent */
 .back-link {
   border-color: rgba(232, 213, 163, 0.65);
   background: rgba(201, 168, 76, 0.18);
@@ -479,12 +503,6 @@ const copyLink = () => {
   border-color: rgba(232, 213, 163, 0.85);
   box-shadow: 0 16px 40px rgba(0,0,0,0.18);
 }
-
-
-.back-link:active {
-  transform: translateY(0px);
-}
-
 
 .back-link svg {
   width: 18px;
@@ -503,7 +521,6 @@ const copyLink = () => {
   border-radius: 999px;
   backdrop-filter: blur(2px);
   margin-bottom: 0.75rem;
-
 }
 
 .page-hero h1 {
@@ -562,6 +579,7 @@ const copyLink = () => {
   padding: 2rem;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-border);
+  border-radius: 20px;
 }
 
 .content-body {
@@ -625,7 +643,7 @@ const copyLink = () => {
   border: 1px solid var(--color-border);
 }
 
-/* Share */
+/* ── Share Section (pop‑up) ── */
 .share-section {
   margin-top: 2rem;
   padding-top: 1.5rem;
@@ -634,6 +652,16 @@ const copyLink = () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+
+  opacity: 0;
+  transform: translateY(20px) scale(0.97);
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.share-section.card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .share-label {
@@ -696,7 +724,7 @@ const copyLink = () => {
   background: var(--primary-dark);
 }
 
-/* Author Bio */
+/* ── Author Bio (pop‑up) ── */
 .author-bio-card {
   display: flex;
   gap: 1rem;
@@ -706,6 +734,17 @@ const copyLink = () => {
   background: var(--color-cream);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  border-radius: 20px;
+
+  opacity: 0;
+  transform: translateY(20px) scale(0.97);
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.author-bio-card.card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .author-avatar-large {
@@ -750,6 +789,19 @@ const copyLink = () => {
   padding: 1.5rem;
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
+  border-radius: 20px;
+
+
+  /* pop‑up */
+  opacity: 0;
+  transform: translateY(20px) scale(0.97);
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar-card.card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .sidebar-card h4 {
@@ -761,10 +813,10 @@ const copyLink = () => {
   letter-spacing: 0.04em;
 }
 
+/* Stats card – no icons */
 .stats-card .stat-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   padding: 0.4rem 0;
   border-bottom: 1px solid var(--color-border);
   font-size: 0.9rem;
@@ -775,12 +827,7 @@ const copyLink = () => {
   border-bottom: none;
 }
 
-.stat-icon {
-  font-size: 1.1rem;
-  width: 1.8rem;
-}
-
-/* Related sidebar */
+/* Related sidebar items – also pop‑up */
 .related-sidebar-item {
   display: flex;
   gap: 0.75rem;
@@ -789,6 +836,15 @@ const copyLink = () => {
   text-decoration: none;
   color: inherit;
   transition: opacity 0.2s;
+
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.2s;
+}
+
+.related-sidebar-item.card-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .related-sidebar-item:hover {
@@ -964,6 +1020,67 @@ const copyLink = () => {
   color: #fff;
 }
 
+/* ── Toast ── */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(16px);
+    z-index: 9999;
+    background: rgba(14, 26, 20, 0.92);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    backdrop-filter: blur(10px);
+    max-width: calc(100vw - 2rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .toast__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(74, 222, 128, 0.18);
+    border: 1px solid rgba(74, 222, 128, 0.35);
+    flex: 0 0 auto;
+  }
+
+  .toast__text {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .toast--success {
+    border-color: rgba(74, 222, 128, 0.35);
+  }
+
+  .toast-enter-active,
+  .toast-leave-active {
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+
+  .toast-enter-from,
+  .toast-leave-to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(24px);
+  }
+
+  .toast-enter-to,
+  .toast-leave-from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
 /* ── Responsive ── */
 @media (max-width: 992px) {
   .article-grid {
@@ -1015,67 +1132,4 @@ const copyLink = () => {
     font-size: 0.95rem;
   }
 }
-
-/* Toast */
-.toast {
-    position: fixed;
-
-    left: 50%;
-    bottom: 24px;
-    transform: translateX(-50%) translateY(16px);
-    z-index: 9999;
-    background: rgba(14, 26, 20, 0.92);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.14);
-    padding: 0.75rem 1rem;
-    border-radius: 999px;
-    box-shadow: 0 18px 60px rgba(0,0,0,0.25);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    backdrop-filter: blur(10px);
-    max-width: calc(100vw - 2rem);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .toast__icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(74, 222, 128, 0.18);
-    border: 1px solid rgba(74, 222, 128, 0.35);
-    flex: 0 0 auto;
-  }
-
-  .toast__text {
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-
-  .toast--success {
-    border-color: rgba(74, 222, 128, 0.35);
-  }
-
-  /* enter/leave */
-  .toast-enter-active,
-  .toast-leave-active {
-    transition: opacity 220ms ease, transform 220ms ease;
-  }
-
-  .toast-enter-from,
-  .toast-leave-to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(24px);
-  }
-
-  .toast-enter-to,
-  .toast-leave-from {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
 </style>

@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue'
 import cambodiaMap from '@/assets/maps/cambodia.png'
 
 import heroImage from '@/assets/hero-impact.jpg'
 import heroImpactForest from '@/assets/hero-impact-forest.jpg'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
-// import cambodiaMap from '@/assets/maps/cambodia.svg'
 
-
-
-
+// ─── SLIDESHOW ──────────────────────────────────────────────────────
 const slideItems = [
     { image: heroImage, caption: '' },
     { image: heroImpactForest, caption: '' },
@@ -29,32 +26,39 @@ const overviewItems: StatItem[] = [
     { value: '3', label: 'Provinces', desc: 'Continuous field presence since 1994.' },
 ]
 
+// ─── FLIP CARD DATA (icons removed) ──────────────────────────────
 const sections = [{
     title: 'Environment',
-    icon: '🌿',
-    items: [
+    icon: 'tree',
+    preview: '570+ hectares protected',
+    details: [
         { value: '570+', label: 'Hectares', desc: 'Community forest protected and restored.' },
         { value: '50k+', label: 'Saplings', desc: 'Grown yearly in village nurseries.' },
         { value: '300+', label: 'Biogas units', desc: 'Installed in rural kitchens.' },
     ],
+    description: 'Community-led conservation that protects biodiversity and builds climate resilience.',
 },
 {
     title: 'Education',
-    icon: '📚',
-    items: [
+    icon: 'book',
+    preview: '120+ children enrolled yearly',
+    details: [
         { value: '120+', label: 'Pre-school children', desc: 'Enrolled each year.' },
         { value: '8', label: 'Mobile libraries', desc: 'Reaching remote villages.' },
         { value: '60+', label: 'Annual scholarships', desc: 'For the poorest students.' },
     ],
+    description: 'Early childhood education and lifelong learning opportunities for every child.',
 },
 {
     title: 'Livelihoods & Child Protection',
-    icon: '🤝',
-    items: [
+    icon: 'handshake',
+    preview: '2,400+ SfC members',
+    details: [
         { value: '2,400+', label: 'SfC members', desc: 'Saving and lending together.' },
         { value: '12', label: 'Cooperatives', desc: 'Rice, vegetables and enterprise.' },
         { value: '600+', label: 'Peer educators', desc: 'Trained in child rights.' },
     ],
+    description: 'Economic empowerment and child safeguarding go hand in hand.',
 },
 ]
 
@@ -89,9 +93,40 @@ const stopSlideshow = () => {
     }
 }
 
-onBeforeUnmount(() => {
-    stopSlideshow()
-})
+// ─── SCROLL‑TRIGGERED POP‑UP (Intersection Observer) ──────────────
+let observers: IntersectionObserver[] = []
+
+const setupObservers = () => {
+    // Clean up old observers
+    observers.forEach(obs => obs.disconnect())
+    observers = []
+
+    // Target all cards that should pop up
+    const selectors = [
+        '.stat-card',
+        '.flip-card-wrapper',
+        '.bullet-list li',
+        '.cta-content',          // CTA section
+    ]
+
+    const elements = document.querySelectorAll(selectors.join(','))
+    elements.forEach((el) => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        el.classList.add('card-visible')
+                    } else {
+                        el.classList.remove('card-visible')
+                    }
+                })
+            },
+            { threshold: 0.15, rootMargin: '0px 0px -20px 0px' }
+        )
+        observer.observe(el)
+        observers.push(observer)
+    })
+}
 
 onMounted(() => {
     document.title = 'Impact by the Numbers — Santi Sena'
@@ -121,11 +156,20 @@ onMounted(() => {
     setOgMeta('og:description', '293 villages, 570+ hectares of forest, and counting.')
 
     startSlideshow()
+
+    // Set up observers after DOM render
+    nextTick(() => {
+        setupObservers()
+    })
+})
+
+onBeforeUnmount(() => {
+    stopSlideshow()
+    observers.forEach(obs => obs.disconnect())
 })
 </script>
 
 <template>
-
     <div class="numbers-page">
         <!-- HERO -->
         <Slideshow :slides="slideItems">
@@ -155,7 +199,7 @@ onMounted(() => {
                 </div>
 
                 <div class="operation-content">
-<!-- Left: Stats -->
+                    <!-- Left: Stats -->
                     <div class="stats-grid">
                         <div class="stat-card" v-for="item in overviewItems" :key="item.label">
                             <h3>{{ item.value }}</h3>
@@ -164,23 +208,20 @@ onMounted(() => {
                         </div>
                     </div>
 
-<!-- Right: Map -->
-<div class="map-wrapper">
+                    <!-- Right: Map (hover effect: shift right + scale) -->
+                    <div class="map-wrapper">
                         <div class="map-inner">
                             <div class="map-media">
                                 <img :src="cambodiaMap" alt="Cambodia map" class="map-image" />
-
-
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </section>
 
-        <!-- THEMED SECTIONS (Environment, Education, Livelihoods) -->
-        <section class="themed-section">
+        <!-- THEMED SECTIONS → FLIP CARDS (with real SVG icons) -->
+        <section class="flip-section">
             <div class="container">
                 <div class="section-header">
                     <span class="subtitle">Impact Areas</span>
@@ -191,17 +232,54 @@ onMounted(() => {
                     </p>
                 </div>
 
-                <div class="themed-grid">
-                    <div v-for="section in sections" :key="section.title" class="themed-block">
-                        <div class="themed-head">
-                            <span class="themed-icon" aria-hidden="true">{{ section.icon }}</span>
-                            <h3>{{ section.title }}</h3>
-                        </div>
-                        <div class="themed-stats">
-                            <div v-for="item in section.items" :key="`${section.title}-${item.label}`" class="themed-stat">
-                                <span class="themed-value">{{ item.value }}</span>
-                                <span class="themed-label">{{ item.label }}</span>
-                                <p class="themed-desc">{{ item.desc }}</p>
+                <div class="flip-grid">
+                    <div
+                        v-for="(item, index) in sections"
+                        :key="item.title"
+                        class="flip-card-wrapper"
+                        :style="{ transitionDelay: (index * 0.12) + 's' }"
+                    >
+                        <div class="flip-card">
+                            <!-- Front (with real icon) -->
+                            <div class="flip-card-front">
+                                <div class="flip-icon">
+                                    <!-- Environment: Tree -->
+                                    <svg v-if="item.icon === 'tree'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22V12M12 12a6 6 0 0 0-6 6M12 12a6 6 0 0 1 6 6M12 2v4" />
+                                        <path d="M8 8a4 4 0 0 1 8 0" />
+                                    </svg>
+                                    <!-- Education: Book -->
+                                    <svg v-else-if="item.icon === 'book'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                                        <path d="M8 7h8" />
+                                        <path d="M8 11h6" />
+                                    </svg>
+                                    <!-- Livelihoods: Handshake -->
+                                    <svg v-else-if="item.icon === 'handshake'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 12L12 7L7 12" />
+                                        <path d="M12 7V19" />
+                                        <path d="M20 19H4" />
+                                        <path d="M22 15C22 17.209 20.209 19 18 19H6C3.791 19 2 17.209 2 15V9" />
+                                        <path d="M22 9H2" />
+                                        <path d="M4 5L2 7" />
+                                        <path d="M20 5L22 7" />
+                                    </svg>
+                                </div>
+                                <h3 class="flip-title">{{ item.title }}</h3>
+                                <p class="flip-preview">{{ item.preview }}</p>
+                                <span class="flip-hint">Hover to explore →</span>
+                            </div>
+                            <!-- Back -->
+                            <div class="flip-card-back">
+                                <h3 class="flip-back-title">{{ item.title }}</h3>
+                                <ul class="flip-details">
+                                    <li v-for="detail in item.details" :key="detail.label">
+                                        <strong>{{ detail.value }}</strong> {{ detail.label }}
+                                        <span class="flip-detail-desc">{{ detail.desc }}</span>
+                                    </li>
+                                </ul>
+                                <p class="flip-back-desc">{{ item.description }}</p>
                             </div>
                         </div>
                     </div>
@@ -230,7 +308,7 @@ onMounted(() => {
             </div>
         </section>
 
-        <!-- CTA -->
+        <!-- CTA (pop‑up on scroll) -->
         <section class="cta-section">
             <div class="container">
                 <div class="cta-content">
@@ -274,19 +352,19 @@ onMounted(() => {
 }
 
 .hero-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  text-align: left;
-  max-width: 720px;
-  margin: 0;
-  left: var(--container-offset);
-  padding: 3rem 1.5rem;
-  animation: fadeInUp 0.8s ease-out;
-  color: #fffdf8;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+    max-width: 720px;
+    margin: 0;
+    left: var(--container-offset);
+    padding: 3rem 1.5rem;
+    animation: fadeInUp 0.8s ease-out;
+    color: #fffdf8;
 }
 
 @keyframes fadeInUp {
@@ -354,7 +432,7 @@ onMounted(() => {
 .section-header h2 {
     font-size: clamp(1.8rem, 2.5vw, 2.8rem);
     font-weight: 700;
-    color:  #1a3d2e;
+    color: #1a3d2e;
     letter-spacing: -0.02em;
     margin: 0 0 0.75rem;
 }
@@ -387,9 +465,7 @@ onMounted(() => {
     gap: 1.25rem;
     grid-template-columns: 1fr 1fr 1fr;
     align-content: start;
-    padding: 60px 0px  0px  70px;
-
-
+    padding: 60px 0px 0px 70px;
 }
 
 .stat-card {
@@ -398,14 +474,25 @@ onMounted(() => {
     border-radius: 1.25rem;
     padding: 1.75rem 1.5rem;
     text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.25s ease,
+        border-color 0.2s ease;
 
+    /* Pop-up initial state */
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+}
+
+.stat-card.card-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
 .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(47, 36, 29, 0.07);
-    border-color: rgba(30, 80, 60, 0.18);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 32px rgba(47, 36, 29, 0.1);
+    border-color: rgba(30, 80, 60, 0.2);
 }
 
 .stat-card h3 {
@@ -431,11 +518,11 @@ onMounted(() => {
     color: var(--color-ink-soft, #554d47);
 }
 
-/* ─── map + overlay labels + stats card ─── */
+/* ─── map ─── */
 .map-wrapper {
     flex: 1;
     display: flex;
-    align-items: center; /* keep map vertically centered */
+    align-items: center;
     justify-content: center;
     background: transparent;
     padding: 1.5rem;
@@ -451,173 +538,178 @@ onMounted(() => {
 .map-media {
     position: relative;
     width: 100%;
+    overflow: hidden;
+    border-radius: 1rem;
 }
 
 .map-image {
     width: 100%;
     height: auto;
     display: block;
+    border-radius: 1rem;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
-
-.labels {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
+.map-wrapper:hover .map-image {
+    transform: translateX(12px) scale(1.04);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
 }
 
-.label {
-    position: absolute;
-    background: #2196f3;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    white-space: nowrap;
-}
-
-.svay {
-    left: 310px;
-    bottom: 55px;
-}
-
-.prey {
-    left: 390px;
-    bottom: 180px;
-}
-
-.kratie {
-    /* Northeast (adjust to match reference design) */
-    right: 70px;
-    top: 78px;
-}
-
-
-.stats-card {
-    position: absolute;
-    /* upper-right, overlapping the map */
-    right: -60px;
-    top: 28px;
-    width: 240px;
-    background: #1e88e5;
-    color: white;
-    border-radius: 24px;
-    padding: 28px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-    z-index: 2;
-}
-
-/* keep card compact on smaller widths */
-.stats-card .stat h2 {
-    font-size: 40px;
-    margin: 0;
-    line-height: 1;
-}
-
-.stats-card .stat span {
-    font-size: 18px;
-    font-weight: 600;
-}
-
-
-.stat {
-
-    padding: 18px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.stat:last-child {
-    border: none;
-}
-
-.stat h2 {
-    font-size: 44px;
-    margin: 0;
-}
-
-.stat span {
-    font-size: 20px;
-}
-
-/* ─── themed section ─── */
-.themed-section {
+/* ─── FLIP CARDS ────────────────────────────────────────────────────── */
+.flip-section {
     padding: 4rem 0 3rem;
     background: var(--color-cream, #f9f6f0);
 }
 
-.themed-grid {
+.flip-grid {
     display: grid;
     gap: 2rem;
     grid-template-columns: repeat(3, 1fr);
 }
 
-.themed-block {
-    background: #ffffff;
-    border: 1px solid rgba(47, 36, 29, 0.06);
+.flip-card-wrapper {
+    perspective: 1000px;
+    height: 420px;
+
+    /* Pop-up initial state */
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.flip-card-wrapper.card-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.flip-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+    transform-style: preserve-3d;
+}
+
+.flip-card-wrapper:hover .flip-card {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
     border-radius: 1.25rem;
     padding: 2rem 1.5rem;
-    box-shadow: 0 4px 16px rgba(47, 36, 29, 0.04);
-    transition: transform 0.2s ease, box-shadow 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1px solid var(--color-border, #e8e3dc);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
 
-.themed-block:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(47, 36, 29, 0.07);
+.flip-card-front {
+    background: #ffffff;
+    z-index: 2;
 }
 
-.themed-head {
+.flip-card-back {
+    background: linear-gradient(#077847, #1e7682);
+    color: #fdf8ef;
+
+    transform: rotateY(180deg);
+}
+
+.flip-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.75rem;
+    color: var(--primary-color, #7a5a2d);
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 1.25rem;
-    border-bottom: 2px solid rgba(30, 80, 60, 0.08);
-    padding-bottom: 0.75rem;
+    justify-content: center;
 }
 
-.themed-icon {
-    font-size: 1.6rem;
-    line-height: 1;
+.flip-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
 }
 
-.themed-head h3 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--primary-dark, #1e4d3a);
-    margin: 0;
-}
-
-.themed-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.themed-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-}
-
-.themed-value {
+.flip-title {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1a4d38;
-    letter-spacing: -0.01em;
+    color: var(--primary-dark, #1a3d2e);
+    margin: 0 0 0.5rem;
 }
 
-.themed-label {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--color-ink, #1e1a16);
+.flip-card-back .flip-back-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    margin-top: 30px;
+    color: #fdf8ef;
 }
 
-.themed-desc {
-    margin: 0.1rem 0 0;
-    font-size: 0.88rem;
-    line-height: 1.5;
+.flip-preview {
+    font-size: 1.1rem;
     color: var(--color-ink-soft, #554d47);
+    margin: 0 0 0.5rem;
+}
+
+.flip-hint {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-soft, #554d47);
+    opacity: 0.5;
+    margin-top: 0.5rem;
+}
+
+.flip-details {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    text-align: left;
+    width: 100%;
+}
+
+.flip-details li {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(253, 248, 239, 0.85);
+    display: flex;
+    flex-direction: column;
+}
+
+.flip-details li:last-child {
+    border-bottom: none;
+}
+
+.flip-details strong {
+    color: #fdf8ef;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.flip-detail-desc {
+    font-size: 0.8rem;
+    color: rgba(253, 248, 239, 0.6);
+    margin-left: 0.2rem;
+}
+
+.flip-back-desc {
+    font-size: 0.85rem;
+    color: rgba(253, 248, 239, 0.7);
+    line-height: 1.6;
+    margin: 0.5rem 0 0;
+    margin-bottom: 20px;
 }
 
 /* ─── methodology section ─── */
@@ -646,6 +738,25 @@ onMounted(() => {
     padding: 0.9rem 1.25rem;
     border-radius: 0.75rem;
     border: 1px solid rgba(30, 80, 60, 0.05);
+    transition: opacity 0.4s ease,
+        transform 0.4s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+
+    /* Pop-up initial state */
+    opacity: 0;
+    transform: translateX(-15px);
+}
+
+.bullet-list li.card-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.bullet-list li:hover {
+    background: #e9f0ed;
+    border-color: rgba(30, 80, 60, 0.1);
+    transform: translateX(4px);
 }
 
 .bullet-marker {
@@ -673,6 +784,22 @@ onMounted(() => {
     border-radius: 1.5rem;
     border: 1px solid rgba(30, 80, 60, 0.06);
     box-shadow: 0 4px 16px rgba(47, 36, 29, 0.04);
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.25s ease;
+
+    /* Pop-up initial state */
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+}
+
+.cta-content.card-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.cta-content:hover {
+    box-shadow: 0 12px 32px rgba(47, 36, 29, 0.08);
 }
 
 .cta-text .subtitle {
@@ -732,6 +859,7 @@ onMounted(() => {
 
     .stats-grid {
         grid-template-columns: repeat(3, 1fr);
+        padding: 20px 0 0 0;
     }
 
     .map-wrapper {
@@ -742,26 +870,14 @@ onMounted(() => {
     .map-image {
         max-width: 340px;
     }
-
-    /* stack card below map for tablet */
-    .stats-card {
-        position: relative;
-        top: auto;
-        right: auto;
-        margin: 1.25rem auto 0;
-        width: 100%;
-        max-width: 360px;
-        border-radius: 18px;
-    }
 }
-
 
 @media (max-width: 820px) {
     .stats-grid {
         grid-template-columns: 1fr 1fr;
     }
 
-    .themed-grid {
+    .flip-grid {
         grid-template-columns: 1fr 1fr;
     }
 
@@ -786,8 +902,12 @@ onMounted(() => {
         grid-template-columns: 1fr;
     }
 
-    .themed-grid {
+    .flip-grid {
         grid-template-columns: 1fr;
+    }
+
+    .flip-card-wrapper {
+        height: 350px;
     }
 
     .stat-card {
@@ -802,7 +922,7 @@ onMounted(() => {
         padding: 2.5rem 0 2rem;
     }
 
-    .themed-section {
+    .flip-section {
         padding: 2.5rem 0 2rem;
     }
 
@@ -832,12 +952,10 @@ onMounted(() => {
         max-width: 260px;
     }
 
-    .themed-block {
-        padding: 1.5rem 1.25rem;
-    }
+    .flip-card-front,
+    .flip-card-back {
+        padding: 3.5rem 3.25rem;
 
-    .themed-value {
-        font-size: 1.4rem;
     }
 }
 
@@ -869,6 +987,44 @@ onMounted(() => {
     .cta-link {
         padding: 0.6rem 1.4rem;
         font-size: 0.88rem;
+    }
+}
+
+/* ─── PREFERS‑REDUCED‑MOTION ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .stat-card,
+    .flip-card-wrapper,
+    .bullet-list li,
+    .cta-content {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+
+    .flip-card-wrapper:hover .flip-card {
+        transform: none;
+    }
+
+    .flip-card-front,
+    .flip-card-back {
+        backface-visibility: visible;
+    }
+
+    .flip-card-back {
+        transform: none;
+        display: none;
+    }
+
+    .flip-card-wrapper:hover .flip-card-back {
+        display: none;
+    }
+
+    .map-wrapper:hover .map-image {
+        transform: none;
+    }
+
+    .bullet-list li:hover {
+        transform: none;
     }
 }
 </style>

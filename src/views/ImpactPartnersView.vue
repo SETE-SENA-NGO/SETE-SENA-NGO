@@ -208,6 +208,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
 // Slideshow background images (Unsplash - free to use)
 const slideItems = [
@@ -398,7 +399,7 @@ function startSmoothScroll() {
   const scrollTrack = track
 
   function step() {
-    if (!track) return;
+    if (!track) return
     if (!isPaused.value) {
       scrollPos -= speed
       // When we've scrolled past one full set of partners, reset position
@@ -429,8 +430,8 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  stopSmoothScroll();
-});
+  stopSmoothScroll()
+})
 </script>
 
 <style scoped>
@@ -494,7 +495,13 @@ onUnmounted(() => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(6, 18, 13, 0.82) 0%,
+    rgba(6, 18, 13, 0.5) 42%,
+    rgba(6, 18, 13, 0.18) 72%,
+    transparent 100%
+  );
 }
 
 .hero-content {
@@ -675,7 +682,9 @@ onUnmounted(() => {
   border-radius: 12px;
   margin-bottom: 0.75rem;
   color: var(--primary-color);
-  transition: transform 0.3s ease, background 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
 }
 
 .gov-card:hover .gov-icon {
@@ -788,7 +797,9 @@ onUnmounted(() => {
   border-radius: 50%;
   margin: 0 auto 1rem;
   color: var(--primary-color);
-  transition: transform 0.3s ease, background 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
 }
 
 .why-card:hover .why-icon {
