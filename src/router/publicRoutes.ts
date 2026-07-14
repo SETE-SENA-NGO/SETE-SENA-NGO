@@ -19,21 +19,8 @@ import ProgramsView from '@/views/public/ProgramsView.vue'
 import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
 import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
 import QrDonateView from '@/views/public/DonateView.vue'
-import ManagedPublicPageView from '@/views/public/ManagedPublicPageView.vue'
 
-function managedRoute(
-  path: string,
-  contentSlug: string,
-  fallbackComponent: unknown,
-  options: Record<string, unknown> = {},
-) {
-  return {
-    path,
-    component: ManagedPublicPageView,
-    meta: { contentSlug, fallbackComponent },
-    ...options,
-  }
-}
+
 
 // 👇 NEW: import news views
 import NewsView from '@/views/public/NewsView.vue'
