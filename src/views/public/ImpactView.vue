@@ -88,6 +88,11 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
     </Slideshow>
 
     <section id="numbers" class="stats-section">
+      <div class="stats-header">
+        <span class="eyebrow">Impact by the Numbers</span>
+        <h2>Thirty years of measurable change.</h2>
+        <p>Every number represents a household strengthened, a forest protected, a life improved.</p>
+      </div>
       <div class="stats-grid">
         <article v-for="stat in stats" :key="stat.label" class="stat-card">
           <div class="stat-value">{{ stat.value }}</div>
@@ -218,7 +223,26 @@ h1 {
 .stats-section,
 .timeline-section,
 .partners-section {
-  padding: 4.5rem 1.5rem;
+  padding: 4rem 1.5rem;
+}
+
+.stats-header {
+  max-width: var(--container-max-width);
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.stats-header h2 {
+  margin: 0.75rem 0 0.5rem;
+  color: var(--color-ink);
+}
+
+.stats-header p {
+  max-width: 560px;
+  margin: 0 auto;
+  color: var(--color-ink-soft);
+  line-height: 1.7;
+  font-size: 0.95rem;
 }
 
 .stats-grid {
@@ -234,17 +258,17 @@ h1 {
 
 .stat-card {
   background: #fffdfa;
-  padding: 2rem;
+  padding: 1.75rem;
 }
 
 .stat-value {
-  font-size: 2.4rem;
+  font-size: 2rem;
   color: var(--primary-dark);
 }
 
 .stat-label {
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -252,8 +276,9 @@ h1 {
 }
 
 .stat-description {
-  margin-top: 0.8rem;
+  margin-top: 0.6rem;
   line-height: 1.6;
+  font-size: 0.9rem;
   color: rgba(31, 41, 55, 0.72);
 }
 

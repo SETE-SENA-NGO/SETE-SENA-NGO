@@ -93,6 +93,13 @@ onMounted(() => {
 
     <!-- ── Key Facts ── -->
     <section class="facts-section">
+      <div class="section-container facts-header">
+        <span class="section-label">Key Facts</span>
+        <h2 class="section-title facts-title">Our reach in numbers</h2>
+        <p class="facts-intro">
+          Every figure represents a child in school, a village with books, a future made possible.
+        </p>
+      </div>
       <div class="facts-grid">
         <div class="fact-card">
           <span class="fact-value">120+</span>
@@ -234,7 +241,7 @@ onMounted(() => {
 .section-container {
   max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 6rem 1.5rem;
+  padding: 4rem 1.5rem;
 }
 
 .section-title {
@@ -362,17 +369,33 @@ onMounted(() => {
   padding-bottom: 0;
 }
 
+.facts-header {
+  padding-bottom: 0;
+}
+
+.facts-header .section-title {
+  margin-bottom: 0.5rem;
+}
+
+.facts-intro {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin-bottom: 2.5rem;
+}
+
 .facts-grid {
   max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 0 1.5rem 4.5rem;
+  padding: 0 1.5rem 4rem;
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .fact-card {
   text-align: center;
-  padding: 2.5rem 1.75rem;
+  padding: 2rem 1.5rem;
   border-radius: 1rem;
   background: var(--warm-card);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
