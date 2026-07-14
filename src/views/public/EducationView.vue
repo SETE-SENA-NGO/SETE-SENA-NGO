@@ -1,6 +1,27 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+
+const stats = [
+  {
+    number: '120+',
+    label: 'PRE-SCHOOL CHILDREN',
+    description: 'Enrolled each year across remote villages in Svay Rieng and Prey Veng.',
+    icon: 'book',
+  },
+  {
+    number: '8',
+    label: 'MOBILE LIBRARIES',
+    description: 'Reaching villages with no school library or bookshop within 20 km.',
+    icon: 'library',
+  },
+  {
+    number: '60+',
+    label: 'ANNUAL SCHOLARSHIPS',
+    description: 'For the poorest students at every level — especially girls.',
+    icon: 'star',
+  },
+]
 
 const bulletsWhatWeDo: string[] = [
   'Community pre-schools led by trained local teachers in remote villages',
@@ -11,19 +32,45 @@ const bulletsWhatWeDo: string[] = [
   'Teacher training and parent engagement to keep children in school',
 ]
 
-const bulletsWhyMatters: string[] = [
+const teamCards = [
+  {
+    role: 'Program Director',
+    desc: 'Oversees education initiatives, partnerships, and donor reporting across all provinces.',
+    icon: 'compass',
+  },
+  {
+    role: 'Field Coordinators',
+    desc: 'Manage pre-school, library and scholarship programs in each province.',
+    icon: 'map',
+  },
+  {
+    role: 'Teachers & Facilitators',
+    desc: 'Deliver early learning, literacy sessions and youth clubs in village settings.',
+    icon: 'heart',
+  },
+  {
+    role: 'Monitoring & Evaluation',
+    desc: 'Tracks learning progress, attendance and community outcomes.',
+    icon: 'chart',
+  },
+]
+
+const whyItems: string[] = [
   'Children who attend pre-school are far more likely to complete primary and secondary school',
   'Scholarships keep the poorest girls in class through the most vulnerable years',
   'Mobile libraries reach children a bus route never will',
   'Pagoda-based ethics classes preserve Khmer language and moral tradition',
 ]
 
-const teamStructure = [
-  { role: 'Program Director', desc: 'Oversees education initiatives, partnerships, and donor reporting.' },
-  { role: 'Field Coordinators', desc: 'Manage pre-school, library and scholarship programs in each province.' },
-  { role: 'Teachers & Facilitators', desc: 'Deliver early learning, literacy sessions and youth clubs.' },
-  { role: 'Monitoring & Evaluation', desc: 'Tracks learning progress, attendance and community outcomes.' },
-]
+// Scroll reveal
+const revealElements = ref<HTMLElement[]>([])
+let observer: IntersectionObserver | null = null
+
+function setRevealRef(el: unknown, index: number) {
+  if (el && el instanceof Element) {
+    revealElements.value[index] = el as HTMLElement
+  }
+}
 
 onMounted(() => {
   document.title = 'Education Program — Santi Sena'
@@ -38,7 +85,10 @@ onMounted(() => {
     el.content = content
   }
 
-  setMeta('description', 'Community pre-schools, mobile libraries, scholarships and Buddhist moral education across rural Cambodian villages.')
+  setMeta(
+    'description',
+    'Community pre-schools, mobile libraries, scholarships and Buddhist moral education across rural Cambodian villages.',
+  )
 
   const setOgMeta = (property: string, content: string) => {
     let el = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`)
@@ -52,499 +102,1139 @@ onMounted(() => {
 
   setOgMeta('og:title', 'Education — Santi Sena')
   setOgMeta('og:description', 'Learning that starts at three years old and never stops.')
+
+  // Set up scroll observer
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer?.unobserve(entry.target)
+        }
+      })
+    },
+    { threshold: 0.15, rootMargin: '0px 0px -40px 0px' },
+  )
+
+  revealElements.value.forEach((el) => el && observer?.observe(el))
+})
+
+onBeforeUnmount(() => {
+  observer?.disconnect()
 })
 </script>
 
 <template>
   <div class="edu-page">
-
-    <!-- ── Introduction ── -->
-    <section class="intro-section">
-      <div class="section-container">
-        <p class="intro-paragraph">
-          Most rural Cambodian children miss the critical years before primary school. Santi Sena
-          fills that gap with low-cost community pre-schools, then keeps walking with families
-          through scholarships, libraries and youth groups.
+    <!-- ════════════════════ PAGE HEADER ════════════════════ -->
+    <div class="page-header">
+      <div class="container">
+        <h1 class="page-header-title">Access to Education</h1>
+        <p class="page-header-desc">
+          Community pre-schools, mobile libraries, scholarships for poor children and the
+          preservation of Buddhist education in pagoda settings across rural Cambodia.
         </p>
       </div>
-    </section>
+    </div>
 
-    <!-- ── Key Facts ── -->
-    <section class="facts-section">
-      <div class="facts-grid">
-        <div class="fact-card">
-          <span class="fact-value">120+</span>
-          <span class="fact-label">Pre-school children</span>
-          <p class="fact-desc">Enrolled each year across remote villages.</p>
+    <!-- ════════════════════ STATS BAND ════════════════════ -->
+    <div class="stats-band-wrap">
+      <div class="container">
+        <div class="stats-band">
+          <template v-for="(stat, i) in stats" :key="stat.label">
+            <div class="stat-item">
+              <span class="stat-icon">
+                <svg
+                  v-if="stat.icon === 'book'"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 19.5A2.5 2.5 0 016.5 17H20"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M4 4.5A2.5 2.5 0 016.5 2H20v18H6.5A2.5 2.5 0 014 17.5v-13z"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <svg
+                  v-else-if="stat.icon === 'library'"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    x="3"
+                    y="3"
+                    width="18"
+                    height="18"
+                    rx="2"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                  />
+                  <path
+                    d="M9 8h6M9 12h6M9 16h4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6L12 2z"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <div class="stat-copy">
+                <h3 class="stat-number">{{ stat.number }}</h3>
+                <p class="stat-label">{{ stat.label }}</p>
+                <p class="stat-desc">{{ stat.description }}</p>
+              </div>
+            </div>
+            <div v-if="i < stats.length - 1" class="stat-divider" aria-hidden="true"></div>
+          </template>
         </div>
-        <div class="fact-card">
-          <span class="fact-value">8</span>
-          <span class="fact-label">Mobile libraries</span>
-          <p class="fact-desc">Reaching villages with no school library.</p>
-        </div>
-        <div class="fact-card">
-          <span class="fact-value">60+</span>
-          <span class="fact-label">Annual scholarships</span>
-          <p class="fact-desc">For the poorest students at every level.</p>
+      </div>
+    </div>
+
+    <!-- ════════════════════ INTRO ════════════════════ -->
+    <section class="section intro-section">
+      <div class="container">
+        <div
+          :ref="(el) => setRevealRef(el, 0)"
+          class="reveal intro-inner"
+        >
+          <div class="intro-rule" aria-hidden="true"></div>
+          <p class="intro-text">
+            Most rural Cambodian children miss the critical years before primary school. Santi Sena
+            fills that gap with low-cost community pre-schools, then keeps walking with families
+            through scholarships, libraries and youth groups that sustain a child's journey from
+            early learning through adolescence.
+          </p>
         </div>
       </div>
     </section>
 
-    <!-- ── What We Do ── -->
-    <section class="program-section">
-      <div class="section-container">
-        <span class="section-label">Programs</span>
-        <h2 class="section-title">What we do</h2>
-        <ul class="bullets-list">
-          <li v-for="item in bulletsWhatWeDo" :key="item" class="bullet-item">
-            <span class="bullet-icon">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="8" cy="8" r="4" fill="currentColor" />
-              </svg>
-            </span>
-            <span class="bullet-text">{{ item }}</span>
-          </li>
-        </ul>
+    <!-- ════════════════════ WHAT WE DO ════════════════════ -->
+    <section class="section programs-section">
+      <div class="container">
+        <div class="two-col-grid">
+          <div
+            :ref="(el) => setRevealRef(el, 1)"
+            class="reveal col-text"
+          >
+            <p class="section-eyebrow">Our Work</p>
+            <h2 class="section-title">What we do</h2>
+            <ul class="check-grid">
+              <li v-for="item in bulletsWhatWeDo" :key="item">
+                <span class="check-icon">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span>{{ item }}</span>
+              </li>
+            </ul>
+          </div>
+          <div
+            :ref="(el) => setRevealRef(el, 2)"
+            class="reveal col-image"
+          >
+            <div class="photo-duo">
+              <div class="col-image-frame photo-back">
+                <img
+                  src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=80"
+                  alt="Children reading books at a community school"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <div class="col-image-frame photo-front">
+                <img
+                  src="https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=600&q=80"
+                  alt="Teacher helping child with learning activity"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- ── Our Approach ── -->
+    <!-- ════════════════════ OUR APPROACH ════════════════════ -->
     <section class="approach-section">
-      <div class="section-container">
-        <span class="section-label">Methodology</span>
-        <h2 class="section-title">Our approach</h2>
-        <p class="approach-text">
-          We hire teachers from the villages we serve, train them in early-childhood pedagogy, and
-          pair every classroom with a parent committee. Curriculum blends the national standard with
-          Buddhist ethics, Khmer culture and hands-on environmental learning.
-        </p>
+      <div class="approach-bg" />
+      <div class="approach-overlay" />
+      <div class="container approach-inner">
+        <div
+          :ref="(el) => setRevealRef(el, 3)"
+          class="reveal"
+        >
+          <p class="section-eyebrow section-eyebrow--light text-center">Methodology</p>
+          <h2 class="section-title section-title--light text-center">Our approach</h2>
+          <p class="approach-text">
+            We hire teachers from the villages we serve, train them in early-childhood pedagogy, and
+            pair every classroom with a parent committee. Curriculum blends the national standard
+            with Buddhist ethics, Khmer culture and hands-on environmental learning — so a child
+            grows up rooted in both the national curriculum and the wisdom of the pagoda.
+          </p>
+        </div>
 
-        <!-- ── Testimonial Blockquote ── -->
-        <blockquote class="testimonial">
-          <svg class="testimonial-quote-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M10 11H6a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5" stroke="currentColor"
-              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M18 11h-4a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5" stroke="currentColor"
-              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <div
+          :ref="(el) => setRevealRef(el, 4)"
+          class="reveal testimonial-block"
+        >
+          <svg
+            class="quote-mark"
+            viewBox="0 0 48 36"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M0 36V20.8C0 8.6 6.9 1.4 18.4 0l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H0zm27.6 0V20.8c0-12.2 6.9-19.4 18.4-20.8l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H27.6z"
+            />
           </svg>
-          <div class="testimonial-body">
-            <p class="testimonial-quote">
+          <blockquote>
+            <p class="quote-text">
               "Before the pre-school, my daughter had never held a pencil. Now she reads to her
               grandmother every night."
             </p>
-            <cite class="testimonial-cite">&mdash; Sopheak, mother of two, Prey Veng</cite>
-          </div>
-        </blockquote>
+            <cite class="quote-cite">&mdash; Sopheak, mother of two, Prey Veng</cite>
+          </blockquote>
+        </div>
       </div>
     </section>
 
-    <!-- ── Organizational Structure ── -->
-    <section class="org-section">
-      <div class="section-container">
-        <span class="section-label">Organizational Structure</span>
-        <h2 class="section-title">Who delivers education programming on the ground</h2>
-        <ul class="org-team-list">
-          <li v-for="t in teamStructure" :key="t.role" class="org-team-card">
-            <div class="org-role">{{ t.role }}</div>
-            <p class="org-desc">{{ t.desc }}</p>
-          </li>
-        </ul>
-      </div>
-    </section>
+    <!-- ════════════════════ TEAM ════════════════════ -->
+    <section class="section team-section">
+      <div class="container">
+        <div
+          :ref="(el) => setRevealRef(el, 5)"
+          class="reveal text-center"
+        >
+          <p class="section-eyebrow">Organizational Structure</p>
+          <h2 class="section-title">Who delivers education on the ground</h2>
+        </div>
 
-    <!-- ── Why It Matters ── -->
-    <section class="impact-section">
-      <div class="section-container">
-        <span class="section-label">Impact</span>
-        <h2 class="section-title">Why it matters</h2>
-        <ul class="bullets-list">
-          <li v-for="item in bulletsWhyMatters" :key="item" class="bullet-item">
-            <span class="bullet-icon bullet-icon-impact">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M13.5 4.5L6.5 11.5L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" />
+        <div class="team-grid">
+          <div
+            v-for="(member, index) in teamCards"
+            :key="member.role"
+            :ref="(el) => setRevealRef(el, 6 + index)"
+            class="reveal team-card"
+            :style="{ transitionDelay: `${index * 0.08}s` }"
+          >
+            <div class="team-icon-wrap">
+              <svg
+                v-if="member.icon === 'compass'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M16 8l-3 5-5 3 3-5 5-3z"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linejoin="round"
+                />
               </svg>
-            </span>
-            <span class="bullet-text">{{ item }}</span>
-          </li>
-        </ul>
+              <svg
+                v-else-if="member.icon === 'map'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linejoin="round"
+                />
+                <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6" />
+              </svg>
+              <svg
+                v-else-if="member.icon === 'heart'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 21l-1.5-1.4C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1A5.7 5.7 0 0116.5 3C19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.1L12 21z"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M18 20v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M18 8l3 3 3-3"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <h3 class="team-role">{{ member.role }}</h3>
+            <p class="team-desc">{{ member.desc }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════ WHY IT MATTERS ════════════════════ -->
+    <section class="section impact-section">
+      <div class="container">
+        <div
+          :ref="(el) => setRevealRef(el, 10)"
+          class="reveal text-center"
+        >
+          <p class="section-eyebrow">Impact</p>
+          <h2 class="section-title">Why it matters</h2>
+        </div>
+
+        <div class="impact-grid">
+          <div
+            v-for="(item, index) in whyItems"
+            :key="item"
+            :ref="(el) => setRevealRef(el, 11 + index)"
+            class="reveal impact-card"
+            :style="{ transitionDelay: `${index * 0.1}s` }"
+          >
+            <div class="impact-icon">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M8 12.5l2.5 2.5 5-5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <p class="impact-text">{{ item }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════ CTA ════════════════════ -->
+    <section class="cta-section">
+      <div class="cta-glow" aria-hidden="true"></div>
+      <div class="container cta-inner">
+        <div
+          :ref="(el) => setRevealRef(el, 15)"
+          class="reveal text-center"
+        >
+          <p class="cta-eyebrow">Get Involved</p>
+          <h2 class="cta-title">Invest in a child's future today.</h2>
+          <p class="cta-desc">
+            Every dollar you give puts a book in a child's hands, a trained teacher in a
+            classroom, or a scholarship on a desk where there was none.
+          </p>
+          <div class="cta-actions">
+            <RouterLink to="/get-involved/donate" class="btn btn--primary btn--large">
+              Support education
+              <span class="btn-arrow">→</span>
+            </RouterLink>
+            <RouterLink to="/get-involved/volunteer" class="btn btn--outline">
+              Volunteer your time
+            </RouterLink>
+          </div>
+        </div>
       </div>
     </section>
   </div>
 </template>
 
 <style scoped>
-/* ─── Color Tokens ───
- * Neutral warm tones stay local; brand accent colors come from the
- * global design tokens (--primary-color / --primary-dark / --primary-light).
- */
+/* ═══════════════════════════════════════════════
+   EDUCATION PAGE — Modern Redesign
+   ═══════════════════════════════════════════════ */
+
 .edu-page {
-  --warm-white: #FDFCF9;
-  --warm-bg: #F8F6F1;
-  --warm-card: #FFFFFF;
-  --warm-card-alt: #FCFAF5;
-  --warm-border: #EBE5DA;
-
-  /* Text — warm neutral tones */
-  --text-heading: #0F1F17;
-  --text-body: #2C3E35;
-  --text-secondary: #5C6B62;
-  --text-muted: #8B9A91;
-  --text-on-hero: rgba(255, 255, 255, 0.88);
-  --text-on-green: rgba(255, 255, 255, 0.92);
+  background: var(--color-cream);
+  color: var(--color-ink);
+  overflow-x: hidden;
 }
 
-/* ─── Shared ─── */
-.section-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4em;
-  margin-bottom: 1rem;
-  padding: 0.35rem 0.85rem;
-  border-radius: 2rem;
-  background: var(--primary-light);
-  color: var(--primary-dark);
-}
-
-.section-container {
+/* ─── Container ─── */
+.container {
   max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 6rem 1.5rem;
+  padding: 0 var(--container-padding);
+}
+
+/* ─── Section Spacing ─── */
+.section {
+  padding: 5rem 0;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* ─── Scroll Reveal ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ─── Section Labels ─── */
+.section-eyebrow {
+  color: var(--primary-color);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.section-eyebrow--light {
+  color: var(--primary-light);
 }
 
 .section-title {
-  margin: 0 0 3rem;
-  color: var(--text-heading);
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-bottom: 1.5rem;
   letter-spacing: -0.01em;
 }
 
-/* ─── Hero ─── */
-/* ── Hero Overlay ── */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to right, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.2) 65%, transparent 100%),
-    linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.15) 100%);
+.section-title--light {
+  color: #ffffff;
 }
 
-/* Hero content sits above overlay */
-.hero-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  text-align: left;
-  max-width: 720px;
-  margin: 0;
-  left: var(--container-offset);
-  padding: 3rem 1.5rem;
-  animation: fadeInUp 0.8s ease-out;
+/* ═══════════════════════════════════════════
+   PAGE HEADER
+   ═══════════════════════════════════════════ */
+
+.page-header {
+  background: var(--color-cream-soft);
+  padding: 3.5rem 0 2.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.hero-content .section-label {
-  background: color-mix(in srgb, var(--primary-color) 18%, transparent);
-  color: #FFFFFF;
-}
-
-.hero-title {
-  margin: 1.5rem 0 0;
-  max-width: 48rem;
+.page-header-title {
   font-weight: 700;
   line-height: 1.1;
-  letter-spacing: -0.015em;
-  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  color: var(--primary-dark);
+  margin-bottom: 0.75rem;
 }
 
-.hero-subtitle {
-  margin-top: 1.5rem;
-  max-width: 42rem;
+.page-header-desc {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* ═══════════════════════════════════════════
+   STATS BAND
+   ═══════════════════════════════════════════ */
+
+.stats-band-wrap {
+  padding-top: 2rem;
+  padding-bottom: 0;
+}
+
+.stats-band {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px -20px rgba(22, 52, 42, 0.28);
+  padding: 2.5rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center;
+}
+
+.stat-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0 0.5rem;
+}
+
+.stat-divider {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(22, 52, 42, 0.1);
+  margin: 0 0.25rem;
+}
+
+.stat-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.stat-copy {
+  min-width: 0;
+}
+
+.stat-number {
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0 0 0.15rem;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--primary-dark);
+  margin: 0 0 0.35rem;
+  font-size: 0.76rem;
+}
+
+.stat-desc {
+  color: #666;
+  line-height: 1.5;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   INTRO
+   ═══════════════════════════════════════════ */
+
+.intro-section {
+  background: var(--color-cream);
+  padding-top: 3.5rem;
+}
+
+.intro-inner {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.intro-rule {
+  width: 56px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--primary-color);
+  margin: 0 auto 1.75rem;
+}
+
+.intro-text {
+  font-size: 1.08rem;
   line-height: 1.8;
-  color: var(--text-on-hero);
+  color: var(--color-ink-soft);
+  margin: 0;
 }
 
-.hero-actions {
-  margin-top: 2.5rem;
+/* ═══════════════════════════════════════════
+   WHAT WE DO — Two column
+   ═══════════════════════════════════════════ */
+
+.programs-section {
+  background: var(--color-cream-soft);
+}
+
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+
+.check-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.check-grid li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(22, 52, 42, 0.07);
+  color: var(--color-ink-soft);
+  line-height: 1.5;
+  font-size: 0.92rem;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.check-grid li:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -14px rgba(22, 52, 42, 0.25);
+  border-color: rgba(22, 52, 42, 0.14);
+}
+
+.check-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.check-icon svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* Photo duo — overlapping images */
+.photo-duo {
+  position: relative;
+  min-height: 420px;
+}
+
+.col-image-frame {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px -18px rgba(22, 52, 42, 0.3);
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s ease;
+}
+
+.col-image-frame:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 56px -18px rgba(22, 52, 42, 0.35);
+}
+
+.col-image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.col-image-frame:hover img {
+  transform: scale(1.06);
+}
+
+.photo-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 62%;
+  height: 320px;
+  z-index: 1;
+}
+
+.photo-front {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 55%;
+  height: 240px;
+  z-index: 2;
+  box-shadow: 0 20px 44px -16px rgba(22, 52, 42, 0.4);
+}
+
+/* ═══════════════════════════════════════════
+   OUR APPROACH — Full-bleed photo section
+   ═══════════════════════════════════════════ */
+
+.approach-section {
+  position: relative;
+  padding: 6rem 0;
+  overflow: hidden;
+}
+
+.approach-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.approach-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 18, 13, 0.88) 0%,
+    rgba(6, 18, 13, 0.72) 50%,
+    rgba(6, 18, 13, 0.9) 100%
+  );
+}
+
+.approach-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 780px;
+}
+
+.approach-text {
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.02rem;
+  margin: 0 auto 3rem;
+}
+
+/* Testimonial */
+.testimonial-block {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.quote-mark {
+  width: 44px;
+  height: auto;
+  color: var(--primary-light);
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+.testimonial-block blockquote {
+  margin: 0;
+}
+
+.quote-text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.5rem;
+  font-style: italic;
+  line-height: 1.6;
+  color: #ffffff;
+  margin: 0 0 1rem;
+}
+
+.quote-cite {
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.92rem;
+}
+
+/* ═══════════════════════════════════════════
+   TEAM SECTION
+   ═══════════════════════════════════════════ */
+
+.team-section {
+  background: var(--color-cream-soft);
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.team-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(22, 52, 42, 0.06);
+  box-shadow: 0 8px 24px -12px rgba(22, 52, 42, 0.12);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+  text-align: center;
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 40px -16px rgba(22, 52, 42, 0.22);
+  border-color: var(--primary-color);
+}
+
+.team-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+
+.team-card:hover .team-icon-wrap {
+  background: var(--primary-color);
+  color: #ffffff;
+  transform: scale(1.1) rotate(-4deg);
+}
+
+.team-icon-wrap svg {
+  width: 24px;
+  height: 24px;
+}
+
+.team-role {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0 0 0.6rem;
+  line-height: 1.3;
+}
+
+.team-desc {
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   WHY IT MATTERS — Impact
+   ═══════════════════════════════════════════ */
+
+.impact-section {
+  background: var(--color-cream);
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.impact-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(22, 52, 42, 0.06);
+  box-shadow: 0 8px 20px -12px rgba(22, 52, 42, 0.1);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.impact-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -14px rgba(22, 52, 42, 0.2);
+  border-color: var(--primary-color);
+}
+
+.impact-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.impact-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.impact-text {
+  color: var(--color-ink-soft);
+  line-height: 1.55;
+  font-size: 0.94rem;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   CTA
+   ═══════════════════════════════════════════ */
+
+.cta-section {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    var(--color-cream-soft) 0%,
+    var(--primary-light) 100%
+  );
+  padding: 5rem 0;
+  overflow: hidden;
+}
+
+.cta-glow {
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(27, 163, 79, 0.08) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.cta-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+}
+
+.cta-eyebrow {
+  color: var(--primary-color);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.cta-title {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 0.75rem;
+}
+
+.cta-desc {
+  color: var(--color-ink-soft);
+  line-height: 1.7;
+  margin-bottom: 2rem;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  align-items: center;
+  justify-content: center;
 }
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════ */
 
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  padding: 0.8rem 1.85rem;
+  border-radius: 999px;
   font-weight: 600;
+  font-size: 0.95rem;
   text-decoration: none;
-  transition: all 0.25s ease;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-.btn-primary {
+.btn--primary {
   background: var(--primary-color);
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(27, 163, 79, 0.30);
+  color: #ffffff;
+  border: 1px solid transparent;
 }
 
-.btn-primary:hover {
+.btn--primary:hover {
   background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(20, 129, 62, 0.35);
+  box-shadow: 0 10px 20px -8px rgba(22, 52, 42, 0.35);
 }
 
-.btn-ghost {
+.btn--outline {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #FFFFFF;
-}
-
-.btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.40);
-}
-
-/* ─── Introduction ─── */
-.intro-section {
-  background: var(--warm-bg);
-}
-
-.intro-paragraph {
-  line-height: 1.8;
-  color: var(--text-body);
-  max-width: 56rem;
-  margin: 0;
-}
-
-/* ─── Key Facts ─── */
-.facts-section {
-  background: var(--warm-bg);
-  padding-bottom: 0;
-}
-
-.facts-grid {
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  padding: 0 1.5rem 4.5rem;
-  display: grid;
-  gap: 1.5rem;
-}
-
-.fact-card {
-  text-align: center;
-  padding: 2.5rem 1.75rem;
-  border-radius: 1rem;
-  background: var(--warm-card);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-  border: 1px solid var(--warm-border);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-
-.fact-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.07);
-  border-color: var(--primary-color);
-}
-
-.fact-value {
-  display: block;
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--primary-color);
-  line-height: 1;
-}
-
-.fact-label {
-  display: block;
-  margin-top: 0.5rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--primary-dark);
-}
-
-.fact-desc {
-  margin: 0.75rem 0 0;
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
-/* ─── Programs Section ─── */
-.program-section {
-  background: var(--warm-card);
-}
-
-.approach-section {
-  background: var(--warm-bg);
-}
-
-.approach-text {
-  line-height: 1.85;
-  color: var(--text-body);
-  max-width: 56rem;
-  margin: 0;
-}
-
-/* ─── Bullet Lists ─── */
-.bullets-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.bullet-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
-}
-
-.bullet-icon {
-  flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 0.15rem;
+  border: 2px solid var(--primary-color);
   color: var(--primary-color);
 }
 
-.bullet-icon-impact {
-  color: var(--primary-dark);
+.btn--outline:hover {
+  background: var(--primary-color);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -8px rgba(22, 52, 42, 0.3);
 }
 
-.bullet-text {
-  line-height: 1.7;
-  color: var(--text-body);
-  padding-top: 0.1rem;
+.btn--large {
+  padding: 1rem 2.4rem;
+  font-size: 1.02rem;
 }
 
-/* ─── Testimonial ─── */
-.testimonial {
-  margin: 3rem 0 0;
-  padding: 2.5rem;
-  border-radius: 1rem;
-  background: var(--warm-card);
-  border: 1px solid var(--warm-border);
-  border-left: 4px solid var(--primary-color);
-  display: flex;
-  gap: 1.25rem;
-  align-items: flex-start;
+.btn-arrow {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  transition: transform 0.25s ease;
 }
 
-.testimonial-quote-icon {
-  flex-shrink: 0;
-  color: var(--primary-color);
-  opacity: 0.5;
-  margin-top: 0.15rem;
+.btn:hover .btn-arrow {
+  transform: translateX(4px);
 }
 
-.testimonial-body {
-  flex: 1;
-  min-width: 0;
-}
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
 
-.testimonial-quote {
-  margin: 0;
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--text-heading);
-  font-style: italic;
-}
-
-.testimonial-cite {
-  display: block;
-  margin-top: 0.75rem;
-  font-style: normal;
-  color: var(--text-secondary);
-}
-
-/* ─── Organizational Structure ─── */
-.org-section {
-  background: var(--warm-bg);
-}
-
-.org-team-list {
-  display: grid;
-  gap: 1rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.org-team-card {
-  padding: 1.75rem;
-  border-radius: 1rem;
-  background: var(--warm-card);
-  border: 1px solid var(--warm-border);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.org-team-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--primary-color);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
-}
-
-.org-role {
-  font-size: 1.1rem;
-  color: var(--text-heading);
-  margin-bottom: 0.75rem;
-}
-
-.org-desc {
-  margin: 0;
-  color: var(--text-body);
-  line-height: 1.75;
-}
-
-/* ─── Impact Section ─── */
-.impact-section {
-  background: var(--primary-light);
-}
-
-/* ─── Responsive ─── */
-@media (min-width: 640px) {
-  .facts-grid {
-    grid-template-columns: repeat(3, 1fr);
+@media (max-width: 1024px) {
+  .team-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 768px) {
-  .fact-card {
-    padding: 2.5rem 2rem;
+@media (max-width: 900px) {
+  .two-col-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
   }
 
-  .testimonial {
-    padding: 3rem;
+  .photo-duo {
+    min-height: 340px;
+  }
+
+  .photo-back {
+    width: 68%;
+    height: 260px;
+  }
+
+  .photo-front {
+    width: 58%;
+    height: 190px;
   }
 }
 
-@media (min-width: 1024px) {
-  .section-container {
-    padding: 6rem 2rem;
+@media (max-width: 768px) {
+  .stats-band-wrap {
+    padding-top: 1.25rem;
+  }
+
+  .stats-band {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .section {
+    padding: 3.5rem 0;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .impact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .approach-section {
+    padding: 4rem 0;
+    background-attachment: scroll;
+  }
+
+  .quote-text {
+    font-size: 1.25rem;
+  }
+
+  .cta-section {
+    padding: 3.5rem 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-header-title {
+    font-size: 1.6rem;
+  }
+
+  .page-header-desc {
+    font-size: 0.95rem;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cta-actions {
+    flex-direction: column;
+  }
+
+  .cta-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
