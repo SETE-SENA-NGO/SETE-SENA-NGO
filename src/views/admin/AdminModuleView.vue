@@ -539,19 +539,19 @@ function bulkDelete() {
 
 <style scoped>
 .admin-module-page {
-  --admin-bg: #f4f7fb;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f8fafc;
-  --admin-border: #dbe3ef;
-  --admin-border-strong: #c7d2e5;
-  --admin-text: #334155;
-  --admin-contrast: #172033;
-  --admin-muted: #667085;
-  --admin-blue: #2563eb;
-  --admin-success: #16a34a;
-  --admin-warning: #f97316;
-  --admin-error: #dc2626;
-  --admin-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-text: var(--admin-theme-text);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-success: var(--admin-theme-primary);
+  --admin-warning: var(--admin-theme-gold);
+  --admin-error: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
   --panel: var(--admin-surface);
   --border: var(--admin-border);
   --text: var(--admin-text);
@@ -563,16 +563,16 @@ function bulkDelete() {
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark) .admin-module-page {
-  --admin-bg: #0b1120;
-  --admin-surface: #111827;
-  --admin-surface-soft: #0f172a;
-  --admin-border: #293548;
-  --admin-border-strong: #3b475d;
-  --admin-text: #cbd5e1;
-  --admin-contrast: #f8fafc;
-  --admin-muted: #a6b0c3;
-  --admin-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+:global(.admin-dark .admin-module-page) {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-text: var(--admin-theme-text);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 .admin-layout {

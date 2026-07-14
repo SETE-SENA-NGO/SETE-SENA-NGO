@@ -246,18 +246,18 @@ async function confirmDelete(item: { id: string; name: string }) {
 
 <style scoped>
 .media-page {
-  --admin-bg: #f4f7fb;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f8fafc;
-  --admin-contrast: #172033;
-  --admin-text: #334155;
-  --admin-muted: #667085;
-  --admin-border: #dbe3ef;
-  --admin-blue: #2563eb;
-  --admin-green: #16a34a;
-  --admin-gold: #f97316;
-  --admin-pink: #dc2626;
-  --admin-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-green: var(--admin-theme-primary);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
 
   min-height: 100vh;
   background: var(--admin-bg);
@@ -265,15 +265,15 @@ async function confirmDelete(item: { id: string; name: string }) {
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark) .media-page {
-  --admin-bg: #0b1120;
-  --admin-surface: #111827;
-  --admin-surface-soft: #0f172a;
-  --admin-contrast: #f8fafc;
-  --admin-text: #cbd5e1;
-  --admin-muted: #a6b0c3;
-  --admin-border: #293548;
-  --admin-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+:global(.admin-dark .media-page) {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 .admin-layout {
@@ -500,12 +500,12 @@ h1 {
   color: #ffffff;
 }
 
-.type-image { background: #2563eb; }
+.type-image { background: var(--admin-blue); }
 .type-video { background: #7c3aed; }
-.type-audio { background: #16a34a; }
+.type-audio { background: var(--admin-green); }
 .type-pdf { background: #dc2626; }
-.type-doc { background: #2563eb; }
-.type-sheet { background: #16a34a; }
+.type-doc { background: var(--admin-blue); }
+.type-sheet { background: var(--admin-green); }
 .type-file { background: #64748b; }
 
 .file-info {

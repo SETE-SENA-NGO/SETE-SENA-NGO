@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
 
 interface ProgramGoal {
   number: string
@@ -106,31 +105,17 @@ const priorityIcons: Record<string, string> = {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l2 5h2l-1-5h2l8 4V6l-8 4H6a2 2 0 0 0-2 2z"/><path d="M13 10V6"/></svg>',
 }
 
-const slideItems = [
-  { image: '/images/programs/education-hero.jpg', caption: '' },
-  { image: '/images/programs/environment-hero.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
-  { image: '/images/programs/child-protection.jpg', caption: '' },
-]
-
 // Scroll-triggered reveal: each goal card (and the priorities wave) animates in once visible
 const cardRefs = ref<HTMLElement[]>([])
 const priorityWaveRef = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
-function setCardRef(el: Element | ComponentPublicInstance | null, index: number) {
-  let element: unknown = null
-
-  if (el instanceof HTMLElement) {
-    element = el
-  } else if (el instanceof Element) {
-    element = null
-  } else if (el) {
-    element = el.$el
+function setCardRef(el: unknown | null, index: number) {
+  if (el && el instanceof Element) {
+    cardRefs.value[index] = el as HTMLElement
   }
-
-  if (element instanceof HTMLElement) cardRefs.value[index] = element
 }
+
 
 onMounted(() => {
   observer = new IntersectionObserver(
@@ -162,17 +147,6 @@ function getNodeLeft(idx: number) {
 
 <template>
   <div class="programs-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <p class="eyebrow">OUR PROGRAMS</p>
-        <h1>Four roots. One tree of peace.</h1>
-        <p class="lead">
-          Santi Sena's work follows four interwoven strategic goals — environment, education,
-          livelihoods and child protection — each delivered with and by the communities themselves.
-        </p>
-      </div>
-    </Slideshow>
 
     <!-- GOALS -->
     <section class="goals-wrap">

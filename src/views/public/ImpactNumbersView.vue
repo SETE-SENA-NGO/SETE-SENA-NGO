@@ -1,18 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { onMounted } from 'vue'
 import cambodiaMap from '@/assets/maps/cambodia.png'
 
-import heroImage from '@/assets/hero-impact.jpg'
-import heroImpactForest from '@/assets/hero-impact-forest.jpg'
-import heroImpactVillage from '@/assets/hero-impact-village.jpg'
-import Slideshow from '@/components/shared/Slideshow.vue'
 // import cambodiaMap from '@/assets/maps/cambodia.svg'
-
-const slideItems = [
-  { image: heroImage, caption: '' },
-  { image: heroImpactForest, caption: '' },
-  { image: heroImpactVillage, caption: '' },
-]
 
 type StatItem = {
   value: string
@@ -63,34 +53,6 @@ const countingMethods = [
   'External evaluations commissioned at the close of major grants',
 ]
 
-const heroImages = [heroImage, heroImpactForest, heroImpactVillage]
-const activeHeroIndex = ref(0)
-let slideTimer: number | undefined
-
-const isReducedMotion = () => {
-  if (typeof window === 'undefined') return false
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false
-}
-
-const startSlideshow = () => {
-  if (isReducedMotion()) return
-  stopSlideshow()
-  slideTimer = window.setInterval(() => {
-    activeHeroIndex.value = (activeHeroIndex.value + 1) % heroImages.length
-  }, 5000)
-}
-
-const stopSlideshow = () => {
-  if (slideTimer) {
-    window.clearInterval(slideTimer)
-    slideTimer = undefined
-  }
-}
-
-onBeforeUnmount(() => {
-  stopSlideshow()
-})
-
 onMounted(() => {
   document.title = 'Impact by the Numbers — Santi Sena'
 
@@ -120,25 +82,12 @@ onMounted(() => {
   )
   setOgMeta('og:title', 'Impact by the Numbers — Santi Sena')
   setOgMeta('og:description', '293 villages, 570+ hectares of forest, and counting.')
-
-  startSlideshow()
 })
 </script>
 
 <template>
   <div class="numbers-page">
     <!-- HERO -->
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="eyebrow">Impact · By the Numbers</span>
-        <h1>Thirty years, measured village by village.</h1>
-        <p>
-          Numbers do not tell the whole story, but they keep us honest. Every figure below is drawn
-          from our annual monitoring and audited reports.
-        </p>
-      </div>
-    </Slideshow>
 
     <!-- OPERATION SECTION — STATS + MAP -->
     <section class="operation-section">

@@ -9,13 +9,6 @@ import livelihoodImage from '@/assets/volunteer/livelihood-home-garden.png'
 import mobileLibraryImage from '@/assets/volunteer/mobile-library.png'
 import volunteerHeroImage from '@/assets/volunteer/volunteer-hero.png'
 import washSchoolImage from '@/assets/volunteer/wash-school.png'
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: volunteerHeroImage, caption: '' },
-  { image: communityForestryImage, caption: '' },
-  { image: mobileLibraryImage, caption: '' },
-]
 
 const volunteerPathways = [
   {
@@ -215,18 +208,6 @@ function setupRevealAnimations() {
 
 <template>
   <main class="volunteer-page">
-    <Slideshow :slides="slideItems" :interval-ms="5600">
-      <div class="hero-shade"></div>
-      <div class="hero-content pop-reveal pop-content is-visible">
-        <p class="eyebrow">Get involved - Volunteer</p>
-        <h1>Volunteer with community-led work.</h1>
-        <p>
-          Share useful skills with village groups, schools, pagodas and local teams in Svay Rieng
-          and Prey Veng.
-        </p>
-        <RouterLink to="/contact" class="primary-link">Apply to volunteer</RouterLink>
-      </div>
-    </Slideshow>
 
     <section class="content-section pathway-section" aria-labelledby="pathways-heading">
       <div class="pathway-layout">

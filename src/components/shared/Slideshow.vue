@@ -29,7 +29,6 @@ const props = withDefaults(
 )
 
 const activeIndex = ref(0)
-const isPaused = ref(false)
 const activeSlide = computed(() => props.slides[activeIndex.value])
 let timer: ReturnType<typeof setInterval> | undefined
 
@@ -51,7 +50,6 @@ function goTo(index: number) {
 function startAutoplay() {
   if (props.slides.length <= 1) return
   stopTimer()
-  isPaused.value = false
   timer = setInterval(next, props.intervalMs)
 }
 
@@ -60,11 +58,6 @@ function stopTimer() {
     clearInterval(timer)
     timer = undefined
   }
-}
-
-function stopAutoplay() {
-  isPaused.value = true
-  stopTimer()
 }
 
 function restartAutoplay() {
@@ -82,21 +75,27 @@ function goPrevious() {
   restartAutoplay()
 }
 
-onMounted(startAutoplay)
+function preloadImages() {
+  for (const slide of props.slides.slice(1)) {
+    const img = new Image()
+    img.src = slide.image
+  }
+}
+
+onMounted(() => {
+  startAutoplay()
+  preloadImages()
+})
 onUnmounted(stopTimer)
 </script>
 
 <template>
   <div
     class="slideshow"
-    :class="{ 'has-overlay': $slots.default, 'is-paused': isPaused }"
+    :class="{ 'has-overlay': $slots.default }"
     role="region"
     aria-label="Image slideshow"
     tabindex="0"
-    @mouseenter="stopAutoplay"
-    @mouseleave="startAutoplay"
-    @focusin="stopAutoplay"
-    @focusout="startAutoplay"
     @keydown.left.prevent="goPrevious"
     @keydown.right.prevent="goNext"
   >
@@ -106,7 +105,10 @@ onUnmounted(stopTimer)
         :key="slide.image"
         class="slideshow-slide"
         :class="{ 'is-active': i === activeIndex }"
-        :style="{ '--slide-position': slide.position ?? 'center' }"
+        :style="{
+          '--slide-position': slide.position ?? 'center',
+          '--slide-duration': `${intervalMs + 1000}ms`,
+        }"
       >
         <img
           :src="slide.image"
@@ -158,13 +160,6 @@ onUnmounted(stopTimer)
       />
     </div>
 
-    <div
-      v-if="slides.length > 1"
-      :key="activeIndex"
-      class="slideshow-progress"
-      :style="{ '--slide-duration': `${intervalMs}ms` }"
-      aria-hidden="true"
-    />
   </div>
 </template>
 
@@ -254,14 +249,12 @@ onUnmounted(stopTimer)
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition:
-    opacity 0.8s ease,
-    transform 1.2s ease;
+  will-change: opacity;
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slideshow-slide.is-active {
   opacity: 1;
-  transform: scale(1);
   z-index: 1;
 }
 
@@ -272,8 +265,23 @@ onUnmounted(stopTimer)
   object-position: var(--slide-position, center);
   display: block;
   backface-visibility: hidden;
-  filter: none;
-  transform: none;
+  will-change: transform;
+}
+
+/* Slow Ken Burns zoom-out while a slide is showing. The duration runs a
+   little past the autoplay interval so the zoom is still settling when
+   the crossfade to the next slide begins. */
+.slideshow-slide.is-active img {
+  animation: slideZoomOut var(--slide-duration, 6000ms) ease-out forwards;
+}
+
+@keyframes slideZoomOut {
+  from {
+    transform: scale(1.1);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 .slideshow-caption {
@@ -379,32 +387,6 @@ onUnmounted(stopTimer)
   border-color: var(--primary-color);
 }
 
-.slideshow-progress {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  z-index: 3;
-  width: 100%;
-  height: 3px;
-  background: var(--primary-color);
-  transform-origin: left;
-  animation: slideshowProgress var(--slide-duration, 5000ms) linear forwards;
-}
-
-.slideshow.is-paused .slideshow-progress {
-  animation-play-state: paused;
-}
-
-@keyframes slideshowProgress {
-  from {
-    transform: scaleX(0);
-  }
-
-  to {
-    transform: scaleX(1);
-  }
-}
-
 @media (max-width: 640px) {
   .slideshow-caption {
     font-size: 0.95rem;
@@ -433,8 +415,8 @@ onUnmounted(stopTimer)
     transition: none;
   }
 
-  .slideshow-progress {
-    display: none;
+  .slideshow-slide.is-active img {
+    animation: none;
   }
 }
 </style>

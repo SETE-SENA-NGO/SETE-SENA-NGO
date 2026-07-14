@@ -85,19 +85,19 @@ function goToAdmin() {
 }
 
 .toast {
-  border: 1px solid #dbe3ef;
+  border: 1px solid var(--admin-theme-border, #dbe3ef);
   border-left-width: 4px;
   border-radius: 14px;
-  background: #ffffff;
-  color: #172033;
+  background: var(--admin-theme-surface, #ffffff);
+  color: var(--admin-theme-contrast, #172033);
   padding: 0.9rem 1rem;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+  box-shadow: var(--admin-theme-shadow, 0 18px 45px rgba(15, 23, 42, 0.14));
   font-weight: 800;
   pointer-events: auto;
 }
 
 .toast-success {
-  border-left-color: #16a34a;
+  border-left-color: var(--admin-theme-primary, #16a34a);
 }
 
 .toast-error {
@@ -109,7 +109,7 @@ function goToAdmin() {
 }
 
 .toast-info {
-  border-left-color: #2563eb;
+  border-left-color: var(--admin-theme-teal, #2563eb);
 }
 
 .confirm-overlay {
@@ -124,12 +124,12 @@ function goToAdmin() {
 
 .confirm-dialog {
   width: min(430px, 100%);
-  border: 1px solid #dbe3ef;
+  border: 1px solid var(--admin-theme-border, #dbe3ef);
   border-radius: 16px;
-  background: #ffffff;
-  color: #172033;
+  background: var(--admin-theme-surface, #ffffff);
+  color: var(--admin-theme-contrast, #172033);
   padding: 1.25rem;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
+  box-shadow: var(--admin-theme-shadow, 0 24px 80px rgba(15, 23, 42, 0.25));
 }
 
 .confirm-dialog h2 {
@@ -142,7 +142,7 @@ function goToAdmin() {
 
 .confirm-dialog p {
   margin: 0;
-  color: #667085;
+  color: var(--admin-theme-muted, #667085);
   line-height: 1.6;
 }
 
@@ -163,9 +163,9 @@ function goToAdmin() {
 }
 
 .confirm-secondary {
-  border: 1px solid #dbe3ef;
-  background: #ffffff;
-  color: #172033;
+  border: 1px solid var(--admin-theme-border, #dbe3ef);
+  background: var(--admin-theme-surface, #ffffff);
+  color: var(--admin-theme-contrast, #172033);
 }
 
 .confirm-primary {
@@ -176,26 +176,26 @@ function goToAdmin() {
 
 .admin-dark .toast,
 .admin-dark .confirm-dialog {
-  border-color: #293548;
-  background: #111827;
-  color: #f8fafc;
+  border-color: var(--admin-theme-border);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-contrast);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
 }
 
 .admin-dark .confirm-dialog p {
-  color: #a6b0c3;
+  color: var(--admin-theme-muted);
 }
 
 .admin-dark .confirm-secondary {
-  border-color: #334155;
-  background: #0f172a;
-  color: #f8fafc;
+  border-color: var(--admin-theme-border-strong);
+  background: var(--admin-theme-surface-soft);
+  color: var(--admin-theme-contrast);
 }
 
 .admin-top-bar {
-  background: linear-gradient(135deg, #0c1a32 0%, #0f1f3d 100%);
-  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-  color: #f1f5f9;
+  background: linear-gradient(135deg, #071311 0%, #0f2d25 100%);
+  border-bottom: 1px solid rgba(53, 208, 190, 0.22);
+  color: #f2fbf6;
   font-size: 0.82rem;
   position: relative;
 }
@@ -206,7 +206,7 @@ function goToAdmin() {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.35), transparent);
+  background: linear-gradient(90deg, transparent, rgba(53, 208, 190, 0.35), transparent);
   content: '';
 }
 
@@ -243,7 +243,7 @@ function goToAdmin() {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #60a5fa;
+  color: #74e0ae;
   flex-shrink: 0;
 }
 
@@ -251,8 +251,8 @@ function goToAdmin() {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  background: #74e0ae;
+  box-shadow: 0 0 8px rgba(116, 224, 174, 0.5);
 }
 
 .admin-top-bar-divider {
@@ -274,10 +274,10 @@ function goToAdmin() {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  border: 1px solid rgba(96, 165, 250, 0.25);
+  border: 1px solid rgba(116, 224, 174, 0.25);
   border-radius: 8px;
-  background: rgba(96, 165, 250, 0.08);
-  color: #93bbfd;
+  background: rgba(116, 224, 174, 0.08);
+  color: #b9ead5;
   padding: 0.35rem 0.8rem;
   font-weight: 700;
   font-size: 0.82rem;
@@ -288,9 +288,9 @@ function goToAdmin() {
 }
 
 .admin-top-bar-btn:hover {
-  background: rgba(96, 165, 250, 0.18);
-  border-color: rgba(96, 165, 250, 0.45);
-  color: #bfdbfe;
+  background: rgba(116, 224, 174, 0.18);
+  border-color: rgba(116, 224, 174, 0.45);
+  color: #f2fbf6;
 }
 
 .admin-top-bar-btn svg {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-
 import { useContentStore } from '@/stores/content.store'
 
 interface ActionLink {
