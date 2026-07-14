@@ -93,17 +93,13 @@ const priorities = [
   },
 ]
 
-// Minimal line icons for the priority cards (stroke = currentColor, tinted via CSS)
+// Font Awesome icon names for each priority card (used with <font-awesome-icon :icon="..." />)
 const priorityIcons: Record<string, string> = {
-  shield:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>',
-  users:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20a4 4 0 0 0-8 0"/><circle cx="13" cy="10" r="3.5"/><path d="M3 20a3.5 3.5 0 0 1 5.2-3.05"/><circle cx="6.5" cy="9" r="2.5"/></svg>',
-  sprout:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c0-3 2-5 6-5-1 3-3 5-6 5z"/><path d="M12 13c0-3-2-5-6-5 1 3 3 5 6 5z"/></svg>',
-  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M20 18H6.5a2.5 2.5 0 0 0-2.5 2.5"/></svg>',
-  megaphone:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l2 5h2l-1-5h2l8 4V6l-8 4H6a2 2 0 0 0-2 2z"/><path d="M13 10V6"/></svg>',
+  shield: 'shield-halved',
+  users: 'users',
+  sprout: 'seedling',
+  book: 'book',
+  megaphone: 'bullhorn',
 }
 
 const slideItems = [
@@ -123,7 +119,6 @@ function setCardRef(el: unknown | null, index: number) {
     cardRefs.value[index] = el as HTMLElement
   }
 }
-
 
 onMounted(() => {
   observer = new IntersectionObserver(
@@ -208,8 +203,24 @@ function getNodeLeft(idx: number) {
 
       <div ref="priorityWaveRef" class="priorities-wave">
         <svg class="wave-line" viewBox="0 0 1000 200" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="var(--primary-light)" />
+              <stop offset="50%" stop-color="var(--primary-color)" />
+              <stop offset="100%" stop-color="var(--primary-light)" />
+            </linearGradient>
+          </defs>
           <path
-            d="M50,120 C150,120 150,40 300,40 C450,40 450,140 500,140 C550,140 550,40 700,40 C850,40 850,120 950,120"
+            class="wave-path"
+            d="M80,150 C185,150 185,50 290,50 C395,50 395,150 500,150 C605,150 605,50 710,50 C815,50 815,150 920,150"
+          />
+          <circle
+            v-for="(item, idx) in priorities"
+            :key="'dot-' + item.title"
+            class="wave-dot"
+            :cx="80 + idx * 210"
+            :cy="idx % 2 === 0 ? 150 : 50"
+            r="5"
           />
         </svg>
 
@@ -221,7 +232,9 @@ function getNodeLeft(idx: number) {
           :style="{ left: getNodeLeft(idx) + '%', transitionDelay: idx * 90 + 'ms' }"
         >
           <span class="node-number">{{ String(idx + 1).padStart(2, '0') }}</span>
-          <div class="node-icon" v-html="priorityIcons[item.icon]" />
+          <div class="node-icon">
+            <font-awesome-icon :icon="priorityIcons[item.icon]" />
+          </div>
           <p class="node-label">{{ item.title }}</p>
         </div>
       </div>
@@ -452,12 +465,18 @@ function getNodeLeft(idx: number) {
   inset: 0;
   width: 100%;
   height: 100%;
+  filter: drop-shadow(0 6px 10px rgba(20, 129, 62, 0.1));
 }
-.wave-line path {
+.wave-path {
   fill: none;
-  stroke: var(--primary-color);
-  stroke-width: 2;
-  stroke-opacity: 0.3;
+  stroke: url(#waveGradient);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-opacity: 0.45;
+}
+.wave-dot {
+  fill: var(--primary-color);
+  opacity: 0.35;
 }
 
 .wave-node {
@@ -487,40 +506,52 @@ function getNodeLeft(idx: number) {
 .node-number {
   font-size: 2.4rem;
   font-weight: 800;
-  color: rgba(20, 129, 62, 0.16);
+  color: rgba(20, 129, 62, 0.18);
   line-height: 1;
   margin-bottom: -0.6rem;
+  letter-spacing: -0.02em;
 }
 .node-icon {
   position: relative;
   z-index: 2;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: var(--color-white);
-  box-shadow: 0 8px 20px rgba(20, 129, 62, 0.18);
+  border: 1.5px solid rgba(20, 129, 62, 0.14);
+  box-shadow:
+    0 10px 24px rgba(20, 129, 62, 0.16),
+    0 0 0 6px rgba(20, 129, 62, 0.05);
   color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
   transition:
     transform 0.3s ease,
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 .wave-node:hover .node-icon {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 26px rgba(20, 129, 62, 0.28);
+  transform: translateY(-5px);
+  border-color: var(--primary-color);
+  box-shadow:
+    0 16px 30px rgba(20, 129, 62, 0.26),
+    0 0 0 6px rgba(20, 129, 62, 0.08);
 }
-.node-icon :deep(svg) {
-  width: 26px;
-  height: 26px;
+.node-icon :deep(.svg-inline--fa) {
+  width: 27px;
+  height: 27px;
 }
 .node-label {
-  margin: 1rem 0 0;
+  margin: 1.1rem 0 0;
   font-weight: 600;
   color: var(--primary-dark);
   line-height: 1.5;
   font-size: 0.95rem;
+  transition: color 0.3s ease;
+}
+.wave-node:hover .node-label {
+  color: var(--primary-color);
 }
 
 @media (max-width: 860px) {
