@@ -126,7 +126,7 @@ const adminEmail = ref('admin@santisena.org')
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark) .admin-page {
+:global(.admin-dark .admin-page) {
   --admin-bg: #0b1120;
   --admin-surface: #111827;
   --admin-border: #293548;

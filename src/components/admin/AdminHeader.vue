@@ -370,7 +370,7 @@ function goToSite() {
 }
 
 /* Dark mode */
-:global(.admin-dark) .admin-header {
+:global(.admin-dark .admin-header) {
   --hdr-surface: #0f172a;
   --hdr-border: #293548;
   --hdr-text: #f1f5f9;
@@ -378,24 +378,24 @@ function goToSite() {
   --hdr-bg: rgba(15, 23, 42, 0.92);
 }
 
-:global(.admin-dark) .sidebar-toggle:hover,
-:global(.admin-dark) .sidebar-toggle.active,
-:global(.admin-dark) .icon-btn:hover {
+:global(.admin-dark .sidebar-toggle:hover),
+:global(.admin-dark .sidebar-toggle.active),
+:global(.admin-dark .icon-btn:hover) {
   background: #1e293b;
   border-color: #334155;
 }
 
-:global(.admin-dark) .view-site-btn {
+:global(.admin-dark .view-site-btn) {
   color: #60a5fa;
 }
 
-:global(.admin-dark) .view-site-btn:hover {
+:global(.admin-dark .view-site-btn:hover) {
   color: #93bbfd;
   border-color: #3b82f6;
   background: #1e3a5f;
 }
 
-:global(.admin-dark) .brand-dot {
+:global(.admin-dark .brand-dot) {
   background: #60a5fa;
 }
 

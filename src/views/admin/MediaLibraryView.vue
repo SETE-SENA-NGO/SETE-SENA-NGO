@@ -265,7 +265,7 @@ async function confirmDelete(item: { id: string; name: string }) {
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark) .media-page {
+:global(.admin-dark .media-page) {
   --admin-bg: #0b1120;
   --admin-surface: #111827;
   --admin-surface-soft: #0f172a;
