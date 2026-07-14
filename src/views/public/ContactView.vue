@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import cambodiaMap from '@/assets/maps/Cambodia Map.png'
+import locationIcon from '@/assets/maps/location_icon.png'
 import preyVengMap from '@/assets/maps/Prey_Veng.png'
 import svayRiengMap from '@/assets/maps/Svay_Rieng.png'
 import logoUrl from '@/assets/logo.png'
@@ -43,10 +44,10 @@ const offices = [
     contact: 'General coordination, donors, partners and project visits',
     mapLabel: 'Santi Sena Head Office',
     mapImage: svayRiengMap,
-    pinLeft: '59%',
-    pinTop: '54%',
-    countryPinLeft: '63%',
-    countryPinTop: '84.5%',
+    pinLeft: '61.8%',
+    pinTop: '81.4%',
+    countryPinLeft: '61.8%',
+    countryPinTop: '81.4%',
   },
   {
     id: 'prey-veng-office',
@@ -60,10 +61,10 @@ const offices = [
     contact: 'Environment, livelihood and education program coordination',
     mapLabel: 'Prey Veng Field Office',
     mapImage: preyVengMap,
-    pinLeft: '52%',
-    pinTop: '63%',
-    countryPinLeft: '56.5%',
-    countryPinTop: '75%',
+    pinLeft: '53.5%',
+    pinTop: '72.4%',
+    countryPinLeft: '53.5%',
+    countryPinTop: '72.4%',
   },
 ] as const
 
@@ -204,6 +205,13 @@ onMounted(() => {
             >
               <div class="map-image-shell">
                 <img class="contact-map-image" :src="activeOffice.mapImage" alt="" />
+                <img
+                  v-if="activeOffice.id !== 'all'"
+                  class="map-location-pin"
+                  :src="locationIcon"
+                  :alt="activeOffice.mapLabel"
+                  :style="{ left: activeOffice.pinLeft, top: activeOffice.pinTop }"
+                />
                 <div v-if="activeOffice.id === 'all'" class="map-hotspots">
                   <button
                     v-for="office in mapOfficeHotspots"
@@ -214,6 +222,7 @@ onMounted(() => {
                     :aria-label="`View ${office.tab} office details`"
                     @click.stop="selectOffice(office.id)"
                   >
+                    <img class="map-hotspot__icon" :src="locationIcon" alt="" aria-hidden="true" />
                     <span class="map-hotspot__label">{{ office.tab }}</span>
                   </button>
                 </div>
@@ -469,10 +478,6 @@ onMounted(() => {
             </div>
           </div>
         </Transition>
-
-        <div v-if="false" class="map-pin" aria-hidden="true">
-          <span>{{ activeOffice.mapLabel }}</span>
-        </div>
       </article>
     </section>
 
@@ -963,6 +968,16 @@ onMounted(() => {
   filter: none;
 }
 
+.map-location-pin {
+  position: absolute;
+  z-index: 3;
+  width: clamp(20px, 3.5vw, 20px);
+  height: auto;
+  filter: drop-shadow(0 7px 11px rgba(20, 129, 62, 0.24));
+  transform: translate(30%, -50%);
+  pointer-events: none;
+}
+
 .map-hotspots {
   position: absolute;
   inset: 0;
@@ -972,54 +987,56 @@ onMounted(() => {
 .map-hotspot {
   position: absolute;
   display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
+  width: 25px;
+  height: 20px;
+  place-items: start end;
   border: 0;
-  border-radius: 999px;
+  border-radius: 8px;
   background: transparent;
   cursor: pointer;
-  transform: translate(-50%, -50%);
+  padding: 0;
+  transform: translate(-30%, -100%);
   pointer-events: auto;
 }
 
-.map-hotspot::before,
 .map-hotspot::after {
   position: absolute;
   border-radius: 999px;
   content: '';
 }
 
-.map-hotspot::before {
-  z-index: 2;
-  width: 16px;
-  height: 16px;
-  border: 3px solid var(--color-white);
-  background: var(--primary-color);
-  box-shadow:
-    0 0 0 5px rgba(27, 163, 79, 0.16),
-    0 10px 22px rgba(20, 129, 62, 0.22);
-}
-
 .map-hotspot::after {
-  z-index: 1;
-  width: 34px;
-  height: 34px;
+  bottom: -1px;
+  left: 50%;
+  z-index: 0;
+  width: 25px;
+  height: 25px;
   border: 2px solid rgba(20, 129, 62, 0.34);
+  transform: translate(-30%, -100%);
   animation: mapHotspotPulse 1.9s ease-out infinite;
 }
 
-.map-hotspot:hover::before,
-.map-hotspot:focus-visible::before {
-  background: var(--primary-dark);
-  box-shadow:
-    0 0 0 7px rgba(27, 163, 79, 0.22),
-    0 12px 28px rgba(20, 129, 62, 0.28);
+.map-hotspot__icon {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 20px;
+  height: auto;
+  filter: drop-shadow(0 9px 9px rgba(20, 129, 62, 0.26));
+  transition:
+    filter 0.2s ease,
+    transform 0.2s ease;
+}
+
+.map-hotspot:hover .map-hotspot__icon,
+.map-hotspot:focus-visible .map-hotspot__icon {
+  filter: drop-shadow(0 8px 12px rgba(20, 129, 62, 0.34));
+  transform: translateY(-2px);
 }
 
 .map-hotspot:focus-visible {
   outline: 3px solid rgba(20, 129, 62, 0.28);
-  outline-offset: 4px;
+  outline-offset: 40px;
 }
 
 .map-hotspot__label {
@@ -1035,7 +1052,7 @@ onMounted(() => {
   font-size: 0.72rem;
   font-weight: 800;
   opacity: 0;
-  transform: translate(-50%, 6px);
+  transform: translate(-10%, 6px);
   transition:
     opacity 0.2s ease,
     transform 0.2s ease;
@@ -1045,18 +1062,18 @@ onMounted(() => {
 .map-hotspot:hover .map-hotspot__label,
 .map-hotspot:focus-visible .map-hotspot__label {
   opacity: 1;
-  transform: translate(-50%, 0);
+  transform: translate(00%, 0);
 }
 
 @keyframes mapHotspotPulse {
   0% {
     opacity: 0.8;
-    transform: scale(0.72);
+    transform: translate(-50%, -50%) scale(0.72);
   }
   70%,
   100% {
     opacity: 0;
-    transform: scale(1.28);
+    transform: translate(-50%, -50%) scale(1.28);
   }
 }
 
@@ -1313,43 +1330,6 @@ onMounted(() => {
 .email-button:hover {
   background: var(--primary-color);
   color: var(--color-white);
-}
-
-.map-pin {
-  position: absolute;
-  top: var(--pin-top);
-  left: var(--pin-left);
-  z-index: 3;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  max-width: 280px;
-  pointer-events: none;
-}
-
-.map-pin::before {
-  width: 20px;
-  height: 20px;
-  border: 6px solid var(--color-white);
-  border-radius: 999px;
-  background: var(--primary-color);
-  box-shadow:
-    0 0 0 8px rgba(27, 163, 79, 0.18),
-    0 18px 36px rgba(20, 129, 62, 0.22);
-  content: '';
-  flex: 0 0 auto;
-}
-
-.map-pin span {
-  padding: 0.5rem 0.7rem;
-  border-radius: 6px;
-  background: var(--primary-color);
-  color: var(--color-white);
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.25;
-  box-shadow: 0 14px 30px rgba(20, 129, 62, 0.24);
 }
 
 .contact-form-section {
@@ -1744,10 +1724,6 @@ onMounted(() => {
     min-height: 340px;
   }
 
-  .map-pin {
-    left: 70%;
-  }
-
   .office-map {
     grid-template-columns: minmax(260px, 0.92fr) minmax(0, 1.08fr);
   }
@@ -1832,17 +1808,6 @@ onMounted(() => {
 
   .map-image-shell {
     width: min(100%, 320px);
-  }
-
-  .map-pin {
-    position: relative;
-    top: auto;
-    left: auto;
-    order: 4;
-    width: calc(100% - 2rem);
-    margin: 0 auto 1.25rem;
-    transform: none;
-    justify-content: center;
   }
 
   .form-row {
