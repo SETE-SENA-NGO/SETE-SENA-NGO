@@ -7,6 +7,8 @@ import heroImpactForest from '@/assets/hero-impact-forest.jpg'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 import { useContentStore } from '@/stores/content.store'
 
+defineOptions({ name: 'GetInvolvedPartnerView' })
+
 interface PartnerLink {
   label: string
   to: string
@@ -316,6 +318,8 @@ function normalizeSlides(value: unknown, fallback: PartnerSlide[]) {
 async function loadCmsContent() {
   try {
     const page = await contentStore.fetchBySlug(PAGE_SLUG)
+    if (!page) return
+
     const body = page.body.trim()
     if (!body) return
 
