@@ -4,6 +4,11 @@ import PageEditorView from '@/views/admin/PageEditorView.vue'
 import AdminModuleView from '@/views/admin/AdminModuleView.vue'
 import MediaLibraryView from '@/views/admin/MediaLibraryView.vue'
 import SettingsView from '@/views/admin/SettingsView.vue'
+import EducationDashboardView from '@/views/admin/EducationDashboardView.vue'
+import EnvironmentDashboardView from '@/views/admin/EnvironmentDashboardView.vue'
+import LivelihoodDashboardView from '@/views/admin/LivelihoodDashboardView.vue'
+import ChildProtectionDashboardView from '@/views/admin/ChildProtectionDashboardView.vue'
+import ProgramsOverviewView from '@/views/admin/ProgramsOverviewView.vue'
 
 export const adminRoutes = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
@@ -11,5 +16,10 @@ export const adminRoutes = [
   { path: '/admin/editor/:slug', component: PageEditorView, meta: { requiresAuth: true } },
   { path: '/admin/media', component: MediaLibraryView, meta: { requiresAuth: true } },
   { path: '/admin/modules/:module', component: AdminModuleView, meta: { requiresAuth: true } },
+  { path: '/admin/education', component: EducationDashboardView, meta: { requiresAuth: true } },
+  { path: '/admin/environment', component: EnvironmentDashboardView, meta: { requiresAuth: true } },
+  { path: '/admin/livelihood', component: LivelihoodDashboardView, meta: { requiresAuth: true } },
+  { path: '/admin/child-protection', component: ChildProtectionDashboardView, meta: { requiresAuth: true } },
+  { path: '/admin/programs', component: ProgramsOverviewView, meta: { requiresAuth: true } },
   { path: '/admin/settings', component: SettingsView, meta: { requiresAuth: true } },
 ]

@@ -7,6 +7,7 @@ import { useUiStore } from '@/stores/ui.store'
 type PageItem = {
   slug: string
   label: string
+  path?: string
 }
 
 type NavItem = {
@@ -19,6 +20,7 @@ type PageGroup = {
   slug: string
   label: string
   items: PageItem[]
+  path?: string
 }
 
 const route = useRoute()
@@ -44,11 +46,10 @@ const pageGroups: PageGroup[] = [
     slug: 'programs',
     label: 'Programs',
     items: [
-      { slug: 'programs-environment', label: 'Environment' },
-      { slug: 'programs-education', label: 'Education' },
-      { slug: 'programs-livelihood', label: 'Livelihood' },
-      { slug: 'programs-child-protection', label: 'Child Protection' },
-      { slug: 'services', label: 'Services' },
+      { slug: 'programs-education', label: 'Education', path: '/admin/editor/programs-education' },
+      { slug: 'programs-environment', label: 'Environment', path: '/admin/editor/programs-environment' },
+      { slug: 'programs-livelihood', label: 'Livelihood', path: '/admin/editor/programs-livelihood' },
+      { slug: 'programs-child-protection', label: 'Child Protection', path: '/admin/editor/programs-child-protection' },
     ],
   },
   {
@@ -94,7 +95,7 @@ function isNavActive(item: NavItem) {
 
 function isGroupActive(group: PageGroup) {
   if (isActive(editorPath(group.slug))) return true
-  return group.items.some((item) => isActive(editorPath(item.slug)))
+  return group.items.some((item) => isActive(item.path ?? editorPath(item.slug)))
 }
 
 function isGroupOpen(group: PageGroup) {
@@ -127,13 +128,8 @@ async function logout() {
 
     <nav aria-label="Admin navigation">
       <p class="nav-heading">Workspace</p>
-      <RouterLink
-        v-for="item in workspaceLinks"
-        :key="item.to"
-        :to="item.to"
-        :class="['link', { active: isNavActive(item) }]"
-        @click="ui.closeSidebarForNavigation"
-      >
+      <RouterLink v-for="item in workspaceLinks" :key="item.to" :to="item.to"
+        :class="['link', { active: isNavActive(item) }]" @click="ui.closeSidebarForNavigation">
         <span :class="['link-icon', item.icon]" aria-hidden="true"></span>
         <span>{{ item.label }}</span>
       </RouterLink>
@@ -141,42 +137,26 @@ async function logout() {
       <p class="nav-heading">Website Pages</p>
 
       <!-- Flat single pages -->
-      <RouterLink
-        v-for="group in pageGroups.filter((g) => !g.items.length)"
-        :key="group.slug"
-        :to="editorPath(group.slug)"
-        :class="['link', { active: isActive(editorPath(group.slug)) }]"
-        @click="ui.closeSidebarForNavigation"
-      >
+      <RouterLink v-for="group in pageGroups.filter((g) => !g.items.length)" :key="group.slug"
+        :to="editorPath(group.slug)" :class="['link', { active: isActive(editorPath(group.slug)) }]"
+        @click="ui.closeSidebarForNavigation">
         <span class="link-icon icon-pages" aria-hidden="true"></span>
         <span>{{ group.label }}</span>
       </RouterLink>
 
       <!-- Expandable groups with sub-pages -->
-      <details
-        v-for="group in pageGroups.filter((g) => g.items.length)"
-        :key="group.slug"
-        class="nav-group"
-        :open="isGroupOpen(group)"
-      >
+      <details v-for="group in pageGroups.filter((g) => g.items.length)" :key="group.slug" class="nav-group"
+        :open="isGroupOpen(group)">
         <summary>
-          <RouterLink
-            :to="editorPath(group.slug)"
-            :class="['link summary-link', { active: isActive(editorPath(group.slug)) }]"
-            @click="ui.closeSidebarForNavigation"
-          >
+          <span :class="['link summary-link', { active: isGroupActive(group) }]">
             <span class="link-icon icon-pages" aria-hidden="true"></span>
             <span>{{ group.label }}</span>
-          </RouterLink>
+          </span>
         </summary>
         <div class="submenu">
-          <RouterLink
-            v-for="item in group.items"
-            :key="item.slug"
-            :to="editorPath(item.slug)"
-            :class="['sub-link', { active: isActive(editorPath(item.slug)) }]"
-            @click="ui.closeSidebarForNavigation"
-          >
+          <RouterLink v-for="item in group.items" :key="item.slug" :to="item.path ?? editorPath(item.slug)"
+            :class="['sub-link', { active: isActive(item.path ?? editorPath(item.slug)) }]"
+            @click="ui.closeSidebarForNavigation">
             {{ item.label }}
           </RouterLink>
         </div>
@@ -184,21 +164,13 @@ async function logout() {
     </nav>
 
     <div class="bottom">
-      <RouterLink
-        :class="['link', 'settings-link', { active: isActive('/admin/settings') }]"
-        to="/admin/settings"
-        @click="ui.closeSidebarForNavigation"
-      >
+      <RouterLink :class="['link', 'settings-link', { active: isActive('/admin/settings') }]" to="/admin/settings"
+        @click="ui.closeSidebarForNavigation">
         <span class="link-icon icon-settings" aria-hidden="true"></span>
         <span>Settings</span>
       </RouterLink>
       <div class="bottom-divider" aria-hidden="true"></div>
-      <button
-        class="link logout-link"
-        type="button"
-        :disabled="loggingOut"
-        @click="logout"
-      >
+      <button class="link logout-link" type="button" :disabled="loggingOut" @click="logout">
         <span class="link-icon icon-logout" aria-hidden="true"></span>
         <span class="logout-copy">
           <strong>{{ loggingOut ? 'Signing out...' : 'Logout' }}</strong>
@@ -314,7 +286,7 @@ nav {
   font-size: 0.9rem;
 }
 
-.link > span:last-child {
+.link>span:last-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -420,6 +392,78 @@ nav {
   transform: skewX(-24deg);
 }
 
+.icon-programs::before {
+  inset: 0.08rem;
+  border-top: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  border-radius: 1px;
+}
+
+.icon-programs::after {
+  left: 0.18rem;
+  right: 0.18rem;
+  top: 0.38rem;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 0.22rem 0 currentColor;
+}
+
+.icon-education::before {
+  inset: 0.1rem;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.icon-education::after {
+  left: 0.24rem;
+  top: 0.14rem;
+  width: 0.34rem;
+  height: 0.38rem;
+  border: 2px solid currentColor;
+  border-radius: 1px;
+}
+
+.icon-environment::before {
+  inset: 0.1rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.icon-environment::after {
+  left: 0.3rem;
+  top: 0.18rem;
+  width: 0.3rem;
+  height: 0.3rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.icon-livelihood::before {
+  inset: 0.08rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.icon-livelihood::after {
+  left: 0.18rem;
+  right: 0.18rem;
+  top: 0.38rem;
+  height: 2px;
+  background: currentColor;
+}
+
+.icon-child-protection::before {
+  inset: 0.1rem;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.icon-child-protection::after {
+  inset: 0.16rem;
+  background: currentColor;
+  border-radius: 1px;
+}
+
 .icon-logout::before {
   inset: 0.12rem 0.38rem 0.12rem 0.08rem;
   border: 2px solid currentColor;
@@ -485,7 +529,9 @@ nav {
 }
 
 .sub-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   border-radius: 5px;
   color: #7b7ea8;
   padding: 0.38rem 0.6rem;
@@ -493,6 +539,14 @@ nav {
   font-weight: 700;
   text-decoration: none;
   transition: color 0.15s ease, background 0.15s ease;
+}
+
+.sub-link .link-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: 0 0 auto;
+  position: relative;
+  color: currentColor;
 }
 
 .sub-link:hover {
