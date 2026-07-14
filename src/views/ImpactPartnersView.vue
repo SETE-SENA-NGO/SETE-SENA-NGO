@@ -1,6 +1,7 @@
 <template>
   <div class="partners-page">
-    <Slideshow :slides="slideItems">
+<Slideshow :slides="slideItems">
+
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="badge">Impact · Partners</span>
@@ -209,18 +210,47 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
 
+// Slideshow background images (Unsplash - free to use)
 const slideItems = [
-  { image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80', caption: '' },
-  {
-    image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80',
-    caption: '',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&q=80',
-    caption: '',
-  },
-  { image: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=1600&q=80', caption: '' },
-]
+  'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80', // community
+  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80', // hands together
+  'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&q=80', // children education
+  'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=1600&q=80', // nature/sustainability
+].map((image) => ({ image, caption: '' }))
+
+
+const currentSlide = ref(0)
+const isTransitioning = ref(false)
+let intervalId: ReturnType<typeof setInterval> | null = null
+
+function nextSlide() {
+  if (isTransitioning.value) return
+  isTransitioning.value = true
+currentSlide.value = (currentSlide.value + 1) % slideItems.length
+
+  setTimeout(() => {
+    isTransitioning.value = false
+  }, 1200)
+}
+
+function startSlideshow() {
+  intervalId = setInterval(nextSlide, 5000)
+}
+
+function stopSlideshow() {
+  if (intervalId) {
+    clearInterval(intervalId)
+    intervalId = null
+  }
+}
+
+onMounted(() => {
+  startSlideshow()
+})
+
+onUnmounted(() => {
+  stopSlideshow()
+})
 
 // Partner data
 const partners = [
