@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
-import cambodiaMap from '@/assets/map/00-cambodia.webp'
-import preyVengMap from '@/assets/map/14-prey-veaeng.jpg'
-import svayRiengMap from '@/assets/map/20-svay-rieng.jpg'
-
-const slideItems = [
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
-  { image: '/images/programs/environment-hero1.jpg', caption: '' },
-]
+import { useScrollReveal } from '@/composables/useScrollReveal'
+import cambodiaMap from '@/assets/maps/Cambodia Map.png'
+import preyVengMap from '@/assets/maps/Prey_Veng.png'
+import svayRiengMap from '@/assets/maps/Svay_Rieng.png'
+import logoUrl from '@/assets/logo.png'
 
 const headquarters = {
   name: 'Our headquarters in Svay Rieng',
@@ -50,6 +45,8 @@ const offices = [
     mapImage: svayRiengMap,
     pinLeft: '59%',
     pinTop: '54%',
+    countryPinLeft: '63%',
+    countryPinTop: '84.5%',
   },
   {
     id: 'prey-veng-office',
@@ -65,6 +62,8 @@ const offices = [
     mapImage: preyVengMap,
     pinLeft: '52%',
     pinTop: '63%',
+    countryPinLeft: '56.5%',
+    countryPinTop: '75%',
   },
 ] as const
 
@@ -79,14 +78,27 @@ const email = ref('')
 const subject = ref('')
 const message = ref('')
 const formSent = ref(false)
+const messageMaxLength = 600
 
 const activeOfficeId = ref<(typeof offices)[number]['id']>('all')
 const activeOffice = computed(
   () => offices.find((office) => office.id === activeOfficeId.value) ?? offices[0],
 )
+const mapOfficeHotspots = computed(() =>
+  offices.filter(
+    (office): office is Extract<(typeof offices)[number], { countryPinLeft: string }> =>
+      'countryPinLeft' in office && 'countryPinTop' in office,
+  ),
+)
 const canSubmit = computed(() =>
   Boolean(name.value.trim() && email.value.trim() && message.value.trim()),
 )
+
+useScrollReveal()
+
+function selectOffice(officeId: (typeof offices)[number]['id']) {
+  activeOfficeId.value = officeId
+}
 
 function submitContact() {
   if (!canSubmit.value) return
@@ -100,25 +112,8 @@ onMounted(() => {
 
 <template>
   <main class="contact-page">
-    <Slideshow class="contact-hero" :slides="slideItems" :interval-ms="5600">
-      <div class="hero-overlay" />
-
-      <div class="hero-inner">
-        <p class="eyebrow eyebrow--light">Contact Santi Sena</p>
-        <h1 id="contact-heading">Get in touch with us easily!</h1>
-        <p class="hero-subtitle">
-          Find the right office, arrange a visit, or write to our team about partnership and
-          community programs.
-        </p>
-        <div class="hero-actions">
-          <a href="#head-office" class="btn btn--primary">Head office</a>
-          <a href="#field-offices" class="btn btn--outline">Field offices</a>
-        </div>
-      </div>
-    </Slideshow>
-
     <section id="head-office" class="headquarters-section" aria-labelledby="headquarters-heading">
-      <div class="section-intro">
+      <div class="section-intro reveal">
         <p class="section-kicker">Contact us</p>
         <h2 id="headquarters-heading">Our headquarters in Cambodia</h2>
         <p>
@@ -128,11 +123,11 @@ onMounted(() => {
       </div>
 
       <div class="headquarters-layout">
-        <figure class="headquarters-photo">
+        <figure class="headquarters-photo reveal" style="animation-delay: 0.1s">
           <img src="/images/programs/hero-1.jpg" alt="Santi Sena team meeting in Cambodia" />
         </figure>
 
-        <article class="headquarters-details">
+        <article class="headquarters-details reveal" style="animation-delay: 0.22s">
           <p class="office-type">Head office</p>
           <h3>{{ headquarters.name }}</h3>
           <dl class="details-list">
@@ -164,16 +159,16 @@ onMounted(() => {
     </section>
 
     <section id="field-offices" class="centers-section" aria-labelledby="centers-heading">
-      <div class="section-intro">
+      <div class="section-intro reveal">
         <p class="section-kicker">Contact us</p>
         <h2 id="centers-heading">Our offices across Cambodia</h2>
         <p>
-          Santi Sena works from the head office and a provincial field office. Choose an office below
-          to see the best contact details for your visit or message.
+          Santi Sena works from the head office and a provincial field office. Choose an office
+          below to see the best contact details for your visit or message.
         </p>
       </div>
 
-      <div class="office-tabs" role="tablist" aria-label="Santi Sena offices">
+      <div class="office-tabs reveal" role="tablist" aria-label="Santi Sena offices">
         <button
           v-for="office in offices"
           :id="`${office.id}-tab`"
@@ -184,7 +179,7 @@ onMounted(() => {
           :aria-selected="activeOfficeId === office.id"
           class="office-tab"
           :class="{ 'office-tab--active': activeOfficeId === office.id }"
-          @click="activeOfficeId = office.id"
+          @click="selectOffice(office.id)"
         >
           <span class="office-tab__label">{{ office.tab }}</span>
           <span class="office-tab__meta">{{ office.type }}</span>
@@ -193,182 +188,287 @@ onMounted(() => {
 
       <article
         :id="`${activeOffice.id}-panel`"
-        class="office-map"
+        class="office-map reveal"
         role="tabpanel"
         :aria-labelledby="`${activeOffice.id}-tab`"
         :style="{ '--pin-left': activeOffice.pinLeft, '--pin-top': activeOffice.pinTop }"
       >
         <p class="province-badge">{{ activeOffice.provinceName }}</p>
 
-        <div class="map-illustration" aria-hidden="true">
+        <div class="map-illustration">
           <Transition name="map-slide" mode="out-in">
-            <div :key="activeOffice.id" class="map-frame">
-              <img class="contact-map-image" :src="activeOffice.mapImage" alt="" />
+            <div
+              :key="activeOffice.id"
+              class="map-frame"
+              :class="{ 'map-frame--interactive': activeOffice.id === 'all' }"
+            >
+              <div class="map-image-shell">
+                <img class="contact-map-image" :src="activeOffice.mapImage" alt="" />
+                <div v-if="activeOffice.id === 'all'" class="map-hotspots">
+                  <button
+                    v-for="office in mapOfficeHotspots"
+                    :key="office.id"
+                    type="button"
+                    class="map-hotspot"
+                    :style="{ left: office.countryPinLeft, top: office.countryPinTop }"
+                    :aria-label="`View ${office.tab} office details`"
+                    @click.stop="selectOffice(office.id)"
+                  >
+                    <span class="map-hotspot__label">{{ office.tab }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </Transition>
           <template v-if="false">
-          <svg
-            v-if="activeOffice.id === 'all'"
-            class="contact-map contact-map--country"
-            viewBox="0 0 760 520"
-          >
-            <path class="water-shape" d="M58 330 L95 346 L106 398 L148 452 L82 494 L34 470 L28 386 Z" />
-            <g class="country-regions">
-              <path class="region region--mint" d="M122 104 L198 76 L294 96 L286 166 L214 184 L136 164 Z" />
-              <path class="region region--pink" d="M214 184 L286 166 L344 206 L314 282 L238 274 L188 224 Z" />
-              <path class="region region--yellow" d="M136 164 L214 184 L188 224 L202 298 L122 306 L76 252 L86 186 Z" />
-              <path class="region region--mint" d="M294 96 L398 72 L492 98 L474 178 L392 198 L344 206 L286 166 Z" />
-              <path class="region region--orange" d="M492 98 L602 62 L704 104 L690 190 L604 208 L474 178 Z" />
-              <path class="region region--lavender" d="M474 178 L604 208 L584 308 L486 324 L392 198 Z" />
-              <path class="region region--yellow" d="M604 208 L704 190 L724 292 L642 354 L584 308 Z" />
-              <path class="region region--pink" d="M122 306 L202 298 L238 274 L300 324 L274 396 L176 420 L106 398 Z" />
-              <path class="region region--yellow" d="M300 324 L376 292 L454 322 L424 402 L336 420 L274 396 Z" />
-              <path class="region region--orange" d="M454 322 L486 324 L584 308 L642 354 L594 426 L500 424 L424 402 Z" />
-              <path class="region region--mint" d="M336 420 L424 402 L500 424 L482 488 L380 492 L308 462 Z" />
-              <path class="region region--pink" d="M500 424 L594 426 L650 470 L586 506 L482 488 Z" />
-            </g>
-            <path class="river-line" d="M522 92 C498 148 544 174 520 226 C494 278 540 316 500 376 C474 416 488 456 462 492" />
-            <g class="province-labels">
-              <text x="176" y="132">Banteay Mean Chey</text>
-              <text x="245" y="222">Siem Reap</text>
-              <text x="382" y="144">Preah Vihear</text>
-              <text x="556" y="148">Stung Treng</text>
-              <text x="642" y="154">Ratanak Kiri</text>
-              <text x="132" y="238">Battambang</text>
-              <text x="250" y="336">Kampong Chhnang</text>
-              <text x="378" y="284">Kampong Thom</text>
-              <text x="614" y="286">Mondol Kiri</text>
-              <text x="158" y="376">Koh Kong</text>
-              <text x="334" y="374">Kampong Speu</text>
-              <text x="432" y="378">Phnom Penh</text>
-              <text x="514" y="374">Kampong Cham</text>
-              <text x="498" y="434">Prey Veng</text>
-              <text x="580" y="466">Svay Rieng</text>
-              <text x="390" y="458">Takeo</text>
-              <text x="314" y="482">Kampot</text>
-            </g>
-            <g class="office-points">
-              <circle cx="585" cy="448" r="5" />
-              <text x="598" y="452">Svay Rieng</text>
-              <circle cx="520" cy="412" r="5" />
-              <text x="532" y="416">Prey Veng</text>
-            </g>
-          </svg>
+            <svg
+              v-if="activeOffice.id === 'all'"
+              class="contact-map contact-map--country"
+              viewBox="0 0 760 520"
+            >
+              <path
+                class="water-shape"
+                d="M58 330 L95 346 L106 398 L148 452 L82 494 L34 470 L28 386 Z"
+              />
+              <g class="country-regions">
+                <path
+                  class="region region--mint"
+                  d="M122 104 L198 76 L294 96 L286 166 L214 184 L136 164 Z"
+                />
+                <path
+                  class="region region--pink"
+                  d="M214 184 L286 166 L344 206 L314 282 L238 274 L188 224 Z"
+                />
+                <path
+                  class="region region--yellow"
+                  d="M136 164 L214 184 L188 224 L202 298 L122 306 L76 252 L86 186 Z"
+                />
+                <path
+                  class="region region--mint"
+                  d="M294 96 L398 72 L492 98 L474 178 L392 198 L344 206 L286 166 Z"
+                />
+                <path
+                  class="region region--orange"
+                  d="M492 98 L602 62 L704 104 L690 190 L604 208 L474 178 Z"
+                />
+                <path
+                  class="region region--lavender"
+                  d="M474 178 L604 208 L584 308 L486 324 L392 198 Z"
+                />
+                <path
+                  class="region region--yellow"
+                  d="M604 208 L704 190 L724 292 L642 354 L584 308 Z"
+                />
+                <path
+                  class="region region--pink"
+                  d="M122 306 L202 298 L238 274 L300 324 L274 396 L176 420 L106 398 Z"
+                />
+                <path
+                  class="region region--yellow"
+                  d="M300 324 L376 292 L454 322 L424 402 L336 420 L274 396 Z"
+                />
+                <path
+                  class="region region--orange"
+                  d="M454 322 L486 324 L584 308 L642 354 L594 426 L500 424 L424 402 Z"
+                />
+                <path
+                  class="region region--mint"
+                  d="M336 420 L424 402 L500 424 L482 488 L380 492 L308 462 Z"
+                />
+                <path
+                  class="region region--pink"
+                  d="M500 424 L594 426 L650 470 L586 506 L482 488 Z"
+                />
+              </g>
+              <path
+                class="river-line"
+                d="M522 92 C498 148 544 174 520 226 C494 278 540 316 500 376 C474 416 488 456 462 492"
+              />
+              <g class="province-labels">
+                <text x="176" y="132">Banteay Mean Chey</text>
+                <text x="245" y="222">Siem Reap</text>
+                <text x="382" y="144">Preah Vihear</text>
+                <text x="556" y="148">Stung Treng</text>
+                <text x="642" y="154">Ratanak Kiri</text>
+                <text x="132" y="238">Battambang</text>
+                <text x="250" y="336">Kampong Chhnang</text>
+                <text x="378" y="284">Kampong Thom</text>
+                <text x="614" y="286">Mondol Kiri</text>
+                <text x="158" y="376">Koh Kong</text>
+                <text x="334" y="374">Kampong Speu</text>
+                <text x="432" y="378">Phnom Penh</text>
+                <text x="514" y="374">Kampong Cham</text>
+                <text x="498" y="434">Prey Veng</text>
+                <text x="580" y="466">Svay Rieng</text>
+                <text x="390" y="458">Takeo</text>
+                <text x="314" y="482">Kampot</text>
+              </g>
+              <g class="office-points">
+                <circle cx="585" cy="448" r="5" />
+                <text x="598" y="452">Svay Rieng</text>
+                <circle cx="520" cy="412" r="5" />
+                <text x="532" y="416">Prey Veng</text>
+              </g>
+            </svg>
 
-          <svg
-            v-else-if="activeOffice.id === 'head-office'"
-            class="contact-map contact-map--province"
-            viewBox="0 0 520 420"
-          >
-            <g class="province-regions">
-              <path class="region region--mint" d="M212 22 L318 40 L338 124 L286 182 L204 166 L182 82 Z" />
-              <path class="region region--yellow" d="M134 170 L204 166 L234 230 L194 306 L108 288 L86 218 Z" />
-              <path class="region region--pink" d="M234 176 L338 124 L408 170 L386 254 L278 256 L234 230 Z" />
-              <path class="region region--lavender" d="M278 256 L386 254 L458 302 L420 386 L306 360 Z" />
-              <path class="region region--mint" d="M194 306 L278 256 L306 360 L238 400 L164 356 Z" />
-              <path class="region region--yellow" d="M204 166 L234 176 L234 230 L194 306 L164 260 Z" />
-            </g>
-            <g class="province-labels">
-              <text x="224" y="106">Romeas Haek</text>
-              <text x="126" y="230">Svay Chrum</text>
-              <text x="254" y="218">Rumdoul</text>
-              <text class="province-title" x="238" y="266">Svay Rieng</text>
-              <text x="326" y="294">Svay Teab</text>
-              <text x="322" y="354">Kampong Rou</text>
-              <text x="392" y="330">Chantrea</text>
-            </g>
-            <g class="district-dots">
-              <circle cx="252" cy="250" r="4" />
-              <circle cx="174" cy="236" r="4" />
-              <circle cx="282" cy="198" r="4" />
-              <circle cx="334" cy="270" r="4" />
-              <circle cx="352" cy="344" r="4" />
-              <circle cx="404" cy="322" r="4" />
-            </g>
-          </svg>
+            <svg
+              v-else-if="activeOffice.id === 'head-office'"
+              class="contact-map contact-map--province"
+              viewBox="0 0 520 420"
+            >
+              <g class="province-regions">
+                <path
+                  class="region region--mint"
+                  d="M212 22 L318 40 L338 124 L286 182 L204 166 L182 82 Z"
+                />
+                <path
+                  class="region region--yellow"
+                  d="M134 170 L204 166 L234 230 L194 306 L108 288 L86 218 Z"
+                />
+                <path
+                  class="region region--pink"
+                  d="M234 176 L338 124 L408 170 L386 254 L278 256 L234 230 Z"
+                />
+                <path
+                  class="region region--lavender"
+                  d="M278 256 L386 254 L458 302 L420 386 L306 360 Z"
+                />
+                <path
+                  class="region region--mint"
+                  d="M194 306 L278 256 L306 360 L238 400 L164 356 Z"
+                />
+                <path
+                  class="region region--yellow"
+                  d="M204 166 L234 176 L234 230 L194 306 L164 260 Z"
+                />
+              </g>
+              <g class="province-labels">
+                <text x="224" y="106">Romeas Haek</text>
+                <text x="126" y="230">Svay Chrum</text>
+                <text x="254" y="218">Rumdoul</text>
+                <text class="province-title" x="238" y="266">Svay Rieng</text>
+                <text x="326" y="294">Svay Teab</text>
+                <text x="322" y="354">Kampong Rou</text>
+                <text x="392" y="330">Chantrea</text>
+              </g>
+              <g class="district-dots">
+                <circle cx="252" cy="250" r="4" />
+                <circle cx="174" cy="236" r="4" />
+                <circle cx="282" cy="198" r="4" />
+                <circle cx="334" cy="270" r="4" />
+                <circle cx="352" cy="344" r="4" />
+                <circle cx="404" cy="322" r="4" />
+              </g>
+            </svg>
 
-          <svg
-            v-else-if="activeOffice.id === 'prey-veng-office'"
-            class="contact-map contact-map--province"
-            viewBox="0 0 520 420"
-          >
-            <g class="province-regions">
-              <path class="region region--yellow" d="M150 42 L252 26 L298 82 L260 142 L168 138 L112 94 Z" />
-              <path class="region region--mint" d="M298 82 L406 68 L454 126 L398 188 L308 168 L260 142 Z" />
-              <path class="region region--pink" d="M168 138 L260 142 L250 218 L168 238 L110 192 Z" />
-              <path class="region region--lavender" d="M250 142 L308 168 L318 244 L244 268 L250 218 Z" />
-              <path class="region region--yellow" d="M318 168 L398 188 L434 270 L350 292 L318 244 Z" />
-              <path class="region region--mint" d="M168 238 L244 268 L226 340 L144 354 L98 286 Z" />
-              <path class="region region--pink" d="M244 268 L350 292 L318 386 L220 378 L226 340 Z" />
-              <path class="region region--yellow" d="M350 292 L434 270 L450 356 L368 400 L318 386 Z" />
-            </g>
-            <g class="province-labels">
-              <text x="154" y="92">Pea Reang</text>
-              <text x="314" y="120">Kanhchriech</text>
-              <text x="140" y="190">Kampong Leav</text>
-              <text class="province-title" x="228" y="224">Prey Veng</text>
-              <text x="340" y="224">Kamchay Mear</text>
-              <text x="160" y="306">Ba Phnom</text>
-              <text x="244" y="334">Preah Sdach</text>
-              <text x="346" y="344">Kampong Trabaek</text>
-            </g>
-            <g class="district-dots">
-              <circle cx="204" cy="108" r="4" />
-              <circle cx="328" cy="106" r="4" />
-              <circle cx="184" cy="202" r="4" />
-              <circle cx="256" cy="210" r="4" />
-              <circle cx="360" cy="204" r="4" />
-              <circle cx="194" cy="292" r="4" />
-              <circle cx="278" cy="324" r="4" />
-              <circle cx="374" cy="330" r="4" />
-            </g>
-          </svg>
+            <svg
+              v-else-if="activeOffice.id === 'prey-veng-office'"
+              class="contact-map contact-map--province"
+              viewBox="0 0 520 420"
+            >
+              <g class="province-regions">
+                <path
+                  class="region region--yellow"
+                  d="M150 42 L252 26 L298 82 L260 142 L168 138 L112 94 Z"
+                />
+                <path
+                  class="region region--mint"
+                  d="M298 82 L406 68 L454 126 L398 188 L308 168 L260 142 Z"
+                />
+                <path
+                  class="region region--pink"
+                  d="M168 138 L260 142 L250 218 L168 238 L110 192 Z"
+                />
+                <path
+                  class="region region--lavender"
+                  d="M250 142 L308 168 L318 244 L244 268 L250 218 Z"
+                />
+                <path
+                  class="region region--yellow"
+                  d="M318 168 L398 188 L434 270 L350 292 L318 244 Z"
+                />
+                <path
+                  class="region region--mint"
+                  d="M168 238 L244 268 L226 340 L144 354 L98 286 Z"
+                />
+                <path
+                  class="region region--pink"
+                  d="M244 268 L350 292 L318 386 L220 378 L226 340 Z"
+                />
+                <path
+                  class="region region--yellow"
+                  d="M350 292 L434 270 L450 356 L368 400 L318 386 Z"
+                />
+              </g>
+              <g class="province-labels">
+                <text x="154" y="92">Pea Reang</text>
+                <text x="314" y="120">Kanhchriech</text>
+                <text x="140" y="190">Kampong Leav</text>
+                <text class="province-title" x="228" y="224">Prey Veng</text>
+                <text x="340" y="224">Kamchay Mear</text>
+                <text x="160" y="306">Ba Phnom</text>
+                <text x="244" y="334">Preah Sdach</text>
+                <text x="346" y="344">Kampong Trabaek</text>
+              </g>
+              <g class="district-dots">
+                <circle cx="204" cy="108" r="4" />
+                <circle cx="328" cy="106" r="4" />
+                <circle cx="184" cy="202" r="4" />
+                <circle cx="256" cy="210" r="4" />
+                <circle cx="360" cy="204" r="4" />
+                <circle cx="194" cy="292" r="4" />
+                <circle cx="278" cy="324" r="4" />
+                <circle cx="374" cy="330" r="4" />
+              </g>
+            </svg>
           </template>
         </div>
 
-        <div class="office-panel">
-          <div class="office-panel__header">
-            <div>
-              <p class="section-kicker">Contact us</p>
-              <h3>{{ activeOffice.title }}</h3>
+        <Transition name="office-card" mode="out-in">
+          <div :key="activeOffice.id" class="office-panel">
+            <div class="office-panel__header">
+              <div>
+                <p class="section-kicker">Contact us</p>
+                <h3>{{ activeOffice.title }}</h3>
+              </div>
+              <p class="office-panel__badge">{{ activeOffice.type }}</p>
             </div>
-            <p class="office-panel__badge">{{ activeOffice.type }}</p>
-          </div>
 
-          <dl class="details-list details-list--compact">
-            <div>
-              <dt>Address</dt>
-              <dd>{{ activeOffice.address }}</dd>
-            </div>
-            <div>
-              <dt>Phone</dt>
-              <dd>
-                <a :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
-                  {{ activeOffice.phone }}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt>Email</dt>
-              <dd>
-                <a :href="`mailto:${activeOffice.email}`">{{ activeOffice.email }}</a>
-              </dd>
-            </div>
-            <div>
-              <dt>Contact</dt>
-              <dd>{{ activeOffice.contact }}</dd>
-            </div>
-          </dl>
+            <dl class="details-list details-list--compact">
+              <div>
+                <dt>Address</dt>
+                <dd>{{ activeOffice.address }}</dd>
+              </div>
+              <div>
+                <dt>Phone</dt>
+                <dd>
+                  <a :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
+                    {{ activeOffice.phone }}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>
+                  <a :href="`mailto:${activeOffice.email}`">{{ activeOffice.email }}</a>
+                </dd>
+              </div>
+              <div>
+                <dt>Contact</dt>
+                <dd>{{ activeOffice.contact }}</dd>
+              </div>
+            </dl>
 
-          <div class="office-actions">
-            <a class="email-button email-button--primary" :href="`mailto:${activeOffice.email}`">
-              Email us
-            </a>
-            <a class="email-button" :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
-              Call office
-            </a>
+            <div class="office-actions">
+              <a class="email-button email-button--primary" :href="`mailto:${activeOffice.email}`">
+                Email us
+              </a>
+              <a class="email-button" :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
+                Call office
+              </a>
+            </div>
           </div>
-        </div>
+        </Transition>
 
         <div v-if="false" class="map-pin" aria-hidden="true">
           <span>{{ activeOffice.mapLabel }}</span>
@@ -377,58 +477,113 @@ onMounted(() => {
     </section>
 
     <section id="write" class="contact-form-section" aria-labelledby="form-heading">
-      <div class="contact-form-intro">
+      <div class="contact-form-intro reveal">
         <p class="section-kicker">Write to us</p>
         <h2 id="form-heading">Send a message to our team</h2>
         <p>
           Share your question, visit request, or partnership idea and our team will follow up from
           the right office.
         </p>
+        <figure class="contact-logo-visual" aria-label="Santi Sena seal">
+          <img class="contact-logo" :src="logoUrl" alt="Santi Sena seal" loading="lazy" />
+        </figure>
       </div>
 
-      <form class="contact-form" @submit.prevent="submitContact">
+      <form
+        class="contact-form reveal"
+        style="animation-delay: 0.14s"
+        @submit.prevent="submitContact"
+      >
+        <p class="form-kicker">Contact form</p>
+        <p class="form-heading">Email to Us</p>
+
         <div class="form-row">
-          <label>
-            <span>Name</span>
-            <input v-model="name" required autocomplete="name" type="text" />
+          <label class="form-field">
+            <span class="field-topline">
+              <span class="field-label">Name</span>
+              <span class="field-required">Required</span>
+            </span>
+            <span class="field-control">
+              <input
+                v-model="name"
+                required
+                autocomplete="name"
+                type="text"
+                placeholder="Your full name"
+              />
+            </span>
           </label>
 
-          <label>
-            <span>Email</span>
-            <input v-model="email" required autocomplete="email" type="email" />
+          <label class="form-field">
+            <span class="field-topline">
+              <span class="field-label">Email</span>
+              <span class="field-required">Required</span>
+            </span>
+            <span class="field-control">
+              <input
+                v-model="email"
+                required
+                autocomplete="email"
+                type="email"
+                placeholder="name@example.com"
+              />
+            </span>
           </label>
         </div>
 
-        <label>
-          <span>Subject</span>
-          <input v-model="subject" autocomplete="off" type="text" />
+        <label class="form-field">
+          <span class="field-topline">
+            <span class="field-label">Subject</span>
+            <span class="field-optional">Optional</span>
+          </span>
+          <span class="field-control">
+            <input
+              v-model="subject"
+              autocomplete="off"
+              type="text"
+              placeholder="What would you like to discuss?"
+            />
+          </span>
         </label>
 
-        <label>
-          <span>Message</span>
-          <textarea v-model="message" required rows="5"></textarea>
+        <label class="form-field form-field--message">
+          <span class="field-topline">
+            <span class="field-label">Message</span>
+            <span class="field-count">{{ message.length }}/{{ messageMaxLength }}</span>
+          </span>
+          <span class="field-control">
+            <textarea
+              v-model="message"
+              required
+              rows="5"
+              :maxlength="messageMaxLength"
+              placeholder="Share a few details so the right team can reply."
+            ></textarea>
+          </span>
         </label>
 
         <div class="form-actions">
           <button type="submit" class="form-submit" :disabled="!canSubmit">
             {{ formSent ? 'Message ready' : 'Send message' }}
           </button>
-          <p v-if="formSent" role="status">Thank you. Your message is ready for our team.</p>
+          <p v-if="formSent" class="form-status" role="status">
+            Thank you. Your message is ready for our team.
+          </p>
         </div>
       </form>
     </section>
 
-    <section class="visit-section" aria-labelledby="write-heading">
-      <div>
+    <section class="visit-section reveal" aria-labelledby="write-heading">
+      <div class="reveal" style="animation-delay: 0.06s">
         <p class="section-kicker section-kicker--light">Write to us</p>
         <h2 id="write-heading">A little coordination helps us welcome you well.</h2>
       </div>
 
-      <ul class="visit-notes">
+      <ul class="visit-notes reveal" style="animation-delay: 0.16s">
         <li v-for="note in visitNotes" :key="note">{{ note }}</li>
       </ul>
 
-      <div class="visit-actions">
+      <div class="visit-actions reveal" style="animation-delay: 0.26s">
         <a class="visit-button visit-button--primary" href="mailto:info@santisena.org">Email us</a>
         <RouterLink class="visit-button visit-button--ghost" to="/get-involved/partner">
           Partnership
@@ -445,11 +600,26 @@ onMounted(() => {
   color: var(--color-ink);
 }
 
-.contact-page .contact-hero {
-  height: 420px;
+.reveal {
+  opacity: 0;
 }
 
-.eyebrow,
+.reveal--visible {
+  opacity: 1;
+  animation: revealUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .section-kicker,
 .office-type {
   display: inline-block;
@@ -461,64 +631,16 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.eyebrow--light,
 .section-kicker--light {
   color: var(--primary-light);
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(6, 18, 13, 0.92) 0%,
-      rgba(6, 18, 13, 0.68) 42%,
-      rgba(6, 18, 13, 0.22) 78%,
-      rgba(6, 18, 13, 0.08) 100%
-    ),
-    radial-gradient(circle at 78% 24%, rgba(27, 163, 79, 0.28) 0%, transparent 52%);
-}
-
-.hero-inner {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: min(100%, var(--container-max-width));
-  margin: 0 auto;
-  padding: 3rem var(--container-padding);
-  text-align: left;
-}
-
-.hero-inner h1 {
-  max-width: 660px;
-  margin: 0.8rem 0 1rem;
-  color: #fffaf2;
-  font-size: clamp(2.2rem, 5vw, 4rem);
-  font-weight: 700;
-  line-height: 1.05;
-}
-
-.hero-subtitle {
-  max-width: 640px;
-  margin: 0 0 2rem;
-  color: rgba(255, 250, 242, 0.88);
-  font-size: 1.05rem;
-  line-height: 1.65;
-}
-
-.hero-actions,
 .visit-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.btn,
 .email-button,
 .visit-button {
   display: inline-flex;
@@ -536,34 +658,9 @@ onMounted(() => {
     transform 0.2s ease;
 }
 
-.btn:hover,
 .email-button:hover,
 .visit-button:hover {
   transform: translateY(-1px);
-}
-
-.btn {
-  padding: 0.85rem 1.8rem;
-  border: 1px solid transparent;
-}
-
-.btn--primary {
-  background: var(--primary-color);
-  color: var(--color-white);
-  box-shadow: 0 18px 36px rgba(27, 163, 79, 0.22);
-}
-
-.btn--primary:hover {
-  background: var(--primary-dark);
-}
-
-.btn--outline {
-  border-color: rgba(255, 250, 242, 0.62);
-  color: #fffaf2;
-}
-
-.btn--outline:hover {
-  background: rgba(255, 250, 242, 0.12);
 }
 
 .headquarters-section,
@@ -753,8 +850,7 @@ onMounted(() => {
 .office-tab--active {
   z-index: 1;
   border-color: rgba(20, 129, 62, 0.28);
-  background:
-    linear-gradient(180deg, rgba(230, 246, 236, 0.98), rgba(255, 250, 242, 0.94));
+  background: linear-gradient(180deg, rgba(230, 246, 236, 0.98), rgba(255, 250, 242, 0.94));
   box-shadow:
     0 12px 26px rgba(20, 129, 62, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.84);
@@ -813,7 +909,6 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 390px;
-  pointer-events: none;
 }
 
 .map-frame {
@@ -830,6 +925,16 @@ onMounted(() => {
   border-radius: 8px;
   background: var(--color-white);
   box-shadow: none;
+}
+
+.map-frame--interactive {
+  cursor: pointer;
+}
+
+.map-image-shell {
+  position: relative;
+  width: min(100%, 440px);
+  aspect-ratio: 1448 / 1086;
 }
 
 .map-slide-enter-active,
@@ -850,12 +955,109 @@ onMounted(() => {
 }
 
 .contact-map-image {
-  width: min(100%, 540px);
+  display: block;
+  width: 100%;
   height: 100%;
-  max-height: 330px;
   object-fit: contain;
   object-position: center;
   filter: none;
+}
+
+.map-hotspots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.map-hotspot {
+  position: absolute;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.map-hotspot::before,
+.map-hotspot::after {
+  position: absolute;
+  border-radius: 999px;
+  content: '';
+}
+
+.map-hotspot::before {
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--color-white);
+  background: var(--primary-color);
+  box-shadow:
+    0 0 0 5px rgba(27, 163, 79, 0.16),
+    0 10px 22px rgba(20, 129, 62, 0.22);
+}
+
+.map-hotspot::after {
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  border: 2px solid rgba(20, 129, 62, 0.34);
+  animation: mapHotspotPulse 1.9s ease-out infinite;
+}
+
+.map-hotspot:hover::before,
+.map-hotspot:focus-visible::before {
+  background: var(--primary-dark);
+  box-shadow:
+    0 0 0 7px rgba(27, 163, 79, 0.22),
+    0 12px 28px rgba(20, 129, 62, 0.28);
+}
+
+.map-hotspot:focus-visible {
+  outline: 3px solid rgba(20, 129, 62, 0.28);
+  outline-offset: 4px;
+}
+
+.map-hotspot__label {
+  position: absolute;
+  bottom: calc(100% - 0.15rem);
+  left: 50%;
+  z-index: 4;
+  min-width: max-content;
+  padding: 0.28rem 0.48rem;
+  border-radius: 6px;
+  background: var(--primary-dark);
+  color: var(--color-white);
+  font-size: 0.72rem;
+  font-weight: 800;
+  opacity: 0;
+  transform: translate(-50%, 6px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  pointer-events: none;
+}
+
+.map-hotspot:hover .map-hotspot__label,
+.map-hotspot:focus-visible .map-hotspot__label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@keyframes mapHotspotPulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.72);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
 }
 
 .contact-map {
@@ -944,12 +1146,50 @@ onMounted(() => {
   grid-row: 1;
   width: 100%;
   margin: 0;
+  overflow: hidden;
   padding: clamp(1.35rem, 2.6vw, 2rem);
   border: 1px solid rgba(232, 228, 223, 0.9);
-  border-left: 4px solid var(--primary-color);
   border-radius: 8px;
   background: var(--color-white);
   box-shadow: none;
+  transition:
+    border-color 0.32s ease,
+    box-shadow 0.32s ease,
+    transform 0.32s ease;
+}
+
+.office-panel::before,
+.office-panel::after {
+  position: absolute;
+  left: 0;
+  z-index: 0;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  content: '';
+  pointer-events: none;
+}
+
+.office-panel::before {
+  top: 0;
+  width: 100%;
+}
+
+.office-panel::after {
+  top: calc(100% - 5px);
+  width: 100%;
+}
+
+.office-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.office-panel:hover,
+.office-panel:focus-within {
+  border-color: rgba(20, 129, 62, 0.18);
+  box-shadow: 0 20px 42px rgba(20, 129, 62, 0.1);
+  transform: translateY(-2px);
 }
 
 .office-panel__header {
@@ -964,7 +1204,7 @@ onMounted(() => {
 }
 
 .office-panel .section-kicker {
-  color: #ff8f2e;
+  color: var(--primary-dark);
   letter-spacing: 0;
   text-transform: none;
   font-size: 1rem;
@@ -1015,6 +1255,39 @@ onMounted(() => {
 
 .office-panel .details-list a {
   color: var(--primary-dark);
+}
+
+.office-card-enter-active,
+.office-card-leave-active {
+  transition:
+    opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.34s ease;
+}
+
+.office-card-enter-active::before {
+  animation: officeAccentSweep 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.office-card-enter-from {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateX(-28px) scale(0.985);
+}
+
+.office-card-leave-to {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateX(22px) scale(0.985);
+}
+
+@keyframes officeAccentSweep {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 .email-button {
@@ -1107,13 +1380,94 @@ onMounted(() => {
   line-height: 1.7;
 }
 
-.contact-form {
+.contact-logo-visual {
   display: grid;
-  gap: 1rem;
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border: 1px solid var(--color-border);
+  place-items: center;
+  margin-top: 0.85rem;
+}
+
+.contact-logo {
+  width: min(100%, 300px);
+  max-height: clamp(180px, 30vw, 320px);
+  object-fit: contain;
+  filter: drop-shadow(0 14px 22px rgba(31, 61, 46, 0.16));
+}
+
+.contact-form {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+  overflow: hidden;
+  padding: clamp(1rem, 2.2vw, 1.45rem);
+  border: 1px solid rgba(232, 228, 223, 0.95);
   border-radius: 8px;
-  background: var(--color-white);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 253, 248, 0.98)),
+    var(--color-white);
+  box-shadow:
+    0 22px 48px rgba(43, 43, 40, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.contact-form::before,
+.contact-form::after {
+  position: absolute;
+  left: 0;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  content: '';
+  pointer-events: none;
+  transition:
+    /* top 0.32s ease, */
+    left 0.5s ease,
+    /* width 0.32s ease, */ /* height 0.32s ease, */ background 0.2s ease;
+}
+
+/* .contact-form::before {
+  top: 0;
+  width: 100%;
+} */
+/*
+.contact-form::after {
+  top: calc(100% - 5px);
+  width: 100%;
+} */
+
+.contact-form:hover::before,
+.contact-form:focus-within::before {
+  top: 0;
+  left: calc(100% - 6px);
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+}
+
+.contact-form:hover::after,
+.contact-form:focus-within::after {
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+}
+
+.form-kicker {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.form-heading {
+  margin: -0.35rem 0 0.2rem;
+  color: var(--color-ink);
+  font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+  font-weight: 800;
+  line-height: 1.15;
 }
 
 .form-row {
@@ -1122,38 +1476,120 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.contact-form label {
+.contact-form label,
+.form-field {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.35rem;
   color: var(--color-ink);
   font-size: 0.92rem;
   font-weight: 700;
 }
 
+.field-topline {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 1.2rem;
+}
+
+.field-label {
+  color: var(--color-ink);
+  transition: color 0.2s ease;
+}
+
+.field-required,
+.field-optional,
+.field-count {
+  color: var(--color-ink-soft);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.field-count {
+  letter-spacing: 0;
+}
+
+.field-control {
+  position: relative;
+  display: block;
+}
+
+.field-control::after {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.65rem;
+  left: 0.85rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary-dark), var(--primary-color));
+  opacity: 0;
+  transform: scaleX(0.7);
+  transform-origin: left center;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  content: '';
+  pointer-events: none;
+}
+
 .contact-form input,
 .contact-form textarea {
   width: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-white);
+  border: 1px solid rgba(232, 228, 223, 0.96);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
   color: var(--color-ink);
   font: inherit;
   outline: none;
-  padding: 0.78rem 0.9rem;
+  padding: 0.68rem 0.85rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 8px 18px rgba(43, 43, 40, 0.04);
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.contact-form input {
+  min-height: 48px;
 }
 
 .contact-form textarea {
-  min-height: 148px;
+  min-height: 125px;
   resize: vertical;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: rgba(91, 86, 76, 0.66);
+}
+
+.form-field:hover .field-label,
+.form-field:focus-within .field-label {
+  color: var(--primary-dark);
+}
+
+.contact-form input:hover,
+.contact-form textarea:hover {
+  border-color: rgba(20, 129, 62, 0.3);
 }
 
 .contact-form input:focus,
 .contact-form textarea:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(27, 163, 79, 0.12);
+  box-shadow:
+    0 0 0 4px rgba(27, 163, 79, 0.12),
+    0 14px 28px rgba(20, 129, 62, 0.11);
+  transform: translateY(-1px);
+}
+
+.form-field:focus-within .field-control::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .form-actions {
@@ -1161,40 +1597,50 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 0.85rem;
   align-items: center;
-  padding-top: 0.25rem;
+  padding-top: 0.1rem;
 }
 
 .form-submit {
   display: inline-flex;
-  min-height: 48px;
+  min-height: 44px;
   min-width: 150px;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--primary-color);
   border-radius: 999px;
-  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: var(--color-white);
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 700;
+  box-shadow: 0 14px 28px rgba(20, 129, 62, 0.18);
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease;
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .form-submit:hover:not(:disabled) {
   background: var(--primary-dark);
   border-color: var(--primary-dark);
+  box-shadow: 0 18px 34px rgba(20, 129, 62, 0.22);
+  transform: translateY(-1px);
 }
 
 .form-submit:disabled {
   cursor: not-allowed;
   opacity: 0.56;
+  box-shadow: none;
 }
 
-.form-actions p {
+.form-status {
   margin: 0;
+  padding: 0.62rem 0.8rem;
+  border: 1px solid rgba(20, 129, 62, 0.18);
+  border-radius: 8px;
+  background: var(--primary-light);
   color: var(--primary-dark);
   font-size: 0.9rem;
   font-weight: 600;
@@ -1207,11 +1653,19 @@ onMounted(() => {
   align-items: center;
   border-top: 1px solid rgba(255, 250, 242, 0.12);
   background:
-    linear-gradient(90deg, rgba(4, 48, 29, 0.94) 0%, rgba(4, 48, 29, 0.9) 52%, rgba(4, 48, 29, 0.76) 100%),
+    linear-gradient(
+      90deg,
+      rgba(4, 48, 29, 0.94) 0%,
+      rgba(4, 48, 29, 0.9) 52%,
+      rgba(4, 48, 29, 0.76) 100%
+    ),
     url('/images/programs/hero-4.jpg') center / cover no-repeat;
   color: #fffaf2;
   padding: clamp(3rem, 6vw, 4.5rem)
-    max(var(--container-padding), calc((100vw - var(--container-max-width)) / 2 + var(--container-padding)));
+    max(
+      var(--container-padding),
+      calc((100vw - var(--container-max-width)) / 2 + var(--container-padding))
+    );
 }
 
 .visit-section .section-kicker--light {
@@ -1309,8 +1763,8 @@ onMounted(() => {
     min-height: 300px;
   }
 
-  .contact-map-image {
-    max-height: 300px;
+  .map-image-shell {
+    width: min(100%, 400px);
   }
 
   .visit-actions {
@@ -1319,16 +1773,6 @@ onMounted(() => {
 }
 
 @media (max-width: 720px) {
-  .contact-page .contact-hero {
-    height: 440px;
-  }
-
-  .hero-inner h1 {
-    font-size: 2.35rem;
-  }
-
-  .hero-actions,
-  .btn,
   .visit-actions,
   .visit-button {
     width: 100%;
@@ -1382,9 +1826,12 @@ onMounted(() => {
     min-height: 250px;
   }
 
-  .contact-map,
-  .contact-map-image {
+  .contact-map {
     max-height: 240px;
+  }
+
+  .map-image-shell {
+    width: min(100%, 320px);
   }
 
   .map-pin {
@@ -1400,6 +1847,14 @@ onMounted(() => {
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    align-items: stretch;
+  }
+
+  .contact-logo-visual {
+    margin-inline: auto;
   }
 }
 
@@ -1432,17 +1887,64 @@ onMounted(() => {
   .form-actions {
     width: 100%;
   }
+
+  .form-actions {
+    gap: 0.65rem;
+  }
+
+  .field-topline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.18rem;
+  }
+
+  .contact-logo-visual {
+    margin-top: 0.85rem;
+  }
+
+  .contact-logo {
+    width: min(100%, 230px);
+    max-height: 220px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reveal--visible {
+    animation: none;
+  }
+
+  .office-panel,
+  .office-panel::before,
+  .office-panel::after,
+  .office-card-enter-active,
+  .office-card-leave-active,
+  .map-hotspot__label,
+  .contact-form::before,
+  .contact-form::after {
+    transition: none;
+  }
+
+  .office-card-enter-active::before,
+  .map-hotspot::after {
+    animation: none;
+  }
+
+  .office-panel:hover,
+  .office-panel:focus-within {
+    transform: none;
+  }
+
   .map-slide-enter-active,
   .map-slide-leave-active {
     transition: none;
   }
 
   .map-slide-enter-from,
-  .map-slide-leave-to {
+  .map-slide-leave-to,
+  .office-card-enter-from,
+  .office-card-leave-to {
     opacity: 1;
+    filter: none;
     transform: none;
   }
 }

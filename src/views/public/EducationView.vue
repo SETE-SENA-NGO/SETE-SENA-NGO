@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/education-hero.jpg', caption: '' },
-  { image: '/images/programs/education.jpg', caption: '' },
-]
 
 const bulletsWhatWeDo: string[] = [
   'Community pre-schools led by trained local teachers in remote villages',
@@ -63,22 +57,6 @@ onMounted(() => {
 
 <template>
   <div class="edu-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-
-      <div class="hero-content">
-        <span class="section-label">Programs &middot; Goal 02 Education</span>
-        <h1 class="hero-title">A teacher in every village. A book in every hand.</h1>
-        <p class="hero-subtitle">
-          From community pre-schools to mobile libraries and pagoda-based ethics classes,
-          Santi Sena builds the kind of learning that lasts a lifetime — and lifts a household out of poverty.
-        </p>
-        <div class="hero-actions">
-          <RouterLink to="/contact" class="btn btn-primary">Sponsor a child</RouterLink>
-          <RouterLink to="/services" class="btn btn-ghost">&larr; All programs</RouterLink>
-        </div>
-      </div>
-    </Slideshow>
 
     <!-- ── Introduction ── -->
     <section class="intro-section">

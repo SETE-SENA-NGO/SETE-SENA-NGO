@@ -1,17 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onUnmounted } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpact from '@/assets/hero-impact.jpg'
 import logoUrl from '@/assets/logo.png'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const { observe } = useScrollReveal({ threshold: 0.12 })
-
-const slideItems = [
-  { image: heroImpact, caption: '' },
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-]
 
 const values = [
   { name: 'Honesty', body: 'We have honesty with our donors, target group, operational partners and working group.' },
@@ -21,14 +15,45 @@ const values = [
 ]
 
 const team = [
-  { role: 'Board of Directors', desc: 'Policy and oversight, including senior Buddhist leadership.' },
+  {
+    role: 'Board of Directors',
+    desc: 'Policy and oversight, including senior Buddhist leadership.',
+  },
   { role: 'Executive Director', desc: 'Daily operations and strategic execution.' },
   { role: 'Management Committee', desc: 'Coordinates programs across provinces.' },
   { role: 'Technical Coordination', desc: 'Provides inputs across thematic areas.' },
-  { role: 'Professional Staff', desc: '30+ full-time and project-based experts in agriculture, education and rural development.' },
+  {
+    role: 'Professional Staff',
+    desc: '30+ full-time and project-based experts in agriculture, education and rural development.',
+  },
 ]
 
-const provinces = ['Svay Rieng', 'Prey Veng', 'Kratie']
+const provinces = [
+  {
+    name: 'Svay Rieng',
+    tagline: 'Southeastern rice bowl',
+    villages: 86,
+    desc: 'Bordering Vietnam, known for its fertile rice plains and close-knit farming communities rebuilding after decades of hardship.',
+    accent: '#0f8f69',
+    accentLight: 'color-mix(in srgb, #0f8f69 12%, transparent)',
+  },
+  {
+    name: 'Prey Veng',
+    tagline: 'Heart of the floodplains',
+    villages: 97,
+    desc: 'The most populous southeastern province, where we run extensive water, sanitation and early childhood education programs.',
+    accent: '#0b5f49',
+    accentLight: 'color-mix(in srgb, #0b5f49 12%, transparent)',
+  },
+  {
+    name: 'Kratie',
+    tagline: 'Mekong river gateway',
+    villages: 110,
+    desc: 'Northeastern province along the Mekong, home to remote villages where we focus on sustainable agriculture and forest restoration.',
+    accent: '#1a7a5c',
+    accentLight: 'color-mix(in srgb, #1a7a5c 12%, transparent)',
+  },
+]
 
 const storyRef = ref<HTMLElement | null>(null)
 const vmgRefs = ref<(HTMLElement | null)[]>([])
@@ -36,6 +61,8 @@ const valuesRef = ref<(HTMLElement | null)[]>([])
 const teamRef = ref<(HTMLElement | null)[]>([])
 const geoRefs = ref<(HTMLElement | null)[]>([])
 const ctaRef = ref<HTMLElement | null>(null)
+const photoFrameRef = ref<HTMLElement | null>(null)
+const photoInnerRef = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   document.title = 'About Santi Sena — Buddhist NGO in Cambodia'
@@ -50,7 +77,10 @@ onMounted(() => {
     el.content = content
   }
 
-  setMeta('description', "Santi Sena ('Peace Army') was founded in 1994 to alleviate poverty and rebuild moral, environmental and economic life across rural Cambodia.")
+  setMeta(
+    'description',
+    "Santi Sena ('Peace Army') was founded in 1994 to alleviate poverty and rebuild moral, environmental and economic life across rural Cambodia.",
+  )
 
   const setOgMeta = (property: string, content: string) => {
     let el = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`)
@@ -72,6 +102,39 @@ onMounted(() => {
   teamRef.value.forEach((el) => observe(el))
   geoRefs.value.forEach((el) => observe(el))
   observe(ctaRef.value)
+
+  // Add interactive tilt to the photo frame (subtle mousemove parallax)
+  const frame = photoFrameRef.value
+  const inner = photoInnerRef.value
+  let onMove: (e: PointerEvent) => void
+  let onLeave: (e: PointerEvent) => void
+  if (frame && inner) {
+    onMove = (e: PointerEvent) => {
+      const rect = frame.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width - 0.5
+      const y = (e.clientY - rect.top) / rect.height - 0.5
+      const rotateX = (-y) * 6
+      const rotateY = x * 6
+      const scale = 1.03
+      inner.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`
+      inner.style.transition = 'transform 120ms linear'
+    }
+
+    onLeave = () => {
+      inner.style.transform = ''
+      inner.style.transition = ''
+    }
+
+    frame.addEventListener('pointermove', onMove)
+    frame.addEventListener('pointerleave', onLeave)
+  }
+
+  onUnmounted(() => {
+    if (frame && onMove && onLeave) {
+      frame.removeEventListener('pointermove', onMove)
+      frame.removeEventListener('pointerleave', onLeave)
+    }
+  })
 })
 
 function setVmgRef(el: HTMLElement | null, index: number) {
@@ -93,38 +156,6 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 
 <template>
   <div class="about-page">
-    <!-- ─── Hero ─── -->
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="hero-badge">About Santi Sena</span>
-        <h1 class="hero-title">
-          A peace army born from the Dharma,<br />
-          <span class="hero-highlight">raised by villages.</span>
-        </h1>
-        <p class="hero-subtitle">
-          Founded in 1994 by Cambodian Buddhist monks, Santi Sena emerged from the ashes of conflict
-          with a quiet conviction: that lasting peace is grown in soil, schools and dignified work,
-          not signed in distant offices.
-        </p>
-        <div class="hero-stats-row">
-          <div class="hero-stat">
-            <span class="hero-stat-value">30+</span>
-            <span class="hero-stat-label">Years Serving</span>
-          </div>
-          <div class="hero-stat-divider" />
-          <div class="hero-stat">
-            <span class="hero-stat-value">293</span>
-            <span class="hero-stat-label">Villages Reached</span>
-          </div>
-          <div class="hero-stat-divider" />
-          <div class="hero-stat">
-            <span class="hero-stat-value">3</span>
-            <span class="hero-stat-label">Provinces</span>
-          </div>
-        </div>
-      </div>
-    </Slideshow>
 
     <!-- ─── Our Story ─── -->
     <section class="story-section">
@@ -134,7 +165,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
             <span class="section-badge">Our Story</span>
           </div>
           <div class="story-content">
-            <h2 class="story-heading">From the ashes of conflict,<br />a seed of peace was planted.</h2>
+            <h2 class="story-heading">From the ashes of conflict,<br />a <span class="highlight">seed of peace</span>
+              was planted.</h2>
             <div class="story-body">
               <p>
                 In the years following the Cambodian Civil War, as the nation began to heal from decades of
@@ -152,25 +184,22 @@ function setGeoRef(el: HTMLElement | null, index: number) {
                 Over three decades, that seed has grown into an organization spanning three provinces,
                 employing over 30 dedicated staff, and touching the lives of tens of thousands of
                 families. Yet our approach remains the same: <strong>listen first, act together,
-                sustain forever.</strong>
+                  sustain forever.</strong>
               </p>
             </div>
           </div>
           <div class="story-visual">
-            <div class="story-timeline">
-              <div class="timeline-item">
-                <span class="timeline-year">1994</span>
-                <span class="timeline-desc">Founded by Buddhist monks</span>
+            <div class="photo-frame" ref="photoFrameRef">
+              <div class="photo-inner" ref="photoInnerRef">
+                <img class="photo-img" src="/src/assets/maps/Cambodia%20Map.png"
+                  alt="Santi Sena operations across Cambodia" loading="lazy" />
+                <!-- Reveal sweep overlay -->
+                <div class="photo-sweep" aria-hidden="true"></div>
               </div>
-              <div class="timeline-dot" />
-              <div class="timeline-item">
-                <span class="timeline-year">2000s</span>
-                <span class="timeline-desc">Expanded to 3 provinces</span>
-              </div>
-              <div class="timeline-dot" />
-              <div class="timeline-item">
-                <span class="timeline-year">Today</span>
-                <span class="timeline-desc">30+ staff, 293 villages served</span>
+              <!-- Photo info caption -->
+              <div class="photo-caption">
+                <span class="photo-caption-dot" aria-hidden="true"></span>
+                <span>Santi Sena operates across <strong>3 provinces</strong> in southeastern Cambodia</span>
               </div>
             </div>
           </div>
@@ -198,26 +227,26 @@ function setGeoRef(el: HTMLElement | null, index: number) {
         <!-- Flow connector between cards -->
         <div class="vmg-flow" aria-hidden="true">
           <svg width="100%" height="40" viewBox="0 0 400 40" preserveAspectRatio="none">
-            <line x1="50" y1="20" x2="180" y2="20" stroke="var(--about-saffron)" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.3" />
+            <line x1="50" y1="20" x2="180" y2="20" stroke="var(--about-saffron)" stroke-width="1.5"
+              stroke-dasharray="6 4" opacity="0.3" />
             <polygon points="178,14 188,20 178,26" fill="var(--about-saffron)" opacity="0.3" />
-            <line x1="220" y1="20" x2="350" y2="20" stroke="var(--about-saffron)" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.3" />
+            <line x1="220" y1="20" x2="350" y2="20" stroke="var(--about-saffron)" stroke-width="1.5"
+              stroke-dasharray="6 4" opacity="0.3" />
             <polygon points="348,14 358,20 348,26" fill="var(--about-saffron)" opacity="0.3" />
           </svg>
         </div>
 
         <div class="vmg-grid">
           <!-- Vision Card -->
-          <div
-            :ref="(el) => setVmgRef(el as HTMLElement | null, 0)"
-            class="reveal-on-scroll vmg-card"
-            style="transition-delay: 0s"
-          >
+          <div :ref="(el) => setVmgRef(el as HTMLElement | null, 0)" class="reveal vmg-card"
+            style="transition-delay: 0s">
             <div class="vmg-card-glow vision-glow" />
             <div class="vmg-card-inner">
               <span class="vmg-number">01</span>
               <div class="vmg-icon-ring">
                 <div class="vmg-icon-wrap">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 2L2 7l10 5 10-5-10-5z" />
                     <path d="M2 17l10 5 10-5" />
                     <path d="M2 12l10 5 10-5" />
@@ -235,17 +264,15 @@ function setGeoRef(el: HTMLElement | null, index: number) {
           </div>
 
           <!-- Mission Card -->
-          <div
-            :ref="(el) => setVmgRef(el as HTMLElement | null, 1)"
-            class="reveal-on-scroll vmg-card"
-            style="transition-delay: 0.12s"
-          >
+          <div :ref="(el) => setVmgRef(el as HTMLElement | null, 1)" class="reveal vmg-card"
+            style="transition-delay: 0.12s">
             <div class="vmg-card-glow mission-glow" />
             <div class="vmg-card-inner">
               <span class="vmg-number">02</span>
               <div class="vmg-icon-ring">
                 <div class="vmg-icon-wrap">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                   </svg>
                 </div>
@@ -262,17 +289,15 @@ function setGeoRef(el: HTMLElement | null, index: number) {
           </div>
 
           <!-- Goal Card -->
-          <div
-            :ref="(el) => setVmgRef(el as HTMLElement | null, 2)"
-            class="reveal-on-scroll vmg-card"
-            style="transition-delay: 0.24s"
-          >
+          <div :ref="(el) => setVmgRef(el as HTMLElement | null, 2)" class="reveal vmg-card"
+            style="transition-delay: 0.24s">
             <div class="vmg-card-glow goal-glow" />
             <div class="vmg-card-inner">
               <span class="vmg-number">03</span>
               <div class="vmg-icon-ring">
                 <div class="vmg-icon-wrap">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
                     <circle cx="12" cy="12" r="6" />
                     <circle cx="12" cy="12" r="2" />
@@ -298,33 +323,32 @@ function setGeoRef(el: HTMLElement | null, index: number) {
         <div class="values-badge-row">
           <span class="section-badge">Core Values</span>
         </div>
-        <h2 class="values-section-heading">Four values that shape every program</h2>
+        <h2 class="values-section-heading">Four <span class="highlight">values</span> that shape every program</h2>
         <p class="values-intro">
           Our values were forged through decades of working alongside rural communities.
           They guide every decision, partnership, and program we undertake.
         </p>
         <div class="values-grid">
-          <div
-            v-for="(v, idx) in values"
-            :key="v.name"
-            :ref="(el) => setValueRef(el as HTMLElement | null, idx)"
-            class="reveal-on-scroll value-card"
-            :style="{ transitionDelay: `${idx * 0.1}s` }"
-          >
+          <div v-for="(v, idx) in values" :key="v.name" :ref="(el) => setValueRef(el as HTMLElement | null, idx)"
+            class="reveal value-card" :style="{ transitionDelay: `${idx * 0.1}s` }">
             <div class="value-icon-wrap">
               <!-- Honesty: heart icon -->
-              <svg v-if="idx === 0" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              <svg v-if="idx === 0" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
               </svg>
               <!-- Non-discrimination: users icon -->
-              <svg v-else-if="idx === 1" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg v-else-if="idx === 1" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
                 <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
               <!-- Collective Benefits: share icon -->
-              <svg v-else-if="idx === 2" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg v-else-if="idx === 2" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="18" cy="5" r="3" />
                 <circle cx="6" cy="12" r="3" />
                 <circle cx="18" cy="19" r="3" />
@@ -332,7 +356,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
                 <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
               </svg>
               <!-- Flexibility: wind/refresh icon -->
-              <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
               </svg>
             </div>
@@ -349,25 +374,24 @@ function setGeoRef(el: HTMLElement | null, index: number) {
         <div class="org-grid">
           <div class="org-text">
             <span class="section-badge">Organizational Structure</span>
-            <h2 class="org-heading">A team of monks, managers and master practitioners.</h2>
+            <h2 class="org-heading">A team of <span class="highlight">monks, managers</span> and master practitioners.
+            </h2>
             <p class="org-body">
               From the Board of Directors to the field staff in Kratie, every level of Santi Sena is
               accountable to the villagers we serve and the donors who trust us.
             </p>
             <figure class="org-visual" aria-label="Santi Sena organization seal">
-              <img class="org-logo" :src="logoUrl" alt="Santi Sena seal" loading="lazy" />
+              <div class="org-logo-float">
+                <img class="org-logo" :src="logoUrl" alt="Santi Sena seal" loading="lazy" />
+              </div>
             </figure>
           </div>
           <ul class="team-list">
-            <li
-              v-for="(t, idx) in team"
-              :key="t.role"
-              :ref="(el) => setTeamRef(el as HTMLElement | null, idx)"
-              class="reveal-on-scroll team-card"
-              :style="{ transitionDelay: `${idx * 0.08}s` }"
-            >
+            <li v-for="(t, idx) in team" :key="t.role" :ref="(el) => setTeamRef(el as HTMLElement | null, idx)"
+              class="reveal team-card" :style="{ transitionDelay: `${idx * 0.08}s` }">
               <div class="team-card-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
@@ -384,38 +408,79 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 
     <!-- ─── Geographical Reach ─── -->
     <section class="geo-section">
+      <div class="geo-bg-map" aria-hidden="true"></div>
       <div class="container">
         <div class="geo-badge-row">
-          <span class="section-badge">Geographical Reach</span>
+          <span class="section-badge">Where We Work</span>
         </div>
-        <h2 class="geo-heading">Three provinces. Forty-three communes. Two hundred and ninety-three villages.</h2>
+        <h2 class="geo-heading"><span class="highlight">Three provinces.</span> Forty-three communes. Two hundred and
+          ninety-three villages.</h2>
         <p class="geo-intro">
           We work where the need is greatest: the southeastern provinces of Cambodia,
           home to farming families and remote villages rebuilding after decades of hardship.
         </p>
+
+        <!-- Decorative connecting path -->
+        <div class="geo-connector" aria-hidden="true">
+          <svg viewBox="0 0 800 40" preserveAspectRatio="none">
+            <path d="M 80 20 Q 200 0, 400 20 T 720 20" fill="none" stroke="var(--about-border)" stroke-width="1.5"
+              stroke-dasharray="8 6" />
+            <circle cx="80" r="4" cy="20" fill="var(--about-highlight)" opacity="0.4" />
+            <circle cx="400" r="4" cy="20" fill="var(--about-highlight)" opacity="0.4" />
+            <circle cx="720" r="4" cy="20" fill="var(--about-highlight)" opacity="0.4" />
+          </svg>
+        </div>
+
         <div class="geo-grid">
-          <div
-            v-for="(p, idx) in provinces"
-            :key="p"
-            :ref="(el) => setGeoRef(el as HTMLElement | null, idx)"
-            class="reveal-on-scroll geo-card"
-            :style="{ transitionDelay: `${idx * 0.15}s` }"
-          >
-            <div class="geo-marker">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
+          <div v-for="(p, idx) in provinces" :key="p.name" :ref="(el) => setGeoRef(el as HTMLElement | null, idx)"
+            class="reveal geo-card" :style="{
+              transitionDelay: `${idx * 0.15}s`,
+              '--province-accent': p.accent,
+              '--province-accent-light': p.accentLight
+            }">
+            <!-- Top decorative band -->
+            <div class="geo-card-band">
+              <div class="geo-card-band-inner"></div>
             </div>
-            <div class="geo-name">{{ p }}</div>
-            <div class="geo-label">Province</div>
+
+            <div class="geo-card-body">
+              <!-- Pulsing marker -->
+              <div class="geo-marker-wrap">
+                <div class="geo-marker-pulse"></div>
+                <div class="geo-marker-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Province name -->
+              <h3 class="geo-name">{{ p.name }}</h3>
+
+              <!-- Tagline -->
+              <p class="geo-tagline">{{ p.tagline }}</p>
+
+              <!-- Divider -->
+              <div class="geo-card-divider"></div>
+
+              <!-- Description -->
+              <p class="geo-desc">{{ p.desc }}</p>
+
+              <!-- Villages stat chip -->
+              <div class="geo-stat">
+                <span class="geo-stat-number">{{ p.villages }}</span>
+                <span class="geo-stat-label">villages served</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ─── Call to Action ─── -->
-    <section ref="ctaRef" class="reveal-on-scroll cta-section">
+    <section ref="ctaRef" class="reveal cta-section">
       <div class="container">
         <div class="cta-content">
           <h2>Join the Peace Army</h2>
@@ -446,11 +511,12 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   --about-cream: var(--color-cream);
   --about-cream-soft: var(--color-cream-soft);
   --about-ink: var(--color-ink);
-  --about-ink-soft: var(--color-ink-soft);
+  --about-ink-soft: #324a3d;
   --about-border: var(--color-border);
   --about-white: var(--color-white);
   --about-surface: color-mix(in srgb, var(--about-primary) 8%, transparent);
   --about-surface-strong: color-mix(in srgb, var(--about-primary) 92%, var(--color-white));
+  --about-highlight: #0f8f69;
 }
 
 /* ─── Shared Elements ─── */
@@ -470,14 +536,14 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 /* ─── Scroll-Reveal (Dropdown style, two-way) ─── */
-.reveal-on-scroll {
+.reveal {
   opacity: 0;
   transform: translateY(-24px);
   transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.reveal-on-scroll.revealed {
+.reveal.revealed {
   opacity: 1;
   transform: translateY(0);
 }
@@ -515,6 +581,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -630,6 +697,13 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   margin-bottom: 1.5rem;
 }
 
+.story-heading .highlight {
+  background: linear-gradient(135deg, var(--about-highlight), #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .story-body {
   display: flex;
   flex-direction: column;
@@ -644,25 +718,274 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .story-body strong {
-  color: var(--about-saffron);
-  font-weight: 700;
+  background: linear-gradient(135deg, var(--about-highlight), #22c55e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
 }
 
 .story-visual {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-.story-timeline {
+/* ═══════════════════════════════════════
+   Photo Frame — Clean & Impactful Animations
+   ═══════════════════════════════════════ */
+
+/* ── Frame: entrance + visual design ── */
+.photo-frame {
+  position: relative;
+  width: 100%;
+  /* allow the image to use available column width instead of a small max */
+  max-width: none;
+  border-radius: 1.125rem;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  transition: transform 0.35s ease;
+  opacity: 0;
+  animation: frameFadeIn 0.7s ease 0.1s forwards;
+}
+
+@keyframes frameFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Warm overlay (gentle gradient, no border) ── */
+.photo-frame::after {
+  /* decorative overlay disabled when frame is removed */
+  content: none;
+}
+
+@keyframes warmFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Inner container — handles hover lift ── */
+.photo-frame .photo-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  transition:
+    transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.4s ease;
+  will-change: transform;
+}
+
+.photo-frame:hover .photo-inner {
+  transform: scale(1.04) translateY(-8px);
+  box-shadow:
+    0 20px 60px rgba(15, 143, 105, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Image — Ken Burns continuous slow zoom ── */
+.photo-frame .photo-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* show the full image (no cropping); if you prefer fill, change to 'cover' */
+  object-fit: contain;
+  transform-origin: center 45%;
+  animation: kenBurns 22s ease-in-out infinite alternate;
+}
+
+@keyframes kenBurns {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.12);
+  }
+}
+
+/* ── Sweep reveal overlay (left-to-right curtain) ── */
+.photo-sweep {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.25) 45%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 65%);
+  transform: translateX(-100%);
+  animation: sweepReveal 1.2s cubic-bezier(0.65, 0, 0.35, 1) 0.4s forwards;
+}
+
+@keyframes sweepReveal {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* ── Photo caption ── */
+.photo-caption {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.78rem;
+  color: var(--about-ink-soft);
+  background: var(--about-cream);
+  border-radius: 0.6rem;
+  border: 1px solid var(--about-border);
+  opacity: 0;
+  animation: captionFadeIn 0.6s ease 0.6s forwards;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.photo-frame:hover .photo-caption {
+  background: color-mix(in srgb, var(--about-highlight) 6%, var(--about-cream));
+  border-color: color-mix(in srgb, var(--about-highlight) 20%, transparent);
+}
+
+@keyframes captionFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.photo-caption-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--about-highlight);
+  flex-shrink: 0;
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+.photo-caption strong {
+  color: var(--about-highlight);
+  font-weight: 700;
+}
+
+.logo-frame {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 2rem;
-  background: var(--about-surface);
-  border-radius: 1.25rem;
+  margin-top: 1.5rem;
+  padding: 1rem 1rem 1.25rem;
+  background: var(--about-white);
+  border-radius: 0.875rem;
   border: 1px solid var(--about-border);
-  min-width: 220px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.4s ease;
+}
+
+.logo-frame:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
+  border-color: color-mix(in srgb, var(--about-highlight) 30%, transparent);
+}
+
+.logo-frame-inner {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--about-white);
+  padding: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logo-frame:hover .logo-frame-inner {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  transform: scale(1.05);
+}
+
+.logo-frame-inner::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,
+      rgba(15, 143, 105, 0.08),
+      transparent 50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.logo-frame:hover .logo-frame-inner::after {
+  opacity: 1;
+}
+
+.logo-frame-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  background: var(--color-cream);
+  opacity: 0;
+  animation: logoRevealIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes logoRevealIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.logo-frame-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.logo-frame-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--about-highlight);
+  letter-spacing: -0.01em;
+}
+
+.logo-frame-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--about-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
 }
 
 .timeline-item {
@@ -752,12 +1075,15 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   0% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(30px, -20px) scale(1.05);
   }
+
   66% {
     transform: translate(-20px, 15px) scale(0.95);
   }
+
   100% {
     transform: translate(10px, -30px) scale(1.02);
   }
@@ -835,13 +1161,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   position: absolute;
   inset: -2px;
   border-radius: 1.6rem;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  z-index: 0;
-  filter: blur(6px);
-}
-
-.vision-glow {
+  background: none;
   background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
   background-size: 300% 300%;
   animation: gradientShift 4s ease infinite;
@@ -860,9 +1180,17 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 @keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .vmg-card:hover .vmg-card-glow {
@@ -937,8 +1265,15 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 @keyframes vmgIconFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .vmg-card:nth-child(1) .vmg-icon-ring {
@@ -1078,6 +1413,13 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   margin-bottom: 0.5rem;
 }
 
+.values-section-heading .highlight {
+  background: linear-gradient(135deg, var(--about-highlight), #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .values-intro {
   font-size: 0.95rem;
   line-height: 1.7;
@@ -1124,7 +1466,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 .value-name {
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--about-ink);
+  color: var(--about-highlight);
   margin-bottom: 0.5rem;
 }
 
@@ -1161,6 +1503,13 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   margin-bottom: 1.25rem;
 }
 
+.org-heading .highlight {
+  background: linear-gradient(135deg, var(--about-highlight), #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .org-body {
   font-size: 0.95rem;
   line-height: 1.75;
@@ -1173,13 +1522,35 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   place-items: center;
 }
 
+.org-logo-float {
+  animation: logoFloat 5s ease-in-out infinite;
+}
+
 .org-logo {
-  position: relative;
-  z-index: 1;
+  display: block;
   width: min(100%, 280px);
   max-height: clamp(160px, 28vw, 280px);
   object-fit: contain;
   filter: drop-shadow(0 14px 22px rgba(31, 61, 46, 0.16));
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.4s ease;
+}
+
+.org-logo:hover {
+  transform: scale(1.08);
+  filter: drop-shadow(0 20px 36px rgba(31, 61, 46, 0.3));
+}
+
+@keyframes logoFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .team-list {
@@ -1229,7 +1600,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 .team-role {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--about-ink);
+  color: var(--about-highlight);
   margin-bottom: 0.2rem;
 }
 
@@ -1241,16 +1612,32 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 /* ═══════════════════════════════════════════════
-   Geographical Reach
+   Geographical Reach — Creative Redesign
    ═══════════════════════════════════════════════ */
 
 .geo-section {
-  padding: 4rem 0;
+  padding: 5rem 0;
   background: var(--about-white);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Background Cambodia Map Silhouette ── */
+.geo-bg-map {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'%3E%3Cpath d='M200 20C120 40 60 100 40 180C20 260 30 340 70 400C110 460 160 490 200 495C240 490 290 460 330 400C370 340 380 260 360 180C340 100 280 40 200 20Z' fill='%230f8f69'/%3E%3Ccircle cx='120' cy='220' r='12' fill='%230f8f69'/%3E%3Ccircle cx='200' cy='280' r='12' fill='%230f8f69'/%3E%3Ccircle cx='280' cy='180' r='12' fill='%230f8f69'/%3E%3C/svg%3E");
+  background-size: 280px auto;
+  background-position: 85% 55%;
+  background-repeat: no-repeat;
 }
 
 .geo-badge-row {
   margin-bottom: 0.75rem;
+  position: relative;
+  z-index: 1;
 }
 
 .geo-heading {
@@ -1260,6 +1647,15 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   color: var(--about-ink);
   margin-bottom: 0.5rem;
   max-width: 540px;
+  position: relative;
+  z-index: 1;
+}
+
+.geo-heading .highlight {
+  background: linear-gradient(135deg, var(--about-highlight), #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .geo-intro {
@@ -1267,53 +1663,276 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   line-height: 1.7;
   color: var(--about-ink-soft);
   max-width: 580px;
-  margin-bottom: 2.5rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
 }
 
+/* ── Connecting Path ── */
+.geo-connector {
+  max-width: 100%;
+  margin: 0.75rem 0 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.geo-connector svg {
+  display: block;
+  width: 100%;
+  height: 32px;
+}
+
+/* ── Card Grid ── */
 .geo-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
+  position: relative;
+  z-index: 1;
 }
 
+/* ── Province Card ── */
 .geo-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 2rem 1.25rem;
-  border-radius: 1.125rem;
-  background: var(--about-cream);
+  border-radius: 1.25rem;
+  background: var(--about-white);
   border: 1px solid var(--about-border);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.geo-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.35rem;
+  background: conic-gradient(from 0deg,
+      transparent,
+      var(--province-accent),
+      transparent 30%,
+      transparent 70%,
+      var(--province-accent),
+      transparent);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
+  pointer-events: none;
+  animation: geoSpin 3s linear infinite;
+}
+
+@keyframes geoSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.geo-card:hover::before {
+  opacity: 0.6;
 }
 
 .geo-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
-  border-color: var(--about-saffron);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
+  border-color: var(--province-accent);
 }
 
-.geo-marker {
-  color: var(--about-saffron);
-  margin-bottom: 0.75rem;
-  opacity: 0.7;
+/* ── Top Band ── */
+.geo-card-band {
+  position: relative;
+  z-index: 1;
+  height: 6px;
+  background: var(--about-cream);
+  border-radius: 1.25rem 1.25rem 0 0;
+  overflow: hidden;
 }
 
+.geo-card-band-inner {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--province-accent), color-mix(in srgb, var(--province-accent) 60%, #4ade80));
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.geo-card:hover .geo-card-band-inner {
+  width: 100%;
+}
+
+/* ── Card Body ── */
+.geo-card-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem 1.5rem;
+  background: var(--about-white);
+  flex: 1;
+}
+
+/* ── Pulsing Marker ── */
+.geo-marker-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.geo-marker-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--province-accent);
+  opacity: 0;
+  animation: geoPulse 2.5s ease-out infinite;
+  animation-delay: calc(var(--pulse-delay, 0) * 0.4s);
+}
+
+.geo-card:nth-child(1) .geo-marker-pulse {
+  --pulse-delay: 0;
+}
+
+.geo-card:nth-child(2) .geo-marker-pulse {
+  --pulse-delay: 1;
+}
+
+.geo-card:nth-child(3) .geo-marker-pulse {
+  --pulse-delay: 2;
+}
+
+@keyframes geoPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+
+  60% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.geo-marker-icon {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--province-accent) 10%, transparent);
+  color: var(--province-accent);
+  transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.geo-card:hover .geo-marker-icon {
+  transform: scale(1.1);
+  background: color-mix(in srgb, var(--province-accent) 18%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--province-accent) 12%, transparent);
+}
+
+.geo-marker-icon svg {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.3s ease;
+}
+
+.geo-card:hover .geo-marker-icon svg {
+  transform: translateY(-1px);
+}
+
+/* ── Province Name ── */
 .geo-name {
   font-size: 1.35rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--about-ink);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.02em;
+  transition: color 0.3s ease;
 }
 
-.geo-label {
+.geo-card:hover .geo-name {
+  color: var(--province-accent);
+}
+
+/* ── Tagline ── */
+.geo-tagline {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--province-accent);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+/* ── Divider ── */
+.geo-card-divider {
+  width: 40px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--province-accent), transparent);
+  margin-bottom: 1rem;
+  transition: width 0.3s ease;
+}
+
+.geo-card:hover .geo-card-divider {
+  width: 60px;
+}
+
+/* ── Description ── */
+.geo-desc {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--about-ink-soft);
+  margin: 0 0 1.25rem;
+  text-align: center;
+  flex: 1;
+}
+
+/* ── Villages Stat Chip ── */
+.geo-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  background: var(--about-cream);
+  border: 1px solid var(--about-border);
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.geo-card:hover .geo-stat {
+  background: color-mix(in srgb, var(--province-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--province-accent) 25%, transparent);
+  transform: scale(1.05);
+}
+
+.geo-stat-number {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--province-accent);
+  line-height: 1;
+}
+
+.geo-stat-label {
   font-size: 0.72rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
   color: var(--about-ink-soft);
-  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* ═══════════════════════════════════════════════
@@ -1408,8 +2027,9 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 
 /* ─── Reduced Motion ─── */
 @media (prefers-reduced-motion: reduce) {
-  .reveal-on-scroll,
-  .reveal-on-scroll.revealed {
+
+  .reveal,
+  .reveal.revealed {
     opacity: 1;
     transform: none;
     transition: none;
@@ -1424,6 +2044,70 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   .geo-card:hover,
   .team-card:hover {
     transform: none;
+  }
+
+  .geo-card::before {
+    animation: none !important;
+  }
+
+  .geo-marker-pulse {
+    animation: none !important;
+  }
+
+  .photo-frame {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  .photo-frame::after {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  .photo-frame .photo-img {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .photo-frame .photo-inner {
+    transition: none;
+    will-change: auto;
+  }
+
+  .photo-frame:hover .photo-inner {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .photo-sweep {
+    animation: none !important;
+    display: none;
+  }
+
+  .photo-caption {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  .photo-caption-dot {
+    animation: none !important;
+  }
+
+  .org-logo-float {
+    animation: none;
+  }
+
+  .logo-frame:hover {
+    transform: none;
+  }
+
+  .logo-frame:hover .logo-frame-inner {
+    transform: none;
+  }
+
+  .logo-frame-img {
+    animation: none;
+    opacity: 1;
   }
 }
 
@@ -1448,6 +2132,14 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   .org-grid {
     grid-template-columns: 1fr;
     gap: 2.5rem;
+  }
+
+  .geo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .geo-connector {
+    display: none;
   }
 }
 
@@ -1528,6 +2220,14 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 
   .geo-heading {
     max-width: 100%;
+  }
+
+  .geo-connector {
+    display: none;
+  }
+
+  .geo-card-body {
+    padding: 1.5rem 1.25rem 1.25rem;
   }
 }
 

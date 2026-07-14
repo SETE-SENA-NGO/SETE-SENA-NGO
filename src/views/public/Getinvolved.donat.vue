@@ -2,33 +2,55 @@
 import { onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const supportCards = [
-  { stat: '293 villages', impact: 'Development programs reached Svay Rieng and Prey Veng communities in 2016.' },
-  { stat: '571.601 ha', impact: 'Three community forests were supported across 18 villages and 2,372 households.' },
-  { stat: '27,810 seedlings', impact: 'Tree nurseries produced multi-purpose and fruit seedlings for schools, communities and farms.' },
-  { stat: '114 groups', impact: 'Saving for Change self-help groups supported 4,555 families with revolving loans.' },
-  { stat: '363 children', impact: 'Seventeen community pre-schools helped young children access early education.' },
-  { stat: '3,400 children', impact: 'Mobile library sessions promoted reading in 14 primary schools and 28 villages.' },
+const giftUses = [
+  {
+    label: 'Education',
+    title: 'School essentials',
+    image: '/images/programs/education-hero.jpg',
+    summary: 'Bikes, uniforms, bags and notebooks.',
+    detail: 'The report names scholarships with bikes, uniforms, bags, shoes, notebooks and pens.',
+  },
+  {
+    label: 'WASH',
+    title: 'Clean water points',
+    image: '/images/programs/hero-1.jpg',
+    summary: 'Filters and handwashing spaces.',
+    detail: 'Support can help schools keep safe water and handwashing practical for children.',
+  },
+  {
+    label: 'Learning',
+    title: 'Books for monastery schools',
+    image: '/images/programs/hero-4.jpg',
+    summary: 'Dharma and secular textbooks.',
+    detail: 'The report records Dharma, Buddhist and secular books for Buddhist primary schools.',
+  },
+  {
+    label: 'Livelihoods',
+    title: 'Home garden inputs',
+    image: '/images/programs/livelihood-hero3.jpg',
+    summary: 'Seeds, farming practice and family food.',
+    detail:
+      'Agriculture inputs help families apply vegetable, animal, rice and fish production training.',
+  },
 ]
 
-const programAreas = [
-  'Community based natural resources management',
-  'Sustainable livelihoods through self-help groups, agriculture cooperatives and home gardens',
-  'Water, sanitation and hygiene through safe water, latrine use and hand washing',
-  'Access to education through pre-schools, scholarships and mobile libraries',
-  'Buddhist preservation through Dharma conversation, radio learning and Buddhist primary schools',
-  'Child rights and child protection networks against trafficking, exploitation and abuse',
-]
-
-const contactDetails = [
-  'Address: Prey Chlak pagoda, Svay Rieng City, Svay Rieng province',
-  'Telephone: +855 77 65 54 64, +855 87 67 57 57, +855 71 877 55 33',
-  'Email: santisenamonk@gmail.com, santisena@santisenacambodia.org',
-  'Website: www.santisenacambodia.org',
+const trustNotes = [
+  {
+    title: 'Finance team',
+    body: 'Santi Sena keeps financial information prepared, maintained and available for reporting.',
+  },
+  {
+    title: 'Written policies',
+    body: 'Finance, anti-corruption, conflict of interest and grievance policies guide the work.',
+  },
+  {
+    title: 'Field use',
+    body: 'Giving is directed into practical materials, learning support and community follow-up.',
+  },
 ]
 
 const description =
-  'Support Santi Sena, a Buddhist non-profit organization working for peace, livelihoods, social justice and environmental protection in rural Cambodia.'
+  'Donate to Santi Sena through practical support for school materials, safe water, learning books and rural livelihood inputs.'
 
 let previousTitle = ''
 let descriptionMeta: HTMLMetaElement | null = null
@@ -37,7 +59,7 @@ let createdDescriptionMeta = false
 
 onMounted(() => {
   previousTitle = document.title
-  document.title = 'Support Santi Sena - Donate'
+  document.title = 'Donate to Santi Sena'
 
   descriptionMeta = document.querySelector('meta[name="description"]')
   previousDescription = descriptionMeta?.getAttribute('content') ?? null
@@ -65,63 +87,58 @@ onUnmounted(() => {
 
 <template>
   <main class="donate-page">
-    <section class="donate-hero" aria-label="Support Santi Sena">
-      <div class="donate-hero__content">
-        <p class="eyebrow">Get Involved - Support Us</p>
-        <h1>Support peace, livelihoods and environmental protection.</h1>
-        <p class="lead">
-          Santi Sena is a Buddhist non-profit, non-governmental and non-political organization
-          founded in 1994 at Prey Chhlak monastery in Svay Rieng province.
-        </p>
-      </div>
-    </section>
 
-    <section class="donate-content" aria-labelledby="support-heading">
-      <h2 id="support-heading">What your support strengthens</h2>
-      <div class="tier-grid">
-        <article v-for="card in supportCards" :key="card.stat" class="tier-card">
-          <strong>{{ card.stat }}</strong>
-          <p>{{ card.impact }}</p>
+    <section id="gift-use" class="gift-section" aria-labelledby="gift-heading">
+      <div class="section-heading">
+        <p class="eyebrow">Gift use</p>
+        <h2 id="gift-heading">Small items. Real field value.</h2>
+      </div>
+
+      <div class="gift-grid">
+        <article
+          v-for="(item, index) in giftUses"
+          :key="item.title"
+          class="gift-card"
+          :class="{ 'gift-card--featured': index === 0 }"
+          tabindex="0"
+        >
+          <img :src="item.image" :alt="item.title" loading="lazy" />
+          <div class="gift-card__copy">
+            <span>{{ item.label }}</span>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.summary }}</p>
+          </div>
+          <div class="gift-card__hover">
+            <strong>{{ item.label }}</strong>
+            <p>{{ item.detail }}</p>
+          </div>
         </article>
       </div>
-
-      <section class="text-section" aria-labelledby="mission-heading">
-        <h2 id="mission-heading">Why support matters</h2>
-        <p>
-          The Santi Sena report describes a mission to reduce poverty, support local initiatives,
-          work with vulnerable and marginalized people, reduce violence, promote human rights and
-          democracy, empower women and contribute to the conservation of natural resources.
-        </p>
-      </section>
-
-      <section class="text-section" aria-labelledby="program-heading">
-        <h2 id="program-heading">Program areas</h2>
-        <ul class="bullet-list">
-          <li v-for="item in programAreas" :key="item">{{ item }}</li>
-        </ul>
-      </section>
-
-      <section class="text-section" aria-labelledby="contact-heading">
-        <h2 id="contact-heading">How to contact Santi Sena</h2>
-        <ul class="bullet-list">
-          <li v-for="item in contactDetails" :key="item">{{ item }}</li>
-        </ul>
-      </section>
-
-      <section class="text-section" aria-labelledby="stewardship-heading">
-        <h2 id="stewardship-heading">Financial stewardship</h2>
-        <p>
-          The report states that Santi Sena has detailed financial systems and policies to maintain
-          high accounting standards, with a Financial Team responsible for preparing, maintaining and
-          providing timely financial information.
-        </p>
-      </section>
     </section>
 
-    <section class="cta-band" aria-label="Contact our team">
+    <section class="trust-section" aria-labelledby="trust-heading">
+      <div class="trust-copy">
+        <p class="eyebrow">Stewardship</p>
+        <h2 id="trust-heading">Clear handling matters.</h2>
+      </div>
+      <div class="trust-grid">
+        <article v-for="note in trustNotes" :key="note.title" class="trust-card">
+          <h3>{{ note.title }}</h3>
+          <p>{{ note.body }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta-band" aria-label="Donate now">
       <div class="cta-band__inner">
-        <h2>Ready to support the work?</h2>
-        <RouterLink to="/contact" class="cta-button">Contact our team -&gt;</RouterLink>
+        <div>
+          <p class="eyebrow">Ready to give</p>
+          <h2>Support the next practical need.</h2>
+        </div>
+        <div class="cta-actions">
+          <RouterLink to="/qr-donate" class="button button-primary">Donate by QR</RouterLink>
+          <RouterLink to="/contact" class="button button-secondary">Contact team</RouterLink>
+        </div>
       </div>
     </section>
   </main>
@@ -129,140 +146,364 @@ onUnmounted(() => {
 
 <style scoped>
 .donate-page {
+  --panel: var(--color-white);
+  --ink: var(--color-ink);
+  --muted: var(--color-ink-soft);
+  --line: var(--color-border);
+  --green: var(--primary-color);
+  --green-dark: var(--primary-dark);
+  --green-light: var(--primary-light);
+
   min-height: 100vh;
   background: var(--color-cream);
-  color: var(--color-ink);
+  color: var(--ink);
 }
 
-.donate-hero {
-  position: relative;
-  min-height: 620px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
+.hero-overlay {
+  position: absolute;
+  inset: 0;
   background:
-    linear-gradient(90deg, rgba(2, 50, 47, 0.9), rgba(2, 50, 47, 0.58), rgba(2, 50, 47, 0.22)),
-    url('https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1800&q=80')
-      center / cover;
+    linear-gradient(
+      90deg,
+      rgba(6, 18, 13, 0.86) 0%,
+      rgba(6, 18, 13, 0.58) 44%,
+      rgba(6, 18, 13, 0.18) 74%,
+      transparent 100%
+    ),
+    linear-gradient(to top, rgba(0, 0, 0, 0.32), transparent 44%);
 }
 
-.donate-hero__content {
-  width: min(100% - 3rem, var(--container-max-width));
-  margin: 0 auto;
-  padding: 7rem 0;
+.hero-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  max-width: 700px;
+  margin: 0;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
+  text-align: left;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
-  margin: 0;
-  color: var(--primary-color);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.42em;
+  margin: 0 0 0.75rem;
+  color: var(--green);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
-.donate-hero h1 {
-  max-width: 980px;
-  margin: 1.4rem 0 0;
-  color: #fff8eb;
+.hero-content .eyebrow,
+.cta-band .eyebrow {
+  color: var(--primary-light);
+}
+
+.hero-content h1,
+.section-heading h2,
+.trust-copy h2,
+.cta-band h2 {
+  margin: 0;
   font-weight: 600;
-  line-height: 0.95;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.hero-content h1 {
+  max-width: 48rem;
+  margin-bottom: 1rem;
+  color: var(--color-white);
 }
 
 .lead {
-  max-width: 780px;
-  margin: 2rem 0 0;
-  color: rgba(255, 248, 235, 0.92);
-  font-weight: 500;
-  line-height: 1.55;
-}
-
-.donate-content {
-  width: min(100% - 3rem, var(--container-max-width));
-  margin: 0 auto;
-  padding: 6.25rem 0 4rem;
-}
-
-.donate-content h2,
-.cta-band h2 {
+  max-width: 40rem;
   margin: 0;
-  color: var(--color-ink);
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.hero-actions,
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.2rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.85rem 1.45rem;
+  color: inherit;
+  font-weight: 850;
   line-height: 1.1;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
 }
 
-.tier-grid {
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button-primary {
+  background: var(--green);
+  color: var(--color-white);
+  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.22);
+}
+
+.button-primary:hover {
+  background: var(--green-dark);
+  box-shadow: 0 20px 38px rgba(20, 129, 62, 0.3);
+}
+
+.button-secondary {
+  border-color: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+}
+
+.button-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.gift-section,
+.trust-section {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding-inline: var(--container-padding);
+}
+
+.gift-section {
+  padding-block: 6rem;
+}
+
+.section-heading,
+.trust-copy {
+  max-width: 760px;
+}
+
+.section-heading h2,
+.trust-copy h2 {
+  margin-top: 0.75rem;
+  color: var(--ink);
+}
+
+.gift-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.9rem;
-  margin-top: 2.8rem;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  grid-auto-rows: minmax(154px, auto);
+  gap: 1rem;
+  margin-top: 2.5rem;
 }
 
-.tier-card {
-  min-height: 200px;
-  border: 1px solid var(--color-border);
-  border-radius: 1.1rem;
-  background: rgba(255, 251, 243, 0.72);
-  padding: 2.6rem;
-  box-shadow: 0 2px 7px rgba(61, 46, 27, 0.1);
+.gift-card {
+  position: relative;
+  min-height: 172px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--green-dark);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  isolation: isolate;
 }
 
-.tier-card strong {
-  display: block;
-  color: var(--primary-dark);
-  font-size: clamp(2.4rem, 3.4vw, 3.2rem);
-  font-weight: 500;
-  line-height: 1;
+.gift-card--featured {
+  grid-row: span 3;
+  min-height: 520px;
 }
 
-.tier-card p {
-  max-width: 280px;
-  margin: 1.35rem 0 0;
-  color: var(--color-ink-soft);
+.gift-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    filter 0.28s ease,
+    transform 0.35s ease;
+}
+
+.gift-card::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(6, 18, 13, 0.02), rgba(6, 18, 13, 0.82));
+  content: '';
+}
+
+.gift-card__copy,
+.gift-card__hover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 1.35rem;
+}
+
+.gift-card__copy {
+  bottom: 0;
+  color: var(--color-white);
+  transition:
+    opacity 0.18s ease,
+    transform 0.24s ease;
+}
+
+.gift-card__copy span {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.gift-card h3 {
+  margin: 0.75rem 0 0;
+  color: var(--color-white);
+  font-size: 1.35rem;
+  line-height: 1.16;
+}
+
+.gift-card--featured h3 {
+  font-size: 1.8rem;
+}
+
+.gift-card__copy p {
+  margin: 0.65rem 0 0;
+  color: rgba(255, 255, 255, 0.86);
   line-height: 1.45;
 }
 
-.text-section {
-  margin-top: 5rem;
+.gift-card__hover {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 18, 13, 0.04) 0%,
+    rgba(6, 18, 13, 0.24) 48%,
+    rgba(6, 18, 13, 0.6) 100%
+  );
+  color: var(--color-white);
+  transform: translateY(100%);
+  transition: transform 0.28s ease;
 }
 
-.text-section p {
-  max-width: 1120px;
-  margin: 1.35rem 0 0;
-  color: var(--color-ink-soft);
+.gift-card__hover strong {
+  color: var(--primary-light);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.gift-card__hover p {
+  max-width: 34rem;
+  margin: 0;
+  line-height: 1.5;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+.gift-card:hover img,
+.gift-card:focus-within img,
+.gift-card:focus img {
+  filter: none;
+  transform: scale(1.06);
+}
+
+.gift-card:hover .gift-card__hover,
+.gift-card:focus-within .gift-card__hover,
+.gift-card:focus .gift-card__hover {
+  transform: translateY(0);
+}
+
+.gift-card:hover .gift-card__copy,
+.gift-card:focus-within .gift-card__copy,
+.gift-card:focus .gift-card__copy {
+  opacity: 0;
+  transform: translateY(-0.75rem);
+}
+
+.trust-section {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1fr);
+  gap: 3rem;
+  padding-block: 0 6rem;
+}
+
+.trust-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.trust-card {
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 1.2rem 1.35rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.trust-card h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.1rem;
+}
+
+.trust-card p {
+  margin: 0.45rem 0 0;
+  color: var(--muted);
   line-height: 1.55;
 }
 
-.bullet-list {
-  display: grid;
-  gap: 1.1rem;
-  margin: 1.8rem 0 0;
-  padding: 0;
-  list-style: none;
-  color: var(--color-ink-soft);
-  line-height: 1.5;
-}
-
-.bullet-list li {
-  position: relative;
-  padding-left: 1.55rem;
-}
-
-.bullet-list li::before {
-  content: '';
-  position: absolute;
-  top: 0.67em;
-  left: 0;
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 50%;
-  background: var(--primary-color);
-}
-
 .cta-band {
-  background: rgba(255, 250, 240, 0.48);
-  border-top: 1px solid rgba(225, 212, 191, 0.72);
-  padding: 4.8rem 0;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--green-dark);
+  padding: 5rem 0;
+}
+
+.cta-band::before {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: url('/images/programs/hero-3.jpg') center / cover;
+  content: '';
+}
+
+.cta-band::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, rgba(6, 18, 13, 0.9), rgba(6, 18, 13, 0.58));
+  content: '';
 }
 
 .cta-band__inner {
@@ -274,36 +515,23 @@ onUnmounted(() => {
   gap: 2rem;
 }
 
-.cta-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3.45rem;
-  border-radius: 999px;
-  background: var(--primary-color);
-  color: #fffaf0;
-  font-weight: 800;
-  padding: 0.95rem 1.9rem;
-  text-decoration: none;
-  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.24);
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+.cta-band h2 {
+  color: var(--color-white);
 }
 
-.cta-button:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 20px 38px rgba(20, 129, 62, 0.3);
+.cta-band .button-secondary {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 @media (max-width: 980px) {
-  .donate-hero {
-    min-height: 560px;
+  .gift-grid,
+  .trust-section {
+    grid-template-columns: 1fr;
   }
 
-  .tier-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .gift-card--featured,
+  .gift-card {
+    min-height: 360px;
   }
 
   .cta-band__inner {
@@ -313,32 +541,35 @@ onUnmounted(() => {
 }
 
 @media (max-width: 640px) {
-  .donate-hero {
-    min-height: 520px;
+  .hero-content {
+    padding: 2rem 1.5rem;
   }
 
-  .donate-hero__content,
-  .donate-content,
-  .cta-band__inner {
-    width: min(100% - 2rem, var(--container-max-width));
+  .lead {
+    font-size: 1rem;
   }
 
-  .donate-hero__content {
-    padding: 5rem 0;
+  .hero-actions,
+  .cta-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .eyebrow {
-    letter-spacing: 0.24em;
+  .button {
+    width: 100%;
   }
 
-  .tier-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+  .gift-section,
+  .trust-section {
+    padding-inline: var(--container-padding);
   }
 
-  .tier-card {
-    min-height: auto;
-    padding: 2rem;
+  .gift-section {
+    padding-block: 4rem;
+  }
+
+  .trust-section {
+    padding-bottom: 4rem;
   }
 }
 </style>

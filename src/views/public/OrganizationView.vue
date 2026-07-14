@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 
@@ -16,12 +15,30 @@ const slideItems = [
 interface TeamMember { role: string; desc: string }
 
 const team: TeamMember[] = [
-  { role: 'Board of Directors', desc: 'Policy and oversight, including senior Buddhist leadership and respected community elders. Meets quarterly to approve strategy, budgets and audits.' },
-  { role: 'Executive Director', desc: 'Leads daily operations and strategic execution, accountable to the Board and to the communities Santi Sena serves.' },
-  { role: 'Management Committee', desc: 'Senior managers coordinating programs across the three provinces, finance, HR and external partnerships.' },
-  { role: 'Technical Coordination Unit', desc: 'Cross-cutting expertise — monitoring & evaluation, gender, environment, child safeguarding — supporting every field team.' },
-  { role: 'Professional Staff', desc: '30+ full-time and project-based staff: agronomists, teachers, social workers, accountants and community organizers.' },
-  { role: 'Field Facilitators & Volunteers', desc: 'Trained villagers and youth who carry programs the last mile, from biogas installation to mobile library visits.' },
+  {
+    role: 'Board of Directors',
+    desc: 'Policy and oversight, including senior Buddhist leadership and respected community elders. Meets quarterly to approve strategy, budgets and audits.',
+  },
+  {
+    role: 'Executive Director',
+    desc: 'Leads daily operations and strategic execution, accountable to the Board and to the communities Santi Sena serves.',
+  },
+  {
+    role: 'Management Committee',
+    desc: 'Senior managers coordinating programs across the three provinces, finance, HR and external partnerships.',
+  },
+  {
+    role: 'Technical Coordination Unit',
+    desc: 'Cross-cutting expertise — monitoring & evaluation, gender, environment, child safeguarding — supporting every field team.',
+  },
+  {
+    role: 'Professional Staff',
+    desc: '30+ full-time and project-based staff: agronomists, teachers, social workers, accountants and community organizers.',
+  },
+  {
+    role: 'Field Facilitators & Volunteers',
+    desc: 'Trained villagers and youth who carry programs the last mile, from biogas installation to mobile library visits.',
+  },
 ]
 
 const priorities: string[] = [
@@ -74,41 +91,6 @@ onMounted(() => {
 
 <template>
   <div class="org-page">
-    <!-- ═══ Hero ═══ -->
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="hero-badge">About · Organizational Structure</span>
-        <h1 class="hero-title">
-          <span class="hero-line">A team of monks, managers</span>
-          <span class="hero-line hero-accent-line">and master practitioners.</span>
-        </h1>
-        <p class="hero-subtitle">
-          From the Board of Directors to the field staff in Kratie, every level of Santi Sena is
-          accountable to the villagers we serve and the donors who trust us.
-        </p>
-        <div class="hero-stats-bar">
-          <div class="hero-stat-item">
-            <span class="hero-stat-num">30+</span>
-            <span class="hero-stat-lbl">Staff</span>
-          </div>
-          <div class="hero-stat-sep" />
-          <div class="hero-stat-item">
-            <span class="hero-stat-num">3</span>
-            <span class="hero-stat-lbl">Provinces</span>
-          </div>
-          <div class="hero-stat-sep" />
-          <div class="hero-stat-item">
-            <span class="hero-stat-num">10+</span>
-            <span class="hero-stat-lbl">Partners</span>
-          </div>
-        </div>
-        <div class="hero-actions">
-          <RouterLink to="/programs" class="btn btn-primary">See our programs</RouterLink>
-          <RouterLink to="/about" class="btn btn-ghost">← Back to About</RouterLink>
-        </div>
-      </div>
-    </Slideshow>
 
     <!-- ═══ Key Facts ═══ -->
     <section class="facts-section">
