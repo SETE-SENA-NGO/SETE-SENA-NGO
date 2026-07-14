@@ -15,8 +15,8 @@ defineProps<{
 
 <style scoped>
 .content-block {
-  padding: 3rem 1rem;
-  border-top: 1px solid var(--border);
+  padding: 4rem 1.5rem;
+  border-top: 1px solid var(--color-border);
 }
 .content-inner {
   max-width: 900px;
@@ -24,6 +24,5 @@ defineProps<{
 }
 h2 {
   margin: 0 0 1rem;
-  font-size: 1.75rem;
 }
 </style>

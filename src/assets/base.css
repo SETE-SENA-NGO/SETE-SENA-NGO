@@ -1,52 +1,71 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* Global design tokens, reset, typography and layout system for the whole site. */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --primary-color: #0f8f69;
+  --primary-dark: #0b5f49;
+  --primary-light: #e3f5ef;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  --color-cream: #f7fbf8;
+  --color-cream-soft: #edf6f1;
+  --color-ink: #16231d;
+  --color-ink-soft: #53645b;
+  --color-white: #ffffff;
+  --color-border: #dce8e0;
 
-  --vt-c-indigo: #2c3e50;
+  --admin-theme-bg: #f3f8f5;
+  --admin-theme-bg-deep: #e6f1eb;
+  --admin-theme-surface: #ffffff;
+  --admin-theme-surface-soft: #eef7f2;
+  --admin-theme-contrast: #10241c;
+  --admin-theme-contrast-soft: #245241;
+  --admin-theme-text: #31483e;
+  --admin-theme-muted: #678074;
+  --admin-theme-border: #d4e5dc;
+  --admin-theme-border-strong: #aecdbe;
+  --admin-theme-primary: #159a57;
+  --admin-theme-primary-deep: #0b6b4c;
+  --admin-theme-teal: #0f8f80;
+  --admin-theme-gold: #b87910;
+  --admin-theme-danger: #d14343;
+  --admin-theme-shadow: 0 18px 44px rgba(15, 95, 73, 0.1);
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  --font-family-base: 'Poppins', 'Noto Sans Khmer', sans-serif;
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  --container-max-width: 1200px;
+  --container-padding: 1.5rem;
+  /* Gap between the page edge and the centered header container. Full-bleed
+     sections (slideshow overlays, captions) use it to line their content up
+     with the header logo. Resolve it on a full-width element only. */
+  --container-offset: max(0rem, calc((100% - var(--container-max-width)) / 2));
+
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
 }
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
+.admin-dark {
+  --admin-theme-bg: #071311;
+  --admin-theme-bg-deep: #0c1f1a;
+  --admin-theme-surface: #10241f;
+  --admin-theme-surface-soft: #0b1b17;
+  --admin-theme-contrast: #f2fbf6;
+  --admin-theme-contrast-soft: #b9ead5;
+  --admin-theme-text: #c9ddd4;
+  --admin-theme-muted: #90aaa0;
+  --admin-theme-border: #1d3b33;
+  --admin-theme-border-strong: #2d554a;
+  --admin-theme-primary: #38c982;
+  --admin-theme-primary-deep: #74e0ae;
+  --admin-theme-teal: #35d0be;
+  --admin-theme-gold: #e0b15a;
+  --admin-theme-danger: #fb7185;
+  --admin-theme-shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (max-width: 640px) {
   :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
+    --container-padding: 1rem;
   }
 }
 
@@ -55,32 +74,78 @@
 *::after {
   box-sizing: border-box;
   margin: 0;
-  font-weight: normal;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
+  font-family: var(--font-family-base);
+  font-size: 16px;
   line-height: 1.6;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
-  font-size: 15px;
-  text-rendering: optimizeLegibility;
+  color: var(--color-ink);
+  background: var(--color-cream);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-family-base);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+h1 {
+  font-size: 32px;
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: 26px;
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: 22px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+small,
+.caption {
+  font-size: 14px;
+}
+
+a {
+  color: var(--primary-color);
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  max-width: var(--container-max-width);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+.section {
+  padding-block: var(--space-xl);
 }
