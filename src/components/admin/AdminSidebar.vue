@@ -279,7 +279,7 @@ async function logout() {
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 20, 0.58);
+  background: rgba(10, 22, 17, 0.4);
   z-index: 55;
 }
 
@@ -304,8 +304,9 @@ async function logout() {
   background: var(--sb-brand-mark-bg);
   color: var(--sb-brand-mark);
   font-size: 0.78rem;
-  font-weight: 950;
+  font-weight: 900;
   flex-shrink: 0;
+  box-shadow: 0 10px 20px rgba(15, 125, 56, 0.22);
 }
 
 .brand-text {
@@ -324,13 +325,13 @@ async function logout() {
 .brand-text strong {
   color: var(--sb-text-strong);
   font-size: 1rem;
-  font-weight: 950;
+  font-weight: 900;
 }
 
 .brand-text small {
   color: var(--sb-muted);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 nav {
@@ -344,7 +345,7 @@ nav {
   margin: 0.85rem 0 0.45rem;
   color: var(--sb-muted);
   font-size: 0.7rem;
-  font-weight: 900;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -357,9 +358,10 @@ nav {
   border-radius: 6px;
   color: var(--sb-text);
   padding: 0.5rem 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: none;
   font-size: 0.9rem;
+  opacity: 0.85;
 }
 
 .link > span:last-child {
@@ -589,6 +591,7 @@ nav {
   cursor: pointer;
   font-family: inherit;
   text-align: left;
+  border-radius: 8px;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -611,13 +614,13 @@ nav {
 
 .logout-copy strong {
   font-size: 0.9rem;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .logout-copy small {
   color: var(--sb-danger-sub);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 @media (min-width: 900px) {

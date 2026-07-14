@@ -36,7 +36,8 @@ const giftUses = [
     title: 'Home garden inputs',
     image: '/images/programs/livelihood-hero3.jpg',
     summary: 'Seeds, farming practice and family food.',
-    detail: 'Agriculture inputs help families apply vegetable, animal, rice and fish production training.',
+    detail:
+      'Agriculture inputs help families apply vegetable, animal, rice and fish production training.',
   },
 ]
 
@@ -181,7 +182,13 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(6, 18, 13, 0.86) 0%, rgba(6, 18, 13, 0.58) 44%, rgba(6, 18, 13, 0.18) 74%, transparent 100%),
+    linear-gradient(
+      90deg,
+      rgba(6, 18, 13, 0.86) 0%,
+      rgba(6, 18, 13, 0.58) 44%,
+      rgba(6, 18, 13, 0.18) 74%,
+      transparent 100%
+    ),
     linear-gradient(to top, rgba(0, 0, 0, 0.32), transparent 44%);
 }
 
@@ -445,7 +452,7 @@ onUnmounted(() => {
 .gift-card:hover img,
 .gift-card:focus-within img,
 .gift-card:focus img {
-  filter: blur(1.6px);
+  filter: none;
   transform: scale(1.06);
 }
 

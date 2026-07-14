@@ -3,6 +3,7 @@ import heroImage1 from '@/assets/hero-impact.jpg'
 import heroImage2 from '@/assets/hero-impact-village.jpg'
 import heroImage3 from '@/assets/hero-impact-forest.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
+import { ref } from 'vue'
 
 const milestones = [
   {
@@ -10,6 +11,8 @@ const milestones = [
     title: '30-Year Strategic Plan',
     description:
       'New five-year strategy to deepen quality, diversify funding and invest in youth leadership.',
+    detail:
+      'The plan prioritises three pillars: (1) expanding community-led education programmes, (2) strengthening child protection systems, and (3) launching a dedicated youth innovation fund. Over 50 community dialogues were held to co‑design the strategy.',
     image: new URL('@/assets/maps/2024.png', import.meta.url).href,
   },
   {
@@ -17,20 +20,24 @@ const milestones = [
     title: 'Melaleuca Oil Enterprise',
     description:
       'Village forest guardians launch a rural enterprise from non-timber forest products.',
+    detail:
+      'With technical support from Santi Sena, 12 village cooperatives now sustainably harvest melaleuca leaves, producing essential oils sold locally and exported. The enterprise provides income for 200 families while preserving the forest.',
     image: new URL('@/assets/maps/2022.png', import.meta.url).href,
   },
   {
     year: '2020',
     title: 'COVID-19 Response',
-    description:
-      'Emergency food, hygiene and remote-learning kits reach more than 200 villages.',
+    description: 'Emergency food, hygiene and remote-learning kits reach more than 200 villages.',
+    detail:
+      'In partnership with local authorities, we distributed 3,500 food packs, 5,000 hygiene kits, and 2,000 radio‑based learning materials to keep children learning despite school closures.',
     image: new URL('@/assets/maps/2019.png', import.meta.url).href,
   },
   {
     year: '2018',
     title: 'Child Protection Networks',
-    description:
-      'CPNs become active across 43 communes with 24/7 referral pathways.',
+    description: 'CPNs become active across 43 communes with 24/7 referral pathways.',
+    detail:
+      'Each network includes trained volunteers, social workers, and local police. They have handled over 1,200 cases, ensuring vulnerable children receive immediate care and legal support.',
     image: new URL('@/assets/maps/2018.png', import.meta.url).href,
   },
   {
@@ -38,20 +45,24 @@ const milestones = [
     title: '20th Anniversary',
     description:
       'Kratie office opens. Programs extend to a third province and staff grows past 30 full-time.',
+    detail:
+      'The expansion to Kratie brought our integrated approach to another province, reaching an additional 80 villages. We also launched our first youth leadership camp that year.',
     image: new URL('@/assets/maps/2014.png', import.meta.url).href,
   },
   {
     year: '2011',
     title: 'Biogas program launched',
-    description:
-      'Household biogas units begin replacing firewood in remote kitchens.',
+    description: 'Household biogas units begin replacing firewood in remote kitchens.',
+    detail:
+      'By 2015, we had installed over 400 biogas units, reducing deforestation and improving indoor air quality. The program also trains local technicians to maintain the systems.',
     image: new URL('@/assets/maps/2011.png', import.meta.url).href,
   },
   {
     year: '2007',
     title: 'Expansion to Prey Veng',
-    description:
-      'Education and child protection programming reaches a second province.',
+    description: 'Education and child protection programming reaches a second province.',
+    detail:
+      'We partnered with the provincial government to replicate the Svay Rieng model, focusing on school enrolment and community‑based child protection committees.',
     image: new URL('@/assets/maps/2007.png', import.meta.url).href,
   },
   {
@@ -59,13 +70,16 @@ const milestones = [
     title: 'Saving-for-Change begins',
     description:
       'First women-led savings circles launched in Svay Rieng; the model becomes a program backbone.',
+    detail:
+      'Today, over 500 savings groups exist, with more than 12,000 members. The groups provide micro‑loans and financial literacy training, empowering women to start small businesses.',
     image: new URL('@/assets/maps/2003.png', import.meta.url).href,
   },
   {
     year: '1998',
     title: 'First community forestry site',
-    description:
-      'Village committees take legal stewardship of 120 hectares of degraded forest.',
+    description: 'Village committees take legal stewardship of 120 hectares of degraded forest.',
+    detail:
+      'The site has since become a model for community‑led reforestation, with over 50,000 trees planted and a thriving biodiversity corridor. It now serves as a learning hub for other villages.',
     image: new URL('@/assets/maps/1998.png', import.meta.url).href,
   },
   {
@@ -73,6 +87,8 @@ const milestones = [
     title: 'Founded in Svay Rieng',
     description:
       'Buddhist monks and community elders establish the Peace Army after the war, focused on moral regeneration and rural recovery.',
+    detail:
+      'The founding team began with just five monks and a handful of volunteers. Their first project was rebuilding a primary school destroyed during the conflict, which became the spark for decades of community development.',
     image: new URL('@/assets/maps/1994.png', import.meta.url).href,
   },
 ]
@@ -82,6 +98,13 @@ const slideItems = [
   { image: heroImage2, caption: '' },
   { image: heroImage3, caption: '' },
 ]
+
+// State for expanded cards
+const expanded = ref<boolean[]>(Array.from({ length: milestones.length }, () => false))
+
+function toggleExpand(index: number) {
+  expanded.value[index] = !expanded.value[index]
+}
 </script>
 
 <template>
@@ -93,8 +116,8 @@ const slideItems = [
         <span class="eyebrow">Impact · Timeline</span>
         <h1>Thirty years of walking with villages.</h1>
         <p>
-          From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones that shaped
-          Santi Sena.
+          From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones
+          that shaped Santi Sena.
         </p>
       </div>
     </Slideshow>
@@ -106,8 +129,8 @@ const slideItems = [
           <span class="label">Milestones</span>
           <h2>Progress built through patient partnership.</h2>
           <p>
-            Each step reflects a commitment to long-term, community-led change
-            grounded in trust, dignity and local stewardship.
+            Each step reflects a commitment to long-term, community-led change grounded in trust,
+            dignity and local stewardship.
           </p>
         </div>
 
@@ -118,11 +141,17 @@ const slideItems = [
             class="timeline-item"
             :class="{ 'timeline-item--reverse': index % 2 }"
           >
-            <div class="timeline-card">
+            <div class="timeline-card" @click="toggleExpand(index)">
               <div class="card-content">
                 <div class="card-text">
                   <h3>{{ item.title }}</h3>
-                  <p>{{ item.description }}</p>
+                  <p class="card-summary">{{ item.description }}</p>
+                  <!-- Expanded detail -->
+                  <div v-if="expanded[index]" class="card-detail">
+                    <p>{{ item.detail }}</p>
+                    <span class="read-less">— click to collapse</span>
+                  </div>
+                  <span v-else class="read-more">Read more</span>
                 </div>
                 <div class="card-image">
                   <img :src="item.image" :alt="item.title" />
@@ -140,7 +169,7 @@ const slideItems = [
       </div>
     </section>
 
-    <!-- Santi Sena Cambodia Intro (added) -->
+    <!-- Santi Sena Cambodia Intro -->
     <section class="intro-section">
       <div class="container">
         <div class="intro-grid">
@@ -148,29 +177,25 @@ const slideItems = [
             <h2>Santi Sena Cambodia</h2>
 
             <p>
-              For more than <strong>30 years</strong>, Santi Sena Cambodia has
-              partnered with rural communities to build peaceful, resilient and
-              sustainable livelihoods through community-led development.
+              For more than <strong>30 years</strong>, Santi Sena Cambodia has partnered with rural
+              communities to build peaceful, resilient and sustainable livelihoods through
+              community-led development.
             </p>
 
             <p>
               Working across
               <span class="highlight">293 villages</span>,
-              <span class="highlight">43 communes</span>,
-              and
-              <span class="highlight">3 provinces</span>,
-              we empower children, youth and families through education, child
-              protection, environmental conservation, sustainable livelihoods and
-              local leadership.
+              <span class="highlight">43 communes</span>, and
+              <span class="highlight">3 provinces</span>, we empower children, youth and families
+              through education, child protection, environmental conservation, sustainable
+              livelihoods and local leadership.
             </p>
 
             <p>
-              Our approach is rooted in dignity, trust and long-term partnership,
-              ensuring communities have the opportunities and capacity to create
-              lasting change for future generations.
+              Our approach is rooted in dignity, trust and long-term partnership, ensuring
+              communities have the opportunities and capacity to create lasting change for future
+              generations.
             </p>
-
-
           </div>
 
           <div class="intro-image">
@@ -223,7 +248,7 @@ const slideItems = [
     105deg,
     rgba(6, 18, 13, 0.88) 0%,
     rgba(6, 18, 13, 0.55) 42%,
-    rgba(6, 18, 13, 0.20) 70%,
+    rgba(6, 18, 13, 0.2) 70%,
     transparent 100%
   );
 }
@@ -265,7 +290,7 @@ const slideItems = [
   background: rgba(255, 255, 255, 0.06);
   padding: 0.25rem 1rem;
   border-radius: 999px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: none;
 }
 
 .hero-content h1 {
@@ -347,6 +372,7 @@ const slideItems = [
   margin-bottom: 80px;
   align-items: center;
   justify-content: space-between;
+  position: relative;
 }
 
 .timeline-item--reverse {
@@ -360,8 +386,11 @@ const slideItems = [
   border-radius: 1.5rem;
   box-shadow: 0 8px 30px rgba(47, 36, 29, 0.06);
   border: 1px solid rgba(47, 36, 29, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .timeline-card:hover {
@@ -391,11 +420,52 @@ const slideItems = [
   margin: 0 0 0.4rem;
 }
 
-.card-text p {
+.card-summary {
   font-size: 0.95rem;
   line-height: 1.6;
   color: #5a524a;
   margin: 0;
+}
+
+/* Expanded detail */
+.card-detail {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(47, 36, 29, 0.08);
+  animation: fadeDetail 0.25s ease;
+}
+
+@keyframes fadeDetail {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-detail p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #4a423a;
+  margin: 0 0 0.5rem 0;
+}
+
+.read-more,
+.read-less {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2d7a5a;
+  margin-top: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.read-less {
+  color: #8a7a6a;
+  font-weight: 400;
 }
 
 .card-image {
@@ -411,33 +481,56 @@ const slideItems = [
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
-/* Timeline Node */
+/* ── Timeline Node – dot and year on the same line ── */
 .timeline-node {
-  width: 10%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  position: relative;
+  justify-content: center; /* centers the dot */
+  pointer-events: none;
+  /* width is auto by default */
 }
 
+/* The dot is centered on the line */
 .node-dot {
   width: 20px;
   height: 20px;
   background: #119992;
   border: 4px solid #faf8f5;
   border-radius: 50%;
-  z-index: 2;
   box-shadow: 0 0 0 2px #1e7a55;
+  flex-shrink: 0;
+  z-index: 2;
 }
 
+/* The year is positioned absolutely next to the dot */
 .node-year {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
   font-size: 2.2rem;
   font-weight: 700;
   color: #136bd6;
-  margin-top: 12px;
   letter-spacing: -0.02em;
 }
 
+/* Cards on the left → year to the right of the dot */
+.timeline-item:not(.timeline-item--reverse) .node-year {
+  left: 100%;
+  margin-left: 14px;
+}
+
+/* Cards on the right → year to the left of the dot */
+.timeline-item--reverse .node-year {
+  right: 100%;
+  margin-right: 14px;
+}
+
+/* The vertical line that connects the node to the top/bottom */
 .node-line {
   position: absolute;
   width: 2px;
@@ -445,77 +538,75 @@ const slideItems = [
   height: 100%;
   top: -50%;
   z-index: 0;
+  transform-origin: center;
+  animation: timelineWave 3.6s ease-in-out infinite;
 }
 
-/* ── Added Intro Section ── */
-.intro-section{
-  padding:90px 0;
-  background:#fff;
+@keyframes timelineWave {
+  0% {
+    transform: scaleY(0.98);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scaleY(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.98);
+    opacity: 0.92;
+  }
 }
 
-.intro-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:70px;
-  align-items:center;
+/* ── Intro Section ── */
+.intro-section {
+  padding: 90px 0;
+  background: #fff;
 }
 
-.intro-content h2{
-  font-size:42px;
-  font-weight:700;
-  color:#1a3d2e;
-  margin-bottom:30px;
+.intro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+  align-items: center;
 }
 
-.intro-content p{
-  font-size:18px;
-  line-height:1.8;
-  color:#444;
-  margin-bottom:22px;
+.intro-content h2 {
+  font-size: 42px;
+  font-weight: 700;
+  color: #1a3d2e;
+  margin-bottom: 30px;
 }
 
-.highlight{
-  color:#27B4E7;
-  font-weight:700;
+.intro-content p {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #444;
+  margin-bottom: 22px;
 }
 
-.btn-primary{
-  margin-top:15px;
-  background:#FF972F;
-  color:#fff;
-  border:none;
-  border-radius:40px;
-  padding:16px 36px;
-  font-size:18px;
-  font-weight:600;
-  cursor:pointer;
-  transition:.3s;
+.highlight {
+  color: #27b4e7;
+  font-weight: 700;
 }
 
-.btn-primary:hover{
-  background:#f48215;
+.intro-image img {
+  width: 100%;
+  border-radius: 16px;
+  object-fit: cover;
 }
 
-.intro-image img{
-  width:100%;
-  border-radius:16px;
-  object-fit:cover;
-}
+@media (max-width: 992px) {
+  .intro-grid {
+    grid-template-columns: 1fr;
+  }
 
-@media(max-width:992px){
+  .intro-content h2 {
+    font-size: 40px;
+  }
 
-.intro-grid{
-  grid-template-columns:1fr;
-}
-
-.intro-content h2{
-  font-size:40px;
-}
-
-.intro-image{
-  order:-1;
-}
-
+  .intro-image {
+    order: -1;
+  }
 }
 
 /* ── CTA ── */
@@ -523,7 +614,6 @@ const slideItems = [
   padding: 40px 0 60px;
   background: #faf8f5;
 }
-
 
 .cta-box {
   display: flex;
@@ -570,12 +660,14 @@ const slideItems = [
   background: #f99f02;
   color: #fff;
   box-shadow: 0 8px 24px rgba(30, 122, 85, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease;
 }
 
 .cta-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(30, 122, 85, 0.30);
+  box-shadow: 0 12px 32px rgba(30, 122, 85, 0.3);
 }
 
 .arrow {
@@ -613,12 +705,19 @@ const slideItems = [
     flex-direction: row !important;
   }
 
+  /* On mobile, the node becomes a horizontal row below the card */
   .timeline-node {
-    width: 100%;
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
     gap: 1.5rem;
     margin-top: 20px;
+    pointer-events: auto;
   }
 
   .node-line {
@@ -626,13 +725,24 @@ const slideItems = [
   }
 
   .node-year {
+    position: static; /* remove absolute */
+    transform: none;
     font-size: 1.8rem;
-    margin-top: 0;
+    margin: 0; /* remove left/right margins */
   }
 
   .node-dot {
     width: 16px;
     height: 16px;
+  }
+
+  /* Override the absolute positioning for mobile */
+  .timeline-item:not(.timeline-item--reverse) .node-year,
+  .timeline-item--reverse .node-year {
+    left: auto;
+    right: auto;
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 

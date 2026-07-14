@@ -1,162 +1,342 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import planLogo from '@/assets/image.png'
-import globalSanitationLogo from '@/assets/image copy.png'
-import khyentseLogo from '@/assets/image copy 2.png'
-import tdhNetherlandsLogo from '@/assets/image copy 3.png'
-import cambodiaActsLogo from '@/assets/image copy 4.png'
-import tdhGermanyLogo from '@/assets/image copy 5.png'
-import germanCoopLogo from '@/assets/image copy 6.png'
-import riversLifeLogo from '@/assets/image copy 7.png'
-import educoLogo from '@/assets/image copy 8.png'
-import heiferLogo from '@/assets/image copy 9.png'
+import heroImpact from '@/assets/hero-impact.jpg'
+import heroImpactForest from '@/assets/hero-impact-forest.jpg'
+import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
+import { useContentStore } from '@/stores/content.store'
 
-const slideItems = [
-  { image: '/images/programs/hero-4.jpg', caption: '' },
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-]
+interface PartnerLink {
+  label: string
+  to: string
+}
 
-const partnershipSteps = [
-  {
-    step: '01',
-    label: 'Listen locally',
-    title: 'Start with community needs',
-    body: 'Santi Sena works with vulnerable and marginalized people, local authorities and stakeholders to identify practical community priorities.',
-  },
-  {
-    step: '02',
-    label: 'Coordinate technically',
-    title: 'Bring the right institutions together',
-    body: 'The report names cooperation with provincial departments, school leaders, commune committees, forest authorities and child protection bodies.',
-  },
-  {
-    step: '03',
-    label: 'Build capacity',
-    title: 'Strengthen people, not only projects',
-    body: 'Funding partners supported training in monitoring and evaluation, strategic planning, proposal writing and financial management.',
-  },
-  {
-    step: '04',
-    label: 'Reflect and improve',
-    title: 'Use learning to guide the next cycle',
-    body: 'Annual staff reflection gathered achievements, challenges, solutions and action plans for the following year.',
-  },
-]
+interface PartnerSlide {
+  image: string
+  caption: string
+}
 
-const engagementAreas = [
-  {
-    title: 'Environment and forestry',
-    body: 'Community forests, tree nurseries, National Tree Day activities and biodiversity conservation with local stakeholders.',
-  },
-  {
-    title: 'Livelihoods and agriculture',
-    body: 'Saving for Change groups, agriculture cooperatives, home gardens and biogas work with technical departments.',
-  },
-  {
-    title: 'WASH',
-    body: 'Safe water, school WASH committees, CLTS follow-up and practical hygiene behavior change.',
-  },
-  {
-    title: 'Education',
-    body: 'Community pre-schools, parenting groups, scholarships and mobile libraries for rural children.',
-  },
-  {
-    title: 'Buddhist preservation',
-    body: 'Dharma conversation, Buddhist primary schools and learning support for young monks.',
-  },
-  {
-    title: 'Child protection',
-    body: 'Commune and district networks that protect children from trafficking, exploitation, migration risks and abuse.',
-  },
-]
+interface PartnerHero {
+  eyebrow: string
+  title: string
+  description: string
+  primaryCta: PartnerLink
+  secondaryCta: PartnerLink
+  slides: PartnerSlide[]
+}
 
-const partnerLogos = [
-  {
-    name: 'terre des hommes',
-    tagline: 'Help for Children in Need',
-    logo: tdhGermanyLogo,
-    variant: 'tdh-germany',
-  },
-  {
-    name: 'german cooperation',
-    tagline: 'DEUTSCHE ZUSAMMENARBEIT',
-    logo: germanCoopLogo,
-    variant: 'german-coop',
-  },
-  {
-    name: 'rivers our life',
-    tagline: 'Community partnership',
-    logo: riversLifeLogo,
-    variant: 'rivers-life',
-  },
-  {
-    name: 'educo',
-    tagline: 'Member of ChildFund Alliance',
-    logo: educoLogo,
-    variant: 'educo',
-  },
-  {
-    name: 'HEIFER',
-    tagline: 'INTERNATIONAL CAMBODIA',
-    logo: heiferLogo,
-    variant: 'heifer',
-  },
-  {
-    name: 'Cambodia ACTs',
-    tagline: 'Child protection network',
-    logo: cambodiaActsLogo,
-    variant: 'cambodia-acts',
-  },
-  {
-    name: 'terre des hommes',
-    tagline: 'stops child exploitation',
-    logo: tdhNetherlandsLogo,
-    variant: 'tdh-netherlands',
-  },
-  {
-    name: 'Plan',
-    tagline: 'International Cambodia',
-    logo: planLogo,
-    variant: 'plan',
-  },
-  {
-    name: 'Global Sanitation Fund',
-    tagline: 'Water, sanitation and hygiene',
-    logo: globalSanitationLogo,
-    variant: 'global-sanitation',
-  },
-  {
-    name: 'Khyentse Foundation',
-    tagline: 'Education and Buddhist preservation',
-    logo: khyentseLogo,
-    variant: 'khyentse',
-  },
-]
+interface PartnerProject {
+  period: string
+  title: string
+  partner: string
+  focus: string
+  image: string
+}
 
-const partnerLogoLoop = [...partnerLogos, ...partnerLogos]
+interface PartnerOperatingModel {
+  step: string
+  title: string
+  detail: string
+  metric: string
+}
 
-const commitments = [
-  'Honesty with donors, target groups, operational partners and working groups',
-  'Non-discrimination across disability, religion, color, race and political affiliation',
-  'Collective benefit and careful use of organizational property',
-  'Flexibility in responding to target groups, development partners and available resources',
-  'Transparency, accountability and consistency through finance, child protection, anti-corruption and grievance policies',
-]
+interface PartnerStrategicTheme {
+  title: string
+  detail: string
+  action: string
+}
 
-const description =
-  'Partner with Santi Sena through community-rooted programs in natural resources, livelihoods, WASH, education, Buddhist preservation and child protection.'
+interface PartnerNetwork {
+  label: string
+  title: string
+  detail: string
+}
+
+interface PartnerFundingHistory {
+  name: string
+  detail: string
+}
+
+interface PartnerCta {
+  eyebrow: string
+  title: string
+  body: string
+  primaryCta: PartnerLink
+  secondaryCta: PartnerLink
+  image: string
+}
+
+interface PartnerPageContent {
+  hero: PartnerHero
+  activeProjects: PartnerProject[]
+  operatingModel: PartnerOperatingModel[]
+  strategicThemes: PartnerStrategicTheme[]
+  networks: PartnerNetwork[]
+  fundingHistory: PartnerFundingHistory[]
+  cta: PartnerCta
+}
+
+const PAGE_SLUG = 'get-involved-partner'
+
+const fallbackContent: PartnerPageContent = {
+  hero: {
+    eyebrow: 'Get involved - Partner',
+    title: 'Partner with Santi Sena',
+    description:
+      'Support practical programs with communities, local authorities, Buddhist networks and technical partners.',
+    primaryCta: { label: 'Start a partnership', to: '/contact' },
+    secondaryCta: { label: 'View portfolio', to: '#portfolio' },
+    slides: [
+      { image: heroImpactVillage, caption: '' },
+      { image: heroImpactForest, caption: '' },
+      { image: heroImpact, caption: '' },
+    ],
+  },
+  activeProjects: [
+    {
+      period: '2021-2024',
+      title: 'Healthy environment for children',
+      partner: 'Terre des Hommes Germany and BMZ',
+      focus: 'Health and environment support for disadvantaged families in Svay Rieng.',
+      image: '/images/programs/environment-hero1.jpg',
+    },
+    {
+      period: '2023-2026',
+      title: 'Mekong climate adaptation',
+      partner: 'Terre des Hommes Germany and BMZ',
+      focus: 'Children and youth action across Cambodia, Thailand, Laos PDR and Vietnam.',
+      image: '/images/programs/hero-4.jpg',
+    },
+    {
+      period: '2023-2025',
+      title: 'Food security, sanitation and hygiene',
+      partner: 'Lotus Outreach International',
+      focus: 'Food security, sanitation and hygiene with rural communities.',
+      image: '/images/programs/livelihood-hero2.jpg',
+    },
+    {
+      period: '2024-2026',
+      title: 'Buddhist primary education',
+      partner: 'Khyentse Foundation',
+      focus: 'Learning support through monastery-based primary schools.',
+      image: '/images/programs/education-hero.jpg',
+    },
+    {
+      period: '2023-2024',
+      title: 'My Planet, My Right in ASEAN',
+      partner: 'Terre des Hommes Germany',
+      focus: 'Child and youth advocacy for environmental rights.',
+      image: '/images/programs/child-protection2.jpg',
+    },
+  ],
+  operatingModel: [
+    {
+      step: '01',
+      title: 'Field teams',
+      detail:
+        'Project staff work with beneficiaries, local authorities and government stakeholders.',
+      metric: 'Local delivery',
+    },
+    {
+      step: '02',
+      title: 'Monthly plans',
+      detail: 'Teams prepare action plans, budgets and achievement reports.',
+      metric: 'Clear tracking',
+    },
+    {
+      step: '03',
+      title: 'Donor reports',
+      detail: 'Progress reports are shared every three months or as required.',
+      metric: 'Quarterly partner updates',
+    },
+    {
+      step: '04',
+      title: 'Monitoring and evaluation',
+      detail: 'M&E includes staff, beneficiaries and local authorities.',
+      metric: '3-month M&E rhythm',
+    },
+    {
+      step: '05',
+      title: 'Learning review',
+      detail: 'Final reports capture lessons for the next project cycle.',
+      metric: 'Lessons retained',
+    },
+  ],
+  strategicThemes: [
+    {
+      title: 'Diversified funding',
+      detail: 'Long-term donors and wider income sources improve stability.',
+      action: 'Multi-year grants and local income streams.',
+    },
+    {
+      title: 'Research and knowledge management',
+      detail: 'Field learning can become research, evidence and advocacy.',
+      action: 'Studies, learning notes and technical support.',
+    },
+    {
+      title: 'Social enterprise and rural markets',
+      detail: 'Farmer groups and cooperatives need practical market links.',
+      action: 'Producer coaching and enterprise support.',
+    },
+    {
+      title: 'Resource center and outreach library',
+      detail: 'Libraries connect children, youth and farmers to useful knowledge.',
+      action: 'Books, outreach and digital learning.',
+    },
+  ],
+  networks: [
+    {
+      label: 'National civil society',
+      title: 'NGO Forum and CRC Cambodia',
+      detail: 'Coordination on child rights, environment and development.',
+    },
+    {
+      label: 'Faith and peace',
+      title: 'United Religions Initiative',
+      detail: "A values-based network linked to Santi Sena's Buddhist roots.",
+    },
+    {
+      label: 'Regional biodiversity',
+      title: 'Working Group for Bio-diversity in Southeast Asia',
+      detail: 'Regional learning for natural resources and climate adaptation.',
+    },
+    {
+      label: 'Community intermediaries',
+      title: 'Monks, youth and child-peer promoters',
+      detail: 'Local people who carry awareness into villages.',
+    },
+  ],
+  fundingHistory: [
+    {
+      name: 'Development donors',
+      detail: 'CIDSE Cambodia, OXFAM G.B., Pact Cambodia, U.S. Embassy and CRS.',
+    },
+    {
+      name: 'UN and multilateral support',
+      detail: 'UNDP-GEF-SGP, UNDP-PTF-SGP and ADB through Plan Cambodia.',
+    },
+    {
+      name: 'Child and community partners',
+      detail: 'Tdh Netherlands, ChildFund, Heifer and Habitat Cambodia.',
+    },
+    {
+      name: 'WASH and education partners',
+      detail: 'Global Sanitation Fund through Plan International Cambodia and Khyentse Foundation.',
+    },
+  ],
+  cta: {
+    eyebrow: 'Partner with us',
+    title: 'Bring funding, technical skill or learning capacity into a working field system.',
+    body: 'Share your focus area and timeframe. The team can match it to current programs and community priorities.',
+    primaryCta: { label: 'Contact partnerships team', to: '/contact' },
+    secondaryCta: { label: 'Explore programs', to: '/programs' },
+    image: '/images/programs/hero-1.jpg',
+  },
+}
+
+const contentStore = useContentStore()
+const cmsContent = ref<Partial<PartnerPageContent> | null>(null)
+
+const pageContent = computed<PartnerPageContent>(() =>
+  mergePartnerContent(fallbackContent, cmsContent.value),
+)
+
+const slideItems = computed(() =>
+  pageContent.value.hero.slides.length
+    ? pageContent.value.hero.slides
+    : fallbackContent.hero.slides,
+)
+
+const portfolioStats = computed(() => [
+  {
+    value: '2023-2026',
+    label: 'Project portfolio window',
+  },
+  {
+    value: '3 months',
+    label: 'Internal M&E rhythm',
+  },
+  {
+    value: '10+',
+    label: 'Grant relationships managed',
+  },
+])
+
+const description = computed(
+  () =>
+    'Partner with Santi Sena through current and strategic programs in climate adaptation, WASH, education, child rights, research and community-led livelihoods.',
+)
 
 let previousTitle = ''
 let descriptionMeta: HTMLMetaElement | null = null
 let previousDescription: string | null = null
 let createdDescriptionMeta = false
+let revealObserver: IntersectionObserver | null = null
 
-onMounted(() => {
-  previousTitle = document.title
-  document.title = 'Partner with Santi Sena'
+function mergePartnerContent(
+  base: PartnerPageContent,
+  override: Partial<PartnerPageContent> | null,
+): PartnerPageContent {
+  if (!override) return base
+  const mergedHero = { ...base.hero, ...override.hero }
+  const overrideSlides = override.hero?.slides
+
+  return {
+    hero: {
+      ...mergedHero,
+      slides: normalizeSlides(overrideSlides, base.hero.slides),
+    },
+    activeProjects: Array.isArray(override.activeProjects)
+      ? override.activeProjects
+      : base.activeProjects,
+    operatingModel: Array.isArray(override.operatingModel)
+      ? override.operatingModel
+      : base.operatingModel,
+    strategicThemes: Array.isArray(override.strategicThemes)
+      ? override.strategicThemes
+      : base.strategicThemes,
+    networks: Array.isArray(override.networks) ? override.networks : base.networks,
+    fundingHistory: Array.isArray(override.fundingHistory)
+      ? override.fundingHistory
+      : base.fundingHistory,
+    cta: { ...base.cta, ...override.cta },
+  }
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function normalizeSlides(value: unknown, fallback: PartnerSlide[]) {
+  if (!Array.isArray(value)) return fallback
+
+  const slides = value.filter(
+    (slide): slide is PartnerSlide =>
+      isObject(slide) && typeof slide.image === 'string' && slide.image.trim().length > 0,
+  )
+
+  return slides.length ? slides : fallback
+}
+
+async function loadCmsContent() {
+  try {
+    const page = await contentStore.fetchBySlug(PAGE_SLUG)
+    const body = page.body.trim()
+    if (!body) return
+
+    const parsed = JSON.parse(body)
+    if (isObject(parsed)) {
+      cmsContent.value = parsed as Partial<PartnerPageContent>
+    }
+  } catch {
+    cmsContent.value = null
+  }
+}
+
+function setDocumentMeta() {
+  document.title = pageContent.value.hero.title
 
   descriptionMeta = document.querySelector('meta[name="description"]')
   previousDescription = descriptionMeta?.getAttribute('content') ?? null
@@ -168,10 +348,57 @@ onMounted(() => {
     createdDescriptionMeta = true
   }
 
-  descriptionMeta.setAttribute('content', description)
+  descriptionMeta.setAttribute('content', description.value)
+}
+
+function revealStatic() {
+  document
+    .querySelectorAll<HTMLElement>('.pop-reveal')
+    .forEach((element) => element.classList.add('is-visible'))
+}
+
+function initScrollReveal() {
+  revealObserver?.disconnect()
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (!('IntersectionObserver' in window) || prefersReducedMotion) {
+    revealStatic()
+    return
+  }
+
+  const elements = Array.from(document.querySelectorAll<HTMLElement>('.pop-reveal'))
+
+  revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-visible')
+        revealObserver?.unobserve(entry.target)
+      })
+    },
+    {
+      rootMargin: '0px 0px -8% 0px',
+      threshold: 0.16,
+    },
+  )
+
+  elements.forEach((element, index) => {
+    element.style.setProperty('--pop-delay', `${Math.min(index * 55, 420)}ms`)
+    revealObserver?.observe(element)
+  })
+}
+
+onMounted(async () => {
+  previousTitle = document.title
+  setDocumentMeta()
+  await loadCmsContent()
+  setDocumentMeta()
+  await nextTick()
+  initScrollReveal()
 })
 
 onUnmounted(() => {
+  revealObserver?.disconnect()
   document.title = previousTitle
 
   if (descriptionMeta && createdDescriptionMeta) {
@@ -184,151 +411,167 @@ onUnmounted(() => {
 
 <template>
   <main class="partner-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="partner-hero__content">
-        <p class="eyebrow">Get involved - Partner</p>
-        <h1>Partner with Santi Sena</h1>
-        <p class="lead">
-          Build practical village-level programs with a Cambodian organization rooted in local
-          authorities, schools, commune committees, technical departments and community groups.
-        </p>
-        <div class="hero-actions" aria-label="Partnership actions">
-          <RouterLink to="/contact" class="primary-button">Start a conversation</RouterLink>
-          <a href="#partnership-practice" class="secondary-link">See how partnership works</a>
-        </div>
+    <Slideshow :slides="slideItems" :interval-ms="6200">
+      <div class="hero-shade" />
+      <div class="hero-grid">
+        <section class="hero-copy pop-reveal is-visible" aria-labelledby="partner-hero-title">
+          <p class="eyebrow">{{ pageContent.hero.eyebrow }}</p>
+          <h1 id="partner-hero-title">{{ pageContent.hero.title }}</h1>
+          <p class="lead">{{ pageContent.hero.description }}</p>
+          <div class="hero-actions" aria-label="Partnership actions">
+            <RouterLink :to="pageContent.hero.primaryCta.to" class="button button-primary">
+              {{ pageContent.hero.primaryCta.label }}
+            </RouterLink>
+            <a :href="pageContent.hero.secondaryCta.to" class="button button-ghost">
+              {{ pageContent.hero.secondaryCta.label }}
+            </a>
+          </div>
+        </section>
+
+        <aside class="hero-brief pop-reveal is-visible" aria-label="Partnership readiness">
+          <span>Partner readiness</span>
+          <strong>Field delivery, donor reports and community feedback in one loop.</strong>
+        </aside>
       </div>
     </Slideshow>
 
-    <section class="partner-content" aria-labelledby="intro-heading">
-      <div class="intro-section">
-        <div class="intro-copy">
-          <div class="section-kicker">Partnership in practice</div>
-          <h2 id="intro-heading">Long-term cooperation, organized around village priorities.</h2>
-          <p>
-            The report describes Santi Sena's work as a field system: local leaders identify
-            priorities, technical departments strengthen the response, and partners help sustain the
-            training, monitoring and resources needed to keep projects moving.
-          </p>
-        </div>
-        <figure class="intro-image">
-          <img
-            src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=82"
-            alt="People placing their hands together in cooperation"
-          />
-          <figcaption>
-            Partnerships connect resources with people already leading change locally.
-          </figcaption>
-        </figure>
+    <section class="stat-strip" aria-label="Partner page highlights">
+      <div v-for="stat in portfolioStats" :key="stat.label" class="stat-item pop-reveal">
+        <strong>{{ stat.value }}</strong>
+        <span>{{ stat.label }}</span>
       </div>
-
-      <section
-        id="partnership-practice"
-        class="practice-section"
-        aria-labelledby="practice-heading"
-      >
-        <div class="section-heading">
-          <div>
-            <div class="section-kicker">Working rhythm</div>
-            <h2 id="practice-heading">How collaboration becomes action</h2>
-          </div>
-          <p>
-            A good partnership with Santi Sena starts close to community reality and stays
-            accountable through technical coordination, staff capacity and annual reflection.
-          </p>
-        </div>
-
-        <div class="practice-layout">
-          <ol class="step-list">
-            <li v-for="item in partnershipSteps" :key="item.step">
-              <span class="step-number">{{ item.step }}</span>
-              <div>
-                <span class="step-label">{{ item.label }}</span>
-                <h3>{{ item.title }}</h3>
-                <p>{{ item.body }}</p>
-              </div>
-            </li>
-          </ol>
-          <div class="practice-media">
-            <img
-              src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=82"
-              alt="Community volunteers organizing supplies together"
-            />
-            <div class="media-note">
-              <strong>Field-led delivery</strong>
-              <span>Programs are shaped with local authorities, schools and community groups.</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="areas-section" aria-labelledby="areas-heading">
-        <div class="areas-media" aria-hidden="true">
-          <img
-            src="https://images.unsplash.com/photo-1492496913980-501348b61469?auto=format&fit=crop&w=1200&q=82"
-            alt=""
-          />
-        </div>
-        <div class="areas-copy">
-          <div class="section-kicker">Where partners engage</div>
-          <h2 id="areas-heading">Program systems named in the report</h2>
-          <ul class="area-list">
-            <li v-for="area in engagementAreas" :key="area.title">
-              <h3>{{ area.title }}</h3>
-              <p>{{ area.body }}</p>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="logo-section" aria-labelledby="partner-logos-heading">
-        <div class="logo-section__header">
-          <div>
-            <div class="section-kicker">Our partners</div>
-            <h2 id="partner-logos-heading">Organizations supporting Santi Sena's work</h2>
-          </div>
-          <p>
-            A rotating view of funding, technical, learning and program partners connected with
-            Santi Sena's community work.
-          </p>
-        </div>
-
-        <div class="logo-marquee" aria-label="Partner logo slideshow">
-          <div class="logo-track">
-            <article
-              v-for="(partner, index) in partnerLogoLoop"
-              :key="`${partner.name}-${partner.variant}-${index}`"
-              class="logo-slide"
-              :aria-hidden="index >= partnerLogos.length ? 'true' : undefined"
-            >
-              <img
-                :src="partner.logo"
-                :alt="`${partner.name} - ${partner.tagline}`"
-                class="partner-logo"
-                loading="lazy"
-              />
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="commitments-section" aria-labelledby="commitments-heading">
-        <div class="commitment-copy">
-          <div class="section-kicker">Working values</div>
-          <h2 id="commitments-heading">What Santi Sena commits to partners</h2>
-        </div>
-        <ul class="commitment-list">
-          <li v-for="item in commitments" :key="item">{{ item }}</li>
-        </ul>
-      </section>
     </section>
 
-    <section class="cta-band" aria-label="Contact partnerships team">
-      <div class="cta-band__media" aria-hidden="true"></div>
-      <div class="cta-band__inner">
-        <p class="eyebrow">Build with us</p>
-        <h2>Ready to create a practical partnership?</h2>
-        <RouterLink to="/contact" class="primary-button">Contact our partnerships team</RouterLink>
+    <section
+      id="portfolio"
+      class="portfolio-section section-shell"
+      aria-labelledby="portfolio-heading"
+    >
+      <div class="section-intro pop-reveal">
+        <p class="section-kicker">Recent and current portfolio</p>
+        <h2 id="portfolio-heading">Current partnership portfolio.</h2>
+        <p>A quick view of active project themes, timeframes and funding partners.</p>
+      </div>
+
+      <div class="project-grid">
+        <article
+          v-for="(project, index) in pageContent.activeProjects"
+          :key="project.title"
+          class="project-card pop-reveal"
+          :class="{ 'project-card--wide': index === 0 }"
+        >
+          <img :src="project.image" :alt="project.title" loading="lazy" />
+          <div class="project-card__content">
+            <div class="project-card__topline">
+              <span>{{ project.period }}</span>
+              <small>{{ project.partner }}</small>
+            </div>
+            <h3>{{ project.title }}</h3>
+            <p>{{ project.focus }}</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="operating-section" aria-labelledby="operating-heading">
+      <div class="operating-inner">
+        <div class="operating-copy pop-reveal">
+          <p class="section-kicker">How partnership works</p>
+          <h2 id="operating-heading">Clear field rhythm.</h2>
+          <p>Support moves through planning, reporting, monitoring and learning.</p>
+        </div>
+
+        <ol class="operating-rail">
+          <li
+            v-for="item in pageContent.operatingModel"
+            :key="item.step"
+            class="operating-item pop-reveal"
+          >
+            <span class="operating-step">{{ item.step }}</span>
+            <div>
+              <strong>{{ item.metric }}</strong>
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.detail }}</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="strategy-section section-shell" aria-labelledby="strategy-heading">
+      <div class="section-intro pop-reveal">
+        <p class="section-kicker">Strategic partnership space</p>
+        <h2 id="strategy-heading">Where partners can help next.</h2>
+      </div>
+
+      <div class="strategy-grid">
+        <article
+          v-for="theme in pageContent.strategicThemes"
+          :key="theme.title"
+          class="strategy-card pop-reveal"
+        >
+          <span aria-hidden="true"></span>
+          <h3>{{ theme.title }}</h3>
+          <p>{{ theme.detail }}</p>
+          <strong>{{ theme.action }}</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="network-section" aria-labelledby="network-heading">
+      <div class="network-inner">
+        <div class="network-panel pop-reveal">
+          <p class="section-kicker">Network layers</p>
+          <h2 id="network-heading">Connected beyond the office.</h2>
+          <p>Civil society, faith and youth networks help learning reach villages.</p>
+        </div>
+
+        <div class="network-grid">
+          <article
+            v-for="network in pageContent.networks"
+            :key="network.title"
+            class="network-card pop-reveal"
+          >
+            <span>{{ network.label }}</span>
+            <h3>{{ network.title }}</h3>
+            <p>{{ network.detail }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="funding-section section-shell" aria-labelledby="funding-heading">
+      <div class="section-intro pop-reveal">
+        <p class="section-kicker">Funding history</p>
+        <h2 id="funding-heading">A wider support base.</h2>
+      </div>
+
+      <div class="funding-list">
+        <article
+          v-for="item in pageContent.fundingHistory"
+          :key="item.name"
+          class="funding-item pop-reveal"
+        >
+          <h3>{{ item.name }}</h3>
+          <p>{{ item.detail }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta-section" aria-label="Partnership contact">
+      <img :src="pageContent.cta.image" alt="" aria-hidden="true" loading="lazy" />
+      <div class="cta-content pop-reveal">
+        <p class="eyebrow">{{ pageContent.cta.eyebrow }}</p>
+        <h2>{{ pageContent.cta.title }}</h2>
+        <p>{{ pageContent.cta.body }}</p>
+        <div class="hero-actions">
+          <RouterLink :to="pageContent.cta.primaryCta.to" class="button button-primary">
+            {{ pageContent.cta.primaryCta.label }}
+          </RouterLink>
+          <RouterLink :to="pageContent.cta.secondaryCta.to" class="button button-ghost">
+            {{ pageContent.cta.secondaryCta.label }}
+          </RouterLink>
+        </div>
       </div>
     </section>
   </main>
@@ -336,577 +579,746 @@ onUnmounted(() => {
 
 <style scoped>
 .partner-page {
-  --blue: #2f6f8f;
+  --partner-accent: var(--primary-color);
+  --partner-surface: var(--color-white);
+  --partner-dark: var(--primary-dark);
 
   min-height: 100vh;
+  overflow: hidden;
   background: var(--color-cream);
   color: var(--color-ink);
 }
 
-.hero-overlay {
+.hero-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
+  background:
+    linear-gradient(90deg, rgba(6, 18, 13, 0.86), rgba(6, 18, 13, 0.58) 46%, rgba(6, 18, 13, 0.16)),
+    linear-gradient(0deg, rgba(6, 18, 13, 0.32), transparent 42%);
 }
 
-.partner-content,
-.cta-band__inner {
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(260px, 0.36fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
   width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
 }
 
-.partner-hero__content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  text-align: left;
-  max-width: 720px;
-  left: var(--container-offset);
-  padding: 3rem 1.5rem;
-  animation: fadeInUp 0.8s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.hero-copy {
+  max-width: 780px;
 }
 
 .eyebrow,
 .section-kicker {
   margin: 0;
-  color: var(--primary-color);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
+  color: var(--primary-light);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
-.partner-hero__content h1 {
-  max-width: 760px;
-  margin: 1.2rem 0 0;
-  color: #fffaf0;
+.section-kicker {
+  color: var(--primary-color);
+}
+
+.hero-copy h1,
+.section-intro h2,
+.operating-copy h2,
+.network-panel h2,
+.cta-content h2 {
+  margin: 0;
   font-weight: 600;
-  line-height: 0.94;
+  line-height: 1.15;
+  letter-spacing: 0;
   text-wrap: balance;
 }
 
+.hero-copy h1 {
+  max-width: 760px;
+  margin-top: 1rem;
+  color: #fffaf0;
+}
+
 .lead {
-  max-width: 720px;
-  margin: 1.8rem 0 0;
+  max-width: 700px;
+  margin: 1.35rem 0 0;
   color: rgba(255, 250, 240, 0.9);
-  font-weight: 500;
   line-height: 1.6;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  gap: 0.85rem;
   align-items: center;
-  gap: 1rem 1.35rem;
-  margin-top: 2.3rem;
+  margin-top: 2rem;
 }
 
-.primary-button,
-.secondary-link {
+.button {
   display: inline-flex;
+  min-height: 3.15rem;
   align-items: center;
   justify-content: center;
-  min-height: 3.25rem;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.primary-button {
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--primary-color);
-  color: #fffaf0;
-  padding: 0.85rem 1.55rem;
-  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.25);
+  padding: 0.82rem 1.35rem;
+  font-weight: 850;
+  line-height: 1.1;
+  text-decoration: none;
   transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.primary-button:hover {
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.button-primary {
+  background: var(--primary-color);
+  color: var(--color-white);
+  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.24);
+}
+
+.button-primary:hover {
   background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 20px 38px rgba(20, 129, 62, 0.32);
+  box-shadow: 0 22px 42px rgba(20, 129, 62, 0.32);
 }
 
-.secondary-link {
+.button-ghost {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
   color: #fffaf0;
-  opacity: 0.86;
 }
 
-.secondary-link:hover {
-  opacity: 1;
+.button-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.15);
 }
 
-.partner-content {
-  padding: 5.5rem 0;
-}
-
-.partner-content h2,
-.cta-band h2 {
-  margin: 0;
-  color: var(--color-ink);
-  font-weight: 600;
-  line-height: 1.08;
-  text-wrap: balance;
-}
-
-.intro-section,
-.practice-layout,
-.areas-section,
-.logo-section,
-.commitments-section {
-  display: grid;
-  gap: clamp(2rem, 5vw, 4.5rem);
-}
-
-.intro-section {
-  grid-template-columns: minmax(0, 0.82fr) minmax(320px, 1fr);
-  align-items: center;
-}
-
-.intro-copy p,
-.section-heading p,
-.logo-section__header p {
-  margin: 1.25rem 0 0;
-  color: var(--color-ink-soft);
-  line-height: 1.65;
-}
-
-.intro-copy h2,
-.section-heading h2,
-.areas-copy h2,
-.logo-section__header h2,
-.commitment-copy h2 {
-  margin-top: 0.85rem;
-}
-
-.intro-image {
-  margin: 0;
-}
-
-.intro-image img,
-.practice-media img,
-.areas-media img {
-  display: block;
-  width: 100%;
-  object-fit: cover;
+.hero-brief {
+  align-self: end;
+  margin-bottom: 4rem;
+  border: 1px solid rgba(255, 250, 240, 0.2);
   border-radius: 8px;
+  background: rgba(20, 129, 62, 0.42);
+  padding: 1.15rem;
+  color: #fffaf0;
+  backdrop-filter: none;
 }
 
-.intro-image img {
-  aspect-ratio: 4 / 3;
+.hero-brief span {
+  display: block;
+  color: var(--primary-light);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-.intro-image figcaption {
-  max-width: 520px;
-  margin-top: 0.85rem;
-  color: var(--color-ink-soft);
-  line-height: 1.5;
+.hero-brief strong {
+  display: block;
+  margin-top: 0.7rem;
+  font-size: 1rem;
+  line-height: 1.45;
 }
 
-.practice-section,
-.areas-section,
-.logo-section,
-.commitments-section {
-  margin-top: 6rem;
+.section-shell,
+.stat-strip,
+.operating-inner,
+.network-inner,
+.cta-content {
+  width: min(100% - 3rem, var(--container-max-width));
+  margin: 0 auto;
 }
 
-.section-heading {
+.stat-strip {
+  position: relative;
+  z-index: 2;
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(260px, 0.75fr);
-  gap: 2rem;
-  align-items: end;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: -3.2rem;
 }
 
-.practice-layout {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.78fr);
-  align-items: start;
-  margin-top: 2.6rem;
+.stat-item {
+  min-height: 112px;
+  border: 1px solid rgba(232, 228, 223, 0.9);
+  border-radius: 8px;
+  background: var(--partner-surface);
+  padding: 1.15rem;
+  box-shadow: 0 14px 32px rgba(20, 129, 62, 0.08);
 }
 
-.step-list {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--color-border);
-}
-
-.step-list li {
-  display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-  gap: 1.6rem;
-  padding: 1.7rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.step-number {
-  color: var(--blue);
-  font-size: 2.4rem;
+.stat-item strong {
+  display: block;
+  color: var(--primary-dark);
+  font-size: 2rem;
+  font-weight: 500;
   line-height: 1;
 }
 
-.step-label {
+.stat-item span {
   display: block;
-  color: var(--primary-color);
-  font-size: 0.75rem;
-  font-weight: 800;
+  margin-top: 0.75rem;
+  color: var(--color-ink-soft);
+  line-height: 1.35;
+}
+
+.portfolio-section,
+.strategy-section,
+.funding-section {
+  padding: 5rem 0;
+}
+
+.section-intro {
+  max-width: 780px;
+}
+
+.section-intro h2,
+.operating-copy h2,
+.network-panel h2 {
+  margin-top: 0.8rem;
+  color: var(--color-ink);
+}
+
+.section-intro p:not(.section-kicker),
+.operating-copy p,
+.network-panel p {
+  margin: 1rem 0 0;
+  color: var(--color-ink-soft);
+  line-height: 1.7;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+  margin-top: 2rem;
+}
+
+.project-card {
+  min-height: auto;
+  display: grid;
+  grid-template-columns: minmax(170px, 0.42fr) minmax(0, 1fr);
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  box-shadow: 0 4px 14px rgba(20, 129, 62, 0.05);
+}
+
+.project-card--wide {
+  grid-column: auto;
+}
+
+.project-card img {
+  width: 100%;
+  height: 100%;
+  min-height: 190px;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.project-card:hover img {
+  transform: scale(1.02);
+}
+
+.project-card__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.15rem 1.2rem;
+  color: var(--color-ink);
+}
+
+.project-card__topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+  align-items: center;
+}
+
+.project-card__topline span,
+.project-card__topline small {
+  display: inline-flex;
+  border-radius: 999px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.project-card__topline span {
+  border: 1px solid color-mix(in srgb, var(--primary-color) 22%, transparent);
+  background: transparent;
+  color: var(--primary-dark);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-card__topline small {
+  max-width: 100%;
+  background: transparent;
+  color: var(--color-ink-soft);
+  padding: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.project-card h3 {
+  margin: 0.65rem 0 0;
+  color: var(--color-ink);
+  font-size: 1.12rem;
+  line-height: 1.28;
+}
+
+.project-card p {
+  max-width: 44rem;
+  margin: 0.5rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.operating-section {
+  padding: 5rem 0;
+  background: var(--primary-light);
+}
+
+.operating-inner {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.operating-copy {
+  position: sticky;
+  top: 7rem;
+}
+
+.operating-rail {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operating-rail::before {
+  position: absolute;
+  top: 1rem;
+  bottom: 1rem;
+  left: 2.05rem;
+  width: 2px;
+  background: linear-gradient(180deg, var(--primary-color), rgba(20, 129, 62, 0.24));
+  content: '';
+}
+
+.operating-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  padding: 1.25rem;
+  box-shadow: 0 10px 26px rgba(20, 129, 62, 0.06);
+}
+
+.operating-step {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 3.6rem;
+  height: 3.6rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--primary-dark);
+  color: #fffaf0;
+  font-weight: 900;
+}
+
+.operating-item strong {
+  display: block;
+  color: var(--primary-dark);
+  font-size: 0.78rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.step-list h3,
-.area-list h3 {
+.operating-item h3 {
   margin: 0.45rem 0 0;
   color: var(--color-ink);
-  font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
-.step-list p,
-.area-list p {
-  margin: 0.65rem 0 0;
+.operating-item p {
+  margin: 0.55rem 0 0;
   color: var(--color-ink-soft);
+  line-height: 1.6;
+}
+
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2.4rem;
+}
+
+.strategy-card {
+  min-height: 238px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(232, 228, 223, 0.92);
+  border-radius: 8px;
+  background: var(--partner-surface);
+  padding: 1.35rem;
+  box-shadow: 0 10px 24px rgba(20, 129, 62, 0.05);
+}
+
+.strategy-card > span {
+  width: 3rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--primary-color);
+}
+
+.strategy-card h3 {
+  margin: 1rem 0 0;
+  color: var(--primary-dark);
+  font-size: 1.1rem;
+  line-height: 1.25;
+}
+
+.strategy-card p {
+  margin: 0.7rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 0.92rem;
   line-height: 1.55;
 }
 
-.practice-media {
-  position: sticky;
-  top: 2rem;
-}
-
-.practice-media img {
-  aspect-ratio: 5 / 6;
-}
-
-.media-note {
-  margin-top: 1rem;
-  border-left: 4px solid var(--primary-color);
-  padding-left: 1rem;
-  color: var(--color-ink-soft);
-}
-
-.media-note strong,
-.media-note span {
+.strategy-card strong {
   display: block;
-}
-
-.media-note strong {
-  color: var(--color-ink);
-  font-weight: 600;
-}
-
-.media-note span {
-  margin-top: 0.3rem;
-  line-height: 1.5;
-}
-
-.areas-section {
-  grid-template-columns: minmax(300px, 0.74fr) minmax(0, 1fr);
-  align-items: start;
-}
-
-.areas-media img {
-  aspect-ratio: 4 / 5;
-}
-
-.area-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 2rem;
-  margin: 2rem 0 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--color-border);
-}
-
-.area-list li {
-  padding: 1.35rem 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.logo-section {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  padding-top: 5rem;
-  overflow: hidden;
-}
-
-.logo-section__header {
-  width: min(100% - 3rem, var(--container-max-width));
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.72fr);
-  gap: 2rem;
-  align-items: end;
-}
-
-.logo-marquee {
-  width: 100%;
-  margin-top: 2.2rem;
-  overflow: hidden;
-  padding: 0.45rem 0;
-  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-}
-
-.logo-track {
-  display: flex;
-  width: max-content;
-  gap: clamp(2.4rem, 5vw, 5rem);
-  animation: logo-scroll 38s linear infinite;
-}
-
-.logo-marquee:hover .logo-track {
-  animation-play-state: paused;
-}
-
-.logo-slide {
-  position: relative;
-  flex: 0 0 clamp(160px, 16vw, 230px);
-  min-height: 98px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 1px solid rgba(221, 209, 192, 0.72);
+  margin-top: auto;
   border-radius: 8px;
-  background: #fff;
-  padding: 1rem;
-  box-shadow: 0 1px 2px rgba(54, 38, 17, 0.06);
+  background: var(--primary-light);
+  padding: 0.75rem;
+  color: var(--primary-dark);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
-.partner-logo {
-  display: block;
-  width: 100%;
-  height: 76px;
-  object-fit: contain;
-}
-
-.commitment-list {
-  display: grid;
-  gap: 0.65rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.commitment-list li {
-  position: relative;
-  color: var(--color-ink-soft);
-  line-height: 1.5;
-}
-
-@keyframes logo-scroll {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(calc(-50% - clamp(1.2rem, 2.5vw, 2.5rem)));
-  }
-}
-
-.commitments-section {
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  align-items: start;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(47, 111, 143, 0.2), transparent 42%), var(--primary-dark);
-  padding: clamp(2rem, 5vw, 3.5rem);
-}
-
-.commitments-section h2,
-.commitments-section .section-kicker,
-.commitment-list li {
+.network-section {
+  padding: 5rem 0;
+  background: var(--primary-dark);
   color: #fffaf0;
 }
 
-.commitments-section .section-kicker {
-  color: var(--primary-light);
-}
-
-.commitment-list {
-  counter-reset: commitments;
-}
-
-.commitment-list li {
-  counter-increment: commitments;
+.network-inner {
   display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: minmax(260px, 0.38fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4rem);
   align-items: start;
-  padding: 1rem 0;
-  border-bottom: 1px solid rgba(255, 250, 240, 0.18);
 }
 
-.commitment-list li:first-child {
-  padding-top: 0;
+.network-panel {
+  border-left: 4px solid var(--primary-color);
+  padding-left: 1.35rem;
 }
 
-.commitment-list li::before {
-  content: counter(commitments, decimal-leading-zero);
+.network-panel h2,
+.cta-content h2 {
+  color: #fffaf0;
+}
+
+.network-panel p,
+.cta-content p {
+  color: rgba(255, 250, 240, 0.82);
+}
+
+.network-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.network-card {
+  min-height: 178px;
+  border: 1px solid rgba(255, 250, 240, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1.35rem;
+}
+
+.network-card span {
+  display: inline-flex;
+  border: 1px solid rgba(255, 250, 240, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
   color: var(--primary-light);
-  font-size: 1.55rem;
-  line-height: 1;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.cta-band {
+.network-card h3 {
+  margin: 0.8rem 0 0;
+  color: #fffaf0;
+  font-size: 1.1rem;
+  line-height: 1.25;
+}
+
+.network-card p {
+  margin: 0.65rem 0 0;
+  color: rgba(255, 250, 240, 0.8);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.funding-section {
+  background: var(--color-cream);
+}
+
+.funding-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2.35rem;
+}
+
+.funding-item {
+  border-top: 5px solid var(--primary-color);
+  border-radius: 8px;
+  background: var(--partner-surface);
+  padding: 1.25rem;
+  box-shadow: 0 10px 24px rgba(20, 129, 62, 0.05);
+}
+
+.funding-item h3 {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.funding-item p {
+  margin: 0.65rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.cta-section {
   position: relative;
-  isolation: isolate;
+  min-height: 420px;
+  display: grid;
+  align-items: center;
   overflow: hidden;
   background: var(--primary-dark);
-  padding: 5rem 0;
+  isolation: isolate;
 }
 
-.cta-band__media {
+.cta-section img {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: url('https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&w=1800&q=82')
-    center / cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.92);
 }
 
-.cta-band::after {
-  content: '';
+.cta-section::after {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(90deg, rgba(4, 42, 38, 0.92), rgba(4, 42, 38, 0.62));
+  background:
+    linear-gradient(90deg, rgba(6, 18, 13, 0.9), rgba(6, 18, 13, 0.62) 55%, rgba(6, 18, 13, 0.3)),
+    linear-gradient(0deg, rgba(6, 18, 13, 0.3), transparent);
+  content: '';
 }
 
-.cta-band__inner {
-  max-width: min(100% - 3rem, 920px);
+.cta-content {
+  max-width: min(100% - 3rem, 860px);
   margin-left: max(1.5rem, calc((100vw - var(--container-max-width)) / 2));
+  padding: 5rem 0;
 }
 
-.cta-band h2 {
+.cta-content h2 {
   max-width: 780px;
   margin-top: 0.8rem;
-  color: #fffaf0;
 }
 
-.cta-band .primary-button {
-  margin-top: 2rem;
+.cta-content p:not(.eyebrow) {
+  max-width: 680px;
+  margin: 1rem 0 0;
+  line-height: 1.7;
 }
 
-@media (max-width: 1060px) {
-  .intro-section,
-  .practice-layout,
-  .areas-section,
-  .logo-section,
-  .commitments-section,
-  .section-heading,
-  .logo-section__header {
+.pop-reveal {
+  opacity: 0;
+  filter: none;
+  transform: translateY(58px) scale(0.92);
+  transition:
+    opacity 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.72s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: var(--pop-delay, 0ms);
+}
+
+.pop-reveal.is-visible {
+  opacity: 1;
+  filter: none;
+  transform: translateY(0) scale(1);
+}
+
+@media (max-width: 1080px) {
+  .hero-grid,
+  .operating-inner,
+  .network-inner {
     grid-template-columns: 1fr;
   }
 
-  .practice-media {
+  .hero-brief {
+    align-self: start;
+    max-width: 520px;
+    margin-bottom: 2rem;
+  }
+
+  .project-grid,
+  .strategy-grid,
+  .funding-list {
+    grid-template-columns: 1fr;
+  }
+
+  .operating-copy {
     position: static;
-  }
-
-  .practice-media img,
-  .areas-media img {
-    aspect-ratio: 16 / 10;
-  }
-
-  .logo-slide {
-    flex-basis: 170px;
   }
 }
 
 @media (max-width: 760px) {
-  .partner-content,
-  .cta-band__inner {
+  .section-shell,
+  .stat-strip,
+  .operating-inner,
+  .network-inner,
+  .cta-content {
     width: min(100% - 2rem, var(--container-max-width));
   }
 
-  .partner-hero__content {
-    padding: 2rem 1.5rem;
-  }
-
-  .hero-actions {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .area-list {
-    grid-template-columns: 1fr;
-  }
-
-  .partner-content {
-    padding: 4rem 0;
-  }
-
-  .practice-section,
-  .areas-section,
-  .logo-section,
-  .commitments-section {
-    margin-top: 4.5rem;
-  }
-
-  .step-list li {
-    grid-template-columns: 3.5rem minmax(0, 1fr);
+  .hero-grid {
+    width: min(100% - 2rem, var(--container-max-width));
+    align-content: center;
     gap: 1rem;
   }
 
-  .step-number {
-    font-size: 2rem;
+  .hero-copy h1 {
+    line-height: 1.12;
   }
 
-  .logo-section {
-    padding-top: 3.5rem;
+  .lead {
+    margin-top: 1rem;
+    line-height: 1.55;
   }
 
-  .logo-marquee {
-    mask-image: none;
+  .hero-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .logo-slide {
-    flex-basis: 154px;
-    min-height: 86px;
-    padding: 0.8rem;
+  .button {
+    width: 100%;
   }
 
-  .partner-logo {
-    height: 62px;
+  .hero-brief {
+    display: none;
   }
 
-  .commitments-section {
-    padding: 2rem;
+  .stat-strip,
+  .project-grid,
+  .strategy-grid,
+  .network-grid,
+  .funding-list {
+    grid-template-columns: 1fr;
   }
 
-  .cta-band {
-    padding: 4rem 0;
+  .stat-strip {
+    margin-top: 1rem;
   }
 
-  .cta-band__inner {
+  .portfolio-section,
+  .strategy-section,
+  .funding-section,
+  .operating-section,
+  .network-section {
+    padding: 4.5rem 0;
+  }
+
+  .project-card,
+  .project-card--wide {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .project-card img,
+  .project-card--wide img {
+    height: 180px;
+    min-height: 180px;
+  }
+
+  .operating-rail::before {
+    display: none;
+  }
+
+  .operating-item {
+    grid-template-columns: 1fr;
+  }
+
+  .operating-step {
+    width: 3.4rem;
+    height: 3.4rem;
+  }
+
+  .strategy-card,
+  .network-card {
+    min-height: auto;
+  }
+
+  .cta-content {
     margin-left: auto;
+    padding: 4rem 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .logo-track {
-    width: 100%;
-    flex-wrap: wrap;
-    animation: none;
+  .project-card img,
+  .button,
+  .pop-reveal {
+    transition: none;
   }
 
-  .logo-slide {
-    flex: 1 1 190px;
+  .pop-reveal {
+    opacity: 1;
+    filter: none;
+    transform: none;
   }
 }
 </style>

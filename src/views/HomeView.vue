@@ -14,11 +14,77 @@ const stats = [
   { value: '10+', label: 'International Partners' },
 ]
 
-const slideItems: { image: string; caption: string }[] = [
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-  { image: '/images/programs/hero-3.jpg', caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
+interface NgoSlide {
+  image: string
+  caption: string
+  alt: string
+  eyebrow: string
+  title: string
+  description: string
+  primaryLabel: string
+  primaryTo: string
+  secondaryLabel: string
+  secondaryTo: string
+  position?: string
+}
+
+const slideItems: NgoSlide[] = [
+  {
+    image: '/images/programs/education-hero.jpg',
+    caption: '',
+    alt: 'Children learning with Santi Sena education support',
+    eyebrow: 'Education and Buddhist learning',
+    title: 'Helping children learn with confidence.',
+    description:
+      'Santi Sena supports schools, mobile libraries, scholarships and Buddhist education so children can keep learning close to home.',
+    primaryLabel: 'Support education',
+    primaryTo: '/qr-donate',
+    secondaryLabel: 'Explore programs',
+    secondaryTo: '/programs',
+    position: 'center',
+  },
+  {
+    image: '/images/programs/environment.jpg',
+    caption: '',
+    alt: 'Community environmental activity in rural Cambodia',
+    eyebrow: 'Environment and climate action',
+    title: 'Protecting the land that sustains villages.',
+    description:
+      'Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.',
+    primaryLabel: 'Support the work',
+    primaryTo: '/qr-donate',
+    secondaryLabel: 'Environment program',
+    secondaryTo: '/programs/environment',
+    position: 'center',
+  },
+  {
+    image: '/images/programs/livelihood-hero2.jpg',
+    caption: '',
+    alt: 'Rural livelihood activity with community members',
+    eyebrow: 'Livelihoods and family resilience',
+    title: 'Growing practical income and food security.',
+    description:
+      'Savings groups, home gardens, cooperatives and farmer support help rural families build steadier livelihoods.',
+    primaryLabel: 'Get involved',
+    primaryTo: '/get-involved',
+    secondaryLabel: 'Livelihood program',
+    secondaryTo: '/programs/livelihood',
+    position: 'center',
+  },
+  {
+    image: '/images/programs/child-protection1.jpg',
+    caption: '',
+    alt: 'Children and community members participating in a protection activity',
+    eyebrow: 'Child protection and dignity',
+    title: 'Safeguarding children through local action.',
+    description:
+      'Child rights campaigns, youth peer groups and community networks help children grow in safer, more caring communities.',
+    primaryLabel: 'Stand with us',
+    primaryTo: '/get-involved',
+    secondaryLabel: 'Protection program',
+    secondaryTo: '/programs/child-protection',
+    position: 'center',
+  },
 ]
 
 useScrollReveal()
@@ -26,26 +92,38 @@ useScrollReveal()
 
 <template>
   <div class="home-view">
-    <Slideshow :slides="slideItems">
+    <Slideshow :slides="slideItems" :interval-ms="6200" v-slot="{ activeSlide }">
       <div class="hero-overlay" />
-
       <div class="hero-inner">
-        <p class="eyebrow eyebrow--light">Buddhist NGO · Cambodia · Since 1994</p>
-        <h1 class="hero-title">
-          Walking with villages toward peace, sustainability and dignity.
-        </h1>
-        <p class="hero-subtitle">
-          Santi Sena, the Peace Army, works alongside rural Cambodian communities in Svay
-          Rieng, Prey Veng and Kratie — protecting forests, teaching children, growing
-          livelihoods and safeguarding families.
-        </p>
-        <div class="hero-actions">
-          <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
-          <RouterLink to="/about" class="btn btn--outline">Stand with us</RouterLink>
+        <div :key="activeSlide?.image" class="hero-message">
+          <p class="eyebrow eyebrow--light">
+            {{ activeSlide?.eyebrow ?? 'Buddhist NGO - Cambodia - Since 1994' }}
+          </p>
+          <h1 class="hero-title">
+            {{
+              activeSlide?.title ??
+              'Walking with villages toward peace, sustainability and dignity.'
+            }}
+          </h1>
+          <p class="hero-subtitle">
+            {{
+              activeSlide?.description ??
+              'Santi Sena works alongside rural Cambodian communities in education, livelihoods, environment and child protection.'
+            }}
+          </p>
+          <div class="hero-actions">
+            <RouterLink :to="activeSlide?.primaryTo ?? '/qr-donate'" class="btn btn--primary">
+              {{ activeSlide?.primaryLabel ?? 'Support Us' }}
+            </RouterLink>
+            <RouterLink :to="activeSlide?.secondaryTo ?? '/about'" class="btn btn--outline">
+              {{ activeSlide?.secondaryLabel ?? 'Stand with us' }}
+            </RouterLink>
+          </div>
         </div>
       </div>
     </Slideshow>
 
+    <!-- Stats + News button -->
     <section class="stats">
       <div class="stats-inner">
         <div
@@ -57,6 +135,10 @@ useScrollReveal()
           <div class="stat-number">{{ stat.value }}</div>
           <div class="stat-label">{{ stat.label }}</div>
         </div>
+      </div>
+      <!-- 👇 NEW: button row under stats -->
+      <div class="stats-news-row">
+        <RouterLink to="/news" class="btn btn--news"> 📰 See all news </RouterLink>
       </div>
     </section>
 
@@ -70,10 +152,10 @@ useScrollReveal()
         Peace is planted, not declared.
       </h2>
       <p class="mission-text reveal" style="animation-delay: 0.24s">
-        Santi Sena — the <em>Peace Army</em> — was founded by Cambodian Buddhist monks in
-        1994 to alleviate poverty and rebuild moral, environmental and economic life after
-        decades of conflict. Today our 30+ staff serve 293 villages with programs that
-        combine the wisdom of the Dharma with rigorous community-led development.
+        Santi Sena — the <em>Peace Army</em> — was founded by Cambodian Buddhist monks in 1994 to
+        alleviate poverty and rebuild moral, environmental and economic life after decades of
+        conflict. Today our 30+ staff serve 293 villages with programs that combine the wisdom of
+        the Dharma with rigorous community-led development.
       </p>
     </section>
 
@@ -89,60 +171,72 @@ useScrollReveal()
       <div class="pillars-grid">
         <article class="pillar-card reveal">
           <div class="pillar-image pillar-image--forest">
-            <img :src="environmentImg" alt="Community forestry in a Cambodian village" class="pillar-photo" />
-
+            <img
+              :src="environmentImg"
+              alt="Community forestry in a Cambodian village"
+              class="pillar-photo"
+            />
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 01</p>
             <h3 class="pillar-title">Natural Resource &amp; Environment</h3>
             <p class="pillar-desc">
-              Community forestry, tree nurseries, WASH and sanitation, climate adaptation
-              and biogas — protecting the land that sustains every village.
+              Community forestry, tree nurseries, WASH and sanitation, climate adaptation and biogas
+              — protecting the land that sustains every village.
             </p>
           </div>
         </article>
 
         <article class="pillar-card reveal" style="animation-delay: 0.12s">
           <div class="pillar-image pillar-image--education">
-            <img :src="educationImg" alt="Children learning at a community pre-school" class="pillar-photo" />
-
+            <img
+              :src="educationImg"
+              alt="Children learning at a community pre-school"
+              class="pillar-photo"
+            />
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 02</p>
             <h3 class="pillar-title">Access to Education</h3>
             <p class="pillar-desc">
-              Community pre-schools, mobile libraries, scholarships for poor children and
-              the preservation of Buddhist education.
+              Community pre-schools, mobile libraries, scholarships for poor children and the
+              preservation of Buddhist education.
             </p>
           </div>
         </article>
 
         <article class="pillar-card reveal" style="animation-delay: 0.12s">
           <div class="pillar-image pillar-image--livelihood">
-            <img :src="livelihoodImg" alt="Villagers working on rural livelihood activities" class="pillar-photo" />
-
+            <img
+              :src="livelihoodImg"
+              alt="Villagers working on rural livelihood activities"
+              class="pillar-photo"
+            />
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 03</p>
             <h3 class="pillar-title">Livelihood &amp; Economic Improvement</h3>
             <p class="pillar-desc">
-              Integrated farming, Saving-for-Change groups, agricultural cooperatives and
-              rural enterprises such as melaleuca oil.
+              Integrated farming, Saving-for-Change groups, agricultural cooperatives and rural
+              enterprises such as melaleuca oil.
             </p>
           </div>
         </article>
 
         <article class="pillar-card reveal" style="animation-delay: 0.24s">
           <div class="pillar-image pillar-image--protection">
-            <img :src="childImg" alt="Children protected and cared for in their community" class="pillar-photo" />
-            
+            <img
+              :src="childImg"
+              alt="Children protected and cared for in their community"
+              class="pillar-photo"
+            />
           </div>
           <div class="pillar-body">
             <p class="pillar-goal">Goal 04</p>
             <h3 class="pillar-title">Child Protection</h3>
             <p class="pillar-desc">
-              Anti-trafficking campaigns, Child Protection Networks, peer educator groups
-              and child rights advocacy.
+              Anti-trafficking campaigns, Child Protection Networks, peer educator groups and child
+              rights advocacy.
             </p>
           </div>
         </article>
@@ -161,7 +255,9 @@ useScrollReveal()
       <div class="cta-card">
         <div class="cta-text">
           <h2 class="cta-title">Join the Peace Army.</h2>
-          <p class="cta-desc">Donate, partner, volunteer — every act seeds another village with hope.</p>
+          <p class="cta-desc">
+            Donate, partner, volunteer — every act seeds another village with hope.
+          </p>
         </div>
         <div class="cta-actions">
           <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
@@ -241,7 +337,13 @@ useScrollReveal()
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(6, 18, 13, 0.92) 0%, rgba(6, 18, 13, 0.68) 38%, rgba(6, 18, 13, 0.3) 65%, rgba(6, 18, 13, 0.05) 100%),
+    linear-gradient(
+      90deg,
+      rgba(6, 18, 13, 0.92) 0%,
+      rgba(6, 18, 13, 0.68) 38%,
+      rgba(6, 18, 13, 0.3) 65%,
+      rgba(6, 18, 13, 0.05) 100%
+    ),
     radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.4) 0%, transparent 55%);
 }
 
@@ -261,11 +363,27 @@ useScrollReveal()
   animation: fadeInUp 0.8s ease-out;
 }
 
+.hero-message {
+  animation: heroMessageIn 0.48s ease-out;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
     transform: translateY(30px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroMessageIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -301,7 +419,10 @@ useScrollReveal()
   font-size: 0.95rem;
   text-decoration: none;
   border: 1px solid transparent;
-  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .btn--primary {
@@ -326,12 +447,13 @@ useScrollReveal()
 .stats {
   background: var(--color-cream);
   border-bottom: 1px solid var(--color-border);
+  padding-bottom: 2rem;
 }
 
 .stats-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3.5rem 1.5rem;
+  padding: 3.5rem 1.5rem 1.5rem;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 2.5rem 1rem;
@@ -359,10 +481,34 @@ useScrollReveal()
   .stats-inner {
     grid-template-columns: repeat(4, 1fr);
   }
-  /* Thin dividers between the four columns, like a classic stats band. */
   .stat + .stat {
     border-left: 1px solid var(--color-border);
   }
+}
+
+/* 👇 NEW: news button row */
+.stats-news-row {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.btn--news {
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 0.65rem 2rem;
+  font-weight: 600;
+  transition:
+    background 0.25s,
+    color 0.25s;
+}
+
+.btn--news:hover {
+  background: var(--primary-color);
+  color: #fff;
 }
 
 /* Mission */
@@ -473,27 +619,11 @@ useScrollReveal()
   transform: scale(1.06);
 }
 
-/* Color tint over the photo keeps each pillar's hue and the icon readable. */
 .pillar-image::after {
   content: '';
   position: absolute;
   inset: 0;
 }
-
-.pillar-icon {
-  position: relative;
-  z-index: 1;
-  width: 3rem;
-  height: 3rem;
-  color: rgba(255, 255, 255, 0.92);
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
-  transition: transform 0.35s ease;
-}
-
-.pillar-card:hover .pillar-icon {
-  transform: scale(1.12);
-}
-
 
 .pillar-body {
   padding: 1.5rem;
@@ -563,7 +693,12 @@ useScrollReveal()
   gap: 2rem;
   padding: clamp(2rem, 4vw, 3rem);
   border-radius: 1.5rem;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 60%, var(--color-ink) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--primary-dark) 60%,
+    var(--color-ink) 100%
+  );
   box-shadow: 0 24px 48px rgba(15, 35, 26, 0.28);
 }
 
