@@ -208,29 +208,29 @@ async function logout() {
 
 <style scoped>
 .admin-sidebar {
-  --sb-bg: linear-gradient(180deg, #edf1f9, #e1e8f4);
-  --sb-border: #d3dcea;
+  --sb-bg: linear-gradient(180deg, #edf7f2, #e2efe8);
+  --sb-border: var(--admin-theme-border);
   --sb-divider: rgba(15, 23, 42, 0.09);
-  --sb-text: #3f4d66;
-  --sb-text-strong: #172033;
-  --sb-muted: #7c88a0;
-  --sb-accent: #2563eb;
-  --sb-accent-soft: rgba(37, 99, 235, 0.13);
-  --sb-active-text: #1d4ed8;
+  --sb-text: var(--admin-theme-text);
+  --sb-text-strong: var(--admin-theme-contrast);
+  --sb-muted: var(--admin-theme-muted);
+  --sb-accent: var(--admin-theme-primary);
+  --sb-accent-soft: color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
+  --sb-active-text: var(--admin-theme-primary-deep);
   --sb-hover-bg: #ffffff;
-  --sb-brand: #2563eb;
-  --sb-brand-mark-bg: rgba(37, 99, 235, 0.12);
-  --sb-brand-mark: #2563eb;
-  --sb-teal: #0f766e;
-  --sb-teal-soft: rgba(13, 148, 136, 0.14);
-  --sb-teal-hover-text: #115e59;
+  --sb-brand: var(--admin-theme-primary-deep);
+  --sb-brand-mark-bg: color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
+  --sb-brand-mark: var(--admin-theme-primary-deep);
+  --sb-teal: var(--admin-theme-teal);
+  --sb-teal-soft: color-mix(in srgb, var(--admin-theme-teal) 15%, transparent);
+  --sb-teal-hover-text: #0b5f57;
   --sb-danger: #be123c;
   --sb-danger-border: rgba(225, 29, 72, 0.3);
   --sb-danger-bg: rgba(225, 29, 72, 0.06);
   --sb-danger-hover-bg: rgba(225, 29, 72, 0.13);
   --sb-danger-hover-text: #9f1239;
   --sb-danger-sub: rgba(159, 18, 57, 0.75);
-  --sb-shadow: 18px 0 38px rgba(15, 23, 42, 0.12);
+  --sb-shadow: 18px 0 38px rgba(15, 95, 73, 0.14);
 
   width: 260px;
   background: var(--sb-bg);
@@ -246,22 +246,22 @@ async function logout() {
 }
 
 :global(.admin-dark .admin-sidebar) {
-  --sb-bg: linear-gradient(180deg, #1b2540, #131c31);
-  --sb-border: #303c58;
+  --sb-bg: linear-gradient(180deg, #10241f, #091814);
+  --sb-border: var(--admin-theme-border);
   --sb-divider: rgba(255, 255, 255, 0.09);
-  --sb-text: #b3bed3;
-  --sb-text-strong: #ffffff;
-  --sb-muted: #93a0ba;
-  --sb-accent: #60a5fa;
-  --sb-accent-soft: rgba(59, 130, 246, 0.28);
-  --sb-active-text: #ffffff;
-  --sb-hover-bg: #26314b;
-  --sb-brand: #60a5fa;
-  --sb-brand-mark-bg: rgba(96, 165, 250, 0.14);
-  --sb-brand-mark: #93c5fd;
-  --sb-teal: #2dd4bf;
-  --sb-teal-soft: rgba(45, 212, 191, 0.18);
-  --sb-teal-hover-text: #ffffff;
+  --sb-text: var(--admin-theme-text);
+  --sb-text-strong: var(--admin-theme-contrast);
+  --sb-muted: var(--admin-theme-muted);
+  --sb-accent: var(--admin-theme-primary);
+  --sb-accent-soft: color-mix(in srgb, var(--admin-theme-primary) 24%, transparent);
+  --sb-active-text: var(--admin-theme-contrast);
+  --sb-hover-bg: var(--admin-theme-surface-soft);
+  --sb-brand: var(--admin-theme-primary-deep);
+  --sb-brand-mark-bg: color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
+  --sb-brand-mark: var(--admin-theme-primary-deep);
+  --sb-teal: var(--admin-theme-teal);
+  --sb-teal-soft: color-mix(in srgb, var(--admin-theme-teal) 18%, transparent);
+  --sb-teal-hover-text: var(--admin-theme-contrast);
   --sb-danger: #fecdd3;
   --sb-danger-border: rgba(251, 113, 133, 0.32);
   --sb-danger-bg: rgba(251, 113, 133, 0.1);

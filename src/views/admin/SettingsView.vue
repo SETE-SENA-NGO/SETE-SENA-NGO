@@ -116,20 +116,19 @@ const adminEmail = ref('admin@santisena.org')
 
 <style scoped>
 .admin-page {
-  /* ---- Professional green & white admin theme ---- */
-  --admin-bg: #f4faf6;
-  --admin-bg-deep: #e7f5ec;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f3faf5;
-  --admin-contrast: #123524;
-  --admin-contrast-soft: #235c3f;
-  --admin-text: #33473c;
-  --admin-muted: #6b8578;
-  --admin-border: #d6ebde;
-  --admin-border-strong: #b9dcc5;
-  --admin-blue: #16a34a;      /* primary green, kept var name for logic compatibility */
-  --admin-blue-deep: #0f7d38;
-  --admin-shadow: 0 18px 44px rgba(16, 88, 51, 0.09);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-blue: var(--admin-theme-primary);
+  --admin-blue-deep: var(--admin-theme-primary-deep);
+  --admin-shadow: var(--admin-theme-shadow);
 
   min-height: 100vh;
   display: flex;
@@ -141,12 +140,15 @@ const adminEmail = ref('admin@santisena.org')
 }
 
 :global(.admin-dark .admin-page) {
-  --admin-bg: #0b1120;
-  --admin-surface: #111827;
-  --admin-border: #293548;
-  --admin-text: #cbd5e1;
-  --admin-muted: #a6b0c3;
-  --admin-contrast: #f8fafc;
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
 }
 
 .admin-layout {
@@ -172,7 +174,7 @@ const adminEmail = ref('admin@santisena.org')
   padding: 1.4rem 1.6rem;
   border: 1px solid var(--admin-border);
   border-radius: 16px;
-  background: linear-gradient(135deg, #ecfdf3, var(--admin-surface));
+  background: linear-gradient(135deg, var(--admin-surface-soft), var(--admin-surface));
   box-shadow: var(--admin-shadow);
 }
 
@@ -238,7 +240,7 @@ h1 {
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 11px;
-  background: #ecfdf3;
+  background: var(--admin-surface-soft);
   color: var(--admin-blue-deep);
   border: 1px solid rgba(22, 163, 74, 0.22);
   flex: 0 0 auto;
@@ -295,7 +297,7 @@ h1 {
   min-height: 44px;
   border: 1px solid var(--admin-blue);
   border-radius: 10px;
-  background: linear-gradient(180deg, #22c55e, var(--admin-blue-deep));
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
   color: #ffffff;
   padding: 0.6rem 1.15rem;
   font-weight: 700;
@@ -307,7 +309,7 @@ h1 {
 }
 
 .settings-btn:hover {
-  background: linear-gradient(180deg, #1fb356, #0c6b30);
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
   transform: translateY(-1px);
   box-shadow: 0 16px 28px rgba(15, 125, 56, 0.3);
 }
@@ -339,7 +341,7 @@ h1 {
 
 .theme-option.active {
   border-color: var(--admin-blue);
-  background: #ecfdf3;
+  background: var(--admin-surface-soft);
   color: var(--admin-blue-deep);
 }
 

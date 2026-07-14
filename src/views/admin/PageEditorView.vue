@@ -1463,25 +1463,24 @@ function formatDate(value: string) {
 
 <style scoped>
 .editor-page {
-  /* ---- Professional green & white admin theme ---- */
-  --admin-bg: #f4faf6;
-  --admin-bg-deep: #e7f5ec;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f3faf5;
-  --admin-contrast: #123524;
-  --admin-contrast-soft: #235c3f;
-  --admin-text: #33473c;
-  --admin-muted: #6b8578;
-  --admin-border: #d6ebde;
-  --admin-border-strong: #b9dcc5;
-  --admin-blue: #16a34a;       /* primary green (kept var name for logic compatibility) */
-  --admin-blue-deep: #0f7d38;
-  --admin-pink: #dc2626;
-  --admin-violet: #0d9488;
-  --admin-gold: #ca8a04;
-  --admin-green: #16a34a;
-  --admin-gold-soft: #fdf6e3;
-  --admin-shadow: 0 18px 44px rgba(16, 88, 51, 0.09);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-blue: var(--admin-theme-primary);
+  --admin-blue-deep: var(--admin-theme-primary-deep);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-violet: var(--admin-theme-teal);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-green: var(--admin-theme-primary);
+  --admin-gold-soft: color-mix(in srgb, var(--admin-gold) 14%, var(--admin-surface));
+  --admin-shadow: var(--admin-theme-shadow);
   --panel: var(--admin-surface);
   --border: var(--admin-border);
   --text: var(--admin-text);
@@ -1497,18 +1496,18 @@ function formatDate(value: string) {
 }
 
 :global(.admin-dark .editor-page) {
-  --admin-bg: #0b1120;
-  --admin-bg-deep: #111827;
-  --admin-surface: #111827;
-  --admin-surface-soft: #0f172a;
-  --admin-contrast: #f8fafc;
-  --admin-contrast-soft: #dbeafe;
-  --admin-text: #cbd5e1;
-  --admin-muted: #a6b0c3;
-  --admin-border: #293548;
-  --admin-border-strong: #3b475d;
-  --admin-gold-soft: rgba(249, 115, 22, 0.14);
-  --admin-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-gold-soft: color-mix(in srgb, var(--admin-gold) 18%, var(--admin-surface));
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 .admin-layout {
@@ -1580,7 +1579,7 @@ h3 {
   margin: -1.75rem -1.75rem 1.5rem;
   padding: 1.75rem;
   border-bottom: 1px solid var(--admin-border);
-  background: linear-gradient(180deg, #ecfdf3, var(--admin-surface-soft));
+  background: linear-gradient(180deg, var(--admin-surface-soft), var(--admin-surface));
 }
 
 .route-line {
@@ -1638,13 +1637,13 @@ h3 {
 
 .button-primary {
   border: 1px solid var(--admin-blue);
-  background: linear-gradient(180deg, #22c55e, var(--admin-blue-deep));
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
   color: #ffffff;
   box-shadow: 0 12px 24px rgba(15, 125, 56, 0.28);
 }
 
 .button-primary:hover {
-  background: linear-gradient(180deg, #1fb356, #0c6b30);
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
   border-color: var(--admin-blue-deep);
 }
 
@@ -1703,12 +1702,12 @@ h3 {
 
 .notice-success {
   border-color: rgba(21, 128, 61, 0.3);
-  background: #ecfdf3;
-  color: #166534;
+  background: var(--admin-surface-soft);
+  color: var(--admin-blue-deep);
 }
 
 .notice-success .notice-icon {
-  background: #16a34a;
+  background: var(--admin-blue);
   color: #ffffff;
 }
 
@@ -1762,7 +1761,7 @@ h3 {
 
 .workflow-step.active {
   border-color: rgba(22, 163, 74, 0.35);
-  background: #ecfdf3;
+  background: var(--admin-surface-soft);
   color: var(--admin-contrast);
 }
 
@@ -1805,7 +1804,7 @@ h3 {
 
 .status-pill {
   border-radius: 999px;
-  background: #ecfdf3;
+  background: var(--admin-surface-soft);
   color: #166534;
   padding: 0.32rem 0.75rem;
   font-size: 0.76rem;
@@ -1912,7 +1911,7 @@ input:disabled {
   width: 1.7rem;
   height: 1.7rem;
   border-radius: 999px;
-  background: #ecfdf3;
+  background: var(--admin-surface-soft);
   color: var(--admin-blue-deep);
   font-size: 0.82rem;
   font-weight: 800;
@@ -1999,8 +1998,8 @@ input:disabled {
   height: 0.85rem;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: #16a34a;
-  box-shadow: 0 0 0 5px rgba(22, 163, 74, 0.14);
+  background: var(--admin-blue);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--admin-blue) 18%, transparent);
 }
 
 .save-dot.dirty {

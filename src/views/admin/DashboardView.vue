@@ -235,23 +235,23 @@ function barWidth(value: number, total: number) {
 
 <style scoped>
 .admin-page {
-  /* ---- Professional green & white admin theme ---- */
-  --admin-bg: #f4faf6;
-  --admin-bg-deep: #e7f5ec;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f3faf5;
-  --admin-contrast: #123524;
-  --admin-contrast-soft: #235c3f;
-  --admin-text: #33473c;
-  --admin-muted: #6b8578;
-  --admin-border: #d6ebde;
-  --admin-border-strong: #b9dcc5;
-  --admin-blue: #0d9488;      /* teal-green accent, kept var name for logic compatibility */
-  --admin-pink: #dc2626;
-  --admin-violet: #0d9488;
-  --admin-gold: #ca8a04;
-  --admin-green: #16a34a;
-  --admin-shadow: 0 18px 44px rgba(16, 88, 51, 0.09);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-violet: var(--admin-theme-teal);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-green: var(--admin-theme-primary);
+  --admin-green-deep: var(--admin-theme-primary-deep);
+  --admin-shadow: var(--admin-theme-shadow);
 
   min-height: 100vh;
   display: flex;
@@ -263,17 +263,17 @@ function barWidth(value: number, total: number) {
 }
 
 :global(.admin-dark .admin-page) {
-  --admin-bg: #0b1120;
-  --admin-bg-deep: #111827;
-  --admin-surface: #111827;
-  --admin-surface-soft: #0f172a;
-  --admin-contrast: #f8fafc;
-  --admin-contrast-soft: #dbeafe;
-  --admin-text: #cbd5e1;
-  --admin-muted: #a6b0c3;
-  --admin-border: #293548;
-  --admin-border-strong: #3b475d;
-  --admin-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 .admin-layout {
@@ -296,7 +296,7 @@ function barWidth(value: number, total: number) {
 
 .eyebrow {
   margin: 0 0 0.5rem;
-  color: #0f7d38;
+  color: var(--admin-green-deep);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -405,14 +405,14 @@ h2 {
 
 .button-primary {
   border: 1px solid var(--admin-green);
-  background: linear-gradient(180deg, #22c55e, #0f7d38);
+  background: linear-gradient(180deg, var(--admin-green), var(--admin-green-deep));
   color: #ffffff;
   box-shadow: 0 12px 24px rgba(15, 125, 56, 0.28);
 }
 
 .button-primary:hover {
-  background: linear-gradient(180deg, #1fb356, #0c6b30);
-  border-color: #0c6b30;
+  background: linear-gradient(180deg, var(--admin-green), var(--admin-green-deep));
+  border-color: var(--admin-green-deep);
 }
 
 .button-secondary {
@@ -424,7 +424,7 @@ h2 {
 .button-secondary:hover {
   border-color: var(--admin-green);
   background: var(--admin-surface-soft);
-  color: #0f7d38;
+  color: var(--admin-green-deep);
   box-shadow: 0 8px 18px rgba(16, 88, 51, 0.1);
 }
 
@@ -548,7 +548,7 @@ h2 {
   margin: -1.3rem -1.3rem 1.3rem;
   padding: 1.1rem 1.3rem;
   border-bottom: 1px solid var(--admin-border);
-  background: linear-gradient(180deg, #ecfdf3, transparent);
+  background: linear-gradient(180deg, var(--admin-surface-soft), transparent);
 }
 
 .dashboard-panel h2,
@@ -589,7 +589,7 @@ h2 {
   min-height: 2rem;
   align-self: end;
   border-radius: 999px 999px 8px 8px;
-  background: linear-gradient(180deg, #22c55e, #0f7d38);
+  background: linear-gradient(180deg, var(--admin-green), var(--admin-green-deep));
   box-shadow: 0 14px 24px rgba(15, 125, 56, 0.22);
   transition: transform 0.15s ease;
 }
@@ -618,7 +618,7 @@ h2 {
   border-radius: 999px;
   background:
     radial-gradient(circle at center, var(--admin-surface) 0 53%, transparent 54%),
-    conic-gradient(#16a34a var(--saved), var(--admin-surface-soft) 0);
+    conic-gradient(var(--admin-green) var(--saved), var(--admin-surface-soft) 0);
   box-shadow: inset 0 0 0 10px var(--admin-bg-deep);
 }
 

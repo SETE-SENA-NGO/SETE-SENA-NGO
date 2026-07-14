@@ -64,19 +64,18 @@ async function submit() {
 
 <style scoped>
 .login-view {
-  /* ---- Same tokens as the Settings page, for a consistent look ---- */
-  --admin-bg: #f4faf6;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f3faf5;
-  --admin-contrast: #123524;
-  --admin-contrast-soft: #235c3f;
-  --admin-text: #33473c;
-  --admin-muted: #6b8578;
-  --admin-border: #d6ebde;
-  --admin-border-strong: #b9dcc5;
-  --admin-blue: #16a34a;
-  --admin-blue-deep: #0f7d38;
-  --admin-shadow: 0 18px 44px rgba(16, 88, 51, 0.09);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-blue: var(--admin-theme-primary);
+  --admin-blue-deep: var(--admin-theme-primary-deep);
+  --admin-shadow: var(--admin-theme-shadow);
 
   display: flex;
   align-items: center;
@@ -94,8 +93,8 @@ async function submit() {
   position: absolute;
   inset: -40% -20%;
   background:
-    radial-gradient(ellipse at 15% 20%, rgba(22, 163, 74, 0.10) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 80%, rgba(15, 125, 56, 0.08) 0%, transparent 55%);
+    radial-gradient(ellipse at 15% 20%, color-mix(in srgb, var(--admin-blue) 14%, transparent) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 80%, color-mix(in srgb, var(--admin-blue-deep) 12%, transparent) 0%, transparent 55%);
   pointer-events: none;
 }
 
@@ -104,7 +103,7 @@ async function submit() {
   width: min(420px, 100%);
   border: 1px solid var(--admin-border);
   border-radius: 16px;
-  background: linear-gradient(135deg, #ecfdf3, var(--admin-surface));
+  background: linear-gradient(135deg, var(--admin-surface-soft), var(--admin-surface));
   color: var(--admin-text);
   padding: 2.4rem 2.2rem;
   display: grid;
@@ -123,7 +122,7 @@ async function submit() {
   width: 3.1rem;
   height: 3.1rem;
   border-radius: 11px;
-  background: linear-gradient(180deg, #22c55e, var(--admin-blue-deep));
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
   box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
   position: relative;
 }
@@ -225,7 +224,7 @@ input::placeholder {
   min-height: 46px;
   border: 1px solid var(--admin-blue);
   border-radius: 10px;
-  background: linear-gradient(180deg, #22c55e, var(--admin-blue-deep));
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
   color: #ffffff;
   font-weight: 700;
   font-size: 0.95rem;
@@ -236,7 +235,7 @@ input::placeholder {
 }
 
 .submit-button:hover:not(:disabled) {
-  background: linear-gradient(180deg, #1fb356, #0c6b30);
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
   transform: translateY(-1px);
   box-shadow: 0 16px 28px rgba(15, 125, 56, 0.3);
 }
