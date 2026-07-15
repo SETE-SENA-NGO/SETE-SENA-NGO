@@ -14,27 +14,27 @@ function fallbackProfile(user: User): UserProfile {
   }
 }
 
+export type Profile = {
+  id: string
+  role: string
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
-  const profile = ref<UserProfile | null>(null)
+  const profile = ref<Profile | null>(null)
   const loading = ref(false)
   const initialized = ref(false)
 
   const isAuthenticated = computed(() => !!user.value)
-  const isContentAdmin = computed(() => {
-    return !!profile.value && adminRoles.has(profile.value.role)
-  })
+  const isAdmin = computed(() => profile.value?.role === 'admin')
 
-  async function loadProfile(currentUser: User) {
-    const { data, error } = await supabase
+  async function loadProfile(userId: string) {
+    const { data } = await supabase
       .from('profiles')
-      .select('id, email, role, full_name, avatar_url')
-      .eq('id', currentUser.id)
+      .select('id, role')
+      .eq('id', userId)
       .maybeSingle()
-
-    if (error) throw error
-    profile.value = (data as UserProfile | null) ?? fallbackProfile(currentUser)
-    return profile.value
+    profile.value = (data as Profile | null) ?? { id: userId, role: 'viewer' }
   }
 
   async function init() {
@@ -46,9 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
       } = await supabase.auth.getSession()
       user.value = session?.user ?? null
       if (user.value) {
-        await loadProfile(user.value)
-      } else {
-        profile.value = null
+        await loadProfile(user.value.id)
       }
     } finally {
       loading.value = false
@@ -58,19 +56,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(email: string, password: string) {
     loading.value = true
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      loading.value = false
-      throw error
-    }
     try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
       user.value = data.user
-      const loadedProfile = await loadProfile(data.user)
-
-      if (!adminRoles.has(loadedProfile.role)) {
-        await logout()
-        throw new Error('This account does not have admin access.')
-      }
+      await loadProfile(data.user.id)
     } finally {
       loading.value = false
     }
@@ -82,15 +72,5 @@ export const useAuthStore = defineStore('auth', () => {
     profile.value = null
   }
 
-  return {
-    user,
-    profile,
-    loading,
-    initialized,
-    isAuthenticated,
-    isContentAdmin,
-    init,
-    login,
-    logout,
-  }
+  return { user, profile, loading, initialized, isAuthenticated, isAdmin, init, login, logout }
 })

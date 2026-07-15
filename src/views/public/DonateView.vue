@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import acledaLogo from '@/assets/acleda-logo.png'
-import { useContentStore } from '@/stores/content.store'
 import {
   defaultDonationMethods,
-  donationSettingsSlug,
-  parseDonationSettings,
+  fetchDonationMethods,
   type DonationMethod,
-  type DonationSettings,
 } from '@/lib/donationSettings'
 
 type Tab = 'qr' | 'card'
@@ -84,20 +81,18 @@ function toPayMethod(method: DonationMethod): PayMethod {
   }
 }
 
-const content = useContentStore()
-const settings = ref<DonationSettings | null>(null)
+const savedMethods = ref<DonationMethod[]>([])
 
 onMounted(async () => {
   try {
-    const page = await content.fetchBySlug(donationSettingsSlug)
-    settings.value = page ? parseDonationSettings(page.body) : null
+    savedMethods.value = await fetchDonationMethods()
   } catch {
     // No admin settings saved yet — fall back to the defaults.
   }
 })
 
 const methods = computed<PayMethod[]>(() => {
-  const source = settings.value?.methods.length ? settings.value.methods : defaultDonationMethods()
+  const source = savedMethods.value.length ? savedMethods.value : defaultDonationMethods()
   return source.map(toPayMethod)
 })
 </script>
