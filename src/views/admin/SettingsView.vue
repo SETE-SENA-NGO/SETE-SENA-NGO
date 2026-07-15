@@ -6,7 +6,7 @@ import { useUiStore } from '@/stores/ui.store'
 
 const ui = useUiStore()
 const siteName = ref('Santi Sena NGO')
-const adminEmail = ref('admin@santisena.org')
+const adminEmail = ref('admin@gmail.com')
 </script>
 
 <template>

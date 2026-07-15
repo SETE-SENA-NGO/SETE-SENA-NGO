@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
+import { imageUploadHelpText } from '@/lib/media'
 
 const media = useMediaStore()
 const ui = useUiStore()
@@ -22,7 +23,7 @@ function onSelect(e: Event) {
 <template>
   <div class="image-uploader">
     <input ref="fileInput" type="file" accept="image/*" @change="onSelect" />
-    <div class="hint">Upload images to Supabase Storage (media bucket)</div>
+    <div class="hint">{{ imageUploadHelpText() }}</div>
   </div>
 </template>
 
