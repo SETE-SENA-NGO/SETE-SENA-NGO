@@ -20,8 +20,6 @@ import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
 import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
 import QrDonateView from '@/views/public/DonateView.vue'
 
-
-
 // 👇 NEW: import news views
 import NewsView from '@/views/public/NewsView.vue'
 import NewsDetailView from '@/views/public/NewsDetailView.vue'
@@ -40,7 +38,11 @@ export const publicRoutes = [
   { path: '/programs/environment', component: ProgramEnviromentView },
   { path: '/programs/education', component: EducationView },
   { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
-  { path: '/programs/child-protection', component: ProgramsChildProtectionView, name: 'programs-child-protection' },
+  {
+    path: '/programs/child-protection',
+    component: ProgramsChildProtectionView,
+    name: 'programs-child-protection',
+  },
 
   // Impact
   { path: '/impact/numbers', component: ImpactNumbersView },

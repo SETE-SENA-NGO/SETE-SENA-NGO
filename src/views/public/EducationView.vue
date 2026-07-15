@@ -19,10 +19,22 @@ const bulletsWhyMatters: string[] = [
 ]
 
 const teamStructure = [
-  { role: 'Program Director', desc: 'Oversees education initiatives, partnerships, and donor reporting.' },
-  { role: 'Field Coordinators', desc: 'Manage pre-school, library and scholarship programs in each province.' },
-  { role: 'Teachers & Facilitators', desc: 'Deliver early learning, literacy sessions and youth clubs.' },
-  { role: 'Monitoring & Evaluation', desc: 'Tracks learning progress, attendance and community outcomes.' },
+  {
+    role: 'Program Director',
+    desc: 'Oversees education initiatives, partnerships, and donor reporting.',
+  },
+  {
+    role: 'Field Coordinators',
+    desc: 'Manage pre-school, library and scholarship programs in each province.',
+  },
+  {
+    role: 'Teachers & Facilitators',
+    desc: 'Deliver early learning, literacy sessions and youth clubs.',
+  },
+  {
+    role: 'Monitoring & Evaluation',
+    desc: 'Tracks learning progress, attendance and community outcomes.',
+  },
 ]
 
 onMounted(() => {
@@ -38,7 +50,10 @@ onMounted(() => {
     el.content = content
   }
 
-  setMeta('description', 'Community pre-schools, mobile libraries, scholarships and Buddhist moral education across rural Cambodian villages.')
+  setMeta(
+    'description',
+    'Community pre-schools, mobile libraries, scholarships and Buddhist moral education across rural Cambodian villages.',
+  )
 
   const setOgMeta = (property: string, content: string) => {
     let el = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`)
@@ -57,7 +72,6 @@ onMounted(() => {
 
 <template>
   <div class="edu-page">
-
     <!-- ── Introduction ── -->
     <section class="intro-section">
       <div class="section-container">
@@ -128,11 +142,28 @@ onMounted(() => {
 
         <!-- ── Testimonial Blockquote ── -->
         <blockquote class="testimonial">
-          <svg class="testimonial-quote-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M10 11H6a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5" stroke="currentColor"
-              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M18 11h-4a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5" stroke="currentColor"
-              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <svg
+            class="testimonial-quote-icon"
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M10 11H6a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M18 11h-4a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 011 1v4c0 2.5-1.5 4.5-4 5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           <div class="testimonial-body">
             <p class="testimonial-quote">
@@ -168,8 +199,13 @@ onMounted(() => {
           <li v-for="item in bulletsWhyMatters" :key="item" class="bullet-item">
             <span class="bullet-icon bullet-icon-impact">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M13.5 4.5L6.5 11.5L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" />
+                <path
+                  d="M13.5 4.5L6.5 11.5L3 8"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </span>
             <span class="bullet-text">{{ item }}</span>
@@ -186,17 +222,17 @@ onMounted(() => {
  * global design tokens (--primary-color / --primary-dark / --primary-light).
  */
 .edu-page {
-  --warm-white: #FDFCF9;
-  --warm-bg: #F8F6F1;
-  --warm-card: #FFFFFF;
-  --warm-card-alt: #FCFAF5;
-  --warm-border: #EBE5DA;
+  --warm-white: #fdfcf9;
+  --warm-bg: #f8f6f1;
+  --warm-card: #ffffff;
+  --warm-card-alt: #fcfaf5;
+  --warm-border: #ebe5da;
 
   /* Text — warm neutral tones */
-  --text-heading: #0F1F17;
-  --text-body: #2C3E35;
-  --text-secondary: #5C6B62;
-  --text-muted: #8B9A91;
+  --text-heading: #0f1f17;
+  --text-body: #2c3e35;
+  --text-secondary: #5c6b62;
+  --text-muted: #8b9a91;
   --text-on-hero: rgba(255, 255, 255, 0.88);
   --text-on-green: rgba(255, 255, 255, 0.92);
 }
@@ -234,7 +270,13 @@ onMounted(() => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.2) 65%, transparent 100%),
+    linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.78) 0%,
+      rgba(0, 0, 0, 0.5) 38%,
+      rgba(0, 0, 0, 0.2) 65%,
+      transparent 100%
+    ),
     linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 40%, rgba(0, 0, 0, 0.15) 100%);
 }
 
@@ -267,7 +309,7 @@ onMounted(() => {
 
 .hero-content .section-label {
   background: color-mix(in srgb, var(--primary-color) 18%, transparent);
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .hero-title {
@@ -276,7 +318,7 @@ onMounted(() => {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.015em;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .hero-subtitle {
@@ -308,8 +350,8 @@ onMounted(() => {
 
 .btn-primary {
   background: var(--primary-color);
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(27, 163, 79, 0.30);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(27, 163, 79, 0.3);
 }
 
 .btn-primary:hover {
@@ -321,12 +363,12 @@ onMounted(() => {
 .btn-ghost {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .btn-ghost:hover {
   background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.40);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* ─── Introduction ─── */
@@ -378,7 +420,10 @@ onMounted(() => {
   background: var(--warm-card);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--warm-border);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .fact-card:hover {
@@ -522,7 +567,10 @@ onMounted(() => {
   background: var(--warm-card);
   border: 1px solid var(--warm-border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .org-team-card:hover {

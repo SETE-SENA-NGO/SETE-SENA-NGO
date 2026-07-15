@@ -137,8 +137,8 @@ useScrollReveal()
         </div>
       </div>
       <!-- 👇 NEW: button row under stats -->
-      <div class="stats-news-row reveal" style="animation-delay: 0.48s">
-        <RouterLink to="/news" class="btn btn--news"> 📰 See all news </RouterLink>
+      <div class="stats-news-row">
+        <RouterLink to="/news" class="btn btn--news"> See all news </RouterLink>
       </div>
     </section>
 
