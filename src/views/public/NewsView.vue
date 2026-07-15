@@ -1609,5 +1609,5 @@ const scrollToTop = () => {
     align-items: flex-start;
     gap: 0.5rem;
   }
-}
+  }
 </style>
