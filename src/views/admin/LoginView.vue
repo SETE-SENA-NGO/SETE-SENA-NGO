@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
+const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -18,8 +19,14 @@ async function submit() {
   submitting.value = true
   try {
     await auth.login(email.value, password.value)
+    if (!auth.isAdmin) {
+      await auth.logout()
+      error.value = 'This account does not have admin access.'
+      return
+    }
     ui.addToast('Welcome back', 'success')
-    router.push('/admin')
+    const redirect = route.query.redirect
+    router.push(typeof redirect === 'string' && redirect.startsWith('/admin') ? redirect : '/admin')
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Login failed. Please check your credentials.'
   } finally {

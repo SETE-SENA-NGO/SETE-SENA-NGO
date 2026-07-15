@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import NotFoundView from '@/views/NotFoundView.vue'
 import { publicRoutes } from './publicRoutes'
 import { adminRoutes } from './adminRoutes'
+import { useAuthStore } from '@/stores/auth.store'
 
 
 const router = createRouter({
@@ -18,16 +19,20 @@ const router = createRouter({
   ],
 })
 
-// router.beforeEach(async (to) => {
-//   if (to.meta.requiresAuth) {
-//     const auth = useAuthStore()
-//     if (!auth.initialized) {
-//       await auth.init()
-//     }
-//     if (!auth.isAuthenticated) {
-//       return { name: 'admin-login', query: { redirect: to.fullPath } }
-//     }
-//   }
-// })
+router.beforeEach(async (to) => {
+  if (to.meta.requiresAuth) {
+    const auth = useAuthStore()
+    if (!auth.initialized) {
+      await auth.init()
+    }
+    if (!auth.isAuthenticated) {
+      return { name: 'admin-login', query: { redirect: to.fullPath } }
+    }
+    // Signed in but not an admin: no access to the admin area.
+    if (!auth.isAdmin) {
+      return { path: '/' }
+    }
+  }
+})
 
 export default router
