@@ -3,7 +3,7 @@
     <!-- Program Overview Section -->
     <section class="section overview-section">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header reveal-header">
           <span class="section-label">Our Approach</span>
           <h2>Environmental Stewardship in Action</h2>
           <p class="section-desc">
@@ -12,7 +12,14 @@
           </p>
         </div>
         <div class="overview-grid">
-          <div class="overview-card">
+          <div
+            v-for="(card, i) in overviewCards"
+            :key="card.title"
+            class="overview-card"
+            :class="{ 'card-visible': visibleCards.overview[i] }"
+            :style="{ '--delay': `${i * 120}ms` }"
+            :ref="el => setRef(el, 'overview', i)"
+          >
             <div class="icon-wrapper">
               <svg
                 width="28"
@@ -23,60 +30,12 @@
                 stroke-width="1.8"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
+                v-html="card.svgPaths"
+              />
             </div>
-            <h3>Conservation</h3>
-            <p>
-              Protecting and restoring natural habitats, wildlife corridors, and biodiversity
-              hotspots through community-led initiatives and scientific research.
-            </p>
-          </div>
-          <div class="overview-card">
-            <div class="icon-wrapper">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            </div>
-            <h3>Sustainability</h3>
-            <p>
-              Promoting renewable energy, sustainable agriculture, and circular economy practices
-              that reduce environmental impact while supporting livelihoods.
-            </p>
-          </div>
-          <div class="overview-card">
-            <div class="icon-wrapper">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </div>
-            <h3>Community Engagement</h3>
-            <p>
-              Empowering local communities with knowledge, resources, and tools to actively
-              participate in environmental protection and climate action.
-            </p>
+            <h3>{{ card.title }}</h3>
+            <p>{{ card.text }}</p>
+            <span class="card-shine" />
           </div>
         </div>
       </div>
@@ -85,111 +44,26 @@
     <!-- Key Initiatives Section -->
     <section class="section initiatives-section alt-bg">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header reveal-header-delay">
           <span class="section-label">Key Initiatives</span>
           <h2>What We're Doing</h2>
         </div>
         <div class="initiatives-list">
-          <div class="initiative-item">
+          <div
+            v-for="(item, i) in initiatives"
+            :key="item.title"
+            class="initiative-item"
+            :class="{ 'initiative-visible': visibleCards.initiatives[i] }"
+            :style="{ '--delay': `${i * 100}ms` }"
+            :ref="el => setRef(el, 'initiatives', i)"
+          >
             <div class="initiative-image">
-              <img
-                src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80"
-                alt="Reforestation Projects"
-                loading="lazy"
-              />
-              <div class="initiative-overlay"></div>
+              <img :src="item.img" :alt="item.title" loading="lazy" />
+              <div class="initiative-overlay" />
             </div>
             <div class="initiative-content">
-              <h3>Reforestation Projects</h3>
-              <p>
-                Planting native tree species to restore degraded forests, combat desertification,
-                and create carbon sinks. We've planted over 500,000 trees across 12 communities.
-              </p>
-            </div>
-          </div>
-          <div class="initiative-item">
-            <div class="initiative-image">
-              <img
-                src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80"
-                alt="Environmental Education"
-                loading="lazy"
-              />
-              <div class="initiative-overlay"></div>
-            </div>
-            <div class="initiative-content">
-              <h3>Environmental Education</h3>
-              <p>
-                Developing curriculum and training programs for schools and community groups to
-                build environmental literacy and promote sustainable practices from an early age.
-              </p>
-            </div>
-          </div>
-          <div class="initiative-item">
-            <div class="initiative-image">
-              <img
-                src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80"
-                alt="Renewable Energy Access"
-                loading="lazy"
-              />
-              <div class="initiative-overlay"></div>
-            </div>
-            <div class="initiative-content">
-              <h3>Renewable Energy Access</h3>
-              <p>
-                Installing solar panels and clean energy solutions in rural communities, reducing
-                dependence on fossil fuels and improving quality of life.
-              </p>
-            </div>
-          </div>
-          <div class="initiative-item">
-            <div class="initiative-image">
-              <img
-                src="https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80"
-                alt="Water Conservation"
-                loading="lazy"
-              />
-              <div class="initiative-overlay"></div>
-            </div>
-            <div class="initiative-content">
-              <h3>Water Conservation</h3>
-              <p>
-                Implementing rainwater harvesting, watershed management, and water purification
-                systems to ensure clean water access and protect aquatic ecosystems.
-              </p>
-            </div>
-          </div>
-          <div class="initiative-item">
-            <div class="initiative-image">
-              <img
-                src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80"
-                alt="Sustainable Agriculture"
-                loading="lazy"
-              />
-              <div class="initiative-overlay"></div>
-            </div>
-            <div class="initiative-content">
-              <h3>Sustainable Agriculture</h3>
-              <p>
-                Training farmers in organic farming, crop rotation, and agroforestry techniques that
-                increase yields while preserving soil health and biodiversity.
-              </p>
-            </div>
-          </div>
-          <div class="initiative-item">
-            <div class="initiative-image">
-              <img
-                src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80"
-                alt="Climate Research & Advocacy"
-                loading="lazy"
-              />
-              <div class="initiative-overlay"></div>
-            </div>
-            <div class="initiative-content">
-              <h3>Climate Research & Advocacy</h3>
-              <p>
-                Conducting climate impact assessments and advocating for policy changes that protect
-                vulnerable ecosystems and promote environmental justice.
-              </p>
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.text }}</p>
             </div>
           </div>
         </div>
@@ -197,28 +71,22 @@
     </section>
 
     <!-- Impact Stats Section -->
-    <section class="section impact-section alt-bg">
+    <section class="section impact-section alt-bg" ref="impactSectionRef">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header reveal-header-delay">
           <span class="section-label">Our Impact</span>
           <h2>Making a Difference</h2>
         </div>
         <div class="impact-grid">
-          <div class="impact-card">
-            <span class="impact-number">500K+</span>
-            <span class="impact-label">Trees Planted</span>
-          </div>
-          <div class="impact-card">
-            <span class="impact-number">12</span>
-            <span class="impact-label">Communities Served</span>
-          </div>
-          <div class="impact-card">
-            <span class="impact-number">50+</span>
-            <span class="impact-label">Ecosystems Protected</span>
-          </div>
-          <div class="impact-card">
-            <span class="impact-number">10K+</span>
-            <span class="impact-label">People Trained</span>
+          <div
+            v-for="(stat, i) in impactStats"
+            :key="stat.label"
+            class="impact-card"
+            :class="{ 'impact-visible': statsVisible }"
+            :style="{ '--delay': `${i * 110}ms` }"
+          >
+            <span class="impact-number">{{ stat.displayed }}</span>
+            <span class="impact-label">{{ stat.label }}</span>
           </div>
         </div>
       </div>
@@ -227,7 +95,7 @@
     <!-- How It Works Section -->
     <section class="section process-section alt-bg">
       <div class="container">
-        <div class="section-header">
+        <div class="section-header reveal-header-delay">
           <span class="section-label">Our Process</span>
           <h2>How We Work</h2>
           <p class="section-desc">
@@ -236,37 +104,17 @@
           </p>
         </div>
         <div class="process-steps">
-          <div class="process-step">
-            <div class="step-number">01</div>
-            <h3>Assessment</h3>
-            <p>
-              We conduct comprehensive environmental assessments to understand local ecosystems,
-              identify challenges, and prioritize interventions.
-            </p>
-          </div>
-          <div class="process-step">
-            <div class="step-number">02</div>
-            <h3>Planning</h3>
-            <p>
-              Working with community leaders and environmental experts, we develop tailored action
-              plans that balance conservation with community needs.
-            </p>
-          </div>
-          <div class="process-step">
-            <div class="step-number">03</div>
-            <h3>Implementation</h3>
-            <p>
-              We execute projects with active community participation, ensuring local ownership and
-              building capacity for long-term sustainability.
-            </p>
-          </div>
-          <div class="process-step">
-            <div class="step-number">04</div>
-            <h3>Monitoring & Learning</h3>
-            <p>
-              Continuous monitoring and evaluation help us measure impact, learn from experiences,
-              and adapt our strategies for greater effectiveness.
-            </p>
+          <div
+            v-for="(step, i) in processSteps"
+            :key="step.number"
+            class="process-step"
+            :class="{ 'step-visible': visibleCards.process[i] }"
+            :style="{ '--delay': `${i * 120}ms` }"
+            :ref="el => setRef(el, 'process', i)"
+          >
+            <div class="step-number">{{ step.number }}</div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.text }}</p>
           </div>
         </div>
       </div>
@@ -275,7 +123,11 @@
     <!-- Quote Section -->
     <section class="quote-section">
       <div class="container">
-        <blockquote>
+        <blockquote
+          class="quote-animate"
+          :class="{ visible: quoteVisible }"
+          ref="quoteRef"
+        >
           <svg
             class="quote-icon"
             width="40"
@@ -307,7 +159,11 @@
     <!-- CTA Section -->
     <section class="cta-section">
       <div class="container">
-        <div class="cta-content">
+        <div
+          class="cta-content cta-animate"
+          :class="{ visible: ctaVisible }"
+          ref="ctaRef"
+        >
           <h2>Join the Environmental Movement</h2>
           <p>
             Whether you want to volunteer, partner with us, or support our conservation efforts,
@@ -322,6 +178,169 @@
     </section>
   </div>
 </template>
+
+<script setup>
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+
+/* ─── Static data ──────────────────────────────── */
+const overviewCards = [
+  {
+    title: 'Conservation',
+    text: 'Protecting and restoring natural habitats, wildlife corridors, and biodiversity hotspots through community-led initiatives and scientific research.',
+    svgPaths: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  },
+  {
+    title: 'Sustainability',
+    text: 'Promoting renewable energy, sustainable agriculture, and circular economy practices that reduce environmental impact while supporting livelihoods.',
+    svgPaths: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  },
+  {
+    title: 'Community Engagement',
+    text: 'Empowering local communities with knowledge, resources, and tools to actively participate in environmental protection and climate action.',
+    svgPaths: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  },
+]
+
+const initiatives = [
+  {
+    title: 'Reforestation Projects',
+    text: 'Planting native tree species to restore degraded forests, combat desertification, and create carbon sinks. We\'ve planted over 500,000 trees across 12 communities.',
+    img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80',
+  },
+  {
+    title: 'Environmental Education',
+    text: 'Developing curriculum and training programs for schools and community groups to build environmental literacy and promote sustainable practices from an early age.',
+    img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+  },
+  {
+    title: 'Renewable Energy Access',
+    text: 'Installing solar panels and clean energy solutions in rural communities, reducing dependence on fossil fuels and improving quality of life.',
+    img: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80',
+  },
+  {
+    title: 'Water Conservation',
+    text: 'Implementing rainwater harvesting, watershed management, and water purification systems to ensure clean water access and protect aquatic ecosystems.',
+    img: 'https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80',
+  },
+  {
+    title: 'Sustainable Agriculture',
+    text: 'Training farmers in organic farming, crop rotation, and agroforestry techniques that increase yields while preserving soil health and biodiversity.',
+    img: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80',
+  },
+  {
+    title: 'Climate Research & Advocacy',
+    text: 'Conducting climate impact assessments and advocating for policy changes that protect vulnerable ecosystems and promote environmental justice.',
+    img: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80',
+  },
+]
+
+const impactStatsRaw = [
+  { label: 'Trees Planted', end: 500, suffix: 'K+' },
+  { label: 'Communities Served', end: 12, suffix: '' },
+  { label: 'Ecosystems Protected', end: 50, suffix: '+' },
+  { label: 'People Trained', end: 10, suffix: 'K+' },
+]
+
+const impactStats = reactive(
+  impactStatsRaw.map(s => ({ ...s, displayed: s.end + s.suffix }))
+)
+
+const processSteps = [
+  { number: '01', title: 'Assessment', text: 'We conduct comprehensive environmental assessments to understand local ecosystems, identify challenges, and prioritize interventions.' },
+  { number: '02', title: 'Planning', text: 'Working with community leaders and environmental experts, we develop tailored action plans that balance conservation with community needs.' },
+  { number: '03', title: 'Implementation', text: 'We execute projects with active community participation, ensuring local ownership and building capacity for long-term sustainability.' },
+  { number: '04', title: 'Monitoring & Learning', text: 'Continuous monitoring and evaluation help us measure impact, learn from experiences, and adapt our strategies for greater effectiveness.' },
+]
+
+/* ─── Visibility state ─────────────────────────── */
+const visibleCards = reactive({
+  overview: Array(overviewCards.length).fill(false),
+  initiatives: Array(initiatives.length).fill(false),
+  process: Array(processSteps.length).fill(false),
+})
+const statsVisible = ref(false)
+const quoteVisible = ref(false)
+const ctaVisible = ref(false)
+
+/* ─── Template refs ────────────────────────────── */
+const cardRefs = reactive({ overview: [], initiatives: [], process: [] })
+const impactSectionRef = ref(null)
+const quoteRef = ref(null)
+const ctaRef = ref(null)
+
+function setRef(el, group, idx) {
+  if (el) cardRefs[group][idx] = el
+}
+
+/* ─── IntersectionObserver helper ──────────────── */
+const observers = []
+
+function observe(el, callback, options = {}) {
+  if (!el) return
+  const io = new IntersectionObserver(
+    entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          callback()
+          io.disconnect()
+        }
+      })
+    },
+    { threshold: 0.15, ...options }
+  )
+  io.observe(el)
+  observers.push(io)
+}
+
+/* ─── Counter animation ────────────────────────── */
+function animateCounter(statObj) {
+  const duration = 1400
+  const start = 0
+  const range = statObj.end - start
+  const step = range / (duration / 16)
+  let current = start
+  const tick = () => {
+    current = Math.min(current + step, statObj.end)
+    statObj.displayed = Math.round(current) + statObj.suffix
+    if (current < statObj.end) requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+}
+
+/* ─── Mount ─────────────────────────────────────── */
+onMounted(() => {
+  // Overview cards
+  cardRefs.overview.forEach((el, i) => {
+    observe(el, () => setTimeout(() => { visibleCards.overview[i] = true }, i * 120))
+  })
+
+  // Initiative cards
+  cardRefs.initiatives.forEach((el, i) => {
+    observe(el, () => setTimeout(() => { visibleCards.initiatives[i] = true }, i * 100))
+  })
+
+  // Impact stats + counters
+  observe(impactSectionRef.value, () => {
+    statsVisible.value = true
+    impactStatsRaw.forEach((_, i) => {
+      setTimeout(() => animateCounter(impactStats[i]), i * 110)
+    })
+  })
+
+  // Process steps
+  cardRefs.process.forEach((el, i) => {
+    observe(el, () => setTimeout(() => { visibleCards.process[i] = true }, i * 120))
+  })
+
+  // Quote
+  observe(quoteRef.value, () => { quoteVisible.value = true })
+
+  // CTA
+  observe(ctaRef.value, () => { ctaVisible.value = true })
+})
+
+onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
+</script>
 
 <style scoped>
 /* =====================
@@ -341,12 +360,32 @@
 }
 
 .section {
-  padding: 5rem 0;
+  padding: 4rem 0;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 3.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Section-header animations */
+.reveal-header {
+  opacity: 0;
+  transform: translateY(-18px);
+  animation: fadeInDown 0.65s ease forwards 0.05s;
+}
+
+.reveal-header-delay {
+  opacity: 0;
+  transform: translateY(-18px);
+  animation: fadeInDown 0.65s ease forwards 0.15s;
+}
+
+@keyframes fadeInDown {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .overview-section,
@@ -387,7 +426,6 @@
 /* =====================
    Hero
    ===================== */
-/* Hero (overlaid on the static hero via its default slot) */
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -466,21 +504,62 @@
   gap: 1.5rem;
 }
 
+/* — entry animation — */
 .overview-card {
   background: linear-gradient(145deg, #ffffff 0%, var(--color-cream-soft) 100%);
   border: 1px solid rgba(27, 163, 79, 0.08);
   border-radius: 1rem;
   padding: 2rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+
+  /* initial hidden state */
+  opacity: 0;
+  transform: translateY(36px) scale(0.97);
+  transition:
+    opacity 0.55s ease var(--delay, 0ms),
+    transform 0.55s cubic-bezier(0.34, 1.36, 0.64, 1) var(--delay, 0ms),
+    border-color 0.3s,
+    box-shadow 0.35s;
 }
 
+.overview-card.card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* — hover lift + glow — */
 .overview-card:hover {
-  border-color: rgba(27, 163, 79, 0.25);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  transform: translateY(-2px);
+  border-color: rgba(27, 163, 79, 0.32);
+  box-shadow:
+    0 10px 36px rgba(27, 163, 79, 0.1),
+    0 0 0 3px rgba(27, 163, 79, 0.06);
+  transform: translateY(-6px) scale(1.015);
 }
 
+/* — shimmer shine — */
+.card-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  background-position: 200% 0;
+  transition: background-position 0.65s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.overview-card:hover .card-shine {
+  background-position: -200% 0;
+}
+
+/* — icon bounce — */
 .icon-wrapper {
   width: 3rem;
   height: 3rem;
@@ -491,12 +570,19 @@
   background: var(--color-cream-soft);
   color: var(--primary-color);
   margin-bottom: 1.25rem;
+  transition: transform 0.35s cubic-bezier(0.34, 1.6, 0.64, 1), background 0.3s;
+}
+
+.overview-card:hover .icon-wrapper {
+  transform: scale(1.18) rotate(-5deg);
+  background: rgba(27, 163, 79, 0.12);
 }
 
 .overview-card h3 {
   font-weight: 600;
   margin-bottom: 0.75rem;
   color: var(--primary-color);
+  transition: color 0.25s;
 }
 
 .overview-card p {
@@ -513,19 +599,34 @@
   gap: 1.5rem;
 }
 
+/* — entry animation — */
 .initiative-item {
   position: relative;
   border-radius: 1rem;
   overflow: hidden;
   height: 400px;
-  transition: all 0.4s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   cursor: pointer;
+
+  /* initial hidden state */
+  opacity: 0;
+  transform: translateY(32px) scale(0.96);
+  transition:
+    opacity 0.6s ease var(--delay, 0ms),
+    transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1) var(--delay, 0ms),
+    box-shadow 0.4s ease;
+
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+.initiative-item.initiative-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* — hover lift — */
 .initiative-item:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
 }
 
 .initiative-image {
@@ -539,12 +640,12 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
+  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @media (hover: hover) {
   .initiative-item:hover .initiative-image img {
-    transform: scale(1.1);
+    transform: scale(1.08);
   }
 }
 
@@ -553,20 +654,20 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(20, 129, 62, 0.3) 0%,
+    rgba(20, 129, 62, 0.28) 0%,
     rgba(20, 129, 62, 0.5) 50%,
-    rgba(20, 129, 62, 0.85) 100%
+    rgba(20, 129, 62, 0.88) 100%
   );
-  transition: all 0.4s ease;
+  transition: background 0.4s ease;
 }
 
 @media (hover: hover) {
   .initiative-item:hover .initiative-overlay {
     background: linear-gradient(
       to bottom,
-      rgba(20, 129, 62, 0.4) 0%,
-      rgba(20, 129, 62, 0.6) 50%,
-      rgba(20, 129, 62, 0.9) 100%
+      rgba(20, 129, 62, 0.38) 0%,
+      rgba(20, 129, 62, 0.62) 50%,
+      rgba(20, 129, 62, 0.92) 100%
     );
   }
 }
@@ -579,8 +680,11 @@
   padding: 2rem;
   z-index: 2;
   color: #ffffff;
-  transform: translateY(0);
-  transition: all 0.4s ease;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.initiative-item:hover .initiative-content {
+  transform: translateY(-4px);
 }
 
 .initiative-content h3 {
@@ -594,7 +698,6 @@
 .initiative-content p {
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.6;
-  opacity: 0.9;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -613,13 +716,49 @@
   border-radius: 1rem;
   padding: 2rem 1.5rem;
   text-align: center;
-  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  /* entry */
+  opacity: 0;
+  transform: translateY(24px) scale(0.95);
+  transition:
+    opacity 0.5s ease var(--delay, 0ms),
+    transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) var(--delay, 0ms),
+    border-color 0.3s,
+    box-shadow 0.3s;
+
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
+.impact-card.impact-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* green top-bar slides in on hover */
+.impact-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+  border-radius: 0 0 2px 2px;
+}
+
+.impact-card:hover::before {
+  transform: scaleX(1);
+}
+
 .impact-card:hover {
-  border-color: rgba(27, 163, 79, 0.25);
-  transform: translateY(-2px);
+  border-color: rgba(27, 163, 79, 0.28);
+  box-shadow: 0 8px 28px rgba(27, 163, 79, 0.1);
+  transform: translateY(-5px) scale(1.02);
 }
 
 .impact-number {
@@ -628,6 +767,11 @@
   font-weight: 700;
   color: var(--primary-color);
   margin-bottom: 0.5rem;
+  transition: transform 0.3s cubic-bezier(0.34, 1.5, 0.64, 1);
+}
+
+.impact-card:hover .impact-number {
+  transform: scale(1.1);
 }
 
 .impact-label {
@@ -651,12 +795,47 @@
   border: 1px solid rgba(27, 163, 79, 0.08);
   border-radius: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  /* entry */
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.5s ease var(--delay, 0ms),
+    transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) var(--delay, 0ms),
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+
+.process-step.step-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* accent left-bar on hover */
+.process-step::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--primary-color);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.35s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+.process-step:hover::before {
+  transform: scaleY(1);
 }
 
 .process-step:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-5px);
+  border-color: rgba(27, 163, 79, 0.25);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
 }
 
 .step-number {
@@ -666,12 +845,19 @@
   opacity: 0.2;
   margin-bottom: 1rem;
   line-height: 1;
+  transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34, 1.5, 0.64, 1);
+}
+
+.process-step:hover .step-number {
+  opacity: 0.35;
+  transform: scale(1.08);
 }
 
 .process-step h3 {
   font-weight: 600;
   margin-bottom: 0.75rem;
   color: var(--primary-color);
+  transition: color 0.25s;
 }
 
 .process-step p {
@@ -683,7 +869,7 @@
    Quote
    ===================== */
 .quote-section {
-  padding: 5rem 0;
+  padding: 4rem 0;
   background: linear-gradient(180deg, var(--color-cream-soft) 0%, #f0e6d8 100%);
   border-top: 1px solid rgba(27, 163, 79, 0.08);
   border-bottom: 1px solid rgba(27, 163, 79, 0.08);
@@ -703,17 +889,31 @@
   pointer-events: none;
 }
 
-.quote-section blockquote {
+.quote-animate {
   text-align: center;
   max-width: 720px;
   margin: 0 auto;
   padding: 0 1.5rem;
+  opacity: 0;
+  transform: scale(0.96) translateY(20px);
+  transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.quote-animate.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 .quote-icon {
   color: var(--primary-color);
   opacity: 0.12;
   margin-bottom: 1rem;
+  animation: floatIcon 4s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
 }
 
 .quote-text {
@@ -732,7 +932,7 @@
    CTA
    ===================== */
 .cta-section {
-  padding: 5rem 0;
+  padding: 4rem 0;
   background: linear-gradient(135deg, var(--color-cream-soft) 0%, #f0e6d8 100%);
   position: relative;
 }
@@ -750,11 +950,19 @@
   pointer-events: none;
 }
 
-.cta-content {
+.cta-animate {
   text-align: center;
   max-width: 580px;
   margin: 0 auto;
   padding: 0 1.5rem;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.cta-animate.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .cta-content h2 {
@@ -784,31 +992,43 @@
   border-radius: 9999px;
   font-size: 0.9rem;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: all 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
   cursor: pointer;
   text-decoration: none;
+}
+
+.btn:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .btn-primary {
   background: #ffffff;
   color: var(--color-ink);
   border: 1px solid rgba(27, 163, 79, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .btn-primary:hover {
   background: var(--color-cream-soft);
   border-color: var(--primary-color);
+  box-shadow: 0 6px 18px rgba(27, 163, 79, 0.14);
 }
 
 .btn-outline {
   background: var(--primary-color);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .btn-outline:hover {
   border-color: #ffffff;
   background: var(--primary-dark);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
 }
 
 /* =====================
