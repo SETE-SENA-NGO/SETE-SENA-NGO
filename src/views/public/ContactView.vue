@@ -942,12 +942,12 @@ onMounted(() => {
   aspect-ratio: 1448 / 1086;
 }
 
-.map-slide-enter-active,
-.map-slide-leave-active {
-  transition:
-    opacity 0.32s ease,
-    transform 0.32s ease;
-}
+  .map-slide-enter-active,
+  .map-slide-leave-active {
+    transition:
+      opacity 0.32s ease,
+      transform 0.32s ease;
+  }
 
 .map-slide-enter-from {
   opacity: 0;
@@ -988,7 +988,7 @@ onMounted(() => {
   position: absolute;
   display: grid;
   width: 25px;
-  height: 20px;
+  height: 25px;
   place-items: start end;
   border: 0;
   border-radius: 8px;
@@ -1005,16 +1005,6 @@ onMounted(() => {
   content: '';
 }
 
-.map-hotspot::after {
-  bottom: -1px;
-  left: 50%;
-  z-index: 0;
-  width: 25px;
-  height: 25px;
-  border: 2px solid rgba(20, 129, 62, 0.34);
-  transform: translate(-30%, -100%);
-  animation: mapHotspotPulse 1.9s ease-out infinite;
-}
 
 .map-hotspot__icon {
   position: relative;
@@ -1062,7 +1052,7 @@ onMounted(() => {
 .map-hotspot:hover .map-hotspot__label,
 .map-hotspot:focus-visible .map-hotspot__label {
   opacity: 1;
-  transform: translate(00%, 0);
+  transform: translate(0%, 0);
 }
 
 @keyframes mapHotspotPulse {
