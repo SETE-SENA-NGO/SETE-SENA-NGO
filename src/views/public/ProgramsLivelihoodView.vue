@@ -1,32 +1,72 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero2.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero3.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero4.jpg', caption: '' },
-]
 
 const stats = [
-  { number: '180+', label: 'SAVINGS GROUPS', description: 'Women-led Saving-for-Change circles active across three provinces.', icon: 'wallet' },
-  { number: '2,400+', label: 'MEMBERS', description: 'Saving, lending and investing together.', icon: 'users' },
-  { number: '12', label: 'COOPERATIVES', description: 'Rice, vegetables, melaleuca oil and handicrafts.', icon: 'building' },
+  {
+    number: '180+',
+    label: 'SAVINGS GROUPS',
+    description: 'Women-led Saving-for-Change circles active across three provinces.',
+    icon: 'wallet',
+  },
+  {
+    number: '2,400+',
+    label: 'MEMBERS',
+    description: 'Saving, lending and investing together.',
+    icon: 'users',
+  },
+  {
+    number: '12',
+    label: 'COOPERATIVES',
+    description: 'Rice, vegetables, melaleuca oil and handicrafts.',
+    icon: 'building',
+  },
 ]
 
-const whatWeDo = [
-  { title: 'Integrated Farming', text: 'Rice, fish, vegetables and livestock combined on one plot for year-round food and income.', image: '/images/programs/livelihood-hero1.jpg' },
-  { title: 'Saving-for-Change', text: 'Self-help savings groups, primarily women-led, meeting weekly to pool and lend.', image: '/images/programs/livelihood-hero2.jpg' },
-  { title: 'Cooperatives', text: 'Agricultural cooperatives for collective bargaining and shared equipment.', image: '/images/programs/livelihood-hero3.jpg' },
-  { title: 'Rural Enterprise', text: 'Small enterprise development — melaleuca oil, honey and handicrafts.', image: '/images/programs/livelihood-hero4.jpg' },
-  { title: 'Financial Literacy', text: 'Bookkeeping and micro-enterprise training for household budgeting.', image: '/images/programs/livelihood-hero2.jpg' },
-  { title: 'Market Linkages', text: 'Connecting producers with provincial buyers and social enterprises.', image: '/images/programs/livelihood-hero3.jpg' },
+interface WorkItem {
+  title: string
+  text: string
+  image: string
+}
+
+const whatWeDo: [WorkItem, WorkItem, WorkItem, WorkItem, WorkItem, WorkItem] = [
+  {
+    title: 'Integrated Farming',
+    text: 'Rice, fish, vegetables and livestock combined on one plot for year-round food and income.',
+    image: '/images/programs/livelihood-hero1.jpg',
+  },
+  {
+    title: 'Saving-for-Change',
+    text: 'Self-help savings groups, primarily women-led, meeting weekly to pool and lend.',
+    image: '/images/programs/livelihood-hero2.jpg',
+  },
+  {
+    title: 'Cooperatives',
+    text: 'Agricultural cooperatives for collective bargaining and shared equipment.',
+    image: '/images/programs/livelihood-hero3.jpg',
+  },
+  {
+    title: 'Rural Enterprise',
+    text: 'Small enterprise development — melaleuca oil, honey and handicrafts.',
+    image: '/images/programs/livelihood-hero4.jpg',
+  },
+  {
+    title: 'Financial Literacy',
+    text: 'Bookkeeping and micro-enterprise training for household budgeting.',
+    image: '/images/programs/livelihood-hero2.jpg',
+  },
+  {
+    title: 'Market Linkages',
+    text: 'Connecting producers with provincial buyers and social enterprises.',
+    image: '/images/programs/livelihood-hero3.jpg',
+  },
 ]
 
 // icon key per bullet, used only to pick which badge icon renders next to each "Why it matters" line
 const whyItMatters = [
-  { text: 'Household income diversification reduces the risk of debt bondage and trafficking', icon: 'shield' },
+  {
+    text: 'Household income diversification reduces the risk of debt bondage and trafficking',
+    icon: 'shield',
+  },
   { text: 'Women-led savings shift decision-making power inside the household', icon: 'key' },
   { text: 'Cooperatives break the isolation of the smallholder in the marketplace', icon: 'users' },
   { text: 'Local enterprise keeps young adults in the village, near their children', icon: 'home' },
@@ -48,7 +88,7 @@ onMounted(() => {
         }
       })
     },
-    { threshold: 0.2, rootMargin: '0px 0px -60px 0px' }
+    { threshold: 0.2, rootMargin: '0px 0px -60px 0px' },
   )
 
   items.forEach((el) => observer?.observe(el))
@@ -63,20 +103,6 @@ onBeforeUnmount(() => {
   <div class="education-page">
     <!-- Hero -->
     <div class="hero-wrap">
-      <Slideshow :slides="slideItems">
-        <div class="hero-overlay"></div>
-
-        <div class="hero-content">
-          <p class="eyebrow">PROGRAMS · GOAL 03 LIVELIHOODS</p>
-          <h1>Dignified work rooted in the village.</h1>
-          <p class="hero-desc">
-            Integrated farming, Saving-for-Change groups, agricultural cooperatives and
-            rural enterprise — livelihoods that keep families together instead of sending
-            parents abroad for wages.
-          </p>
-        </div>
-      </Slideshow>
-
       <div class="scroll-cue" aria-hidden="true"><span></span></div>
     </div>
 
@@ -86,21 +112,72 @@ onBeforeUnmount(() => {
         <template v-for="(stat, i) in stats" :key="stat.label">
           <div class="stat-item">
             <span class="stat-icon">
-              <svg v-if="stat.icon === 'wallet'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2.5" y="6.5" width="19" height="13" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M16.5 6.5V5a2 2 0 00-2-2H7a2 2 0 00-2 2v1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <circle cx="16.5" cy="13" r="1.6" fill="currentColor"/>
+              <svg
+                v-if="stat.icon === 'wallet'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="2.5"
+                  y="6.5"
+                  width="19"
+                  height="13"
+                  rx="2.5"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                />
+                <path
+                  d="M16.5 6.5V5a2 2 0 00-2-2H7a2 2 0 00-2 2v1.5"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+                <circle cx="16.5" cy="13" r="1.6" fill="currentColor" />
               </svg>
-              <svg v-else-if="stat.icon === 'users'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M15 20c0-2.6 2-4.6 5-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <svg
+                v-else-if="stat.icon === 'users'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+                <circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M15 20c0-2.6 2-4.6 5-4.6"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
               </svg>
               <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="3" width="16" height="18" rx="1.5" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M9 21v-4.5h6V21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <path d="M8 7.5h1.2M8 11.5h1.2M14.8 7.5H16M14.8 11.5H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <rect
+                  x="4"
+                  y="3"
+                  width="16"
+                  height="18"
+                  rx="1.5"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                />
+                <path
+                  d="M9 21v-4.5h6V21"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M8 7.5h1.2M8 11.5h1.2M14.8 7.5H16M14.8 11.5H16"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
               </svg>
             </span>
             <div class="stat-copy">
@@ -119,10 +196,9 @@ onBeforeUnmount(() => {
       <div class="container">
         <div class="intro-rule" aria-hidden="true"></div>
         <p class="intro-text text-center">
-          Poverty pushes rural Cambodians into unsafe migration and predatory debt.
-          Santi Sena answers with income at home — soil restored, savings pooled,
-          cooperatives negotiating fair prices, and small enterprises rooted in local
-          resources.
+          Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena
+          answers with income at home — soil restored, savings pooled, cooperatives negotiating fair
+          prices, and small enterprises rooted in local resources.
         </p>
       </div>
     </section>
@@ -136,47 +212,47 @@ onBeforeUnmount(() => {
 
           <div class="radial-wrap" ref="radialWrap">
             <div class="radial-center">
-              <img :src="whatWeDo[0].image" alt="" />
-              <p class="radial-center-text">{{ whatWeDo[0].text }}</p>
+              <img :src="whatWeDo[0]?.image" alt="" />
+              {{ whatWeDo[0]?.text }}
             </div>
 
             <div class="radial-item radial-item--1">
-              <div class="radial-thumb"><img :src="whatWeDo[1].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[1]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[1].title }}</p>
-                <p class="radial-text">{{ whatWeDo[1].text }}</p>
+                {{ whatWeDo[1]?.title }}
+                {{ whatWeDo[1]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--2">
-              <div class="radial-thumb"><img :src="whatWeDo[2].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[2]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[2].title }}</p>
-                <p class="radial-text">{{ whatWeDo[2].text }}</p>
+                {{ whatWeDo[2]?.title }}
+                {{ whatWeDo[2]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--3">
-              <div class="radial-thumb"><img :src="whatWeDo[3].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[3]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[3].title }}</p>
-                <p class="radial-text">{{ whatWeDo[3].text }}</p>
+                {{ whatWeDo[3]?.title }}
+                {{ whatWeDo[3]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--4">
-              <div class="radial-thumb"><img :src="whatWeDo[4].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[4]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[4].title }}</p>
-                <p class="radial-text">{{ whatWeDo[4].text }}</p>
+                {{ whatWeDo[4]?.title }}
+                {{ whatWeDo[4]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--5">
-              <div class="radial-thumb"><img :src="whatWeDo[5].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[5]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[5].title }}</p>
-                <p class="radial-text">{{ whatWeDo[5].text }}</p>
+                {{ whatWeDo[5]?.title }}
+                {{ whatWeDo[5]?.text }}
               </div>
             </div>
           </div>
@@ -191,19 +267,27 @@ onBeforeUnmount(() => {
         <p class="section-eyebrow section-eyebrow--light text-center">Our method</p>
         <h2 class="section-title section-title--light text-center">Our approach</h2>
         <p class="approach-text approach-text--light text-center">
-          We do not distribute cash. We build the systems — saving groups,
-          cooperatives, farmer schools — that let a household earn, save, invest
-          and repeat. Every group is coached for 18–24 months, then graduates to
-          independence with our field team on call.
+          We do not distribute cash. We build the systems — saving groups, cooperatives, farmer
+          schools — that let a household earn, save, invest and repeat. Every group is coached for
+          18–24 months, then graduates to independence with our field team on call.
         </p>
 
         <div class="quote-block">
-          <svg class="quote-mark-svg" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M0 36V20.8C0 8.6 6.9 1.4 18.4 0l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H0zm27.6 0V20.8c0-12.2 6.9-19.4 18.4-20.8l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H27.6z" fill="currentColor"/>
+          <svg
+            class="quote-mark-svg"
+            viewBox="0 0 48 36"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M0 36V20.8C0 8.6 6.9 1.4 18.4 0l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H0zm27.6 0V20.8c0-12.2 6.9-19.4 18.4-20.8l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H27.6z"
+              fill="currentColor"
+            />
           </svg>
           <p class="quote-text">
-            "Our group has lent to twelve families for chickens and school fees.
-            Nobody has left for Thailand this year."
+            "Our group has lent to twelve families for chickens and school fees. Nobody has left for
+            Thailand this year."
           </p>
         </div>
       </div>
@@ -215,7 +299,10 @@ onBeforeUnmount(() => {
         <div class="two-col-grid reverse">
           <div class="col-image">
             <div class="col-image-frame">
-              <img src="/images/programs/livelihood-hero2.jpg" alt="Savings group members meeting together" />
+              <img
+                src="/images/programs/livelihood-hero2.jpg"
+                alt="Savings group members meeting together"
+              />
             </div>
           </div>
           <div class="col-text">
@@ -224,22 +311,70 @@ onBeforeUnmount(() => {
             <div class="impact-grid">
               <div v-for="item in whyItMatters" :key="item.text" class="impact-card">
                 <span class="icon-badge">
-                  <svg v-if="item.icon === 'shield'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    v-if="item.icon === 'shield'"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
-                  <svg v-else-if="item.icon === 'key'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="8" cy="15" r="4" stroke="currentColor" stroke-width="1.8"/>
-                    <path d="M11 12l8-8M16 4l3 3M19 6l2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <svg
+                    v-else-if="item.icon === 'key'"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="8" cy="15" r="4" stroke="currentColor" stroke-width="1.8" />
+                    <path
+                      d="M11 12l8-8M16 4l3 3M19 6l2 2"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
                   </svg>
-                  <svg v-else-if="item.icon === 'users'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/>
-                    <path d="M3 20c0-3 3-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="1.8"/>
-                    <path d="M15 20c0-2.5 2-4.5 5-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <svg
+                    v-else-if="item.icon === 'users'"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8" />
+                    <path
+                      d="M3 20c0-3 3-5 6-5s6 2 6 5"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="1.8" />
+                    <path
+                      d="M15 20c0-2.5 2-4.5 5-4.5"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
                   </svg>
                   <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 11l8-7 8 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path
+                      d="M4 11l8-7 8 7"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </span>
                 <p>{{ item.text }}</p>
@@ -279,7 +414,13 @@ onBeforeUnmount(() => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6,18,13,0.85) 0%, rgba(6,18,13,0.55) 42%, rgba(6,18,13,0.22) 70%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 42%,
+    rgba(6, 18, 13, 0.22) 70%,
+    transparent 100%
+  );
 }
 .hero-content {
   position: absolute;
@@ -297,8 +438,14 @@ onBeforeUnmount(() => {
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .eyebrow {
   color: var(--primary-light);
@@ -342,10 +489,20 @@ onBeforeUnmount(() => {
   animation: scrollDrop 1.8s ease-in-out infinite;
 }
 @keyframes scrollDrop {
-  0% { opacity: 0; transform: translateY(0); }
-  30% { opacity: 1; }
-  70% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(12px); }
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }
 
 /* ===== Stats band ===== */
@@ -390,7 +547,9 @@ onBeforeUnmount(() => {
   width: 22px;
   height: 22px;
 }
-.stat-copy { min-width: 0; }
+.stat-copy {
+  min-width: 0;
+}
 .stat-number {
   font-weight: 700;
   color: var(--primary-color);
@@ -447,15 +606,21 @@ onBeforeUnmount(() => {
   font-size: 0.75rem;
   margin-bottom: 0.6rem;
 }
-.section-eyebrow--light { color: var(--primary-light); }
+.section-eyebrow--light {
+  color: var(--primary-light);
+}
 .section-title {
   font-weight: 600;
   color: var(--primary-dark);
   margin-bottom: 1.5rem;
   letter-spacing: -0.01em;
 }
-.section-title--light { color: #ffffff; }
-.text-center { text-align: center; }
+.section-title--light {
+  color: #ffffff;
+}
+.text-center {
+  text-align: center;
+}
 
 /* ===== Two-column layout (Why it matters) ===== */
 .two-col-grid {
@@ -464,8 +629,12 @@ onBeforeUnmount(() => {
   gap: 3.5rem;
   align-items: center;
 }
-.two-col-grid.reverse .col-image { order: 1; }
-.two-col-grid.reverse .col-text { order: 2; }
+.two-col-grid.reverse .col-image {
+  order: 1;
+}
+.two-col-grid.reverse .col-text {
+  order: 2;
+}
 .col-image-frame {
   position: relative;
   border-radius: 20px;
@@ -473,7 +642,10 @@ onBeforeUnmount(() => {
   cursor: pointer;
   border: 2px solid transparent;
   box-shadow: 0 16px 36px -18px rgba(22, 52, 42, 0.3);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
 }
 .col-image-frame:hover,
 .col-image-frame:active {
@@ -513,9 +685,9 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(220px, 1fr) minmax(340px, 420px) minmax(220px, 1fr);
   grid-template-rows: repeat(3, minmax(150px, auto));
   grid-template-areas:
-    ".     center item1"
-    "item5 center item2"
-    "item4 center item3";
+    '.     center item1'
+    'item5 center item2'
+    'item4 center item3';
   column-gap: 2.5rem;
   row-gap: 2.25rem;
   align-items: center;
@@ -549,11 +721,21 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 1rem;
 }
-.radial-item--1 { grid-area: item1; }
-.radial-item--2 { grid-area: item2; }
-.radial-item--3 { grid-area: item3; }
-.radial-item--4 { grid-area: item4; }
-.radial-item--5 { grid-area: item5; }
+.radial-item--1 {
+  grid-area: item1;
+}
+.radial-item--2 {
+  grid-area: item2;
+}
+.radial-item--3 {
+  grid-area: item3;
+}
+.radial-item--4 {
+  grid-area: item4;
+}
+.radial-item--5 {
+  grid-area: item5;
+}
 
 .radial-thumb {
   flex-shrink: 0;
@@ -591,30 +773,42 @@ onBeforeUnmount(() => {
 .radial-item {
   opacity: 0;
   transform: translateY(28px);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .radial-center.is-visible,
 .radial-item.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
-.radial-item--1.is-visible { transition-delay: 0.05s; }
-.radial-item--2.is-visible { transition-delay: 0.15s; }
-.radial-item--3.is-visible { transition-delay: 0.25s; }
-.radial-item--4.is-visible { transition-delay: 0.1s; }
-.radial-item--5.is-visible { transition-delay: 0.2s; }
+.radial-item--1.is-visible {
+  transition-delay: 0.05s;
+}
+.radial-item--2.is-visible {
+  transition-delay: 0.15s;
+}
+.radial-item--3.is-visible {
+  transition-delay: 0.25s;
+}
+.radial-item--4.is-visible {
+  transition-delay: 0.1s;
+}
+.radial-item--5.is-visible {
+  transition-delay: 0.2s;
+}
 
 /* Mobile: single column stack, center first */
 @media (max-width: 900px) {
   .radial-wrap {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "center"
-      "item1"
-      "item2"
-      "item3"
-      "item4"
-      "item5";
+      'center'
+      'item1'
+      'item2'
+      'item3'
+      'item4'
+      'item5';
     row-gap: 1.75rem;
   }
   .radial-center img {
@@ -634,7 +828,12 @@ onBeforeUnmount(() => {
 .quote-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(6,18,13,0.82) 0%, rgba(6,18,13,0.72) 55%, rgba(6,18,13,0.88) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(6, 18, 13, 0.82) 0%,
+    rgba(6, 18, 13, 0.72) 55%,
+    rgba(6, 18, 13, 0.88) 100%
+  );
 }
 .quote-inner {
   position: relative;
@@ -681,7 +880,10 @@ onBeforeUnmount(() => {
   padding: 1.4rem;
   box-shadow: 0 10px 24px -14px rgba(22, 52, 42, 0.18);
   border: 1px solid rgba(22, 52, 42, 0.06);
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 .impact-card:hover {
   transform: translateY(-6px);
@@ -723,7 +925,10 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    background 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 .btn-large {
   padding: 1rem 2.4rem;
@@ -757,7 +962,7 @@ onBeforeUnmount(() => {
   width: 480px;
   height: 480px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(22,52,42,0.05) 0%, rgba(22,52,42,0) 70%);
+  background: radial-gradient(circle, rgba(22, 52, 42, 0.05) 0%, rgba(22, 52, 42, 0) 70%);
   pointer-events: none;
 }
 .cta-banner-inner {
@@ -783,26 +988,50 @@ onBeforeUnmount(() => {
 /* ===== Responsive ===== */
 
 @media (max-width: 768px) {
-  .hero-content { padding: 2rem 1.5rem; }
-  .scroll-cue { display: none; }
+  .hero-content {
+    padding: 2rem 1.5rem;
+  }
+  .scroll-cue {
+    display: none;
+  }
 
-  .stats-band-wrap { margin-top: -40px; }
+  .stats-band-wrap {
+    margin-top: -40px;
+  }
   .stats-band {
     grid-template-columns: 1fr;
     gap: 1.5rem;
     padding: 2rem 1.5rem;
   }
-  .stat-divider { display: none; }
+  .stat-divider {
+    display: none;
+  }
 
-  .two-col-grid { grid-template-columns: 1fr; gap: 2.5rem; }
-  .two-col-grid.reverse .col-image { order: 0; }
-  .two-col-grid.reverse .col-text { order: 1; }
+  .two-col-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .two-col-grid.reverse .col-image {
+    order: 0;
+  }
+  .two-col-grid.reverse .col-text {
+    order: 1;
+  }
 
-  .impact-grid { grid-template-columns: 1fr; }
+  .impact-grid {
+    grid-template-columns: 1fr;
+  }
 
-  .quote-section { padding: 4.5rem 0; background-attachment: scroll; }
-  .quote-text { font-size: 1.25rem; }
+  .quote-section {
+    padding: 4.5rem 0;
+    background-attachment: scroll;
+  }
+  .quote-text {
+    font-size: 1.25rem;
+  }
 
-  .cta-banner { padding: 3.5rem 0; }
+  .cta-banner {
+    padding: 3.5rem 0;
+  }
 }
 </style>

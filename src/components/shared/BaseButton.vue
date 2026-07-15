@@ -22,7 +22,10 @@ withDefaults(defineProps<{ type?: 'primary' | 'secondary' | 'ghost' }>(), {
   color: var(--color-white);
   cursor: pointer;
   font-weight: 500;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.15s;
 }
 .base-button:hover {
   transform: translateY(-1px);

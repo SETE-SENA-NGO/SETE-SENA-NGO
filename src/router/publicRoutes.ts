@@ -1,10 +1,10 @@
-import HomeView from '@/views/HomeView.vue'
+import HomeView from '@/views/public/HomeView.vue'
 import AboutView from '@/views/public/AboutView.vue'
-import AboutVisionView from '@/views/AboutVisionView.vue'
-import ProgramEnviromentView from '@/views/ProgramEnviromentView.vue'
+import AboutVisionView from '@/views/public/AboutVisionView.vue'
+import ProgramEnviromentView from '@/views/public/ProgramEnviromentView.vue'
 import OrganizationView from '@/views/public/OrganizationView.vue'
 import EducationView from '@/views/public/EducationView.vue'
-import ImpactPartnersView from '@/views/ImpactPartnersView.vue'
+import ImpactPartnersView from '@/views/public/ImpactPartnersView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
 import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
@@ -19,21 +19,6 @@ import ProgramsView from '@/views/public/ProgramsView.vue'
 import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
 import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
 import QrDonateView from '@/views/public/DonateView.vue'
-import ManagedPublicPageView from '@/views/public/ManagedPublicPageView.vue'
-
-function managedRoute(
-  path: string,
-  contentSlug: string,
-  fallbackComponent: unknown,
-  options: Record<string, unknown> = {},
-) {
-  return {
-    path,
-    component: ManagedPublicPageView,
-    meta: { contentSlug, fallbackComponent },
-    ...options,
-  }
-}
 
 // 👇 NEW: import news views
 import NewsView from '@/views/public/NewsView.vue'
@@ -53,7 +38,11 @@ export const publicRoutes = [
   { path: '/programs/environment', component: ProgramEnviromentView },
   { path: '/programs/education', component: EducationView },
   { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
-  { path: '/programs/child-protection', component: ProgramsChildProtectionView, name: 'programs-child-protection' },
+  {
+    path: '/programs/child-protection',
+    component: ProgramsChildProtectionView,
+    name: 'programs-child-protection',
+  },
 
   // Impact
   { path: '/impact/numbers', component: ImpactNumbersView },

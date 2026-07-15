@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
+import { imageUploadHelpText } from '@/lib/media'
 
 const media = useMediaStore()
 const ui = useUiStore()
@@ -77,13 +78,18 @@ function fileIcon(mime: string) {
   if (mime.startsWith('audio/')) return 'audio'
   if (mime.includes('pdf')) return 'pdf'
   if (mime.includes('word') || mime.includes('document')) return 'doc'
-  if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('sheet')) return 'sheet'
+  if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('sheet'))
+    return 'sheet'
   return 'file'
 }
 
 function isImage(mime: string) {
   return mime.startsWith('image/')
 }
+
+const totalMediaSize = computed(() => {
+  return media.items.reduce((total, item) => total + item.size, 0)
+})
 
 async function uploadFiles(files: File[]) {
   for (const file of files) {
@@ -127,7 +133,7 @@ async function confirmDelete(item: { id: string; name: string }) {
           <div>
             <p class="eyebrow">Assets</p>
             <h1>Media Library</h1>
-            <p class="page-desc">Upload, browse and manage images, documents and media files.</p>
+            <p class="page-desc">Upload, browse and manage website images.</p>
           </div>
           <div class="header-actions">
             <button
@@ -145,7 +151,7 @@ async function confirmDelete(item: { id: string; name: string }) {
           ref="fileInput"
           type="file"
           multiple
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+          accept="image/jpeg,image/png,image/webp,image/gif"
           class="file-input-hidden"
           @change="onFilesSelected"
         />
@@ -169,37 +175,27 @@ async function confirmDelete(item: { id: string; name: string }) {
         >
           <span class="drop-icon" aria-hidden="true"></span>
           <strong>Drop files here or click to browse</strong>
-          <small>Supports images, videos, audio, PDFs, documents</small>
+          <small>{{ imageUploadHelpText() }}</small>
         </section>
 
         <!-- Stats bar -->
         <section class="stats-bar" aria-label="Media library stats">
-          <span><strong>{{ media.items.length }}</strong> files</span>
+          <span
+            ><strong>{{ media.items.length }}</strong> files</span
+          >
           <span>
             <strong>{{ media.items.filter((f) => isImage(f.mime_type)).length }}</strong> images
           </span>
-          <span>
-            <strong>{{ media.items.filter((f) => f.mime_type.startsWith('video/')).length }}</strong> videos
-          </span>
-          <span>
-            <strong>{{ media.items.filter((f) => f.mime_type.startsWith('audio/')).length }}</strong> audio
-          </span>
+          <span
+            ><strong>{{ formatSize(totalMediaSize) }}</strong> stored</span
+          >
         </section>
 
         <!-- File grid -->
         <section v-if="media.items.length" class="file-grid" aria-label="Media files">
-          <article
-            v-for="item in media.items"
-            :key="item.id"
-            class="file-card"
-          >
+          <article v-for="item in media.items" :key="item.id" class="file-card">
             <div class="file-thumb">
-              <img
-                v-if="isImage(item.mime_type)"
-                :src="item.url"
-                :alt="item.name"
-                loading="lazy"
-              />
+              <img v-if="isImage(item.mime_type)" :src="item.url" :alt="item.name" loading="lazy" />
               <span v-else class="file-type-icon" :class="`type-${fileIcon(item.mime_type)}`">
                 {{ fileIcon(item.mime_type).toUpperCase() }}
               </span>
@@ -246,18 +242,18 @@ async function confirmDelete(item: { id: string; name: string }) {
 
 <style scoped>
 .media-page {
-  --admin-bg: #f4f7fb;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f8fafc;
-  --admin-contrast: #172033;
-  --admin-text: #334155;
-  --admin-muted: #667085;
-  --admin-border: #dbe3ef;
-  --admin-blue: #2563eb;
-  --admin-green: #16a34a;
-  --admin-gold: #f97316;
-  --admin-pink: #dc2626;
-  --admin-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-green: var(--admin-theme-primary);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
 
   min-height: 100vh;
   background: var(--admin-bg);
@@ -265,15 +261,15 @@ async function confirmDelete(item: { id: string; name: string }) {
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark) .media-page {
-  --admin-bg: #0b1120;
-  --admin-surface: #111827;
-  --admin-surface-soft: #0f172a;
-  --admin-contrast: #f8fafc;
-  --admin-text: #cbd5e1;
-  --admin-muted: #a6b0c3;
-  --admin-border: #293548;
-  --admin-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+:global(.admin-dark .media-page) {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 .admin-layout {
@@ -330,7 +326,9 @@ h1 {
   font-weight: 850;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 
 .button:disabled {
@@ -379,8 +377,13 @@ h1 {
 }
 
 @keyframes progress-pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .drop-zone {
@@ -394,7 +397,9 @@ h1 {
   color: var(--admin-muted);
   padding: 2.5rem 1rem;
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .drop-zone:hover,
@@ -467,7 +472,9 @@ h1 {
   background: var(--admin-surface);
   box-shadow: var(--admin-shadow);
   overflow: hidden;
-  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .file-card:hover {
@@ -500,13 +507,27 @@ h1 {
   color: #ffffff;
 }
 
-.type-image { background: #2563eb; }
-.type-video { background: #7c3aed; }
-.type-audio { background: #16a34a; }
-.type-pdf { background: #dc2626; }
-.type-doc { background: #2563eb; }
-.type-sheet { background: #16a34a; }
-.type-file { background: #64748b; }
+.type-image {
+  background: var(--admin-blue);
+}
+.type-video {
+  background: #7c3aed;
+}
+.type-audio {
+  background: var(--admin-green);
+}
+.type-pdf {
+  background: #dc2626;
+}
+.type-doc {
+  background: var(--admin-blue);
+}
+.type-sheet {
+  background: var(--admin-green);
+}
+.type-file {
+  background: #64748b;
+}
 
 .file-info {
   display: grid;
