@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 
 const route = useRoute()
 const articleId = Number(route.params.id)
 
-// ── Dummy data (replace with API call) ──
+// ── Extended dummy data ──
 const articles = [
   {
     id: 1,
     title: 'New community pre‑school opens in Svay Rieng',
-    summary: 'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+    summary:
+      'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
     content: `
       <p>The new pre‑school, located in the village of Thmor Kor, was built with funding from the Australian Embassy and local community contributions. It features two classrooms, a play area, and a kitchen for preparing nutritious meals.</p>
       <p>Over 60 children are now enrolled, with three trained teachers providing early childhood education. The school also serves as a hub for parent education sessions on nutrition and child development.</p>
@@ -21,83 +22,275 @@ const articles = [
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
+    authorBio:
+      'The Communications Team shares stories of impact from the field, highlighting the voices of communities and partners.',
     readTime: '3 min read',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
+    views: 1247,
+    likes: 89,
+    tags: ['Education', 'Community', 'Early Childhood'],
   },
   {
     id: 2,
     title: 'Forest Guardians celebrate 500 hectares of protected land',
+    summary:
+      'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
     content: `<p>After years of dedicated conservation efforts, the community forestry committees in Prey Veng have officially protected 500 hectares of forest. The area is now home to diverse wildlife and serves as a vital carbon sink.</p><p>The achievement was celebrated with a ceremony attended by provincial authorities and local villagers, who have worked tirelessly to replant trees and prevent illegal logging.</p>`,
     image: '/src/assets/maps/wash.png',
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
+    authorBio:
+      'The Environment Team works with communities to protect natural resources and promote sustainable land use.',
     readTime: '4 min read',
+    views: 856,
+    likes: 64,
+    tags: ['Environment', 'Conservation', 'Biodiversity'],
   },
   {
     id: 3,
     title: 'Youth leaders trained in child protection advocacy',
+    summary:
+      'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
     content: `<p>Forty young volunteers from 25 villages completed a three‑day training on child rights, protection mechanisms, and reporting procedures. The participants are now equipped to lead awareness sessions in their communities.</p><p>The training was facilitated by Santi Sena's Child Protection Unit and supported by UNICEF. It is part of a larger initiative to establish youth‑led child protection networks across the province.</p>`,
     image: '/src/assets/maps/certi.png',
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
+    authorBio:
+      'The Child Protection Unit works to safeguard children’s rights and empower communities to prevent abuse and exploitation.',
     readTime: '2 min read',
+    views: 523,
+    likes: 42,
+    tags: ['Child Protection', 'Youth', 'Advocacy'],
   },
   {
     id: 4,
     title: 'Saving‑for‑Change groups reach 10,000 members',
+    summary:
+      'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
     content: `<p>The village savings program, which started with just 50 members in 2003, has now grown to 10,000 active participants across 293 villages. The groups provide a safe way for families to save, access small loans, and build financial resilience.</p><p>To celebrate, Santi Sena held a series of community events, highlighting success stories of members who have used loans to start small businesses or invest in education.</p>`,
     image: '/src/assets/maps/pre-school.png',
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
+    authorBio:
+      'The Livelihood Unit promotes economic empowerment through savings groups, skills training, and enterprise development.',
     readTime: '3 min read',
+    views: 2134,
+    likes: 156,
+    tags: ['Livelihood', 'Savings', 'Financial Inclusion'],
   },
   {
     id: 5,
     title: 'New partnership to expand clean water access',
+    summary:
+      'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
     content: `<p>Santi Sena has signed a memorandum of understanding with WaterAid to bring safe drinking water to 15 additional villages in Kratie province. The initiative includes the construction of boreholes, water purification systems, and community training on hygiene practices.</p><p>This partnership will directly benefit over 2,000 families and is expected to reduce waterborne diseases significantly.</p>`,
     image: '/src/assets/maps/water.png',
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
+    authorBio:
+      'The WASH Team focuses on improving water, sanitation, and hygiene practices in underserved communities.',
     readTime: '5 min read',
+    views: 678,
+    likes: 51,
+    tags: ['WASH', 'Water', 'Health'],
   },
 ]
 
-const article = ref<any>(null)
+type Article = {
+  id: number
+  title: string
+  summary: string
+  content: string
+  image: string
+  date: string
+  category: string
+  author: string
+  authorAvatar?: string
+  authorBio?: string
+  readTime: string
+  views: number
+  likes: number
+  tags?: string[]
+}
+
+const article = ref<Article | null>(null)
 
 onMounted(() => {
-  article.value = articles.find(a => a.id === articleId) || null
+  const found = (articles as Article[]).find((a) => a.id === articleId)
+  article.value = found ?? null
 })
 
-// Related news: articles with same category, excluding current
+// Related articles
 const relatedArticles = computed(() => {
-  if (!article.value) return []
-  return articles
-    .filter(a => a.id !== article.value.id && a.category === article.value.category)
-    .slice(0, 2)
+  const current = article.value
+  if (!current) return []
+  return articles.filter((a) => a.id !== current.id && a.category === current.category).slice(0, 3)
 })
+
+// ─── Scroll‑triggered pop‑up for cards ──────────────────────────
+let observers: IntersectionObserver[] = []
+
+const setupObservers = () => {
+  // Clean up old observers
+  observers.forEach((obs) => obs.disconnect())
+  observers = []
+
+  // Target all cards that should pop up
+  const selectors = [
+    '.sidebar-card', // includes stats, related, newsletter
+    '.author-bio-card',
+    '.share-section',
+    '.related-sidebar-item', // individual related links
+  ]
+  const elements = document.querySelectorAll(selectors.join(','))
+  elements.forEach((el) => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            el.classList.add('card-visible')
+          } else {
+            el.classList.remove('card-visible')
+          }
+        })
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -20px 0px' },
+    )
+    observer.observe(el)
+    observers.push(observer)
+  })
+}
+
+onMounted(() => {
+  nextTick(() => {
+    setupObservers()
+  })
+})
+
+onBeforeUnmount(() => {
+  observers.forEach((obs) => obs.disconnect())
+  observers = []
+})
+
+// ─── Share functions ──────────────────────────────────────────────
+const shareOn = (platform: string) => {
+  const url = window.location.href
+  const title = article.value?.title || ''
+  let shareUrl = ''
+  switch (platform) {
+    case 'facebook':
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+      break
+    case 'twitter':
+      shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`
+      break
+    case 'linkedin':
+      shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
+      break
+    case 'email':
+      shareUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`
+      break
+    default:
+      return
+  }
+  window.open(shareUrl, '_blank', 'width=600,height=400')
+}
+
+const toastMessage = ref('')
+const showToast = ref(false)
+let toastTimer: number | null = null
+
+const showAlertToast = (message: string) => {
+  toastMessage.value = message
+  showToast.value = true
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = window.setTimeout(() => {
+    showToast.value = false
+  }, 2200)
+}
+
+const copyLink = () => {
+  navigator.clipboard
+    ?.writeText(window.location.href)
+    .then(() => showAlertToast('Link copied to clipboard!'))
+    .catch(() => showAlertToast('Could not copy link. Please copy manually.'))
+}
 </script>
 
 <template>
   <div class="news-detail">
-    <!-- Hero with background image -->
-    <section
-      v-if="article"
-      class="page-hero"
-      :style="{ backgroundImage: `url(${article.image})` }"
-    >
+    <!-- Toast notification -->
+    <transition name="toast">
+      <div v-if="showToast" class="toast toast--success" role="status" aria-live="polite">
+        <span class="toast__icon">✅</span>
+        <span class="toast__text">{{ toastMessage }}</span>
+      </div>
+    </transition>
+
+    <!-- Hero -->
+    <section v-if="article" class="page-hero" :style="{ backgroundImage: `url(${article.image})` }">
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <RouterLink to="/news" class="back-link">← Back to all news</RouterLink>
-        <span class="eyebrow">{{ article.category }}</span>
+        <RouterLink to="/news" class="back-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5" />
+            <path d="M12 19l-7-7 7-7" />
+          </svg>
+          Back to all news
+        </RouterLink>
+        <div class="hero-badge">{{ article.category }}</div>
         <h1>{{ article.title }}</h1>
         <p class="hero-subtitle">{{ article.summary }}</p>
         <div class="hero-meta">
-          <span class="meta-item">By {{ article.author }}</span>
-          <span class="meta-item">{{ new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }}</span>
-          <span class="meta-item">{{ article.readTime }}</span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            {{ article.author }}
+          </span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            {{
+              new Date(article.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })
+            }}
+          </span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {{ article.readTime }}
+          </span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            {{ article.views }} views
+          </span>
         </div>
       </div>
     </section>
@@ -106,39 +299,162 @@ const relatedArticles = computed(() => {
     <div class="container">
       <div v-if="article" class="detail-wrapper">
         <div class="article-grid">
-          <!-- Image (left) – we already used it as background, but we can still show it inline if you want.
-               However, to avoid duplication, we can omit the inline image and just show content.
-               For a clean design, I'll keep the image on the left as a smaller "featured" image.
-          -->
-          <div class="detail-image">
-            <img :src="article.image" :alt="article.title" />
+          <!-- Left: Main content -->
+          <div class="detail-content">
+            <div class="content-body" v-html="article.content"></div>
+
+            <!-- Tags -->
+            <div class="tags-section" v-if="article.tags && article.tags.length">
+              <span class="tags-label">Tags</span>
+              <div class="tags-list">
+                <span v-for="tag in article.tags" :key="tag" class="tag-item">#{{ tag }}</span>
+              </div>
+            </div>
+
+            <!-- Share Section (pop‑up) -->
+            <div class="share-section">
+              <span class="share-label">Share this story</span>
+              <div class="share-buttons">
+                <button class="share-btn facebook" @click="shareOn('facebook')">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                  </svg>
+                </button>
+                <button class="share-btn twitter" @click="shareOn('twitter')">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"
+                    />
+                  </svg>
+                </button>
+                <button class="share-btn linkedin" @click="shareOn('linkedin')">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
+                    />
+                    <rect x="2" y="9" width="4" height="12" />
+                    <circle cx="4" cy="4" r="2" />
+                  </svg>
+                </button>
+                <button class="share-btn email" @click="shareOn('email')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                    />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                </button>
+                <button class="share-btn copy" @click="copyLink">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Author Bio (pop‑up) -->
+            <div class="author-bio-card">
+              <div
+                class="author-avatar-large"
+                :style="{ backgroundImage: `url(${article.authorAvatar})` }"
+              >
+                <span v-if="!article.authorAvatar">{{
+                  article.author
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .slice(0, 2)
+                }}</span>
+              </div>
+              <div class="author-bio-content">
+                <h4 class="author-name">{{ article.author }}</h4>
+                <p class="author-bio-text">
+                  {{ article.authorBio || 'Contributor to Santi Sena.' }}
+                </p>
+              </div>
+            </div>
           </div>
-          <div class="detail-content" v-html="article.content"></div>
+
+          <!-- Right: Sidebar -->
+          <aside class="detail-sidebar">
+            <!-- Article stats (without icons) – now with pop‑up -->
+            <div class="sidebar-card stats-card">
+              <h4>Article stats</h4>
+              <div class="stat-row">
+                <span>{{ article.views }} views</span>
+              </div>
+              <div class="stat-row">
+                <span>{{ article.likes }} likes</span>
+              </div>
+              <div class="stat-row">
+                <span>{{ article.readTime }}</span>
+              </div>
+              <div class="stat-row">
+                <span>{{
+                  new Date(article.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                }}</span>
+              </div>
+            </div>
+
+            <!-- Related articles (pop‑up) -->
+            <div v-if="relatedArticles.length > 0" class="sidebar-card related-sidebar">
+              <h4>More from {{ article.category }}</h4>
+              <RouterLink
+                v-for="item in relatedArticles"
+                :key="item.id"
+                :to="`/news/${item.id}`"
+                class="related-sidebar-item"
+              >
+                <div class="related-sidebar-image">
+                  <img :src="item.image" :alt="item.title" />
+                </div>
+                <div class="related-sidebar-info">
+                  <span class="related-sidebar-category">{{ item.category }}</span>
+                  <h5>{{ item.title }}</h5>
+                  <span class="related-sidebar-date">{{
+                    new Date(item.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  }}</span>
+                </div>
+              </RouterLink>
+            </div>
+
+            <!-- Newsletter mini (pop‑up) -->
+            <div class="sidebar-card newsletter-mini">
+              <h4>📬 Never miss a story</h4>
+              <p>Get the latest updates delivered to your inbox.</p>
+              <div class="newsletter-mini-form">
+                <input type="email" placeholder="Your email" class="mini-input" />
+                <button class="mini-btn">Subscribe</button>
+              </div>
+            </div>
+          </aside>
         </div>
 
-        <div class="detail-footer">
-          <span class="tag">#{{ article.category }}</span>
-        </div>
-
-        <div v-if="relatedArticles.length > 0" class="related-section">
-          <h3 class="related-title">You might also like</h3>
-          <div class="related-grid">
-            <RouterLink
-              v-for="item in relatedArticles"
-              :key="item.id"
-              :to="`/news/${item.id}`"
-              class="related-card"
-            >
-              <div class="related-image">
-                <img :src="item.image" :alt="item.title" />
-              </div>
-              <div class="related-content">
-                <span class="related-category">{{ item.category }}</span>
-                <h4 class="related-headline">{{ item.title }}</h4>
-                <span class="related-date">{{ new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}</span>
-              </div>
-            </RouterLink>
-          </div>
+        <!-- Bottom navigation -->
+        <div class="detail-footer-nav">
+          <RouterLink to="/news" class="footer-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+            All news
+          </RouterLink>
+          <button
+            class="scroll-top-btn"
+            @click="$el?.ownerDocument?.defaultView?.scrollTo({ top: 0, behavior: 'smooth' })"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 15l-6-6-6 6" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -152,6 +468,25 @@ const relatedArticles = computed(() => {
 </template>
 
 <style scoped>
+/* ── Variables ── */
+:root {
+  --color-cream: #faf8f5;
+  --color-border: #e8e3dc;
+  --color-ink: #1e1a16;
+  --color-ink-soft: #5a524a;
+  --primary-color: #2d7a5a;
+  --primary-dark: #1a3d2e;
+  --primary-light: #aad6c7;
+  --gold: #c9a84c;
+  --gold-light: #e8d5a3;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 32px rgba(30, 26, 22, 0.06);
+  --shadow-lg: 0 16px 56px rgba(30, 26, 22, 0.1);
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
 .news-detail {
   min-height: 100vh;
   background: var(--color-cream);
@@ -163,13 +498,13 @@ const relatedArticles = computed(() => {
   padding: 2rem clamp(1.25rem, 4vw, 3rem);
 }
 
-/* ── Hero with background image ── */
+/* ── Hero ── */
 .page-hero {
   position: relative;
   background-size: cover;
   background-position: center;
   padding: 5rem 1.5rem 4rem;
-  min-height: 400px;
+  min-height: 420px;
   display: flex;
   align-items: center;
 }
@@ -179,7 +514,7 @@ const relatedArticles = computed(() => {
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(6, 18, 13, 0.88) 0%,
+    rgba(6, 18, 13, 0.92) 0%,
     rgba(6, 18, 13, 0.6) 50%,
     rgba(6, 18, 13, 0.3) 100%
   );
@@ -195,39 +530,65 @@ const relatedArticles = computed(() => {
 }
 
 .back-link {
-  display: inline-block;
-  color: #aad6c7;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(253, 248, 239, 0.92);
+  font-weight: 700;
   text-decoration: none;
   margin-bottom: 1rem;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(170, 214, 199, 0.35);
+  background: rgba(45, 122, 90, 0.2);
+  backdrop-filter: blur(8px);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    background 0.2s,
+    border-color 0.2s;
+  font-size: 0.9rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.back-link {
+  border-color: rgba(232, 213, 163, 0.65);
+  background: rgba(201, 168, 76, 0.18);
 }
 
 .back-link:hover {
-  border-color: currentColor;
+  transform: translateY(-2px);
+  background: rgba(215, 172, 52, 0.26);
+  border-color: rgba(232, 213, 163, 0.85);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
 }
 
-.eyebrow {
+.back-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+.hero-badge {
   display: inline-block;
   text-transform: uppercase;
   letter-spacing: 0.35em;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #aad6c7;
-  background: rgba(255, 255, 255, 0.08);
+  color: rgb(21, 243, 21);
+  background: rgba(248, 247, 247, 0.08);
   padding: 0.3rem 1.2rem;
   border-radius: 999px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: none;
   margin-bottom: 0.75rem;
 }
 
 .page-hero h1 {
-  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-size: clamp(2rem, 5vw, 3.6rem);
   font-weight: 700;
   color: #fdf8ef;
   margin: 0.5rem 0 0.5rem;
   letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
 .hero-subtitle {
@@ -241,71 +602,67 @@ const relatedArticles = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
-  margin-top: 1rem;
+  margin-top: 1.2rem;
   font-size: 0.85rem;
   color: rgba(253, 248, 239, 0.75);
 }
 
-.meta-item::before {
-  content: '•';
-  margin-right: 0.3rem;
-  color: var(--primary-color);
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.meta-item:first-child::before {
-  content: '';
-  margin-right: 0;
+.meta-item svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
 }
 
-/* ── Article body ── */
+/* ── Article Grid ── */
 .detail-wrapper {
   padding: 2rem 0 3rem;
 }
 
 .article-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 2.5rem;
   align-items: start;
 }
 
-.detail-image {
-  border-radius: 1.25rem;
-  overflow: hidden;
-  box-shadow: 0 8px 30px rgba(47, 36, 29, 0.12);
-  position: sticky;
-  top: 2rem;
-}
-
-.detail-image img {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  display: block;
-}
-
+/* ── Content ── */
 .detail-content {
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+}
+
+.content-body {
   font-size: 1.05rem;
   line-height: 1.8;
   color: var(--color-ink);
 }
 
-.detail-content p {
+.content-body p {
   margin: 0 0 1.2rem 0;
 }
 
-.detail-content h2,
-.detail-content h3 {
+.content-body h2,
+.content-body h3 {
   margin: 1.8rem 0 0.8rem;
   color: var(--primary-dark);
 }
 
-.detail-content ul,
-.detail-content ol {
+.content-body ul,
+.content-body ol {
   margin: 0 0 1.2rem 1.5rem;
 }
 
-.detail-content blockquote {
+.content-body blockquote {
   margin: 1.5rem 0;
   padding-left: 1.5rem;
   border-left: 4px solid var(--primary-color);
@@ -313,94 +670,390 @@ const relatedArticles = computed(() => {
   color: var(--color-ink-soft);
 }
 
-.detail-footer {
-  margin-top: 2.5rem;
+/* Tags */
+.tags-section {
+  margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--color-border);
 }
 
-.tag {
-  display: inline-block;
-  background: var(--color-border);
+.tags-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.5rem;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-item {
+  background: var(--color-cream);
   padding: 0.2rem 0.8rem;
   border-radius: 999px;
   font-size: 0.8rem;
+  color: var(--primary-dark);
+  border: 1px solid var(--color-border);
+}
+
+/* ── Share Section (pop‑up) ── */
+.share-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+
+  opacity: 0;
+  transform: translateY(20px) scale(0.97);
+  transition:
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.share-section.card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.share-label {
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.share-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--color-cream);
   color: var(--color-ink-soft);
 }
 
-/* ── Related ── */
-.related-section {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--color-border);
+.share-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
-.related-title {
-  font-size: 1.3rem;
+.share-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.share-btn.facebook {
+  background: #1877f2;
+  color: #fff;
+}
+.share-btn.twitter {
+  background: #1da1f2;
+  color: #fff;
+}
+.share-btn.linkedin {
+  background: #0a66c2;
+  color: #fff;
+}
+.share-btn.email {
+  background: #6c5ce7;
+  color: #fff;
+}
+.share-btn.copy {
+  background: var(--primary-color);
+  color: #fff;
+}
+.share-btn.copy:hover {
+  background: var(--primary-dark);
+}
+
+/* ── Author Bio (pop‑up) ── */
+.author-bio-card {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--color-cream);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+
+  opacity: 0;
+  transform: translateY(20px) scale(0.97);
+  transition:
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.author-bio-card.card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.author-avatar-large {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
   color: var(--primary-dark);
-  margin: 0 0 1.5rem;
 }
 
-.related-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.author-name {
+  margin: 0 0 0.2rem;
+  font-size: 1.1rem;
+  color: var(--primary-dark);
+}
+
+.author-bio-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-ink-soft);
+  line-height: 1.5;
+}
+
+/* ── Sidebar ── */
+.detail-sidebar {
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
-.related-card {
-  display: flex;
-  gap: 1rem;
+.sidebar-card {
   background: #fff;
-  border-radius: 1rem;
-  overflow: hidden;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  border-radius: 20px;
+
+  /* pop‑up */
+  opacity: 0;
+  transform: translateY(20px) scale(0.97);
+  transition:
+    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar-card.card-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.sidebar-card h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Stats card – no icons */
+.stats-card .stat-row {
+  display: flex;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+  color: var(--color-ink-soft);
+}
+
+.stats-card .stat-row:last-child {
+  border-bottom: none;
+}
+
+/* Related sidebar items – also pop‑up */
+.related-sidebar-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border);
   text-decoration: none;
   color: inherit;
-  border: 1px solid var(--color-border);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: opacity 0.2s;
+
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease,
+    border-color 0.2s;
 }
 
-.related-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(47, 36, 29, 0.08);
+.related-sidebar-item.card-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.related-image {
-  flex: 0 0 100px;
+.related-sidebar-item:hover {
+  opacity: 0.7;
+}
+
+.related-sidebar-item:last-child {
+  border-bottom: none;
+}
+
+.related-sidebar-image {
+  flex: 0 0 60px;
   aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
-.related-image img {
+.related-sidebar-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.related-content {
-  padding: 0.75rem 0.75rem 0.75rem 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.related-sidebar-info {
+  flex: 1;
 }
 
-.related-category {
-  font-size: 0.65rem;
+.related-sidebar-category {
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--primary-color);
 }
 
-.related-headline {
-  font-size: 0.95rem;
-  margin: 0.2rem 0 0.3rem;
+.related-sidebar-info h5 {
+  margin: 0.1rem 0 0.2rem;
+  font-size: 0.9rem;
   line-height: 1.3;
   color: var(--primary-dark);
 }
 
-.related-date {
+.related-sidebar-date {
   font-size: 0.7rem;
   color: var(--color-ink-soft);
+}
+
+/* Newsletter mini */
+.newsletter-mini p {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+  margin: 0 0 0.75rem;
+}
+
+.newsletter-mini-form {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.mini-input {
+  flex: 1;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  background: var(--color-cream);
+}
+
+.mini-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.mini-btn {
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mini-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* ── Footer Nav ── */
+.detail-footer-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-decoration: none;
+  color: var(--color-ink-soft);
+  font-weight: 600;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.footer-link:hover {
+  border-color: currentColor;
+}
+
+.footer-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+.scroll-top-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.scroll-top-btn:hover {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(45, 122, 90, 0.2);
+}
+
+.scroll-top-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* ── Not Found ── */
@@ -423,7 +1076,9 @@ const relatedArticles = computed(() => {
   color: var(--primary-color);
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.25s, color 0.25s;
+  transition:
+    background 0.25s,
+    color 0.25s;
 }
 
 .btn--read:hover {
@@ -431,36 +1086,117 @@ const relatedArticles = computed(() => {
   color: #fff;
 }
 
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(16px);
+  z-index: 9999;
+  background: rgba(14, 26, 20, 0.92);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  backdrop-filter: blur(10px);
+  max-width: calc(100vw - 2rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74, 222, 128, 0.18);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  flex: 0 0 auto;
+}
+
+.toast__text {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.toast--success {
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(24px);
+}
+
+.toast-enter-to,
+.toast-leave-from {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ── Responsive ── */
-@media (max-width: 820px) {
+@media (max-width: 992px) {
   .article-grid {
     grid-template-columns: 1fr;
+  }
+  .detail-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
-  }
-  .detail-image {
-    position: static;
-  }
-  .related-grid {
-    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .page-hero {
     padding: 3rem 1.5rem 2.5rem;
     min-height: 300px;
   }
   .page-hero h1 {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
   }
   .hero-meta {
     flex-direction: column;
     gap: 0.4rem;
   }
-  .meta-item::before {
-    display: none;
-  }
   .detail-content {
+    padding: 1.25rem;
+  }
+  .detail-sidebar {
+    grid-template-columns: 1fr;
+  }
+  .author-bio-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .share-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .share-buttons {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  .content-body {
     font-size: 0.95rem;
   }
 }

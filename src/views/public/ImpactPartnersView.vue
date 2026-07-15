@@ -1,17 +1,5 @@
 <template>
   <div class="partners-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="badge">Impact · Partners</span>
-        <h1>Trusted by ten+ international donors and every government line ministry we touch.</h1>
-        <p class="hero-subtitle">
-          Multi-year grants, audited books and thirty years of unbroken village presence — that's
-          why partners return.
-        </p>
-      </div>
-    </Slideshow>
-
     <!-- Partners Carousel Section -->
     <section class="section partners-section">
       <div class="container">
@@ -208,19 +196,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1600&q=80', caption: '' },
-  {
-    image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80',
-    caption: '',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1600&q=80',
-    caption: '',
-  },
-  { image: 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=1600&q=80', caption: '' },
-]
 
 // Partner data
 const partners = [

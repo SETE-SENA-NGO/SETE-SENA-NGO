@@ -1,15 +1,32 @@
 /* Global design tokens, reset, typography and layout system for the whole site. */
 :root {
-  --primary-color: #1BA34F;
-  --primary-dark: #14813E;
-  --primary-light: #E6F6EC;
+  --primary-color: #0f8f69;
+  --primary-dark: #0b5f49;
+  --primary-light: #e3f5ef;
 
-  --color-cream: #FCF6E9;
-  --color-cream-soft: #F5EBE0;
-  --color-ink: #2B2B28;
-  --color-ink-soft: #5B564C;
-  --color-white: #FFFFFF;
-  --color-border: #E8E4DF;
+  --color-cream: #f7fbf8;
+  --color-cream-soft: #edf6f1;
+  --color-ink: #16231d;
+  --color-ink-soft: #53645b;
+  --color-white: #ffffff;
+  --color-border: #dce8e0;
+
+  --admin-theme-bg: #f3f8f5;
+  --admin-theme-bg-deep: #e6f1eb;
+  --admin-theme-surface: #ffffff;
+  --admin-theme-surface-soft: #eef7f2;
+  --admin-theme-contrast: #10241c;
+  --admin-theme-contrast-soft: #245241;
+  --admin-theme-text: #31483e;
+  --admin-theme-muted: #678074;
+  --admin-theme-border: #d4e5dc;
+  --admin-theme-border-strong: #aecdbe;
+  --admin-theme-primary: #159a57;
+  --admin-theme-primary-deep: #0b6b4c;
+  --admin-theme-teal: #0f8f80;
+  --admin-theme-gold: #b87910;
+  --admin-theme-danger: #d14343;
+  --admin-theme-shadow: 0 18px 44px rgba(15, 95, 73, 0.1);
 
   --font-family-base: 'Poppins', 'Noto Sans Khmer', sans-serif;
 
@@ -25,6 +42,25 @@
   --space-md: 1.5rem;
   --space-lg: 2.5rem;
   --space-xl: 4rem;
+}
+
+.admin-dark {
+  --admin-theme-bg: #071311;
+  --admin-theme-bg-deep: #0c1f1a;
+  --admin-theme-surface: #10241f;
+  --admin-theme-surface-soft: #0b1b17;
+  --admin-theme-contrast: #f2fbf6;
+  --admin-theme-contrast-soft: #b9ead5;
+  --admin-theme-text: #c9ddd4;
+  --admin-theme-muted: #90aaa0;
+  --admin-theme-border: #1d3b33;
+  --admin-theme-border-strong: #2d554a;
+  --admin-theme-primary: #38c982;
+  --admin-theme-primary-deep: #74e0ae;
+  --admin-theme-teal: #35d0be;
+  --admin-theme-gold: #e0b15a;
+  --admin-theme-danger: #fb7185;
+  --admin-theme-shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
 }
 
 @media (max-width: 640px) {

@@ -1,13 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero2.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero3.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero4.jpg', caption: '' },
-]
 
 const stats = [
   {
@@ -111,20 +103,6 @@ onBeforeUnmount(() => {
   <div class="education-page">
     <!-- Hero -->
     <div class="hero-wrap">
-      <Slideshow :slides="slideItems">
-        <div class="hero-overlay"></div>
-
-        <div class="hero-content">
-          <p class="eyebrow">PROGRAMS · GOAL 03 LIVELIHOODS</p>
-          <h1>Dignified work rooted in the village.</h1>
-          <p class="hero-desc">
-            Integrated farming, Saving-for-Change groups, agricultural cooperatives and rural
-            enterprise — livelihoods that keep families together instead of sending parents abroad
-            for wages.
-          </p>
-        </div>
-      </Slideshow>
-
       <div class="scroll-cue" aria-hidden="true"><span></span></div>
     </div>
 
@@ -234,47 +212,47 @@ onBeforeUnmount(() => {
 
           <div class="radial-wrap" ref="radialWrap">
             <div class="radial-center">
-              <img :src="whatWeDo[0].image" alt="" />
-              <p class="radial-center-text">{{ whatWeDo[0].text }}</p>
+              <img :src="whatWeDo[0]?.image" alt="" />
+              {{ whatWeDo[0]?.text }}
             </div>
 
             <div class="radial-item radial-item--1">
-              <div class="radial-thumb"><img :src="whatWeDo[1].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[1]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[1].title }}</p>
-                <p class="radial-text">{{ whatWeDo[1].text }}</p>
+                {{ whatWeDo[1]?.title }}
+                {{ whatWeDo[1]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--2">
-              <div class="radial-thumb"><img :src="whatWeDo[2].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[2]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[2].title }}</p>
-                <p class="radial-text">{{ whatWeDo[2].text }}</p>
+                {{ whatWeDo[2]?.title }}
+                {{ whatWeDo[2]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--3">
-              <div class="radial-thumb"><img :src="whatWeDo[3].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[3]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[3].title }}</p>
-                <p class="radial-text">{{ whatWeDo[3].text }}</p>
+                {{ whatWeDo[3]?.title }}
+                {{ whatWeDo[3]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--4">
-              <div class="radial-thumb"><img :src="whatWeDo[4].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[4]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[4].title }}</p>
-                <p class="radial-text">{{ whatWeDo[4].text }}</p>
+                {{ whatWeDo[4]?.title }}
+                {{ whatWeDo[4]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--5">
-              <div class="radial-thumb"><img :src="whatWeDo[5].image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDo[5]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[5].title }}</p>
-                <p class="radial-text">{{ whatWeDo[5].text }}</p>
+                {{ whatWeDo[5]?.title }}
+                {{ whatWeDo[5]?.text }}
               </div>
             </div>
           </div>

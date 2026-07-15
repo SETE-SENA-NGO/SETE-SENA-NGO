@@ -5,8 +5,9 @@ import { RouterLink } from 'vue-router'
 import heroImpact from '@/assets/hero-impact.jpg'
 import heroImpactForest from '@/assets/hero-impact-forest.jpg'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
-import Slideshow from '@/components/shared/Slideshow.vue'
 import { useContentStore } from '@/stores/content.store'
+
+defineOptions({ name: 'GetInvolvedPartnerView' })
 
 interface PartnerLink {
   label: string
@@ -243,12 +244,6 @@ const pageContent = computed<PartnerPageContent>(() =>
   mergePartnerContent(fallbackContent, cmsContent.value),
 )
 
-const slideItems = computed(() =>
-  pageContent.value.hero.slides.length
-    ? pageContent.value.hero.slides
-    : fallbackContent.hero.slides,
-)
-
 const portfolioStats = computed(() => [
   {
     value: '2023-2026',
@@ -323,6 +318,8 @@ function normalizeSlides(value: unknown, fallback: PartnerSlide[]) {
 async function loadCmsContent() {
   try {
     const page = await contentStore.fetchBySlug(PAGE_SLUG)
+    if (!page) return
+
     const body = page.body.trim()
     if (!body) return
 
@@ -411,30 +408,6 @@ onUnmounted(() => {
 
 <template>
   <main class="partner-page">
-    <Slideshow :slides="slideItems" :interval-ms="6200">
-      <div class="hero-shade" />
-      <div class="hero-grid">
-        <section class="hero-copy pop-reveal is-visible" aria-labelledby="partner-hero-title">
-          <p class="eyebrow">{{ pageContent.hero.eyebrow }}</p>
-          <h1 id="partner-hero-title">{{ pageContent.hero.title }}</h1>
-          <p class="lead">{{ pageContent.hero.description }}</p>
-          <div class="hero-actions" aria-label="Partnership actions">
-            <RouterLink :to="pageContent.hero.primaryCta.to" class="button button-primary">
-              {{ pageContent.hero.primaryCta.label }}
-            </RouterLink>
-            <a :href="pageContent.hero.secondaryCta.to" class="button button-ghost">
-              {{ pageContent.hero.secondaryCta.label }}
-            </a>
-          </div>
-        </section>
-
-        <aside class="hero-brief pop-reveal is-visible" aria-label="Partnership readiness">
-          <span>Partner readiness</span>
-          <strong>Field delivery, donor reports and community feedback in one loop.</strong>
-        </aside>
-      </div>
-    </Slideshow>
-
     <section class="stat-strip" aria-label="Partner page highlights">
       <div v-for="stat in portfolioStats" :key="stat.label" class="stat-item pop-reveal">
         <strong>{{ stat.value }}</strong>
@@ -712,7 +685,7 @@ onUnmounted(() => {
   background: rgba(20, 129, 62, 0.42);
   padding: 1.15rem;
   color: #fffaf0;
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 .hero-brief span {
@@ -746,7 +719,7 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  margin-top: -3.2rem;
+  margin-top: 1rem;
 }
 
 .stat-item {
@@ -1176,18 +1149,17 @@ onUnmounted(() => {
 
 .pop-reveal {
   opacity: 0;
-  filter: blur(8px);
+  filter: none;
   transform: translateY(58px) scale(0.92);
   transition:
     opacity 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
-    filter 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
     transform 0.72s cubic-bezier(0.2, 0.8, 0.2, 1);
   transition-delay: var(--pop-delay, 0ms);
 }
 
 .pop-reveal.is-visible {
   opacity: 1;
-  filter: blur(0);
+  filter: none;
   transform: translateY(0) scale(1);
 }
 

@@ -75,8 +75,7 @@ const defaultPages: PageDraft[] = [
         id: 'home-mission',
         label: 'Mission',
         heading: 'Peace is planted, not declared.',
-        body:
-          'Santi Sena, the Peace Army, was founded by Cambodian Buddhist monks in 1994 to alleviate poverty and rebuild moral, environmental and economic life after decades of conflict.',
+        body: 'Santi Sena, the Peace Army, was founded by Cambodian Buddhist monks in 1994 to alleviate poverty and rebuild moral, environmental and economic life after decades of conflict.',
         items: '',
       },
       {
@@ -113,8 +112,7 @@ const defaultPages: PageDraft[] = [
         id: 'about-vmg',
         label: 'Vision, mission, goal',
         heading: 'Vision, Mission, Goal',
-        body:
-          'Vision: A Cambodia where peace, justice and harmony flourish. Mission: Alleviate poverty through community-led development rooted in Buddhist ethics. Goal: Better work and living situations for vulnerable rural households.',
+        body: 'Vision: A Cambodia where peace, justice and harmony flourish. Mission: Alleviate poverty through community-led development rooted in Buddhist ethics. Goal: Better work and living situations for vulnerable rural households.',
         items:
           'Vision | A Cambodia where peace, justice and harmony flourish across every village and generation.\nMission | To alleviate poverty through community-led development rooted in Buddhist ethics.\nGoal | Better work and living situations for the most vulnerable rural households of southeastern Cambodia.',
       },
@@ -488,8 +486,7 @@ const defaultPages: PageDraft[] = [
     title: 'Impact Timeline',
     eyebrow: 'Timeline',
     headline: 'Thirty years of walking with villages.',
-    intro:
-      'Progress built through patient partnership from founding in Svay Rieng to today.',
+    intro: 'Progress built through patient partnership from founding in Svay Rieng to today.',
     primaryAction: 'Take the next step',
     secondaryAction: '',
     sections: [
@@ -1193,7 +1190,6 @@ function formatDate(value: string) {
     timeStyle: 'short',
   }).format(date)
 }
-
 </script>
 
 <template>
@@ -1204,6 +1200,9 @@ function formatDate(value: string) {
 
       <main class="main">
         <p v-if="notice" class="notice" :class="`notice-${notice.type}`" role="status">
+          <span class="notice-icon" aria-hidden="true">{{
+            notice.type === 'success' ? '✓' : '!'
+          }}</span>
           {{ notice.message }}
         </p>
 
@@ -1223,6 +1222,7 @@ function formatDate(value: string) {
                   :disabled="loading"
                   @click="loadPages"
                 >
+                  <span class="btn-icon" aria-hidden="true">⟳</span>
                   Reload
                 </button>
                 <RouterLink
@@ -1230,6 +1230,7 @@ function formatDate(value: string) {
                   class="button button-secondary"
                   :to="activePage.route"
                 >
+                  <span class="btn-icon" aria-hidden="true">👁</span>
                   View
                 </RouterLink>
                 <button
@@ -1237,6 +1238,7 @@ function formatDate(value: string) {
                   type="button"
                   @click="resetCurrentToDefault"
                 >
+                  <span class="btn-icon" aria-hidden="true">↺</span>
                   Reset
                 </button>
                 <button
@@ -1245,6 +1247,7 @@ function formatDate(value: string) {
                   :disabled="savingSlug === activePage.slug || loading"
                   @click="saveCurrentPage"
                 >
+                  <span class="btn-icon" aria-hidden="true">✓</span>
                   {{ savingSlug === activePage.slug ? 'Saving...' : 'Save page' }}
                 </button>
               </div>
@@ -1308,7 +1311,11 @@ function formatDate(value: string) {
 
                   <label class="field-block">
                     <span>Hero headline</span>
-                    <textarea v-model="activePage.headline" name="page-headline" rows="2"></textarea>
+                    <textarea
+                      v-model="activePage.headline"
+                      name="page-headline"
+                      rows="2"
+                    ></textarea>
                   </label>
 
                   <label class="field-block">
@@ -1335,6 +1342,7 @@ function formatDate(value: string) {
                       <h3>{{ activePage.sections.length }} editable blocks</h3>
                     </div>
                     <button class="button button-secondary" type="button" @click="addSection">
+                      <span class="btn-icon" aria-hidden="true">+</span>
                       Add section
                     </button>
                   </div>
@@ -1347,7 +1355,8 @@ function formatDate(value: string) {
                   >
                     <details open>
                       <summary class="section-summary">
-                        <span>{{ index + 1 }}. {{ section.label || 'Section' }}</span>
+                        <span class="section-summary-index">{{ index + 1 }}</span>
+                        <span class="section-summary-label">{{ section.label || 'Section' }}</span>
                         <small>{{ section.heading || 'No heading' }}</small>
                       </summary>
 
@@ -1396,13 +1405,20 @@ function formatDate(value: string) {
                         </label>
                         <label>
                           <span>Heading</span>
-                          <input v-model="section.heading" :name="`section-${section.id}-heading`" />
+                          <input
+                            v-model="section.heading"
+                            :name="`section-${section.id}-heading`"
+                          />
                         </label>
                       </div>
 
                       <label class="field-block">
                         <span>Body</span>
-                        <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="4"></textarea>
+                        <textarea
+                          v-model="section.body"
+                          :name="`section-${section.id}-body`"
+                          rows="4"
+                        ></textarea>
                       </label>
 
                       <label class="field-block">
@@ -1445,7 +1461,6 @@ function formatDate(value: string) {
                   </div>
                 </div>
               </div>
-
             </div>
           </section>
         </section>
@@ -1456,23 +1471,24 @@ function formatDate(value: string) {
 
 <style scoped>
 .editor-page {
-  --admin-bg: #f4f7fb;
-  --admin-bg-deep: #e8edf7;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f8fafc;
-  --admin-contrast: #172033;
-  --admin-contrast-soft: #334155;
-  --admin-text: #334155;
-  --admin-muted: #667085;
-  --admin-border: #dbe3ef;
-  --admin-border-strong: #c7d2e5;
-  --admin-blue: #2563eb;
-  --admin-pink: #dc2626;
-  --admin-violet: #7c3aed;
-  --admin-gold: #f97316;
-  --admin-green: #16a34a;
-  --admin-gold-soft: #fff7ed;
-  --admin-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-blue: var(--admin-theme-primary);
+  --admin-blue-deep: var(--admin-theme-primary-deep);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-violet: var(--admin-theme-teal);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-green: var(--admin-theme-primary);
+  --admin-gold-soft: color-mix(in srgb, var(--admin-gold) 14%, var(--admin-surface));
+  --admin-shadow: var(--admin-theme-shadow);
   --panel: var(--admin-surface);
   --border: var(--admin-border);
   --text: var(--admin-text);
@@ -1483,22 +1499,29 @@ function formatDate(value: string) {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark) .editor-page {
-  --admin-bg: #0b1120;
-  --admin-bg-deep: #111827;
-  --admin-surface: #111827;
-  --admin-surface-soft: #0f172a;
-  --admin-contrast: #f8fafc;
-  --admin-contrast-soft: #dbeafe;
-  --admin-text: #cbd5e1;
-  --admin-muted: #a6b0c3;
-  --admin-border: #293548;
-  --admin-border-strong: #3b475d;
-  --admin-gold-soft: rgba(249, 115, 22, 0.14);
-  --admin-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+:global(.admin-dark .editor-page) {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-gold-soft: color-mix(in srgb, var(--admin-gold) 18%, var(--admin-surface));
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 .admin-layout {
@@ -1510,13 +1533,13 @@ function formatDate(value: string) {
 .main {
   flex: 1;
   width: 100%;
-  padding: 1.25rem 2rem 2rem;
+  padding: 1.5rem 2.25rem 2.5rem;
   background: var(--admin-bg);
 }
 
 .workspace {
   border: 1px solid var(--admin-border);
-  border-radius: 8px;
+  border-radius: 16px;
   background: var(--admin-surface);
   box-shadow: var(--admin-shadow);
   display: grid;
@@ -1526,11 +1549,11 @@ function formatDate(value: string) {
 }
 
 .eyebrow {
-  margin: 0 0 0.45rem;
-  color: var(--admin-blue);
+  margin: 0 0 0.5rem;
+  color: var(--admin-blue-deep);
   font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -1544,20 +1567,21 @@ p {
 h2 {
   margin-bottom: 0.35rem;
   color: var(--admin-contrast);
-  font-size: 1.05rem;
+  font-size: 1.35rem;
   font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 h3 {
   margin-bottom: 0;
   color: var(--admin-contrast);
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 1.08rem;
+  font-weight: 700;
 }
 
 .editor {
   min-width: 0;
-  padding: 1.35rem;
+  padding: 1.75rem;
   background: var(--admin-surface);
 }
 
@@ -1565,40 +1589,51 @@ h3 {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  margin: -1.35rem -1.35rem 1.15rem;
-  padding: 1.35rem;
+  gap: 1.25rem;
+  margin: -1.75rem -1.75rem 1.5rem;
+  padding: 1.75rem;
   border-bottom: 1px solid var(--admin-border);
-  background: linear-gradient(180deg, var(--admin-surface), var(--admin-surface-soft));
+  background: linear-gradient(180deg, var(--admin-surface-soft), var(--admin-surface));
 }
 
 .route-line {
   margin-bottom: 0;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--admin-muted);
+  font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
 }
 
 .editor-actions,
 .section-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.7rem;
+  gap: 0.65rem;
 }
 
 .button,
 .icon-button {
-  min-height: 42px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  padding: 0.62rem 1rem;
-  font-weight: 800;
-  font-size: 0.9rem;
+  gap: 0.4rem;
+  border-radius: 10px;
+  padding: 0.65rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.92rem;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+
+.btn-icon {
+  font-size: 0.95em;
+  line-height: 1;
 }
 
 .button:hover,
@@ -1606,72 +1641,103 @@ h3 {
   transform: translateY(-1px);
 }
 
+.button:active,
+.icon-button:active {
+  transform: translateY(0);
+}
+
 .button:disabled,
 .icon-button:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.5;
   transform: none;
 }
 
 .button-primary {
   border: 1px solid var(--admin-blue);
-  background: var(--admin-blue);
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
   color: #ffffff;
-  box-shadow: 0 10px 22px rgba(89, 104, 243, 0.26);
+  box-shadow: 0 12px 24px rgba(15, 125, 56, 0.28);
 }
 
 .button-primary:hover {
-  background: #4958df;
-  border-color: #4958df;
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
+  border-color: var(--admin-blue-deep);
 }
 
 .button-secondary,
 .icon-button {
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-border-strong);
   background: var(--admin-surface);
-  color: var(--admin-contrast);
+  color: var(--admin-contrast-soft);
 }
 
 .button-secondary:hover,
 .icon-button:hover {
-  border-color: var(--admin-border-strong);
+  border-color: var(--admin-blue);
   background: var(--admin-surface-soft);
-  box-shadow: 0 8px 18px rgba(47, 52, 86, 0.08);
+  color: var(--admin-blue-deep);
+  box-shadow: 0 8px 18px rgba(16, 88, 51, 0.1);
 }
 
 .icon-button {
-  min-height: 34px;
-  padding: 0.42rem 0.65rem;
-  font-size: 0.78rem;
+  min-height: 36px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
 }
 
 .icon-button.danger {
-  border-color: rgba(185, 28, 28, 0.28);
+  border-color: rgba(220, 38, 38, 0.28);
   color: #b91c1c;
 }
 
 .icon-button.danger:hover {
   background: #fff5f5;
+  border-color: #dc2626;
+  color: #dc2626;
 }
 
 .notice {
-  margin: 1rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1.1rem;
   border: 1px solid var(--admin-border);
-  border-radius: 8px;
-  padding: 0.9rem 1rem;
-  font-weight: 800;
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  font-weight: 700;
+}
+
+.notice-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  flex: 0 0 auto;
 }
 
 .notice-success {
-  border-color: rgba(21, 128, 61, 0.28);
-  background: #ecfdf3;
-  color: #166534;
+  border-color: rgba(21, 128, 61, 0.3);
+  background: var(--admin-surface-soft);
+  color: var(--admin-blue-deep);
+}
+
+.notice-success .notice-icon {
+  background: var(--admin-blue);
+  color: #ffffff;
 }
 
 .notice-error {
   border-color: rgba(185, 28, 28, 0.28);
   background: #fef2f2;
   color: #991b1b;
+}
+
+.notice-error .notice-icon {
+  background: #dc2626;
+  color: #ffffff;
 }
 
 .editor-workflow,
@@ -1682,55 +1748,57 @@ h3 {
 .workflow-bar {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
 }
 
 .workflow-step {
-  min-height: 62px;
+  min-height: 66px;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.75rem;
   border: 1px solid var(--admin-border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--admin-surface-soft);
   color: var(--admin-muted);
-  padding: 0.7rem;
-  font-weight: 900;
+  padding: 0.75rem 0.9rem;
+  font-weight: 700;
 }
 
 .workflow-step strong {
-  width: 2rem;
-  height: 2rem;
+  width: 2.1rem;
+  height: 2.1rem;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: var(--admin-surface-soft);
+  background: #ffffff;
+  border: 1px solid var(--admin-border-strong);
   color: var(--admin-muted);
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .workflow-step.active {
-  border-color: rgba(37, 99, 235, 0.3);
-  background: color-mix(in srgb, var(--admin-blue) 8%, var(--admin-surface));
+  border-color: rgba(22, 163, 74, 0.35);
+  background: var(--admin-surface-soft);
   color: var(--admin-contrast);
 }
 
 .workflow-step.active strong {
   background: var(--admin-blue);
+  border-color: var(--admin-blue);
   color: #ffffff;
 }
 
 .form-panel,
 .editor-save-bar {
   border: 1px solid var(--admin-border);
-  border-radius: 8px;
+  border-radius: 14px;
   background: var(--admin-surface);
 }
 
 .form-panel {
-  margin-top: 1rem;
-  padding: 1rem;
+  margin-top: 1.25rem;
+  padding: 1.35rem;
 }
 
 .workflow-bar + .form-panel {
@@ -1742,7 +1810,9 @@ h3 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--admin-border);
 }
 
 .panel-heading h3,
@@ -1752,49 +1822,55 @@ h3 {
 
 .status-pill {
   border-radius: 999px;
-  background: #eefdf3;
+  background: var(--admin-surface-soft);
   color: #166534;
-  padding: 0.28rem 0.6rem;
+  padding: 0.32rem 0.75rem;
   font-size: 0.76rem;
-  font-weight: 900;
+  font-weight: 800;
+  border: 1px solid rgba(22, 163, 74, 0.25);
 }
 
 .status-pill.dirty {
-  background: #fff3cf;
-  color: #8a5c00;
+  background: var(--admin-gold-soft);
+  color: #92660a;
+  border-color: rgba(202, 138, 4, 0.3);
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.1rem;
 }
 
 label,
 .field-block {
   display: grid;
-  gap: 0.48rem;
+  gap: 0.5rem;
 }
 
 label {
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: 700;
+  color: var(--admin-contrast-soft);
 }
 
 .field-block {
-  margin-top: 1rem;
+  margin-top: 1.1rem;
 }
 
 input,
 textarea {
   width: 100%;
-  border: 1px solid var(--admin-border-strong);
-  border-radius: 8px;
+  border: 1.5px solid var(--admin-border-strong);
+  border-radius: 10px;
   background: var(--admin-surface);
   color: var(--admin-text);
-  padding: 0.72rem 0.82rem;
-  line-height: 1.45;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  padding: 0.78rem 0.9rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 textarea {
@@ -1804,7 +1880,7 @@ textarea {
 input:focus,
 textarea:focus {
   border-color: var(--admin-blue);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
   outline: none;
 }
 
@@ -1819,30 +1895,59 @@ input:disabled {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--admin-border);
+  margin-bottom: 0;
 }
 
 .content-section {
-  margin-top: 1rem;
+  margin-top: 1.1rem;
   padding: 0;
   background: var(--admin-surface-soft);
   box-shadow: none;
   overflow: hidden;
   border: 1px solid var(--admin-border);
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .section-summary {
-  min-height: 58px;
+  min-height: 62px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.85rem;
   border-bottom: 1px solid var(--admin-border);
   background: var(--admin-surface);
   color: var(--admin-contrast);
-  padding: 0.82rem 1rem;
+  padding: 0.9rem 1.1rem;
   cursor: pointer;
   list-style: none;
+  font-weight: 700;
+}
+
+.section-summary-index {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  background: var(--admin-surface-soft);
+  color: var(--admin-blue-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+}
+
+.section-summary-label {
+  font-weight: 700;
+}
+
+.section-summary small {
+  color: var(--admin-muted);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .section-summary::-webkit-details-marker {
@@ -1850,13 +1955,14 @@ input:disabled {
 }
 
 .section-summary::after {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-right: 2px solid var(--admin-muted);
-  border-bottom: 2px solid var(--admin-muted);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--admin-blue);
+  border-bottom: 2px solid var(--admin-blue);
   transform: rotate(45deg);
   transition: transform 0.18s ease;
   content: '';
+  justify-self: end;
 }
 
 .content-section details[open] .section-summary::after {
@@ -1868,14 +1974,22 @@ input:disabled {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-inline: 1rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-inline: 1.1rem;
+  margin-top: 1.1rem;
+  margin-bottom: 1.1rem;
 }
 
 .content-section details > .form-grid,
 .content-section details > .field-block {
-  margin-inline: 1rem;
+  margin-inline: 1.1rem;
+}
+
+.content-section details > .form-grid {
+  margin-bottom: 1.1rem;
+}
+
+.content-section details > .field-block:last-child {
+  margin-bottom: 1.1rem;
 }
 
 .editor-save-bar {
@@ -1883,46 +1997,47 @@ input:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 1rem;
-  padding: 0.8rem;
-  box-shadow: 0 14px 32px rgba(47, 52, 86, 0.14);
+  margin-top: 1.25rem;
+  padding: 0.95rem 1.1rem;
+  box-shadow: 0 16px 36px rgba(16, 88, 51, 0.14);
   position: sticky;
   bottom: 1rem;
   z-index: 4;
+  border-color: var(--admin-border-strong);
 }
 
 .save-state,
 .save-bar-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .save-dot {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.85rem;
+  height: 0.85rem;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: #16a34a;
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+  background: var(--admin-blue);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--admin-blue) 18%, transparent);
 }
 
 .save-dot.dirty {
   background: var(--admin-gold);
-  box-shadow: 0 0 0 4px rgba(255, 189, 61, 0.18);
+  box-shadow: 0 0 0 5px rgba(202, 138, 4, 0.16);
 }
 
 .save-state strong {
   display: block;
   color: var(--admin-contrast);
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .save-state small {
   display: block;
   color: var(--admin-muted);
-  font-size: 0.76rem;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 @media (min-width: 900px) {
@@ -1942,11 +2057,11 @@ input:disabled {
 
   .editor,
   .editor-header {
-    padding: 1rem;
+    padding: 1.1rem;
   }
 
   .editor-header {
-    margin: -1rem -1rem 1rem;
+    margin: -1.1rem -1.1rem 1.1rem;
   }
 
   .editor-actions,

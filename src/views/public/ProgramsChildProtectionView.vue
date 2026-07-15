@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/child-protection.jpg', caption: '' },
-  { image: '/images/programs/child-protection1.jpg', caption: '' },
-  { image: '/images/programs/child-protection2.jpg', caption: '' },
-  { image: '/images/programs/child-protection3.jpg', caption: '' },
-]
-
 const stats = [
-  { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin' },
-  { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.', icon: 'users' },
-  { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.', icon: 'phone' },
+  {
+    number: '43',
+    label: 'COMMUNES',
+    description: 'With active Child Protection Networks.',
+    icon: 'pin',
+  },
+  {
+    number: '600+',
+    label: 'PEER EDUCATORS',
+    description: 'Youth trained in child rights and safeguarding.',
+    icon: 'users',
+  },
+  {
+    number: '24/7',
+    label: 'VILLAGE HOTLINES',
+    description: 'Case referral into commune and provincial authorities.',
+    icon: 'phone',
+  },
 ]
 
 const whatWeDo = [
@@ -47,19 +53,6 @@ const pathway = [
 <template>
   <div class="child-protection-page">
     <!-- Hero -->
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay"></div>
-
-      <div class="hero-content">
-        <p class="eyebrow">PROGRAMS · GOAL 04 CHILD PROTECTION</p>
-        <h1>Every child safe. Every child in school.</h1>
-        <p class="hero-desc">
-          Anti-trafficking campaigns, village Child Protection Networks, child rights
-          advocacy and youth peer educators — because peace begins with a safe
-          childhood.
-        </p>
-      </div>
-    </Slideshow>
 
     <!-- Trust bar -->
     <section class="trust-bar">
@@ -67,18 +60,48 @@ const pathway = [
         <template v-for="(stat, i) in stats" :key="stat.label">
           <div class="trust-item">
             <span class="trust-icon">
-              <svg v-if="stat.icon === 'pin'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                <circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.6"/>
+              <svg
+                v-if="stat.icon === 'pin'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linejoin="round"
+                />
+                <circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.6" />
               </svg>
-              <svg v-else-if="stat.icon === 'users'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M15 20c0-2.6 2-4.6 5-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <svg
+                v-else-if="stat.icon === 'users'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+                <circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M15 20c0-2.6 2-4.6 5-4.6"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
               </svg>
               <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 005 5l1.5-2 4 1.5v3a1.5 1.5 0 01-1.6 1.5A16.5 16.5 0 015 5.1 1.5 1.5 0 016.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <path
+                  d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 005 5l1.5-2 4 1.5v3a1.5 1.5 0 01-1.6 1.5A16.5 16.5 0 015 5.1 1.5 1.5 0 016.5 3.5z"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linejoin="round"
+                />
               </svg>
             </span>
             <div class="trust-copy">
@@ -97,10 +120,9 @@ const pathway = [
       <div class="container">
         <div class="intro-rule" aria-hidden="true"></div>
         <p class="intro-text text-center">
-          Cross-border migration, poverty and family separation put rural Cambodian
-          children at risk of unsafe labour and trafficking. Santi Sena works with
-          villages, schools and pagodas to build the safety net closest to the child
-          — before anything goes wrong.
+          Cross-border migration, poverty and family separation put rural Cambodian children at risk
+          of unsafe labour and trafficking. Santi Sena works with villages, schools and pagodas to
+          build the safety net closest to the child — before anything goes wrong.
         </p>
       </div>
     </section>
@@ -116,7 +138,13 @@ const pathway = [
               <li v-for="item in whatWeDo" :key="item">
                 <span class="check-icon">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </span>
                 <span>{{ item }}</span>
@@ -126,10 +154,16 @@ const pathway = [
           <div class="col-image">
             <div class="photo-duo">
               <div class="col-image-frame photo-duo-back">
-                <img src="/images/programs/child-protection1.jpg" alt="Monk and peer educator reading with a child" />
+                <img
+                  src="/images/programs/child-protection1.jpg"
+                  alt="Monk and peer educator reading with a child"
+                />
               </div>
               <div class="col-image-frame photo-duo-front">
-                <img src="/images/programs/child-protection2.jpg" alt="Youth peer educators standing together" />
+                <img
+                  src="/images/programs/child-protection2.jpg"
+                  alt="Youth peer educators standing together"
+                />
               </div>
             </div>
           </div>
@@ -143,10 +177,9 @@ const pathway = [
         <p class="section-eyebrow text-center">Our method</p>
         <h2 class="section-title text-center">Our approach</h2>
         <p class="approach-text text-center">
-          Every network is anchored by the people children already trust — mothers,
-          monks, teachers, commune council members. We train, coach and connect them
-          to formal referral pathways so a case identified in a village at dawn
-          reaches the provincial social affairs office by dusk.
+          Every network is anchored by the people children already trust — mothers, monks, teachers,
+          commune council members. We train, coach and connect them to formal referral pathways so a
+          case identified in a village at dawn reaches the provincial social affairs office by dusk.
         </p>
 
         <ol class="pathway">
@@ -157,21 +190,79 @@ const pathway = [
           <li v-for="(node, i) in pathway" :key="node.step" class="pathway-node">
             <div class="pathway-marker">
               <span class="pathway-index">{{ i + 1 }}</span>
-              <svg v-if="node.icon === 'village'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 11.5L12 5l8 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 10v8.5a1 1 0 001 1h10a1 1 0 001-1V10" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-                <path d="M10 19.5v-5h4v5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+              <svg
+                v-if="node.icon === 'village'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4 11.5L12 5l8 6.5"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M6 10v8.5a1 1 0 001 1h10a1 1 0 001-1V10"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M10 19.5v-5h4v5"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linejoin="round"
+                />
               </svg>
-              <svg v-else-if="node.icon === 'link'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9.5 14.5l5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-                <path d="M8 16.5l-1.8 1.8a3 3 0 01-4.3-4.3L4 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 7.5l1.8-1.8a3 3 0 014.3 4.3L20 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+              <svg
+                v-else-if="node.icon === 'link'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M9.5 14.5l5-5"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M8 16.5l-1.8 1.8a3 3 0 01-4.3-4.3L4 12"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M16 7.5l1.8-1.8a3 3 0 014.3 4.3L20 12"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
               <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 21V6a1 1 0 011-1h6a1 1 0 011 1v15" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-                <path d="M13 11h5a1 1 0 011 1v9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-                <path d="M8 9h0M8 12h0M8 15h0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M16 15h0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path
+                  d="M5 21V6a1 1 0 011-1h6a1 1 0 011 1v15"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M13 11h5a1 1 0 011 1v9"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M8 9h0M8 12h0M8 15h0"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+                <path d="M16 15h0" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
               </svg>
             </div>
             <p class="pathway-step">{{ node.step }}</p>
@@ -187,7 +278,10 @@ const pathway = [
         <div class="two-col-grid reverse">
           <div class="col-image">
             <div class="col-image-frame story-frame">
-              <img src="/images/programs/child-protection3.jpg" alt="Child Protection Network volunteer speaking with a family" />
+              <img
+                src="/images/programs/child-protection3.jpg"
+                alt="Child Protection Network volunteer speaking with a family"
+              />
             </div>
           </div>
           <div class="col-text">
@@ -195,13 +289,24 @@ const pathway = [
             <div class="story-card">
               <span class="story-badge">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                  <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path
+                    d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M9 12l2 2 4-4"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </span>
               <p class="story-text">
-                "The network spotted my nephew before the broker took him. He is
-                back in school this term."
+                "The network spotted my nephew before the broker took him. He is back in school this
+                term."
               </p>
             </div>
           </div>
@@ -236,7 +341,13 @@ const pathway = [
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6,18,13,0.85) 0%, rgba(6,18,13,0.55) 42%, rgba(6,18,13,0.22) 70%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 42%,
+    rgba(6, 18, 13, 0.22) 70%,
+    transparent 100%
+  );
 }
 .hero-content {
   position: absolute;
@@ -254,8 +365,14 @@ const pathway = [
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .eyebrow {
   color: var(--primary-light);
@@ -308,8 +425,13 @@ const pathway = [
   background: rgba(255, 255, 255, 0.1);
   color: var(--primary-light);
 }
-.trust-icon svg { width: 20px; height: 20px; }
-.trust-copy { min-width: 0; }
+.trust-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.trust-copy {
+  min-width: 0;
+}
 .trust-number {
   font-weight: 700;
   color: #ffffff;
@@ -339,7 +461,9 @@ const pathway = [
   background: #f2f5ee;
   padding: 4.5rem 0;
 }
-.intro-section { text-align: center; }
+.intro-section {
+  text-align: center;
+}
 .intro-rule {
   width: 56px;
   height: 3px;
@@ -369,7 +493,9 @@ const pathway = [
   margin-bottom: 1.5rem;
   letter-spacing: -0.01em;
 }
-.text-center { text-align: center; }
+.text-center {
+  text-align: center;
+}
 
 /* ===== Two-column layout ===== */
 .two-col-grid {
@@ -378,8 +504,12 @@ const pathway = [
   gap: 3.5rem;
   align-items: center;
 }
-.two-col-grid.reverse .col-image { order: 1; }
-.two-col-grid.reverse .col-text { order: 2; }
+.two-col-grid.reverse .col-image {
+  order: 1;
+}
+.two-col-grid.reverse .col-text {
+  order: 2;
+}
 .col-image-frame {
   position: relative;
   border-radius: 20px;
@@ -387,7 +517,10 @@ const pathway = [
   cursor: pointer;
   border: 2px solid transparent;
   box-shadow: 0 16px 36px -18px rgba(22, 52, 42, 0.3);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
 }
 .col-image-frame:hover,
 .col-image-frame:active {
@@ -406,7 +539,9 @@ const pathway = [
 .col-image-frame:active img {
   transform: scale(1.06);
 }
-.story-frame { min-height: 420px; }
+.story-frame {
+  min-height: 420px;
+}
 
 /* Overlapping photo duo */
 .photo-duo {
@@ -451,7 +586,10 @@ const pathway = [
   color: #333;
   line-height: 1.5;
   font-size: 0.92rem;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 .check-grid li:hover {
   transform: translateY(-3px);
@@ -471,7 +609,10 @@ const pathway = [
   justify-content: center;
   margin-top: 1px;
 }
-.check-icon svg { width: 11px; height: 11px; }
+.check-icon svg {
+  width: 11px;
+  height: 11px;
+}
 
 /* ===== Approach + referral pathway ===== */
 .approach-text {
@@ -583,7 +724,10 @@ const pathway = [
   margin-bottom: 0.9rem;
   box-shadow: 0 4px 10px rgba(22, 52, 42, 0.12);
 }
-.story-badge svg { width: 17px; height: 17px; }
+.story-badge svg {
+  width: 17px;
+  height: 17px;
+}
 .story-text {
   font-family: Georgia, 'Times New Roman', serif;
   font-style: italic;
@@ -592,7 +736,9 @@ const pathway = [
   line-height: 1.6;
   margin: 0;
 }
-.cta-row { display: flex; }
+.cta-row {
+  display: flex;
+}
 
 /* ===== Buttons ===== */
 .btn-primary {
@@ -606,7 +752,10 @@ const pathway = [
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    background 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 .btn-large {
   padding: 1rem 2.4rem;
@@ -655,25 +804,56 @@ const pathway = [
 
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
-  .pathway { grid-template-columns: 1fr; gap: 2.5rem; }
-  .pathway-wave { display: none; }
-  .pathway-text { max-width: none; }
+  .pathway {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .pathway-wave {
+    display: none;
+  }
+  .pathway-text {
+    max-width: none;
+  }
 }
 
 @media (max-width: 768px) {
-  .hero-content { padding: 2rem 1.5rem; }
+  .hero-content {
+    padding: 2rem 1.5rem;
+  }
 
-  .trust-bar-inner { grid-template-columns: 1fr; gap: 1.25rem; }
-  .trust-divider { display: none; }
+  .trust-bar-inner {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .trust-divider {
+    display: none;
+  }
 
-  .two-col-grid { grid-template-columns: 1fr; gap: 2.5rem; }
-  .two-col-grid.reverse .col-image { order: 0; }
-  .two-col-grid.reverse .col-text { order: 1; }
-  .photo-duo { min-height: 320px; }
-  .story-frame { min-height: 300px; }
+  .two-col-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .two-col-grid.reverse .col-image {
+    order: 0;
+  }
+  .two-col-grid.reverse .col-text {
+    order: 1;
+  }
+  .photo-duo {
+    min-height: 320px;
+  }
+  .story-frame {
+    min-height: 300px;
+  }
 
-  .check-grid { grid-template-columns: 1fr; }
+  .check-grid {
+    grid-template-columns: 1fr;
+  }
 
-  .cta-split-inner { flex-direction: column; align-items: flex-start; text-align: left; }
+  .cta-split-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
 }
 </style>

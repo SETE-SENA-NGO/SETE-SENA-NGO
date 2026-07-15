@@ -1,18 +1,13 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
-
-const slideItems = [
-  { image: heroImpactVillage, caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
-]
 
 const fieldOffices = [
   {
     name: 'Prey Veng Field Office',
-    summary: 'Coordinating environment, livelihood and education programs across Prey Veng communes.',
+    summary:
+      'Coordinating environment, livelihood and education programs across Prey Veng communes.',
     details: [
       { label: 'Address', value: 'Prey Veng Town, Prey Veng Province, Cambodia', href: undefined },
       { label: 'Email', value: 'preyveng@santisena.org', href: 'mailto:preyveng@santisena.org' },
@@ -45,18 +40,6 @@ onMounted(() => {
 
 <template>
   <main class="field-offices-page">
-    <Slideshow :slides="slideItems">
-      <div class="field-hero-overlay" />
-      <div class="field-hero__content">
-        <p class="field-eyebrow">Contact - Field Offices</p>
-        <h1 id="field-heading">Where the work actually happens.</h1>
-        <p>
-          Our two provincial field offices are the daily home of the staff who walk into
-          villages - and the easiest way to reach a program directly.
-        </p>
-      </div>
-    </Slideshow>
-
     <section class="field-details" aria-label="Field office contact details">
       <div class="field-details__inner">
         <div class="field-card-grid">
@@ -79,9 +62,9 @@ onMounted(() => {
         <section class="field-copy" aria-labelledby="visits-heading">
           <h2 id="visits-heading">Field visits</h2>
           <p>
-            Donors, partners and researchers are welcome to visit a project site. Please
-            arrange visits through our head office at least two weeks in advance so we can
-            coordinate travel, translation and appropriate safeguarding.
+            Donors, partners and researchers are welcome to visit a project site. Please arrange
+            visits through our head office at least two weeks in advance so we can coordinate
+            travel, translation and appropriate safeguarding.
           </p>
         </section>
 
@@ -115,7 +98,13 @@ onMounted(() => {
 .field-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(3, 43, 35, 0.9) 0%, rgba(4, 62, 50, 0.6) 42%, rgba(4, 62, 50, 0.22) 72%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(3, 43, 35, 0.9) 0%,
+    rgba(4, 62, 50, 0.6) 42%,
+    rgba(4, 62, 50, 0.22) 72%,
+    transparent 100%
+  );
 }
 
 .field-details__inner,

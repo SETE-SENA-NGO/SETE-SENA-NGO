@@ -1,28 +1,5 @@
-<script setup lang="ts">
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/environment-hero.jpg', caption: '' },
-  { image: '/images/programs/environment-hero1.jpg', caption: '' },
-  { image: '/images/programs/environment-hero2.jpg', caption: '' },
-  { image: '/images/programs/environment-hero3.jpg', caption: '' },
-]
-</script>
-
 <template>
   <div class="environment-page">
-    <Slideshow :slides="slideItems">
-      <div class="hero-overlay" />
-      <div class="hero-content">
-        <span class="badge">Environment Program</span>
-        <h1>Protecting Our Planet<br />For Future Generations</h1>
-        <p class="hero-subtitle">
-          We are committed to environmental conservation, sustainable practices, and
-          empowering communities to become stewards of their natural resources.
-        </p>
-      </div>
-    </Slideshow>
-
     <!-- Program Overview Section -->
     <section class="section overview-section">
       <div class="container">
@@ -30,14 +7,23 @@ const slideItems = [
           <span class="section-label">Our Approach</span>
           <h2>Environmental Stewardship in Action</h2>
           <p class="section-desc">
-            Our environment program takes a holistic approach to conservation, combining
-            immediate action with long-term community education and sustainable development.
+            Our environment program takes a holistic approach to conservation, combining immediate
+            action with long-term community education and sustainable development.
           </p>
         </div>
         <div class="overview-grid">
           <div class="overview-card">
             <div class="icon-wrapper">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
@@ -49,19 +35,37 @@ const slideItems = [
           </div>
           <div class="overview-card">
             <div class="icon-wrapper">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
             </div>
             <h3>Sustainability</h3>
             <p>
-              Promoting renewable energy, sustainable agriculture, and circular economy
-              practices that reduce environmental impact while supporting livelihoods.
+              Promoting renewable energy, sustainable agriculture, and circular economy practices
+              that reduce environmental impact while supporting livelihoods.
             </p>
           </div>
           <div class="overview-card">
             <div class="icon-wrapper">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -88,7 +92,11 @@ const slideItems = [
         <div class="initiatives-list">
           <div class="initiative-item">
             <div class="initiative-image">
-              <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80" alt="Reforestation Projects" loading="lazy" />
+              <img
+                src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80"
+                alt="Reforestation Projects"
+                loading="lazy"
+              />
               <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
@@ -101,33 +109,45 @@ const slideItems = [
           </div>
           <div class="initiative-item">
             <div class="initiative-image">
-              <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80" alt="Environmental Education" loading="lazy" />
+              <img
+                src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80"
+                alt="Environmental Education"
+                loading="lazy"
+              />
               <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Environmental Education</h3>
               <p>
-                Developing curriculum and training programs for schools and community groups
-                to build environmental literacy and promote sustainable practices from an early age.
+                Developing curriculum and training programs for schools and community groups to
+                build environmental literacy and promote sustainable practices from an early age.
               </p>
             </div>
           </div>
           <div class="initiative-item">
             <div class="initiative-image">
-              <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80" alt="Renewable Energy Access" loading="lazy" />
+              <img
+                src="https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80"
+                alt="Renewable Energy Access"
+                loading="lazy"
+              />
               <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Renewable Energy Access</h3>
               <p>
-                Installing solar panels and clean energy solutions in rural communities,
-                reducing dependence on fossil fuels and improving quality of life.
+                Installing solar panels and clean energy solutions in rural communities, reducing
+                dependence on fossil fuels and improving quality of life.
               </p>
             </div>
           </div>
           <div class="initiative-item">
             <div class="initiative-image">
-              <img src="https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80" alt="Water Conservation" loading="lazy" />
+              <img
+                src="https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80"
+                alt="Water Conservation"
+                loading="lazy"
+              />
               <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
@@ -140,27 +160,35 @@ const slideItems = [
           </div>
           <div class="initiative-item">
             <div class="initiative-image">
-              <img src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80" alt="Sustainable Agriculture" loading="lazy" />
+              <img
+                src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80"
+                alt="Sustainable Agriculture"
+                loading="lazy"
+              />
               <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Sustainable Agriculture</h3>
               <p>
-                Training farmers in organic farming, crop rotation, and agroforestry techniques
-                that increase yields while preserving soil health and biodiversity.
+                Training farmers in organic farming, crop rotation, and agroforestry techniques that
+                increase yields while preserving soil health and biodiversity.
               </p>
             </div>
           </div>
           <div class="initiative-item">
             <div class="initiative-image">
-              <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" alt="Climate Research & Advocacy" loading="lazy" />
+              <img
+                src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80"
+                alt="Climate Research & Advocacy"
+                loading="lazy"
+              />
               <div class="initiative-overlay"></div>
             </div>
             <div class="initiative-content">
               <h3>Climate Research & Advocacy</h3>
               <p>
-                Conducting climate impact assessments and advocating for policy changes that
-                protect vulnerable ecosystems and promote environmental justice.
+                Conducting climate impact assessments and advocating for policy changes that protect
+                vulnerable ecosystems and promote environmental justice.
               </p>
             </div>
           </div>
@@ -220,16 +248,16 @@ const slideItems = [
             <div class="step-number">02</div>
             <h3>Planning</h3>
             <p>
-              Working with community leaders and environmental experts, we develop tailored
-              action plans that balance conservation with community needs.
+              Working with community leaders and environmental experts, we develop tailored action
+              plans that balance conservation with community needs.
             </p>
           </div>
           <div class="process-step">
             <div class="step-number">03</div>
             <h3>Implementation</h3>
             <p>
-              We execute projects with active community participation, ensuring local ownership
-              and building capacity for long-term sustainability.
+              We execute projects with active community participation, ensuring local ownership and
+              building capacity for long-term sustainability.
             </p>
           </div>
           <div class="process-step">
@@ -248,14 +276,28 @@ const slideItems = [
     <section class="quote-section">
       <div class="container">
         <blockquote>
-          <svg class="quote-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" />
-            <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" />
+          <svg
+            class="quote-icon"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"
+            />
+            <path
+              d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"
+            />
           </svg>
           <p class="quote-text">
-            "We do not inherit the earth from our ancestors; we borrow it from our children.
-            Our environmental program is a pledge to protect that inheritance and ensure
-            future generations inherit a planet that is healthy, vibrant, and full of possibility."
+            "We do not inherit the earth from our ancestors; we borrow it from our children. Our
+            environmental program is a pledge to protect that inheritance and ensure future
+            generations inherit a planet that is healthy, vibrant, and full of possibility."
           </p>
           <cite>— SETE SENA Environmental Team</cite>
         </blockquote>
@@ -345,11 +387,17 @@ const slideItems = [
 /* =====================
    Hero
    ===================== */
-/* Hero (overlaid on the slideshow via its default slot) */
+/* Hero (overlaid on the static hero via its default slot) */
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(6, 18, 13, 0.82) 0%, rgba(6, 18, 13, 0.5) 42%, rgba(6, 18, 13, 0.18) 72%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(6, 18, 13, 0.82) 0%,
+    rgba(6, 18, 13, 0.5) 42%,
+    rgba(6, 18, 13, 0.18) 72%,
+    transparent 100%
+  );
 }
 
 .hero-content {
@@ -390,7 +438,7 @@ const slideItems = [
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(4px);
+  backdrop-filter: none;
 }
 
 .hero-content h1 {
@@ -696,8 +744,9 @@ const slideItems = [
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(27, 163, 79, 0.05) 0%, transparent 50%),
-              radial-gradient(circle at 80% 50%, rgba(20, 129, 62, 0.05) 0%, transparent 50%);
+  background:
+    radial-gradient(circle at 20% 50%, rgba(27, 163, 79, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(20, 129, 62, 0.05) 0%, transparent 50%);
   pointer-events: none;
 }
 
