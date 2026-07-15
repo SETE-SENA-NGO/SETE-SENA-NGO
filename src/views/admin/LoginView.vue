@@ -49,12 +49,26 @@ async function submit() {
 
       <label>
         <span>Email address</span>
-        <input v-model="email" name="login-email" type="email" placeholder="admin@santisena.org" required autocomplete="email" />
+        <input
+          v-model="email"
+          name="login-email"
+          type="email"
+          placeholder="admin@gmail.com"
+          required
+          autocomplete="email"
+        />
       </label>
 
       <label>
         <span>Password</span>
-        <input v-model="password" name="login-password" type="password" placeholder="Enter your password" required autocomplete="current-password" />
+        <input
+          v-model="password"
+          name="login-password"
+          type="password"
+          placeholder="Enter your password"
+          required
+          autocomplete="current-password"
+        />
       </label>
 
       <p v-if="error" class="error" role="alert">
@@ -92,7 +106,13 @@ async function submit() {
   position: relative;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   overflow: hidden;
 }
 
@@ -100,8 +120,16 @@ async function submit() {
   position: absolute;
   inset: -40% -20%;
   background:
-    radial-gradient(ellipse at 15% 20%, color-mix(in srgb, var(--admin-blue) 14%, transparent) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 80%, color-mix(in srgb, var(--admin-blue-deep) 12%, transparent) 0%, transparent 55%);
+    radial-gradient(
+      ellipse at 15% 20%,
+      color-mix(in srgb, var(--admin-blue) 14%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 85% 80%,
+      color-mix(in srgb, var(--admin-blue-deep) 12%, transparent) 0%,
+      transparent 55%
+    );
   pointer-events: none;
 }
 
@@ -190,7 +218,9 @@ input {
   padding: 0.65rem 0.9rem;
   font-size: 0.95rem;
   font-family: inherit;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 input:focus {
@@ -237,7 +267,10 @@ input::placeholder {
   font-size: 0.95rem;
   cursor: pointer;
   margin-top: 0.15rem;
-  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
   box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
 }
 

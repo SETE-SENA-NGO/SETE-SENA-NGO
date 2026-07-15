@@ -2,6 +2,17 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import type { UserProfile } from '@/types/user'
+
+const adminRoles = new Set<UserProfile['role']>(['super_admin', 'admin', 'editor'])
+
+function fallbackProfile(user: User): UserProfile {
+  return {
+    id: user.id,
+    email: user.email ?? '',
+    role: 'viewer',
+  }
+}
 
 export type Profile = {
   id: string

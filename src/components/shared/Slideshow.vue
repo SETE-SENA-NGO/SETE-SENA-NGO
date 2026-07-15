@@ -159,7 +159,6 @@ onUnmounted(stopTimer)
         @click="goTo(i)"
       />
     </div>
-
   </div>
 </template>
 

@@ -152,8 +152,7 @@ const fallbackContent: GetInvolvedPageContent = {
       'Santi Sena means people working together for peace, livelihoods, justice and environmental preservation.',
     credit: 'From the Santi Sena profile and strategic plan',
     title: 'Support here is not only a gift. It is cooperation with village systems.',
-    body:
-      'Santi Sena works with monks, villagers, local government, schools and partners in Svay Rieng, Prey Veng and Kratie. Choose the help you can offer and connect it to work communities can carry forward.',
+    body: 'Santi Sena works with monks, villagers, local government, schools and partners in Svay Rieng, Prey Veng and Kratie. Choose the help you can offer and connect it to work communities can carry forward.',
   },
   journey: [
     {
@@ -371,14 +370,15 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
         </div>
 
         <div class="hero-card-grid" aria-label="Ways to support">
-          <svg
-            class="hero-tree-lines"
-            viewBox="0 0 640 660"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path class="hero-tree-trunk" d="M310 650 C306 545 322 462 350 405 C367 369 390 340 418 316" />
-            <path class="hero-tree-trunk" d="M380 650 C372 548 374 468 392 408 C410 356 452 316 500 288" />
+          <svg class="hero-tree-lines" viewBox="0 0 640 660" aria-hidden="true" focusable="false">
+            <path
+              class="hero-tree-trunk"
+              d="M310 650 C306 545 322 462 350 405 C367 369 390 340 418 316"
+            />
+            <path
+              class="hero-tree-trunk"
+              d="M380 650 C372 548 374 468 392 408 C410 356 452 316 500 288"
+            />
             <path d="M338 430 C318 492 300 566 290 626" />
             <path d="M352 405 C324 356 290 326 252 314" />
             <path d="M418 316 C380 288 338 274 294 275" />
@@ -480,9 +480,7 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
       <div class="journey-intro pop-reveal pop-content">
         <p class="eyebrow">Your path</p>
         <h2 id="journey-heading">Choose your path.</h2>
-        <p class="journey-summary">
-          Choose one route and connect it to real field needs.
-        </p>
+        <p class="journey-summary">Choose one route and connect it to real field needs.</p>
       </div>
 
       <ol class="journey-list">
@@ -510,7 +508,9 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
         <div class="closing-body">
           <p class="closing-copy pop-reveal pop-content">{{ pageContent.closing.body }}</p>
           <div class="closing-action-column">
-            <p class="pop-reveal pop-content">Start with a conversation or a local donation path.</p>
+            <p class="pop-reveal pop-content">
+              Start with a conversation or a local donation path.
+            </p>
             <div class="closing-actions">
               <RouterLink
                 :to="pageContent.closing.primaryCta.to"
@@ -574,7 +574,12 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   z-index: 1;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.2) 48%, rgba(255, 255, 255, 0.05)),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.2) 48%,
+      rgba(255, 255, 255, 0.05)
+    ),
     linear-gradient(180deg, rgba(255, 255, 255, 0), var(--surface) 98%);
   content: '';
 }
@@ -1707,7 +1712,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   .journey-list li {
     gap: 0.95rem;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

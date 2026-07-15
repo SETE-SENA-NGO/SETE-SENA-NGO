@@ -40,7 +40,16 @@ function goToAdmin() {
         </div>
         <div class="admin-top-bar-right">
           <button type="button" class="admin-top-bar-btn" @click="goToAdmin">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M19 12H5" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
@@ -284,7 +293,10 @@ function goToAdmin() {
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .admin-top-bar-btn:hover {
@@ -299,11 +311,15 @@ function goToAdmin() {
 
 /* Slide transition */
 .bar-slide-enter-active {
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .bar-slide-leave-active {
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .bar-slide-enter-from {

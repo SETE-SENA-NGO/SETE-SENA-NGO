@@ -48,7 +48,12 @@ const knownMeta: Record<string, Partial<PayMethod>> = {
 }
 
 function badgeFor(bank: string) {
-  return bank.replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || 'QR'
+  return (
+    bank
+      .replace(/[^a-zA-Z]/g, '')
+      .slice(0, 3)
+      .toUpperCase() || 'QR'
+  )
 }
 
 function toPayMethod(method: DonationMethod): PayMethod {
@@ -131,7 +136,11 @@ const methods = computed<PayMethod[]>(() => {
         </div>
 
         <div class="card-body">
-          <div class="qr-box" :class="{ 'has-qr': m.qrUrl }" :style="{ borderColor: m.headerColor }">
+          <div
+            class="qr-box"
+            :class="{ 'has-qr': m.qrUrl }"
+            :style="{ borderColor: m.headerColor }"
+          >
             <template v-if="m.qrUrl">
               <img class="qr-image" :src="m.qrUrl" :alt="`${m.bank} donation QR code`" />
               <span class="qr-caption" :style="{ color: m.headerColor }">SCAN TO DONATE</span>
@@ -185,7 +194,9 @@ const methods = computed<PayMethod[]>(() => {
           After completing your donation, please send your <strong>payment screenshot</strong> to
           <a href="mailto:SANTISENAMONK@GMAIL.COM">SANTISENAMONK@GMAIL.COM</a>.
         </p>
-        <p class="notice-sub">This allows us to send you an official receipt and our sincere gratitude.</p>
+        <p class="notice-sub">
+          This allows us to send you an official receipt and our sincere gratitude.
+        </p>
       </div>
     </div>
   </div>

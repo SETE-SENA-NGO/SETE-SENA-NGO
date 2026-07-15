@@ -4,7 +4,6 @@ import { publicRoutes } from './publicRoutes'
 import { adminRoutes } from './adminRoutes'
 import { useAuthStore } from '@/stores/auth.store'
 
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior(to, _from, savedPosition) {

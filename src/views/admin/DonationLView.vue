@@ -5,14 +5,18 @@ import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { supabase } from '@/lib/supabase'
 import {
+  MEDIA_BUCKET,
+  imageUploadHelpText,
+  isAllowedImageFile,
+  safeStorageFileName,
+} from '@/lib/media'
+import {
   createDonationMethod,
   defaultDonationMethods,
   fetchDonationMethods,
   saveDonationMethods,
   type DonationMethod,
 } from '@/lib/donationSettings'
-
-const MAX_QR_SIZE = 5 * 1024 * 1024
 
 const ui = useUiStore()
 
@@ -57,12 +61,8 @@ function onFileChange(method: DonationMethod, event: Event) {
   input.value = ''
   if (!file) return
 
-  if (!file.type.startsWith('image/')) {
-    showMessage('Please choose an image file (PNG or JPG).', 'error')
-    return
-  }
-  if (file.size > MAX_QR_SIZE) {
-    showMessage('QR image must be smaller than 5MB.', 'error')
+  if (!isAllowedImageFile(file)) {
+    showMessage(`Please choose ${imageUploadHelpText()}`, 'error')
     return
   }
 
@@ -96,16 +96,31 @@ function showMessage(text: string, type: 'success' | 'error') {
 }
 
 async function uploadQr(method: DonationMethod, file: File) {
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
   const safeId = method.id.replace(/[^a-zA-Z0-9_-]/g, '')
-  const path = `donation-qr/${safeId}-${Date.now()}.${ext}`
+  const path = `donation-qr/${safeId}-${Date.now()}-${safeStorageFileName(file.name)}`
 
   const { error: uploadError } = await supabase.storage
-    .from('media')
+    .from(MEDIA_BUCKET)
     .upload(path, file, { upsert: true })
   if (uploadError) throw uploadError
 
-  return supabase.storage.from('media').getPublicUrl(path).data.publicUrl
+  const publicUrl = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl
+  const { error: assetError } = await supabase.from('media_assets').upsert(
+    {
+      bucket: MEDIA_BUCKET,
+      path,
+      public_url: publicUrl,
+      file_name: file.name,
+      mime_type: file.type,
+      file_size: file.size,
+      folder: 'donation-qr',
+    },
+    { onConflict: 'bucket,path' },
+  )
+
+  if (assetError) throw assetError
+
+  return publicUrl
 }
 
 async function save() {
@@ -237,11 +252,7 @@ async function save() {
                 <div class="field">
                   <label :for="`${method.id}-color`">Card color</label>
                   <div class="color-field">
-                    <input
-                      :id="`${method.id}-color`"
-                      v-model="method.headerColor"
-                      type="color"
-                    />
+                    <input :id="`${method.id}-color`" v-model="method.headerColor" type="color" />
                     <span class="color-value">{{ method.headerColor }}</span>
                   </div>
                 </div>
@@ -295,7 +306,13 @@ async function save() {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   transition: padding-left 0.25s ease;
 }
 
@@ -368,7 +385,9 @@ h1 {
   font-weight: 800;
   font-size: 0.92rem;
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.12s ease;
+  transition:
+    background 0.18s ease,
+    transform 0.12s ease;
 }
 
 .add-btn:hover {
@@ -513,7 +532,9 @@ h1 {
   font-size: 0.88rem;
   cursor: pointer;
   box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
-  transition: transform 0.12s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
 }
 
 .upload-btn:hover {
@@ -567,7 +588,9 @@ h1 {
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
   font-family: inherit;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .field input:not([type='color']):focus {
@@ -637,7 +660,9 @@ h1 {
   font-size: 0.92rem;
   cursor: pointer;
   box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
-  transition: transform 0.12s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
 }
 
 .save-btn:hover {
