@@ -92,13 +92,14 @@ const priorities = [
   },
 ]
 
-// Font Awesome icon names for each priority card (used with <font-awesome-icon :icon="..." />)
-const priorityIcons: Record<string, string> = {
-  shield: 'shield-halved',
-  users: 'users',
-  sprout: 'seedling',
-  book: 'book',
-  megaphone: 'bullhorn',
+// Inline SVG icons — no external icon package required.
+// Line-style icons using currentColor so they inherit the .priority-icon color.
+const priorityIconSvg: Record<string, string> = {
+  shield: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>`,
+  users: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5"/><path d="M10 20c0-3 3-5 6-5s6 2 6 5"/></svg>`,
+  sprout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10c0-3 2-5 5-5 0 3-2 5-5 5z"/><path d="M12 13c0-3-2-5-5-5 0 3 2 5 5 5z"/></svg>`,
+  book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"/></svg>`,
+  megaphone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l3 5V6l-3 5H5a2 2 0 0 0-2 2z"/><path d="M13 8a4 4 0 0 1 0 8"/><path d="M17 6a8 8 0 0 1 0 12"/></svg>`,
 }
 
 // Scroll-triggered reveal: each goal card (and the priorities grid) animates in once visible
@@ -189,9 +190,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="priority-body">
-            <div class="priority-icon">
-              <font-awesome-icon :icon="priorityIcons[item.icon]" />
-            </div>
+            <div class="priority-icon" v-html="priorityIconSvg[item.icon]" />
             <p class="priority-label">{{ item.title }}</p>
           </div>
         </div>
@@ -547,7 +546,7 @@ onBeforeUnmount(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.7),
     0 10px 22px -8px rgba(20, 129, 62, 0.5);
 }
-.priority-icon :deep(.svg-inline--fa) {
+.priority-icon :deep(svg) {
   width: 24px;
   height: 24px;
 }
