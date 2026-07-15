@@ -19,18 +19,19 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (!to.meta.requiresAuth) return true
-
-  const auth = useAuthStore()
-  if (!auth.initialized) {
-    await auth.init()
+  if (to.meta.requiresAuth) {
+    const auth = useAuthStore()
+    if (!auth.initialized) {
+      await auth.init()
+    }
+    if (!auth.isAuthenticated) {
+      return { name: 'admin-login', query: { redirect: to.fullPath } }
+    }
+    // Signed in but not an admin: no access to the admin area.
+    if (!auth.isAdmin) {
+      return { path: '/' }
+    }
   }
-
-  if (!auth.isAuthenticated || !auth.isContentAdmin) {
-    return { name: 'admin-login', query: { redirect: to.fullPath } }
-  }
-
-  return true
 })
 
 export default router
