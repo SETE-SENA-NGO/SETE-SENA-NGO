@@ -48,7 +48,7 @@ const pageContext = computed(() => {
 })
 
 const userInitials = computed(() => {
-  const email = auth.user?.email || 'admin@santisena.org'
+  const email = auth.user?.email || 'admin@gmail.com'
   const namePart = email.split('@')[0] ?? ''
   const parts = namePart.split(/[._-]/)
   if (parts.length >= 2) {
@@ -60,7 +60,7 @@ const userInitials = computed(() => {
   return 'AD'
 })
 
-const userEmail = computed(() => auth.user?.email || 'admin@santisena.org')
+const userEmail = computed(() => auth.user?.email || 'admin@gmail.com')
 
 function goToSite() {
   void router.push('/')

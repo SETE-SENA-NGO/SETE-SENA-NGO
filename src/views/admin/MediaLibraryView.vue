@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
+import { imageUploadHelpText } from '@/lib/media'
 
 const media = useMediaStore()
 const ui = useUiStore()
@@ -86,6 +87,10 @@ function isImage(mime: string) {
   return mime.startsWith('image/')
 }
 
+const totalMediaSize = computed(() => {
+  return media.items.reduce((total, item) => total + item.size, 0)
+})
+
 async function uploadFiles(files: File[]) {
   for (const file of files) {
     try {
@@ -128,7 +133,7 @@ async function confirmDelete(item: { id: string; name: string }) {
           <div>
             <p class="eyebrow">Assets</p>
             <h1>Media Library</h1>
-            <p class="page-desc">Upload, browse and manage images, documents and media files.</p>
+            <p class="page-desc">Upload, browse and manage website images.</p>
           </div>
           <div class="header-actions">
             <button
@@ -146,7 +151,7 @@ async function confirmDelete(item: { id: string; name: string }) {
           ref="fileInput"
           type="file"
           multiple
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+          accept="image/jpeg,image/png,image/webp,image/gif"
           class="file-input-hidden"
           @change="onFilesSelected"
         />
@@ -170,7 +175,7 @@ async function confirmDelete(item: { id: string; name: string }) {
         >
           <span class="drop-icon" aria-hidden="true"></span>
           <strong>Drop files here or click to browse</strong>
-          <small>Supports images, videos, audio, PDFs, documents</small>
+          <small>{{ imageUploadHelpText() }}</small>
         </section>
 
         <!-- Stats bar -->
@@ -181,18 +186,9 @@ async function confirmDelete(item: { id: string; name: string }) {
           <span>
             <strong>{{ media.items.filter((f) => isImage(f.mime_type)).length }}</strong> images
           </span>
-          <span>
-            <strong>{{
-              media.items.filter((f) => f.mime_type.startsWith('video/')).length
-            }}</strong>
-            videos
-          </span>
-          <span>
-            <strong>{{
-              media.items.filter((f) => f.mime_type.startsWith('audio/')).length
-            }}</strong>
-            audio
-          </span>
+          <span
+            ><strong>{{ formatSize(totalMediaSize) }}</strong> stored</span
+          >
         </section>
 
         <!-- File grid -->

@@ -90,7 +90,7 @@ const settings = ref<DonationSettings | null>(null)
 onMounted(async () => {
   try {
     const page = await content.fetchBySlug(donationSettingsSlug)
-    settings.value = parseDonationSettings(page.body)
+    settings.value = page ? parseDonationSettings(page.body) : null
   } catch {
     // No admin settings saved yet — fall back to the defaults.
   }

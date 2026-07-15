@@ -6,6 +6,12 @@ import { useUiStore } from '@/stores/ui.store'
 import { useContentStore } from '@/stores/content.store'
 import { supabase } from '@/lib/supabase'
 import {
+  MEDIA_BUCKET,
+  imageUploadHelpText,
+  isAllowedImageFile,
+  safeStorageFileName,
+} from '@/lib/media'
+import {
   createDonationMethod,
   defaultDonationMethods,
   donationSettingsSlug,
@@ -14,8 +20,6 @@ import {
   type DonationMethod,
 } from '@/lib/donationSettings'
 import type { PageContent } from '@/types/content'
-
-const MAX_QR_SIZE = 5 * 1024 * 1024
 
 const ui = useUiStore()
 const content = useContentStore()
@@ -33,9 +37,11 @@ const messageType = ref<'success' | 'error'>('success')
 onMounted(async () => {
   try {
     const page = await content.fetchBySlug(donationSettingsSlug)
-    pageId.value = page.id
-    const parsed = parseDonationSettings(page.body)
-    if (parsed && parsed.methods.length) methods.value = parsed.methods
+    if (page) {
+      pageId.value = page.id
+      const parsed = parseDonationSettings(page.body)
+      if (parsed && parsed.methods.length) methods.value = parsed.methods
+    }
   } catch {
     // No settings saved yet — start from defaults.
   } finally {
@@ -64,12 +70,8 @@ function onFileChange(method: DonationMethod, event: Event) {
   input.value = ''
   if (!file) return
 
-  if (!file.type.startsWith('image/')) {
-    showMessage('Please choose an image file (PNG or JPG).', 'error')
-    return
-  }
-  if (file.size > MAX_QR_SIZE) {
-    showMessage('QR image must be smaller than 5MB.', 'error')
+  if (!isAllowedImageFile(file)) {
+    showMessage(`Please choose ${imageUploadHelpText()}`, 'error')
     return
   }
 
@@ -103,16 +105,31 @@ function showMessage(text: string, type: 'success' | 'error') {
 }
 
 async function uploadQr(method: DonationMethod, file: File) {
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
   const safeId = method.id.replace(/[^a-zA-Z0-9_-]/g, '')
-  const path = `donation-qr/${safeId}-${Date.now()}.${ext}`
+  const path = `donation-qr/${safeId}-${Date.now()}-${safeStorageFileName(file.name)}`
 
   const { error: uploadError } = await supabase.storage
-    .from('media')
+    .from(MEDIA_BUCKET)
     .upload(path, file, { upsert: true })
   if (uploadError) throw uploadError
 
-  return supabase.storage.from('media').getPublicUrl(path).data.publicUrl
+  const publicUrl = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl
+  const { error: assetError } = await supabase.from('media_assets').upsert(
+    {
+      bucket: MEDIA_BUCKET,
+      path,
+      public_url: publicUrl,
+      file_name: file.name,
+      mime_type: file.type,
+      file_size: file.size,
+      folder: 'donation-qr',
+    },
+    { onConflict: 'bucket,path' },
+  )
+
+  if (assetError) throw assetError
+
+  return publicUrl
 }
 
 async function save() {
