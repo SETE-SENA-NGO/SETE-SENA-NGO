@@ -408,7 +408,6 @@ onUnmounted(() => {
 
 <template>
   <main class="partner-page">
-
     <section class="stat-strip" aria-label="Partner page highlights">
       <div v-for="stat in portfolioStats" :key="stat.label" class="stat-item pop-reveal">
         <strong>{{ stat.value }}</strong>

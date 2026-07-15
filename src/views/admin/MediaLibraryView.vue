@@ -77,7 +77,8 @@ function fileIcon(mime: string) {
   if (mime.startsWith('audio/')) return 'audio'
   if (mime.includes('pdf')) return 'pdf'
   if (mime.includes('word') || mime.includes('document')) return 'doc'
-  if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('sheet')) return 'sheet'
+  if (mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('sheet'))
+    return 'sheet'
   return 'file'
 }
 
@@ -174,32 +175,31 @@ async function confirmDelete(item: { id: string; name: string }) {
 
         <!-- Stats bar -->
         <section class="stats-bar" aria-label="Media library stats">
-          <span><strong>{{ media.items.length }}</strong> files</span>
+          <span
+            ><strong>{{ media.items.length }}</strong> files</span
+          >
           <span>
             <strong>{{ media.items.filter((f) => isImage(f.mime_type)).length }}</strong> images
           </span>
           <span>
-            <strong>{{ media.items.filter((f) => f.mime_type.startsWith('video/')).length }}</strong> videos
+            <strong>{{
+              media.items.filter((f) => f.mime_type.startsWith('video/')).length
+            }}</strong>
+            videos
           </span>
           <span>
-            <strong>{{ media.items.filter((f) => f.mime_type.startsWith('audio/')).length }}</strong> audio
+            <strong>{{
+              media.items.filter((f) => f.mime_type.startsWith('audio/')).length
+            }}</strong>
+            audio
           </span>
         </section>
 
         <!-- File grid -->
         <section v-if="media.items.length" class="file-grid" aria-label="Media files">
-          <article
-            v-for="item in media.items"
-            :key="item.id"
-            class="file-card"
-          >
+          <article v-for="item in media.items" :key="item.id" class="file-card">
             <div class="file-thumb">
-              <img
-                v-if="isImage(item.mime_type)"
-                :src="item.url"
-                :alt="item.name"
-                loading="lazy"
-              />
+              <img v-if="isImage(item.mime_type)" :src="item.url" :alt="item.name" loading="lazy" />
               <span v-else class="file-type-icon" :class="`type-${fileIcon(item.mime_type)}`">
                 {{ fileIcon(item.mime_type).toUpperCase() }}
               </span>
@@ -330,7 +330,9 @@ h1 {
   font-weight: 850;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 
 .button:disabled {
@@ -379,8 +381,13 @@ h1 {
 }
 
 @keyframes progress-pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .drop-zone {
@@ -394,7 +401,9 @@ h1 {
   color: var(--admin-muted);
   padding: 2.5rem 1rem;
   cursor: pointer;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .drop-zone:hover,
@@ -467,7 +476,9 @@ h1 {
   background: var(--admin-surface);
   box-shadow: var(--admin-shadow);
   overflow: hidden;
-  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .file-card:hover {
@@ -500,13 +511,27 @@ h1 {
   color: #ffffff;
 }
 
-.type-image { background: var(--admin-blue); }
-.type-video { background: #7c3aed; }
-.type-audio { background: var(--admin-green); }
-.type-pdf { background: #dc2626; }
-.type-doc { background: var(--admin-blue); }
-.type-sheet { background: var(--admin-green); }
-.type-file { background: #64748b; }
+.type-image {
+  background: var(--admin-blue);
+}
+.type-video {
+  background: #7c3aed;
+}
+.type-audio {
+  background: var(--admin-green);
+}
+.type-pdf {
+  background: #dc2626;
+}
+.type-doc {
+  background: var(--admin-blue);
+}
+.type-sheet {
+  background: var(--admin-green);
+}
+.type-file {
+  background: #64748b;
+}
 
 .file-info {
   display: grid;

@@ -431,7 +431,11 @@ function bulkDelete() {
                 placeholder="Search title, category, author..."
               />
             </label>
-            <select v-model="statusFilter" name="module-status-filter" aria-label="Filter by status">
+            <select
+              v-model="statusFilter"
+              name="module-status-filter"
+              aria-label="Filter by status"
+            >
               <option value="all">All status</option>
               <option value="Published">Published</option>
               <option value="Draft">Draft</option>

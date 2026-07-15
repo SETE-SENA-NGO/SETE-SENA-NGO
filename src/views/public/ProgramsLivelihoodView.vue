@@ -1,13 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
-
-const slideItems = [
-  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero2.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero3.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero3.jpg', caption: '' },
-]
 
 const stats = [
   {
@@ -55,7 +47,7 @@ const whatWeDo: [WorkItem, WorkItem, WorkItem, WorkItem, WorkItem, WorkItem] = [
   {
     title: 'Rural Enterprise',
     text: 'Small enterprise development — melaleuca oil, honey and handicrafts.',
-    image: '/images/programs/livelihood-hero3.jpg',
+    image: '/images/programs/livelihood-hero4.jpg',
   },
   {
     title: 'Financial Literacy',
@@ -69,40 +61,16 @@ const whatWeDo: [WorkItem, WorkItem, WorkItem, WorkItem, WorkItem, WorkItem] = [
   },
 ]
 
-// icon + image per bullet — icon renders as a badge over the image;
-// clicking a card opens the image with the text large in a popup (see openImpactModal)
+// icon key per bullet, used only to pick which badge icon renders next to each "Why it matters" line
 const whyItMatters = [
   {
     text: 'Household income diversification reduces the risk of debt bondage and trafficking',
-    icon: 'shield-halved',
-    image: '/images/programs/livelihood-hero1.jpg',
+    icon: 'shield',
   },
-  {
-    text: 'Women-led savings shift decision-making power inside the household',
-    icon: 'key',
-    image: '/images/programs/livelihood-hero2.jpg',
-  },
-  {
-    text: 'Cooperatives break the isolation of the smallholder in the marketplace',
-    icon: 'users',
-    image: '/images/programs/livelihood-hero3.jpg',
-  },
-  {
-    text: 'Local enterprise keeps young adults in the village, near their children',
-    icon: 'house',
-    image: '/images/programs/livelihood-hero1.jpg',
-  },
+  { text: 'Women-led savings shift decision-making power inside the household', icon: 'key' },
+  { text: 'Cooperatives break the isolation of the smallholder in the marketplace', icon: 'users' },
+  { text: 'Local enterprise keeps young adults in the village, near their children', icon: 'home' },
 ]
-
-// modal state for "Why it matters" cards — clicking a card opens its image + text large in a popup
-const activeImpactItem = ref<(typeof whyItMatters)[number] | null>(null)
-
-function openImpactModal(item: (typeof whyItMatters)[number]) {
-  activeImpactItem.value = item
-}
-function closeImpactModal() {
-  activeImpactItem.value = null
-}
 
 const radialWrap = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
@@ -133,7 +101,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="education-page">
-
+    <!-- Hero -->
+    <div class="hero-wrap">
+      <div class="scroll-cue" aria-hidden="true"><span></span></div>
+    </div>
 
     <!-- Stats band — bridges hero into content -->
     <div class="container stats-band-wrap">
@@ -141,7 +112,73 @@ onBeforeUnmount(() => {
         <template v-for="(stat, i) in stats" :key="stat.label">
           <div class="stat-item">
             <span class="stat-icon">
-              <font-awesome-icon :icon="stat.icon" />
+              <svg
+                v-if="stat.icon === 'wallet'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  x="2.5"
+                  y="6.5"
+                  width="19"
+                  height="13"
+                  rx="2.5"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                />
+                <path
+                  d="M16.5 6.5V5a2 2 0 00-2-2H7a2 2 0 00-2 2v1.5"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+                <circle cx="16.5" cy="13" r="1.6" fill="currentColor" />
+              </svg>
+              <svg
+                v-else-if="stat.icon === 'users'"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+                <circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.6" />
+                <path
+                  d="M15 20c0-2.6 2-4.6 5-4.6"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect
+                  x="4"
+                  y="3"
+                  width="16"
+                  height="18"
+                  rx="1.5"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                />
+                <path
+                  d="M9 21v-4.5h6V21"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M8 7.5h1.2M8 11.5h1.2M14.8 7.5H16M14.8 11.5H16"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+              </svg>
             </span>
             <div class="stat-copy">
               <h2 class="stat-number">{{ stat.number }}</h2>
@@ -176,46 +213,46 @@ onBeforeUnmount(() => {
           <div class="radial-wrap" ref="radialWrap">
             <div class="radial-center">
               <img :src="whatWeDo[0]?.image" alt="" />
-              <p class="radial-center-text">{{ whatWeDo[0]?.text }}</p>
+              {{ whatWeDo[0]?.text }}
             </div>
 
             <div class="radial-item radial-item--1">
               <div class="radial-thumb"><img :src="whatWeDo[1]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[1]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[1]?.text }}</p>
+                {{ whatWeDo[1]?.title }}
+                {{ whatWeDo[1]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--2">
               <div class="radial-thumb"><img :src="whatWeDo[2]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[2]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[2]?.text }}</p>
+                {{ whatWeDo[2]?.title }}
+                {{ whatWeDo[2]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--3">
               <div class="radial-thumb"><img :src="whatWeDo[3]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[3]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[3]?.text }}</p>
+                {{ whatWeDo[3]?.title }}
+                {{ whatWeDo[3]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--4">
               <div class="radial-thumb"><img :src="whatWeDo[4]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[4]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[4]?.text }}</p>
+                {{ whatWeDo[4]?.title }}
+                {{ whatWeDo[4]?.text }}
               </div>
             </div>
 
             <div class="radial-item radial-item--5">
               <div class="radial-thumb"><img :src="whatWeDo[5]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[5]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[5]?.text }}</p>
+                {{ whatWeDo[5]?.title }}
+                {{ whatWeDo[5]?.text }}
               </div>
             </div>
           </div>
@@ -256,53 +293,110 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <!-- Why it matters — image + impact card grid (text overlaid on image, like the reference design) -->
+    <!-- Why it matters — image + impact card grid -->
     <section class="section-cream">
       <div class="container">
-        <div class="col-text col-text--full">
-          <p class="section-eyebrow">Our impact</p>
-          <h2 class="section-title">Why it matters</h2>
-          <div class="impact-grid">
-            <div
-              v-for="item in whyItMatters"
-              :key="item.text"
-              class="impact-card"
-              role="button"
-              tabindex="0"
-              @click="openImpactModal(item)"
-              @keydown.enter="openImpactModal(item)"
-            >
-              <img :src="item.image" alt="" class="impact-card-img" />
-              <div class="impact-card-overlay">
-                <p class="impact-card-text">{{ item.text }}</p>
+        <div class="two-col-grid reverse">
+          <div class="col-image">
+            <div class="col-image-frame">
+              <img
+                src="/images/programs/livelihood-hero2.jpg"
+                alt="Savings group members meeting together"
+              />
+            </div>
+          </div>
+          <div class="col-text">
+            <p class="section-eyebrow">Our impact</p>
+            <h2 class="section-title">Why it matters</h2>
+            <div class="impact-grid">
+              <div v-for="item in whyItMatters" :key="item.text" class="impact-card">
+                <span class="icon-badge">
+                  <svg
+                    v-if="item.icon === 'shield'"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <svg
+                    v-else-if="item.icon === 'key'"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="8" cy="15" r="4" stroke="currentColor" stroke-width="1.8" />
+                    <path
+                      d="M11 12l8-8M16 4l3 3M19 6l2 2"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <svg
+                    v-else-if="item.icon === 'users'"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8" />
+                    <path
+                      d="M3 20c0-3 3-5 6-5s6 2 6 5"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <circle cx="17" cy="9" r="2.5" stroke="currentColor" stroke-width="1.8" />
+                    <path
+                      d="M15 20c0-2.5 2-4.5 5-4.5"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M4 11l8-7 8 7"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <p>{{ item.text }}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-    <!-- Popup: shows the clicked card's image with its text large and clear -->
-    <Teleport to="body">
-      <div
-        v-if="activeImpactItem"
-        class="impact-modal-overlay"
-        @click.self="closeImpactModal"
-      >
-        <div class="impact-modal">
-          <button
-            class="impact-modal-close"
-            type="button"
-            aria-label="Close"
-            @click="closeImpactModal"
-          >
-            ✕
-          </button>
-          <div class="impact-modal-media">
-            <img :src="activeImpactItem.image" alt="" />
-          </div>
-        </div>
+
+    <!-- Closing CTA banner -->
+    <section class="cta-banner">
+      <div class="cta-banner-glow" aria-hidden="true"></div>
+      <div class="container cta-banner-inner">
+        <p class="cta-banner-eyebrow">Get involved</p>
+        <h2 class="cta-banner-title">Ready to take the next step?</h2>
+        <router-link to="/get-involved" class="btn-primary btn-large">
+          Seed a savings group
+          <span class="btn-arrow">→</span>
+        </router-link>
       </div>
-    </Teleport>
+    </section>
   </div>
 </template>
 
@@ -415,7 +509,7 @@ onBeforeUnmount(() => {
 .stats-band-wrap {
   position: relative;
   z-index: 4;
-  margin-top: 1rem;
+  margin-top: -64px;
 }
 .stats-band {
   background: #ffffff;
@@ -449,9 +543,9 @@ onBeforeUnmount(() => {
   background: var(--primary-light);
   color: var(--primary-color);
 }
-.stat-icon :deep(.svg-inline--fa) {
-  width: 20px;
-  height: 20px;
+.stat-icon svg {
+  width: 22px;
+  height: 22px;
 }
 .stat-copy {
   min-width: 0;
@@ -541,12 +635,6 @@ onBeforeUnmount(() => {
 .two-col-grid.reverse .col-text {
   order: 2;
 }
-.col-text--full {
-  max-width: var(--container-max-width);
-}
-.col-text--full .impact-grid {
-  grid-template-columns: repeat(4, 1fr);
-}
 .col-image-frame {
   position: relative;
   border-radius: 20px;
@@ -586,110 +674,89 @@ onBeforeUnmount(() => {
   transform: scale(1.06);
 }
 
-/* ===== "What we do" — satellite images orbiting around the center image ===== */
+/* ===== "What we do" — grid gallery (center image + 5 items, no overlap possible) ===== */
 .do-section {
   max-width: var(--container-max-width);
   margin: 0 auto;
 }
 
 .radial-wrap {
-  position: relative;
-  max-width: 860px;
-  height: 820px;
-  margin: 3rem auto 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(340px, 420px) minmax(220px, 1fr);
+  grid-template-rows: repeat(3, minmax(150px, auto));
+  grid-template-areas:
+    '.     center item1'
+    'item5 center item2'
+    'item4 center item3';
+  column-gap: 2.5rem;
+  row-gap: 2.25rem;
+  align-items: center;
+  margin-top: 1.5rem;
 }
 
 .radial-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  width: 260px;
+  grid-area: center;
+  align-self: center;
+  justify-self: center;
+  width: 100%;
   text-align: center;
 }
 .radial-center img {
-  width: 260px;
-  height: 260px;
+  width: 100%;
+  height: 300px;
   object-fit: cover;
   display: block;
-  margin: 0 auto;
-  border-radius: 50%;
-  border: 2px solid var(--primary-light);
-  padding: 6px;
-  background: #ffffff;
-  box-shadow: 0 10px 24px -12px rgba(22, 52, 42, 0.35);
+  border-radius: 4px;
 }
 .radial-center-text {
   margin: 1.75rem 0 0;
-  color: #6b7280;
-  font-weight: 400;
+  color: var(--primary-color);
+  font-weight: 700;
   font-size: 0.95rem;
   line-height: 1.4;
 }
 
 .radial-item {
-  position: absolute;
-  width: 200px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  gap: 0.6rem;
+  gap: 1rem;
 }
-/* 5 satellites placed evenly around the center circle, clockwise from the top */
 .radial-item--1 {
-  top: calc(50% - 300px);
-  left: 50%;
-  transform: translate(-50%, calc(-50% + 24px)) scale(0.9);
+  grid-area: item1;
 }
 .radial-item--2 {
-  top: calc(50% - 93px);
-  left: calc(50% + 285px);
-  transform: translate(-50%, calc(-50% + 24px)) scale(0.9);
+  grid-area: item2;
 }
 .radial-item--3 {
-  top: calc(50% + 243px);
-  left: calc(50% + 176px);
-  transform: translate(-50%, calc(-50% + 24px)) scale(0.9);
+  grid-area: item3;
 }
 .radial-item--4 {
-  top: calc(50% + 243px);
-  left: calc(50% - 176px);
-  transform: translate(-50%, calc(-50% + 24px)) scale(0.9);
+  grid-area: item4;
 }
 .radial-item--5 {
-  top: calc(50% - 93px);
-  left: calc(50% - 285px);
-  transform: translate(-50%, calc(-50% + 24px)) scale(0.9);
+  grid-area: item5;
 }
 
 .radial-thumb {
   flex-shrink: 0;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  overflow: hidden;
+  width: 132px;
+  height: 132px;
+  padding: 6px;
+  background: var(--color-cream, #f2f5ee);
+  border: 1px solid rgba(22, 52, 42, 0.12);
+  box-shadow: 0 6px 16px -8px rgba(22, 52, 42, 0.25);
 }
 .radial-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 50%;
-}
-.radial-item--1 .radial-thumb,
-.radial-item--2 .radial-thumb,
-.radial-item--3 .radial-thumb,
-.radial-item--4 .radial-thumb,
-.radial-item--5 .radial-thumb {
-  border: 2px solid var(--primary-light);
 }
 .radial-copy {
   min-width: 0;
 }
 .radial-title {
-  color: #6b7280;
+  color: var(--primary-color);
   font-weight: 700;
   font-size: 0.92rem;
   margin: 0 0 0.35rem;
@@ -705,70 +772,55 @@ onBeforeUnmount(() => {
 .radial-center,
 .radial-item {
   opacity: 0;
+  transform: translateY(28px);
   transition:
-    opacity 0.6s ease,
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.radial-center {
-  transform: translate(-50%, calc(-50% + 28px));
-}
-.radial-center.is-visible {
-  opacity: 1;
-  transform: translate(-50%, -50%);
-}
-.radial-item {
-  opacity: 0;
-  transition:
-    opacity 0.6s ease,
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
+.radial-center.is-visible,
 .radial-item.is-visible {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
+  transform: translateY(0);
 }
 .radial-item--1.is-visible {
-  transition-delay: 0.15s;
+  transition-delay: 0.05s;
 }
 .radial-item--2.is-visible {
-  transition-delay: 0.3s;
+  transition-delay: 0.15s;
 }
 .radial-item--3.is-visible {
-  transition-delay: 0.45s;
+  transition-delay: 0.25s;
 }
 .radial-item--4.is-visible {
-  transition-delay: 0.6s;
+  transition-delay: 0.1s;
 }
 .radial-item--5.is-visible {
-  transition-delay: 0.75s;
+  transition-delay: 0.2s;
 }
 
-/* Mobile: orbit doesn't fit — stack vertically, center first */
+/* Mobile: single column stack, center first */
 @media (max-width: 900px) {
   .radial-wrap {
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.75rem;
-  }
-  .radial-center,
-  .radial-item {
-    position: static;
-    transform: none !important;
-    width: 100%;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'center'
+      'item1'
+      'item2'
+      'item3'
+      'item4'
+      'item5';
+    row-gap: 1.75rem;
   }
   .radial-center img {
-    width: 200px;
-    height: 200px;
+    height: 260px;
   }
 }
-
 
 /* ===== Our approach — full-bleed photo quote ===== */
 .quote-section {
   position: relative;
   padding: 6.5rem 0;
-  background-image: url('/images/programs/livelihood-hero3.jpg');
+  background-image: url('/images/programs/livelihood-hero4.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -816,159 +868,49 @@ onBeforeUnmount(() => {
   line-height: 1.6;
 }
 
-/* ===== Why it matters — image cards with text overlaid directly on the photo ===== */
+/* ===== Why it matters — impact card grid ===== */
 .impact-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 .impact-card {
-  position: relative;
+  background: #ffffff;
   border-radius: 16px;
-  overflow: hidden;
-  aspect-ratio: 4 / 5;
-  cursor: pointer;
-  box-shadow: 0 10px 24px -14px rgba(22, 52, 42, 0.28);
+  padding: 1.4rem;
+  box-shadow: 0 10px 24px -14px rgba(22, 52, 42, 0.18);
   border: 1px solid rgba(22, 52, 42, 0.06);
   transition:
     transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s ease;
-}
-.impact-card:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 .impact-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 20px 36px -16px rgba(22, 52, 42, 0.36);
+  box-shadow: 0 20px 36px -16px rgba(22, 52, 42, 0.28);
+  border-color: rgba(22, 52, 42, 0.12);
 }
-.impact-card-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.5s ease;
-}
-.impact-card:hover .impact-card-img {
-  transform: scale(1.08);
-}
-.impact-card-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 1.1rem;
-  background: linear-gradient(
-    to top,
-    rgba(6, 18, 13, 0.9) 0%,
-    rgba(6, 18, 13, 0.45) 55%,
-    rgba(6, 18, 13, 0) 100%
-  );
+.impact-card p {
+  color: #333;
+  line-height: 1.55;
+  font-size: 0.94rem;
+  margin: 0;
 }
 .icon-badge {
+  flex-shrink: 0;
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--primary-color);
-  color: #ffffff;
+  background: var(--primary-light);
+  color: var(--primary-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.7rem;
-  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.5);
+  margin-bottom: 0.85rem;
 }
-.icon-badge :deep(.svg-inline--fa) {
+.icon-badge svg {
   width: 16px;
   height: 16px;
-}
-.impact-card-text {
-  color: #ffffff;
-  font-weight: 400;
-  font-size: 0.94rem;
-  line-height: 1.4;
-  margin: 0;
-}
-
-/* ===== Popup shown when a "Why it matters" card is clicked ===== */
-.impact-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(6, 18, 13, 0.72);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  animation: fadeInModal 0.25s ease;
-}
-@keyframes fadeInModal {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.impact-modal {
-  position: relative;
-  width: 100%;
-  max-width: 560px;
-  background: #ffffff;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.45);
-  animation: popIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-}
-@keyframes popIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-.impact-modal-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 2;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(6, 18, 13, 0.55);
-  color: #ffffff;
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease;
-}
-.impact-modal-close:hover {
-  background: rgba(6, 18, 13, 0.8);
-}
-.impact-modal-media {
-  width: 100%;
-  height: 420px;
-}
-.impact-modal-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-@media (max-width: 600px) {
-  .impact-modal-media {
-    height: 280px;
-  }
 }
 
 /* ===== Buttons ===== */
@@ -1045,12 +987,6 @@ onBeforeUnmount(() => {
 
 /* ===== Responsive ===== */
 
-@media (max-width: 1024px) {
-  .col-text--full .impact-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
   .hero-content {
     padding: 2rem 1.5rem;
@@ -1071,7 +1007,18 @@ onBeforeUnmount(() => {
     display: none;
   }
 
-  .col-text--full .impact-grid {
+  .two-col-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .two-col-grid.reverse .col-image {
+    order: 0;
+  }
+  .two-col-grid.reverse .col-text {
+    order: 1;
+  }
+
+  .impact-grid {
     grid-template-columns: 1fr;
   }
 

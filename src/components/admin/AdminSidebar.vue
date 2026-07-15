@@ -72,9 +72,8 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'contact',
     label: 'Contact',
-    items: [
-    ],
-  }
+    items: [],
+  },
 ]
 
 function editorPath(slug: string) {
@@ -190,12 +189,7 @@ async function logout() {
         <span>Settings</span>
       </RouterLink>
       <div class="bottom-divider" aria-hidden="true"></div>
-      <button
-        class="link logout-link"
-        type="button"
-        :disabled="loggingOut"
-        @click="logout"
-      >
+      <button class="link logout-link" type="button" :disabled="loggingOut" @click="logout">
         <span class="link-icon icon-logout" aria-hidden="true"></span>
         <span class="logout-copy">
           <strong>{{ loggingOut ? 'Signing out...' : 'Logout' }}</strong>
@@ -242,7 +236,11 @@ async function logout() {
   z-index: 60;
   transform: translateX(-100%);
   box-shadow: none;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease;
 }
 
 :global(.admin-dark .admin-sidebar) {
@@ -542,7 +540,9 @@ nav {
   font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
 }
 
 .sub-link:hover {
@@ -592,14 +592,20 @@ nav {
   font-family: inherit;
   text-align: left;
   border-radius: 8px;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .logout-link:hover {
   color: var(--sb-danger-hover-text);
   border-color: var(--sb-danger-border);
   background: var(--sb-danger-hover-bg) !important;
-  box-shadow: inset 3px 0 0 var(--sb-danger), 0 10px 24px rgba(220, 38, 38, 0.14);
+  box-shadow:
+    inset 3px 0 0 var(--sb-danger),
+    0 10px 24px rgba(220, 38, 38, 0.14);
 }
 
 .logout-link:disabled {

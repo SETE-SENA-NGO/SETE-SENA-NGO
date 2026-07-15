@@ -8,6 +8,15 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 export default defineConfig({
   envPrefix: ['VITE_', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'],
   plugins: [vue(), vueDevTools()],
+  server: {
+    host: 'localhost',
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      host: 'localhost',
+      clientPort: 5173,
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
