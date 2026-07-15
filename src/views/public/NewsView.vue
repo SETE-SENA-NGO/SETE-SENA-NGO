@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
 
 // ─── Dummy news data ────────────────────────────────────────────────
 const newsItems = ref([
@@ -92,13 +91,6 @@ const newsItems = ref([
   },
 ])
 
-const heroSlides = [
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-  { image: '/images/programs/hero-3.jpg', caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
-]
-
 // ─── State ──────────────────────────────────────────────────────────
 const savedArticles = ref<number[]>([])
 const likedArticles = ref<number[]>([])
@@ -113,12 +105,10 @@ const articleRefs = ref<HTMLElement[]>([])
 const newsletterRef = ref<HTMLElement | null>(null)
 const newsletterVisible = ref(false)
 
-// Store observers so we can clean them up
 let articleObservers: IntersectionObserver[] = []
 let newsletterObserver: IntersectionObserver | null = null
 
 const setupIntersectionObservers = () => {
-  // Clean up any existing observers
   articleObservers.forEach((obs) => obs.disconnect())
   articleObservers = []
   if (newsletterObserver) {
@@ -126,7 +116,6 @@ const setupIntersectionObservers = () => {
     newsletterObserver = null
   }
 
-  // ── Article cards: toggle visibility on each intersection ──
   articleRefs.value.forEach((el) => {
     if (!el) return
     const observer = new IntersectionObserver(
@@ -148,7 +137,6 @@ const setupIntersectionObservers = () => {
     articleObservers.push(observer)
   })
 
-  // ── Newsletter: scale from small to big when entering, stay big ──
   if (newsletterRef.value) {
     newsletterObserver = new IntersectionObserver(
       (entries) => {
@@ -156,9 +144,6 @@ const setupIntersectionObservers = () => {
           if (entry.isIntersecting) {
             newsletterVisible.value = true
           }
-          // Optionally, you could set to false when leaving to shrink again,
-          // but typical UX keeps it expanded once seen.
-          // We keep it true once triggered.
         })
       },
       {
@@ -170,10 +155,8 @@ const setupIntersectionObservers = () => {
   }
 }
 
-// ─── Lifecycle ──────────────────────────────────────────────────────
 onMounted(() => {
   nextTick(() => {
-    // Gather article elements
     const els = document.querySelectorAll('.news-card')
     articleRefs.value = Array.from(els) as HTMLElement[]
     setupIntersectionObservers()
@@ -247,13 +230,11 @@ const shareArticle = (title: string) => {
 
 const subscribeNewsletter = () => {
   if (newsletterEmail.value) {
-    // Keep existing alert for now (not part of the merge request)
     alert(`Subscribed with ${newsletterEmail.value}!`)
     newsletterEmail.value = ''
   }
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -285,10 +266,10 @@ const scrollToTop = () => {
         <span class="toast__text">{{ toastMessage }}</span>
       </div>
     </transition>
-    <!-- ─── HERO with Slideshow ────────────────────────────────── -->
-    <Slideshow :slides="heroSlides">
-      <div class="hero-overlay" />
-      <div class="hero-content">
+
+    <!-- ─── NEW STATIC HERO (no slideshow) ──────────────────────── -->
+    <header class="hero-static">
+      <div class="hero-static-inner">
         <div class="hero-badge">
           <span class="pulse-dot"></span>
           Latest Stories
@@ -312,7 +293,7 @@ const scrollToTop = () => {
           </div>
         </div>
       </div>
-    </Slideshow>
+    </header>
 
     <!-- ─── MAIN CONTENT ───────────────────────────────────────── -->
     <div class="container">
@@ -615,35 +596,21 @@ const scrollToTop = () => {
   padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 
-/* ── Hero ── */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(6, 18, 13, 0.92) 0%,
-    rgba(6, 18, 13, 0.6) 45%,
-    rgba(6, 18, 13, 0.2) 75%,
-    transparent 100%
-  );
+/* ── STATIC HERO (new) ── */
+.hero-static {
+  background: linear-gradient(135deg, #f0f7f4, #ffffff);
+  padding: 4rem 1.5rem 3rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
 }
 
-.hero-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+.hero-static-inner {
   max-width: 820px;
   margin: 0 auto;
-  width: 100%;
-  left: 0;
-  right: 0;
-  color: #fffdf8;
+  padding: 0 1.5rem;
 }
 
-.hero-badge {
+.hero-static .hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -651,14 +618,13 @@ const scrollToTop = () => {
   letter-spacing: 0.3em;
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--gold-light);
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(12px);
+  color: var(--primary-color);
+  background: rgba(45, 122, 90, 0.08);
   padding: 0.4rem 1.4rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(45, 122, 90, 0.1);
   margin-bottom: 1rem;
-  align-self: flex-start;
+   margin-left:290px ;
 }
 
 .pulse-dot {
@@ -667,68 +633,63 @@ const scrollToTop = () => {
   border-radius: 50%;
   background: #4ade80;
   animation: pulse-dot 2s ease-in-out infinite;
+
 }
 
 @keyframes pulse-dot {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.4;
-    transform: scale(0.8);
-  }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-.hero-content {
-  margin: 0 10px 0 60px;
-}
-.hero-content h1 {
+.hero-static h1 {
   font-size: clamp(2.6rem, 6vw, 4.2rem);
   font-weight: 700;
-  color: #f1eaea;
-  margin-right: 40px;
+  color: var(--primary-dark);
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 0.95;
+  /* margin: 0 0 0.5rem; */
+   margin-left:200px ;
 }
 
-.hero-content h1 .highlight {
+.hero-static h1 .highlight {
   background: linear-gradient(135deg, var(--gold-light), var(--gold));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.hero-subtitle {
+.hero-static .hero-subtitle {
   font-size: 1.1rem;
   line-height: 1.7;
-  color: rgba(253, 248, 239, 0.82);
-  max-width: 540px;
+  color: var(--color-ink-soft);
+  max-width: 680px;
   margin: 0 0 2rem;
+   margin-left:80px ;
 }
 
-.hero-stats {
+.hero-static .hero-stats {
   display: flex;
   gap: 2.5rem;
   flex-wrap: wrap;
 }
 
-.hero-stat {
+.hero-static .hero-stat {
   display: flex;
   flex-direction: column;
+   margin-left:81px ;
 }
 
-.stat-number {
-  font-size: 3rem;
+.hero-static .stat-number {
+  font-size: 2.2rem;
   font-weight: 700;
-  color: #70e2e1;
+  color: var(--primary-color);
   letter-spacing: -0.02em;
+   margin-left:35px ;
 }
 
-.stat-label {
+.hero-static .stat-label {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-ink-soft);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -1083,8 +1044,6 @@ const scrollToTop = () => {
   border-radius: 20px;
   display: flex;
   flex-direction: column;
-
-  /* ── hidden state ── */
   opacity: 0;
   transform: translateY(28px) scale(0.96);
   transition:
@@ -1095,7 +1054,6 @@ const scrollToTop = () => {
   will-change: transform, opacity;
 }
 
-/* ── visible state ── */
 .news-card.card-visible {
   opacity: 1;
   transform: translateY(0) scale(1);
@@ -1107,22 +1065,11 @@ const scrollToTop = () => {
   border-color: transparent;
 }
 
-/* stagger delays */
-.news-card:nth-child(2) {
-  transition-delay: 0.06s;
-}
-.news-card:nth-child(3) {
-  transition-delay: 0.12s;
-}
-.news-card:nth-child(4) {
-  transition-delay: 0.18s;
-}
-.news-card:nth-child(5) {
-  transition-delay: 0.24s;
-}
-.news-card:nth-child(6) {
-  transition-delay: 0.3s;
-}
+.news-card:nth-child(2) { transition-delay: 0.06s; }
+.news-card:nth-child(3) { transition-delay: 0.12s; }
+.news-card:nth-child(4) { transition-delay: 0.18s; }
+.news-card:nth-child(5) { transition-delay: 0.24s; }
+.news-card:nth-child(6) { transition-delay: 0.3s; }
 
 .card-link {
   display: block;
@@ -1294,8 +1241,6 @@ const scrollToTop = () => {
   border-radius: 20px;
   color: #fff;
   box-shadow: 0 12px 48px rgba(26, 61, 46, 0.2);
-
-  /* ── initial: small ── */
   transform: scale(0.88);
   opacity: 0.5;
   transition:
@@ -1306,7 +1251,6 @@ const scrollToTop = () => {
   transform-origin: center center;
 }
 
-/* ── visible: full size ── */
 .newsletter-card.newsletter-visible {
   transform: scale(1);
   opacity: 1;
@@ -1367,8 +1311,8 @@ const scrollToTop = () => {
   padding: 0.5rem 1.8rem;
   border: none;
   border-radius: 999px;
-  background: rgb(236, 118, 15);
-  color: white;
+  background: rgb(255, 255, 255);
+  color: rgb(19, 135, 73);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
@@ -1495,9 +1439,7 @@ const scrollToTop = () => {
 
 .toast-enter-active,
 .toast-leave-active {
-  transition:
-    opacity 220ms ease,
-    transform 220ms ease;
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 .toast-enter-from,
@@ -1532,16 +1474,16 @@ const scrollToTop = () => {
 }
 
 @media (max-width: 768px) {
-  .hero-content {
-    padding: 2rem 1.5rem;
+  .hero-static {
+    padding: 3rem 1.5rem 2rem;
   }
-  .hero-content h1 {
+  .hero-static h1 {
     font-size: 2rem;
   }
-  .hero-stats {
+  .hero-static .hero-stats {
     gap: 1.5rem;
   }
-  .stat-number {
+  .hero-static .stat-number {
     font-size: 1.2rem;
   }
   .featured-actions {
