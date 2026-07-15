@@ -2,14 +2,40 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import type { UserProfile } from '@/types/user'
+
+const adminRoles = new Set<UserProfile['role']>(['super_admin', 'admin', 'editor'])
+
+function fallbackProfile(user: User): UserProfile {
+  return {
+    id: user.id,
+    email: user.email ?? '',
+    role: 'viewer',
+  }
+}
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
-  const profile = ref<unknown>(null)
+  const profile = ref<UserProfile | null>(null)
   const loading = ref(false)
   const initialized = ref(false)
 
   const isAuthenticated = computed(() => !!user.value)
+  const isContentAdmin = computed(() => {
+    return !!profile.value && adminRoles.has(profile.value.role)
+  })
+
+  async function loadProfile(currentUser: User) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, role, full_name, avatar_url')
+      .eq('id', currentUser.id)
+      .maybeSingle()
+
+    if (error) throw error
+    profile.value = (data as UserProfile | null) ?? fallbackProfile(currentUser)
+    return profile.value
+  }
 
   async function init() {
     if (initialized.value) return
@@ -20,12 +46,9 @@ export const useAuthStore = defineStore('auth', () => {
       } = await supabase.auth.getSession()
       user.value = session?.user ?? null
       if (user.value) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.value.id)
-          .maybeSingle()
-        profile.value = data ?? { id: user.value.id, email: user.value.email ?? '', role: 'viewer' }
+        await loadProfile(user.value)
+      } else {
+        profile.value = null
       }
     } finally {
       loading.value = false
@@ -40,18 +63,17 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = false
       throw error
     }
-    user.value = data.user
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', data.user.id)
-      .maybeSingle()
-    profile.value = profileData ?? {
-      id: data.user.id,
-      email: data.user.email ?? '',
-      role: 'viewer',
+    try {
+      user.value = data.user
+      const loadedProfile = await loadProfile(data.user)
+
+      if (!adminRoles.has(loadedProfile.role)) {
+        await logout()
+        throw new Error('This account does not have admin access.')
+      }
+    } finally {
+      loading.value = false
     }
-    loading.value = false
   }
 
   async function logout() {
@@ -60,5 +82,15 @@ export const useAuthStore = defineStore('auth', () => {
     profile.value = null
   }
 
-  return { user, profile, loading, initialized, isAuthenticated, init, login, logout }
+  return {
+    user,
+    profile,
+    loading,
+    initialized,
+    isAuthenticated,
+    isContentAdmin,
+    init,
+    login,
+    logout,
+  }
 })
