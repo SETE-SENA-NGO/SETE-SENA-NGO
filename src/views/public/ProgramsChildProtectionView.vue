@@ -10,55 +10,48 @@ const slideItems = [
 ]
 
 const stats = [
-  { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin' },
-  { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.', icon: 'users' },
-  { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.', icon: 'phone' },
+  { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin', image: '/images/programs/child-protection.jpg' },
+  { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.', icon: 'users', image: '/images/programs/child-protection1.jpg' },
+  { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.', icon: 'phone', image: '/images/programs/child-protection2.jpg' },
 ]
 
-// "What we do" — each item keeps its full original sentence in `text`;
-// `title` is just a short label pulled from that same sentence for the wheel display.
+// "What we do" — six focus areas, each with a photo, title and description.
 const whatWeDo = [
   {
     title: 'Anti-Trafficking Campaigns',
     text: 'Anti-child-trafficking campaigns at borders, markets and schools',
-    icon: 'megaphone',
-    color: '#0a7d5c',
     image: '/images/programs/child-protection.jpg',
+    color: '#0a7d5c',
   },
   {
     title: 'Child Protection Networks',
     text: 'Village Child Protection Networks (CPN) trained in identification and referral',
-    icon: 'shield',
-    color: '#2c7be5',
     image: '/images/programs/child-protection1.jpg',
+    color: '#2c7be5',
   },
   {
     title: 'Child Rights Advocacy',
     text: 'Child rights advocacy with commune councils and provincial authorities',
-    icon: 'scale',
-    color: '#e8871e',
     image: '/images/programs/child-protection2.jpg',
+    color: '#e8871e',
   },
   {
     title: 'Peer Educators',
     text: 'Peer-educator youth groups on safe migration, health and rights',
-    icon: 'users',
-    color: '#8b5cf6',
     image: '/images/programs/child-protection3.jpg',
+    color: '#8b5cf6',
   },
   {
     title: 'Family Reintegration',
     text: 'Family reintegration support for children returning from unsafe labour',
-    icon: 'home',
-    color: '#e0475a',
     image: '/images/programs/child-protection.jpg',
+    color: '#e0475a',
   },
   {
     title: 'Safeguarding Training',
     text: 'Safeguarding training for every teacher, monk and volunteer we work with',
-    icon: 'book',
-    color: '#c9a227',
     image: '/images/programs/child-protection1.jpg',
+    color: '#c9a227',
   },
 ]
 
@@ -82,87 +75,115 @@ const pathway = [
   },
 ]
 
-const wheelEl = ref<HTMLElement | null>(null)
-let wheelObserver: IntersectionObserver | undefined
-
+// Generic scroll-reveal: every ref below gets an `in-view` class added the
+// first time it enters the viewport, then is unobserved. One shared observer
+// drives all of them so each section (and, via CSS nth-child delays, each
+// item inside a section) fades/slides in as the user scrolls down the page.
+const trustBarEl = ref<HTMLElement | null>(null)
+const introEl = ref<HTMLElement | null>(null)
+const doGridEl = ref<HTMLElement | null>(null)
 const pathwayEl = ref<HTMLElement | null>(null)
-let pathwayObserver: IntersectionObserver | undefined
+const storyEl = ref<HTMLElement | null>(null)
+const ctaEl = ref<HTMLElement | null>(null)
+const collageEl = ref<HTMLElement | null>(null)
+
+let revealObserver: IntersectionObserver | undefined
+let parallaxRaf = 0
+let parallaxTicking = false
 
 onMounted(() => {
-  if (wheelEl.value) {
-    wheelObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view')
-            wheelObserver?.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.2 }
-    )
-    wheelObserver.observe(wheelEl.value)
-  }
+  const revealTargets = [
+    trustBarEl.value,
+    introEl.value,
+    doGridEl.value,
+    pathwayEl.value,
+    storyEl.value,
+    ctaEl.value,
+  ].filter((el): el is HTMLElement => el !== null)
 
-  if (!pathwayEl.value) return
-  pathwayObserver = new IntersectionObserver(
+  // Toggling (not unobserving) means every section fades/slides in as it
+  // enters the viewport scrolling down, AND fades/slides back out and
+  // replays when scrolled back up past it — dynamic both directions.
+  revealObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('in-view')
-          pathwayObserver?.unobserve(entry.target)
-        }
+        entry.target.classList.toggle('in-view', entry.isIntersecting)
       })
     },
-    { threshold: 0.25 }
+    { threshold: 0.18, rootMargin: '-8% 0px -8% 0px' }
   )
-  pathwayObserver.observe(pathwayEl.value)
+
+  revealTargets.forEach((el) => revealObserver?.observe(el))
+
+  // Subtle parallax: the story collage drifts slightly slower than scroll
+  // speed, adding depth without being distracting, in both scroll directions.
+  const updateParallax = () => {
+    parallaxTicking = false
+    const el = collageEl.value
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const viewportCenter = window.innerHeight / 2
+    const elCenter = rect.top + rect.height / 2
+    const offset = (viewportCenter - elCenter) * 0.06
+    el.style.transform = `translateY(${offset}px)`
+  }
+
+  const onScroll = () => {
+    if (!parallaxTicking) {
+      parallaxTicking = true
+      parallaxRaf = requestAnimationFrame(updateParallax)
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true })
+  updateParallax()
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('scroll', onScroll)
+    cancelAnimationFrame(parallaxRaf)
+  })
 })
 
 onBeforeUnmount(() => {
-  wheelObserver?.disconnect()
-  pathwayObserver?.disconnect()
+  revealObserver?.disconnect()
 })
 </script>
 
 <template>
   <div class="child-protection-page">
-    <!-- Hero -->
-
     <!-- Trust bar -->
     <section class="trust-bar">
-      <div class="container trust-bar-inner">
-        <template v-for="(stat, i) in stats" :key="stat.label">
-          <div class="trust-item">
-            <span class="trust-icon">
-              <svg v-if="stat.icon === 'pin'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                <circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.6"/>
-              </svg>
-              <svg v-else-if="stat.icon === 'users'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M15 20c0-2.6 2-4.6 5-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-              </svg>
-              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 005 5l1.5-2 4 1.5v3a1.5 1.5 0 01-1.6 1.5A16.5 16.5 0 015 5.1 1.5 1.5 0 016.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-              </svg>
-            </span>
-            <div class="trust-copy">
-              <p class="trust-number">{{ stat.number }}</p>
-              <p class="trust-label">{{ stat.label }}</p>
-              <p class="trust-desc">{{ stat.description }}</p>
-            </div>
+      <div class="container trust-bar-inner" ref="trustBarEl">
+        <div v-for="stat in stats" :key="stat.label" class="trust-card">
+          <img :src="stat.image" :alt="stat.label" class="trust-card-img" />
+          <div class="trust-card-overlay" aria-hidden="true"></div>
+          <span class="trust-card-icon">
+            <svg v-if="stat.icon === 'pin'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <svg v-else-if="stat.icon === 'users'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M15 20c0-2.6 2-4.6 5-4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 005 5l1.5-2 4 1.5v3a1.5 1.5 0 01-1.6 1.5A16.5 16.5 0 015 5.1 1.5 1.5 0 016.5 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div class="trust-card-copy">
+            <p class="trust-card-number">{{ stat.number }}</p>
+            <p class="trust-card-label">{{ stat.label }}</p>
+            <p class="trust-card-desc">{{ stat.description }}</p>
           </div>
-          <div v-if="i < stats.length - 1" class="trust-divider" aria-hidden="true"></div>
-        </template>
+        </div>
       </div>
     </section>
 
     <!-- Intro -->
     <section class="section-cream intro-section">
-      <div class="container">
+      <div class="container" ref="introEl">
         <div class="intro-rule" aria-hidden="true"></div>
         <p class="intro-text text-center">
           Cross-border migration, poverty and family separation put rural Cambodian
@@ -173,62 +194,20 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <!-- What we do — wheel of items radiating around a center hub -->
+    <!-- What we do — icon/title/description grid -->
     <section class="section-light">
       <div class="container">
         <div class="do-section">
           <p class="section-eyebrow text-center">Our work</p>
           <h2 class="section-title text-center">What we do</h2>
 
-          <div class="wheel-wrap" ref="wheelEl">
-            <div class="wheel-center">
-              <span class="wheel-center-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.6 10.8c.6.45 1.1 1.2 1.1 2.2h5c0-1 .5-1.75 1.1-2.2A6 6 0 0012 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-                </svg>
-              </span>
-              <p class="wheel-center-title">Child<br />Protection</p>
-            </div>
-
-            <div
-              v-for="(item, i) in whatWeDo"
-              :key="item.title"
-              class="wheel-item"
-              :class="`wheel-item--${i + 1}`"
-            >
-              <div class="wheel-photo">
-                <img :src="item.image" alt="" />
+          <div class="do-grid" ref="doGridEl">
+            <div v-for="item in whatWeDo" :key="item.title" class="do-card">
+              <div class="do-image">
+                <img :src="item.image" :alt="item.title" />
               </div>
-              <span class="wheel-icon" :style="{ background: item.color }">
-                <svg v-if="item.icon === 'megaphone'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 11v2a2 2 0 002 2h1l2 5h2l-1.5-5H10l8 4V6l-8 4H8l-2-3H5a2 2 0 00-2 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                </svg>
-                <svg v-else-if="item.icon === 'shield'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 3l7 3v5c0 5-3.4 8.5-7 10-3.6-1.5-7-5-7-10V6l7-3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                  <path d="M9.3 12.2l1.9 1.9 3.5-3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <svg v-else-if="item.icon === 'scale'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 3v18M7 21h10M5 7l3.5-1.5L12 7M19 7l-3.5-1.5L12 7M3 7l2 5.5a2.3 2.3 0 004 0L11 7M13 7l2 5.5a2.3 2.3 0 004 0L21 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <svg v-else-if="item.icon === 'users'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/>
-                  <path d="M3.5 20c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  <circle cx="17" cy="9" r="2.2" stroke="currentColor" stroke-width="1.5"/>
-                  <path d="M15.5 20c0-2.4 1.9-4.4 4.5-4.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-                <svg v-else-if="item.icon === 'home'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 11.5L12 5l8 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M6 10v8.5a1 1 0 001 1h10a1 1 0 001-1V10" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                  <path d="M12 18c-1.8-1.5-3-2.6-3-4a1.7 1.7 0 013-1 1.7 1.7 0 013 1c0 1.4-1.2 2.5-3 4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                </svg>
-                <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 5.5A1.5 1.5 0 015.5 4H12v16H5.5A1.5 1.5 0 014 18.5v-13z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                  <path d="M20 5.5A1.5 1.5 0 0018.5 4H12v16h6.5a1.5 1.5 0 001.5-1.5v-13z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                  <path d="M7 8h3M7 11h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-                </svg>
-              </span>
-              <p class="wheel-title" :style="{ color: item.color }">{{ item.title }}</p>
-              <p class="wheel-text">{{ item.text }}</p>
+              <p class="do-title" :style="{ color: item.color }">{{ item.title }}</p>
+              <p class="do-text">{{ item.text }}</p>
             </div>
           </div>
         </div>
@@ -282,10 +261,25 @@ onBeforeUnmount(() => {
     <!-- Story + CTA -->
     <section class="section-light">
       <div class="container">
-        <div class="two-col-grid reverse">
+        <div class="two-col-grid reverse" ref="storyEl">
           <div class="col-image">
-            <div class="col-image-frame story-frame">
-              <img src="/images/programs/child-protection3.jpg" alt="Child Protection Network volunteer speaking with a family" />
+            <div class="story-collage" ref="collageEl">
+              <div class="story-collage-main">
+                <img src="/images/programs/child-protection3.jpg" alt="Child Protection Network volunteer speaking with a family" />
+                <span class="story-collage-heart">
+                  <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 20.5s-7.6-4.8-10.2-9.4C.4 8.2 1.7 4.8 5 3.9c2-.5 3.9.3 5 2 .1-.1.1-.2.2-.3 1.1-1.6 3-2.5 5-2 3.3.9 4.6 4.3 3.2 7.2C19.6 15.7 12 20.5 12 20.5z"/>
+                  </svg>
+                </span>
+              </div>
+
+              <!-- Two square photos, crossing/staggered, overlapping the bottom of the circle -->
+              <div class="story-collage-sub story-collage-sub--left">
+                <img src="/images/programs/child-protection.jpg" alt="" />
+              </div>
+              <div class="story-collage-sub story-collage-sub--right">
+                <img src="/images/programs/child-protection1.jpg" alt="" />
+              </div>
             </div>
           </div>
           <div class="col-text">
@@ -309,7 +303,7 @@ onBeforeUnmount(() => {
 
     <!-- Closing CTA -->
     <section class="cta-split">
-      <div class="container cta-split-inner">
+      <div class="container cta-split-inner" ref="ctaEl">
         <div class="cta-split-text">
           <p class="cta-split-eyebrow">Get involved</p>
           <h2 class="cta-split-title">Ready to take the next step?</h2>
@@ -330,102 +324,109 @@ onBeforeUnmount(() => {
   padding: 0 var(--container-padding);
 }
 
-/* ===== Hero ===== */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(6,18,13,0.85) 0%, rgba(6,18,13,0.55) 42%, rgba(6,18,13,0.22) 70%, transparent 100%);
-}
-.hero-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  text-align: left;
-  max-width: 600px;
-  color: white;
-  left: var(--container-offset);
-  padding: 3rem 1.5rem;
-  animation: fadeInUp 0.8s ease-out;
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.eyebrow {
-  color: var(--primary-light);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
-}
-.hero-content h1 {
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  margin-bottom: 1.25rem;
-  color: white;
-}
-.hero-desc {
-  line-height: 1.6;
-  opacity: 0.95;
-}
-
-/* ===== Trust bar ===== */
+/* ===== Trust bar — small photo stat cards ===== */
 .trust-bar {
-  background: var(--primary-dark);
-  padding: 2.25rem 0;
+  background: transparent;
+  padding: 2.5rem 0;
 }
 .trust-bar-inner {
   display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
-  align-items: center;
-}
-.trust-item {
-  display: flex;
-  align-items: center;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  padding: 0 0.75rem;
+  max-width: 780px;
+  margin: 0 auto;
 }
-.trust-divider {
-  width: 1px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.16);
+.trust-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 3 / 3.6;
+  isolation: isolate;
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.3s ease;
+  box-shadow: 0 10px 22px -12px rgba(0, 0, 0, 0.5);
 }
-.trust-icon {
-  flex-shrink: 0;
+.trust-bar-inner.in-view .trust-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+.trust-bar-inner.in-view .trust-card:nth-child(1) { transition-delay: 0s; }
+.trust-bar-inner.in-view .trust-card:nth-child(2) { transition-delay: 0.15s; }
+.trust-bar-inner.in-view .trust-card:nth-child(3) { transition-delay: 0.3s; }
+.trust-card:hover {
+  box-shadow: 0 14px 28px -12px rgba(0, 0, 0, 0.6);
+}
+.trust-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  transition: transform 0.6s ease;
+}
+.trust-card:hover .trust-card-img {
+  transform: scale(1.08);
+}
+.trust-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 31, 25, 0.1) 0%,
+    rgba(11, 31, 25, 0.2) 35%,
+    rgba(11, 31, 25, 0.92) 100%
+  );
+}
+.trust-card-icon {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--primary-light);
-}
-.trust-icon svg { width: 20px; height: 20px; }
-.trust-copy { min-width: 0; }
-.trust-number {
-  font-weight: 700;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(4px);
   color: #ffffff;
-  font-size: 1.35rem;
-  line-height: 1.15;
+}
+.trust-card-icon svg { width: 14px; height: 14px; }
+.trust-card-copy {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 0 0.8rem 0.9rem;
+}
+.trust-card-number {
+  font-weight: 800;
+  color: #ffffff;
+  font-size: 1.3rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
   margin-bottom: 0.15rem;
 }
-.trust-label {
+.trust-card-label {
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   color: var(--primary-light);
-  font-size: 0.7rem;
-  margin-bottom: 0.2rem;
+  font-size: 0.62rem;
+  margin-bottom: 0.25rem;
 }
-.trust-desc {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.82rem;
+.trust-card-desc {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.74rem;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ===== Cream / light sections ===== */
@@ -438,6 +439,15 @@ onBeforeUnmount(() => {
   padding: 4.5rem 0;
 }
 .intro-section { text-align: center; }
+.intro-section .container {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.intro-section .container.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
 .intro-rule {
   width: 56px;
   height: 3px;
@@ -469,7 +479,7 @@ onBeforeUnmount(() => {
 }
 .text-center { text-align: center; }
 
-/* ===== Two-column layout ===== */
+/* ===== Two-column layout: photo collage + quote ===== */
 .two-col-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -478,172 +488,216 @@ onBeforeUnmount(() => {
 }
 .two-col-grid.reverse .col-image { order: 1; }
 .two-col-grid.reverse .col-text { order: 2; }
-.col-image-frame {
+.two-col-grid .col-image,
+.two-col-grid .col-text {
+  opacity: 0;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.two-col-grid .col-image { transform: translateX(-24px); }
+.two-col-grid .col-text { transform: translateX(24px); }
+.two-col-grid.in-view .col-image,
+.two-col-grid.in-view .col-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+.two-col-grid.in-view .col-text { transition-delay: 0.15s; }
+
+/* Photo collage — one large circular photo, with two smaller photos
+   overlapping its lower corners at a slight rotation for a more dynamic,
+   hand-placed feel, plus a small heart accent badge. */
+.story-collage {
   position: relative;
-  border-radius: 20px;
+  width: min(370px, 82%);
+  margin: 0 auto;
+  padding: 0 4% 18%;
+}
+.story-collage::before {
+  content: '';
+  position: absolute;
+  inset: -8% -6% 4%;
+  z-index: -1;
+  background: radial-gradient(
+    circle at 40% 35%,
+    rgba(74, 155, 110, 0.35) 0%,
+    rgba(74, 155, 110, 0.18) 45%,
+    rgba(74, 155, 110, 0) 75%
+  );
+  filter: blur(18px);
+  border-radius: 50%;
+}
+.story-collage-main {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
   overflow: hidden;
-  cursor: pointer;
-  border: 2px solid transparent;
-  box-shadow: 0 16px 36px -18px rgba(22, 52, 42, 0.3);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  border: 6px solid #ffffff;
+  box-shadow: 0 20px 42px -18px rgba(74, 155, 110, 0.45), 0 6px 16px -10px rgba(22, 52, 42, 0.2);
+  z-index: 1;
 }
-.col-image-frame:hover,
-.col-image-frame:active {
-  transform: translateY(-8px);
-  border-color: var(--primary-color);
-  box-shadow: 0 28px 56px -18px rgba(22, 52, 42, 0.35);
-}
-.col-image-frame img {
+.story-collage-main img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.5s ease;
+  transition: transform 0.6s ease;
 }
-.col-image-frame:hover img,
-.col-image-frame:active img {
+.story-collage:hover .story-collage-main img {
   transform: scale(1.06);
 }
-.story-frame { min-height: 420px; }
-
-/* ===== What we do — wheel around a center hub ===== */
-.do-section {
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-}
-
-.wheel-wrap {
-  position: relative;
-  max-width: 900px;
-  height: 860px;
-  margin: 3.5rem auto 0;
-}
-
-.wheel-center {
+.story-collage-heart {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  width: 168px;
-  height: 168px;
+  top: -4px;
+  right: 10%;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 16px 36px -14px rgba(22, 52, 42, 0.35);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 1rem;
-}
-.wheel-center-icon {
-  width: 34px;
-  height: 34px;
-  color: var(--primary-color);
-  margin-bottom: 0.5rem;
-}
-.wheel-center-icon svg { width: 100%; height: 100%; }
-.wheel-center-title {
-  font-weight: 700;
-  color: var(--primary-dark);
-  font-size: 0.95rem;
-  line-height: 1.3;
-  margin: 0;
-}
-
-.wheel-item {
-  position: absolute;
-  width: 220px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0.5rem;
-}
-/* 6 items placed evenly (60° apart) around the center hub, clockwise from the top */
-.wheel-item--1 { top: calc(50% - 320px); left: 50%; transform: translate(-50%, -50%); }
-.wheel-item--2 { top: calc(50% - 160px); left: calc(50% + 277px); transform: translate(-50%, -50%); }
-.wheel-item--3 { top: calc(50% + 160px); left: calc(50% + 277px); transform: translate(-50%, -50%); }
-.wheel-item--4 { top: calc(50% + 320px); left: 50%; transform: translate(-50%, -50%); }
-.wheel-item--5 { top: calc(50% + 160px); left: calc(50% - 277px); transform: translate(-50%, -50%); }
-.wheel-item--6 { top: calc(50% - 160px); left: calc(50% - 277px); transform: translate(-50%, -50%); }
-
-.wheel-photo {
-  width: 200px;
-  height: 150px;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 8px 18px -8px rgba(22, 52, 42, 0.3);
-}
-.wheel-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.wheel-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
+  background: var(--primary-color);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: -19px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 22px -6px rgba(0, 0, 0, 0.4);
+  z-index: 4;
+  animation: heart-pulse 2.8s ease-in-out infinite;
 }
-.wheel-icon svg { width: 18px; height: 18px; }
-.wheel-title {
-  font-weight: 700;
-  font-size: 0.92rem;
-  margin: 0.2rem 0 0;
+.story-collage-heart svg { width: 21px; height: 21px; }
+@keyframes heart-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
-.wheel-text {
-  color: #6b7280;
-  font-size: 0.8rem;
-  line-height: 1.5;
+
+/* Two photos overlapping the circle's lower corners, each tilted slightly
+   in opposite directions so they read as playfully "dropped" into place
+   rather than mechanically aligned. Deep, soft shadows lift them off the
+   circle; a subtle rotate-and-lift on hover adds polish. */
+.story-collage-sub {
+  position: absolute;
+  width: 46%;
+  aspect-ratio: 4 / 5;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 5px solid #ffffff;
+  box-shadow: 0 16px 30px -12px rgba(74, 155, 110, 0.4), 0 4px 10px -4px rgba(22, 52, 42, 0.2);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.story-collage-sub img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.story-collage-sub--left {
+  left: -2%;
+  bottom: 0;
+  transform: rotate(-6deg);
+  z-index: 3;
+}
+.story-collage-sub--right {
+  right: -2%;
+  bottom: 12%;
+  transform: rotate(5deg);
+  z-index: 2;
+}
+.story-collage-sub--left:hover {
+  transform: rotate(-6deg) translateY(-6px) scale(1.03);
+  box-shadow: 0 24px 40px -12px rgba(22, 52, 42, 0.5), 0 6px 14px -4px rgba(22, 52, 42, 0.25);
+  z-index: 5;
+}
+.story-collage-sub--right:hover {
+  transform: rotate(5deg) translateY(-6px) scale(1.03);
+  box-shadow: 0 24px 40px -12px rgba(22, 52, 42, 0.5), 0 6px 14px -4px rgba(22, 52, 42, 0.25);
+  z-index: 5;
+}
+
+/* ===== Story card ===== */
+.story-card {
+  background: var(--primary-light);
+  border-radius: 18px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+}
+.story-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--primary-color);
+  margin-bottom: 0.9rem;
+  box-shadow: 0 4px 10px rgba(22, 52, 42, 0.12);
+}
+.story-badge svg { width: 17px; height: 17px; }
+.story-text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--primary-dark);
+  line-height: 1.6;
   margin: 0;
 }
 
-/* Scroll-in reveal */
-.wheel-center,
-.wheel-item {
+/* ===== What we do — icon/title/description grid ===== */
+.do-section {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+.do-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem 1.75rem;
+  max-width: 980px;
+  margin: 3rem auto 0;
+}
+.do-card {
+  text-align: center;
   opacity: 0;
-  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
-.wheel-wrap.in-view .wheel-center {
+.do-grid.in-view .do-card {
   opacity: 1;
+  transform: translateY(0);
 }
-.wheel-item {
-  transform: translate(-50%, calc(-50% + 20px)) scale(0.9);
+.do-grid.in-view .do-card:nth-child(1) { transition-delay: 0.05s; }
+.do-grid.in-view .do-card:nth-child(2) { transition-delay: 0.15s; }
+.do-grid.in-view .do-card:nth-child(3) { transition-delay: 0.25s; }
+.do-grid.in-view .do-card:nth-child(4) { transition-delay: 0.35s; }
+.do-grid.in-view .do-card:nth-child(5) { transition-delay: 0.45s; }
+.do-grid.in-view .do-card:nth-child(6) { transition-delay: 0.55s; }
+.do-image {
+  width: 100%;
+  height: 170px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.3);
 }
-.wheel-wrap.in-view .wheel-item {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
+.do-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
-.wheel-wrap.in-view .wheel-item--1 { transition-delay: 0.1s; }
-.wheel-wrap.in-view .wheel-item--2 { transition-delay: 0.2s; }
-.wheel-wrap.in-view .wheel-item--3 { transition-delay: 0.3s; }
-.wheel-wrap.in-view .wheel-item--4 { transition-delay: 0.4s; }
-.wheel-wrap.in-view .wheel-item--5 { transition-delay: 0.5s; }
-.wheel-wrap.in-view .wheel-item--6 { transition-delay: 0.6s; }
+.do-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+}
+.do-text {
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+}
 
-@media (max-width: 900px) {
-  .wheel-wrap {
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+@media (max-width: 700px) {
+  .do-grid {
+    grid-template-columns: 1fr;
     gap: 2rem;
-  }
-  .wheel-center,
-  .wheel-item {
-    position: static;
-    transform: none !important;
-  }
-  .wheel-icon {
-    margin-top: -19px;
+    max-width: 420px;
   }
 }
 
@@ -755,34 +809,6 @@ onBeforeUnmount(() => {
   margin: 0 auto;
 }
 
-/* ===== Story card ===== */
-.story-card {
-  background: var(--primary-light);
-  border-radius: 18px;
-  padding: 1.75rem 2rem;
-  margin-bottom: 2rem;
-}
-.story-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #ffffff;
-  color: var(--primary-color);
-  margin-bottom: 0.9rem;
-  box-shadow: 0 4px 10px rgba(22, 52, 42, 0.12);
-}
-.story-badge svg { width: 17px; height: 17px; }
-.story-text {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-style: italic;
-  font-size: 1.15rem;
-  color: var(--primary-dark);
-  line-height: 1.6;
-  margin: 0;
-}
 .cta-row { display: flex; }
 
 /* ===== Buttons ===== */
@@ -828,6 +854,13 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   padding-top: 3rem;
   padding-bottom: 3rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.cta-split-inner.in-view {
+  opacity: 1;
+  transform: translateY(0);
 }
 .cta-split-eyebrow {
   color: var(--primary-color);
@@ -854,15 +887,12 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .hero-content { padding: 2rem 1.5rem; }
-
-  .trust-bar-inner { grid-template-columns: 1fr; gap: 1.25rem; }
-  .trust-divider { display: none; }
+  .trust-bar-inner { grid-template-columns: repeat(3, 1fr); gap: 0.6rem; max-width: 420px; }
 
   .two-col-grid { grid-template-columns: 1fr; gap: 2.5rem; }
   .two-col-grid.reverse .col-image { order: 0; }
   .two-col-grid.reverse .col-text { order: 1; }
-  .story-frame { min-height: 300px; }
+  .story-collage { width: min(280px, 74vw); padding: 0 4% 24%; }
 
   .cta-split-inner { flex-direction: column; align-items: flex-start; text-align: left; }
 }

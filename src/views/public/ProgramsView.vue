@@ -101,7 +101,7 @@ const priorityIcons: Record<string, string> = {
   megaphone: 'bullhorn',
 }
 
-// Scroll-triggered reveal: each goal card (and the priorities wave) animates in once visible
+// Scroll-triggered reveal: each goal card (and the priorities grid) animates in once visible
 const cardRefs = ref<HTMLElement[]>([])
 const priorityWaveRef = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
@@ -132,12 +132,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   observer?.disconnect()
 })
-
-// x-position (%) for each node along the wave, evenly spaced with margin from the edges
-function getNodeLeft(idx: number) {
-  const count = priorities.length
-  return 8 + idx * (84 / (count - 1))
-}
 </script>
 
 <template>
@@ -182,41 +176,24 @@ function getNodeLeft(idx: number) {
       </p>
       <h2 class="center">How we keep the tree alive</h2>
 
-      <div ref="priorityWaveRef" class="priorities-wave">
-        <svg class="wave-line" viewBox="0 0 1000 200" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="var(--primary-light)" />
-              <stop offset="50%" stop-color="var(--primary-color)" />
-              <stop offset="100%" stop-color="var(--primary-light)" />
-            </linearGradient>
-          </defs>
-          <path
-            class="wave-path"
-            d="M80,150 C185,150 185,50 290,50 C395,50 395,150 500,150 C605,150 605,50 710,50 C815,50 815,150 920,150"
-          />
-          <circle
-            v-for="(item, idx) in priorities"
-            :key="'dot-' + item.title"
-            class="wave-dot"
-            :cx="80 + idx * 210"
-            :cy="idx % 2 === 0 ? 150 : 50"
-            r="5"
-          />
-        </svg>
-
+      <div ref="priorityWaveRef" class="priorities-grid">
         <div
           v-for="(item, idx) in priorities"
           :key="item.title"
-          class="wave-node"
-          :class="idx % 2 === 0 ? 'node-low' : 'node-high'"
-          :style="{ left: getNodeLeft(idx) + '%', transitionDelay: idx * 90 + 'ms' }"
+          class="priority-card"
+          :style="{ transitionDelay: idx * 90 + 'ms' }"
         >
-          <span class="node-number">{{ String(idx + 1).padStart(2, '0') }}</span>
-          <div class="node-icon">
-            <font-awesome-icon :icon="priorityIcons[item.icon]" />
+          <div class="priority-step">
+            <span class="step-number">{{ String(idx + 1).padStart(2, '0') }}</span>
+            <span class="step-connector" />
           </div>
-          <p class="node-label">{{ item.title }}</p>
+
+          <div class="priority-body">
+            <div class="priority-icon">
+              <font-awesome-icon :icon="priorityIcons[item.icon]" />
+            </div>
+            <p class="priority-label">{{ item.title }}</p>
+          </div>
         </div>
       </div>
     </section>
@@ -332,10 +309,10 @@ function getNodeLeft(idx: number) {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(6, 18, 13, 0.9) 0%,
-    rgba(6, 18, 13, 0.72) 38%,
-    rgba(6, 18, 13, 0.25) 68%,
-    rgba(6, 18, 13, 0) 100%
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
   );
 }
 
@@ -345,10 +322,10 @@ function getNodeLeft(idx: number) {
 .goal-card.reverse .goal-overlay {
   background: linear-gradient(
     270deg,
-    rgba(6, 18, 13, 0.9) 0%,
-    rgba(6, 18, 13, 0.72) 38%,
-    rgba(6, 18, 13, 0.25) 68%,
-    rgba(6, 18, 13, 0) 100%
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
   );
 }
 
@@ -410,14 +387,31 @@ function getNodeLeft(idx: number) {
   color: #fff;
 }
 
-/* PRIORITIES */
+/* ===== PRIORITIES — clean, professional stepper with cards ===== */
 .priorities {
+  position: relative;
   max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 5rem 3rem 6rem;
   text-align: center;
+  overflow: hidden;
+}
+/* Soft ambient glow behind the whole section for depth */
+.priorities::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 500px;
+  background: radial-gradient(ellipse at center, rgba(20, 129, 62, 0.07) 0%, rgba(20, 129, 62, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 .eyebrow.center {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -431,78 +425,112 @@ function getNodeLeft(idx: number) {
   display: inline-block;
 }
 .priorities h2 {
-  font-weight: 600;
-  margin: 0.5rem 0 2.5rem;
-}
-.priorities-wave {
   position: relative;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  height: 380px;
+  z-index: 1;
+  font-weight: 600;
+  margin: 0.5rem 0 3.5rem;
 }
 
-.wave-line {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 6px 10px rgba(20, 129, 62, 0.1));
-}
-.wave-path {
-  fill: none;
-  stroke: url(#waveGradient);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-opacity: 0.45;
-}
-.wave-dot {
-  fill: var(--primary-color);
-  opacity: 0.35;
+/* Straight, evenly-spaced stepper row instead of the zigzag wave */
+.priorities-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.75rem;
+  align-items: start;
 }
 
-.wave-node {
-  position: absolute;
-  transform: translateX(-50%) translateY(28px);
-  width: 170px;
+.priority-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
   opacity: 0;
+  transform: translateY(24px);
   transition:
     opacity 0.6s ease,
     transform 0.6s ease;
 }
-.priorities-wave.is-visible .wave-node {
+.priorities-grid.is-visible .priority-card {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-.wave-node.node-low {
-  top: 58%;
-}
-.wave-node.node-high {
-  top: 14%;
+  transform: translateY(0);
 }
 
-.node-number {
-  font-size: 2.4rem;
-  font-weight: 800;
-  color: rgba(20, 129, 62, 0.18);
-  line-height: 1;
-  margin-bottom: -0.6rem;
-  letter-spacing: -0.02em;
+/* Numbered node + connecting line */
+.priority-step {
+  position: relative;
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
-.node-icon {
+.step-number {
   position: relative;
   z-index: 2;
-  width: 60px;
-  height: 60px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 14px -4px rgba(20, 129, 62, 0.5);
+}
+.step-connector {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100% + 1.75rem);
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+  opacity: 0.35;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+.priority-card:last-child .step-connector {
+  display: none;
+}
+
+/* Card body */
+.priority-body {
+  width: 100%;
   background: var(--color-white);
-  border: 1.5px solid rgba(20, 129, 62, 0.14);
+  border-radius: 18px;
+  border: 1px solid rgba(20, 129, 62, 0.1);
+  padding: 1.85rem 1.1rem 1.5rem;
   box-shadow:
-    0 10px 24px rgba(20, 129, 62, 0.16),
-    0 0 0 6px rgba(20, 129, 62, 0.05);
+    0 4px 10px rgba(20, 129, 62, 0.06),
+    0 16px 32px -14px rgba(20, 129, 62, 0.18);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+.priority-card:hover .priority-body {
+  transform: translateY(-6px);
+  border-color: rgba(20, 129, 62, 0.28);
+  box-shadow:
+    0 6px 14px rgba(20, 129, 62, 0.1),
+    0 24px 44px -16px rgba(20, 129, 62, 0.3);
+}
+
+.priority-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(160deg, var(--color-white) 0%, rgba(20, 129, 62, 0.08) 100%);
+  border: 1.5px solid rgba(20, 129, 62, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 8px 18px -8px rgba(20, 129, 62, 0.35);
   color: var(--primary-color);
   display: flex;
   align-items: center;
@@ -512,27 +540,27 @@ function getNodeLeft(idx: number) {
     box-shadow 0.3s ease,
     border-color 0.3s ease;
 }
-.wave-node:hover .node-icon {
-  transform: translateY(-5px);
+.priority-card:hover .priority-icon {
+  transform: scale(1.08);
   border-color: var(--primary-color);
   box-shadow:
-    0 16px 30px rgba(20, 129, 62, 0.26),
-    0 0 0 6px rgba(20, 129, 62, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 10px 22px -8px rgba(20, 129, 62, 0.5);
 }
-.node-icon :deep(.svg-inline--fa) {
-  width: 27px;
-  height: 27px;
+.priority-icon :deep(.svg-inline--fa) {
+  width: 24px;
+  height: 24px;
 }
-.node-label {
-  margin: 1.1rem 0 0;
-  font-weight: 600;
-  color: var(--primary-dark);
-  line-height: 1.5;
-  font-size: 0.95rem;
+.priority-label {
+  margin: 0;
+  font-weight: 400;
+  color: #6b7280;
+  line-height: 1.45;
+  font-size: 0.9rem;
   transition: color 0.3s ease;
 }
-.wave-node:hover .node-label {
-  color: var(--primary-color);
+.priority-card:hover .priority-label {
+  color: #6b7280;
 }
 
 @media (max-width: 860px) {
@@ -550,38 +578,36 @@ function getNodeLeft(idx: number) {
   .priorities {
     padding: 3.5rem 1.25rem 4rem;
   }
-  .priorities-wave {
-    height: auto;
+
+  .priorities-grid {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
   }
-  .wave-line {
-    display: none;
-  }
-  .wave-node {
-    position: static;
+  .priority-card {
     flex-direction: row;
     align-items: center;
-    width: 100%;
-    text-align: left;
     gap: 1rem;
-    margin-bottom: 1.25rem;
-    transform: none !important;
   }
-  .wave-node:last-child {
+  .priority-step {
+    width: auto;
+    height: auto;
     margin-bottom: 0;
   }
-  .node-number {
-    font-size: 1rem;
-    margin: 0;
-    width: 24px;
-    flex-shrink: 0;
-    color: var(--primary-light);
+  .step-connector {
+    display: none;
   }
-  .node-icon {
+  .priority-body {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 1.1rem;
+  }
+  .priority-icon {
     margin: 0;
     flex-shrink: 0;
   }
-  .node-label {
-    margin: 0;
+  .priority-label {
     text-align: left;
   }
   .hero-arrow {
@@ -595,7 +621,7 @@ function getNodeLeft(idx: number) {
   .goal-card,
   .goal-media,
   .goal-content,
-  .wave-node {
+  .priority-card {
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;

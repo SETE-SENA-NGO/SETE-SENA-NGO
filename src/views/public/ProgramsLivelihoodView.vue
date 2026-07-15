@@ -105,29 +105,99 @@ function closeImpactModal() {
 }
 
 const radialWrap = ref<HTMLElement | null>(null)
-let observer: IntersectionObserver | null = null
+const statsBandEl = ref<HTMLElement | null>(null)
+const introEl = ref<HTMLElement | null>(null)
+const quoteInnerEl = ref<HTMLElement | null>(null)
+const impactWrapEl = ref<HTMLElement | null>(null)
+
+let radialObserver: IntersectionObserver | null = null
+let revealObserver: IntersectionObserver | null = null
+let countObserver: IntersectionObserver | null = null
+
+// Splits a stat string like "2,400+" into a numeric target (2400) and the
+// trailing suffix ("+") so the number can be counted up and re-assembled.
+function parseStatNumber(raw: string) {
+  const suffix = raw.match(/[^0-9,]+$/)?.[0] ?? ''
+  const numeric = Number(raw.replace(/[^0-9]/g, ''))
+  return { numeric, suffix }
+}
+
+// Eases a number from 0 up to its target over ~1.1s using requestAnimationFrame.
+function animateCount(el: HTMLElement, target: number, suffix: string) {
+  const duration = 1100
+  const startTime = performance.now()
+  const step = (now: number) => {
+    const progress = Math.min((now - startTime) / duration, 1)
+    const eased = 1 - Math.pow(1 - progress, 3)
+    const current = Math.round(target * eased)
+    el.textContent = current.toLocaleString('en-US') + suffix
+    if (progress < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
 
 onMounted(() => {
-  const items = radialWrap.value?.querySelectorAll('.radial-center, .radial-item')
-  if (!items) return
+  // "What we do" satellite gallery: toggling the class (rather than
+  // unobserving) means each photo/orbit item fades in scrolling down AND
+  // fades back out + replays scrolling back up past the section.
+  const radialItems = radialWrap.value?.querySelectorAll('.radial-center, .radial-item')
+  if (radialItems) {
+    radialObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          entry.target.classList.toggle('is-visible', entry.isIntersecting)
+        })
+      },
+      { threshold: 0.2, rootMargin: '0px 0px -60px 0px' },
+    )
+    radialItems.forEach((el) => radialObserver?.observe(el))
+  }
 
-  observer = new IntersectionObserver(
+  // Stats band, intro, quote and impact-grid sections all reveal the same
+  // bidirectional way — fade/slide in on the way down, fade/slide back out
+  // and replay on the way back up.
+  const revealTargets = [
+    statsBandEl.value,
+    introEl.value,
+    quoteInnerEl.value,
+    impactWrapEl.value,
+  ].filter((el): el is HTMLElement => el !== null)
+
+  revealObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible')
-          observer?.unobserve(entry.target)
-        }
+        entry.target.classList.toggle('in-view', entry.isIntersecting)
       })
     },
-    { threshold: 0.2, rootMargin: '0px 0px -60px 0px' },
+    { threshold: 0.2, rootMargin: '-6% 0px -6% 0px' },
   )
+  revealTargets.forEach((el) => revealObserver?.observe(el))
 
-  items.forEach((el) => observer?.observe(el))
+  // Stat numbers count up from 0 the first time the band scrolls into view.
+  if (statsBandEl.value) {
+    const numberEls = statsBandEl.value.querySelectorAll<HTMLElement>('.stat-number')
+    countObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            numberEls.forEach((el, i) => {
+              const { numeric, suffix } = parseStatNumber(stats[i].number)
+              animateCount(el, numeric, suffix)
+            })
+            countObserver?.disconnect()
+          }
+        })
+      },
+      { threshold: 0.4 },
+    )
+    countObserver.observe(statsBandEl.value)
+  }
 })
 
 onBeforeUnmount(() => {
-  observer?.disconnect()
+  radialObserver?.disconnect()
+  revealObserver?.disconnect()
+  countObserver?.disconnect()
 })
 </script>
 
@@ -137,7 +207,7 @@ onBeforeUnmount(() => {
 
     <!-- Stats band — bridges hero into content -->
     <div class="container stats-band-wrap">
-      <div class="stats-band">
+      <div class="stats-band" ref="statsBandEl">
         <template v-for="(stat, i) in stats" :key="stat.label">
           <div class="stat-item">
             <span class="stat-icon">
@@ -156,7 +226,7 @@ onBeforeUnmount(() => {
 
     <!-- Intro -->
     <section class="section-cream intro-section">
-      <div class="container">
+      <div class="container" ref="introEl">
         <div class="intro-rule" aria-hidden="true"></div>
         <p class="intro-text text-center">
           Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena
@@ -226,7 +296,7 @@ onBeforeUnmount(() => {
     <!-- Our approach — full-bleed photo statement -->
     <section class="quote-section">
       <div class="quote-overlay"></div>
-      <div class="container quote-inner">
+      <div class="container quote-inner" ref="quoteInnerEl">
         <p class="section-eyebrow section-eyebrow--light text-center">Our method</p>
         <h2 class="section-title section-title--light text-center">Our approach</h2>
         <p class="approach-text approach-text--light text-center">
@@ -259,7 +329,7 @@ onBeforeUnmount(() => {
     <!-- Why it matters — image + impact card grid (text overlaid on image, like the reference design) -->
     <section class="section-cream">
       <div class="container">
-        <div class="col-text col-text--full">
+        <div class="col-text col-text--full" ref="impactWrapEl">
           <p class="section-eyebrow">Our impact</p>
           <h2 class="section-title">Why it matters</h2>
           <div class="impact-grid">
@@ -462,6 +532,7 @@ onBeforeUnmount(() => {
   margin-bottom: 0.25rem;
   letter-spacing: -0.01em;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 .stat-label {
   font-weight: 700;
@@ -701,7 +772,7 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-/* Scroll-in reveal */
+/* Scroll-in reveal — replays both directions via the toggled class */
 .radial-center,
 .radial-item {
   opacity: 0;
@@ -763,6 +834,78 @@ onBeforeUnmount(() => {
   }
 }
 
+/* ===== Scroll reveal — stats band, intro, quote and impact sections =====
+   Each replays both scrolling down (fade/slide in) and scrolling back up
+   (fade/slide out, then re-plays), matching the radial gallery above but
+   using its own visual language: a growing rule and count-up numbers
+   rather than parallax drift. */
+.stats-band,
+.intro-section .container,
+.quote-inner,
+.col-text--full {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.stats-band.in-view,
+.intro-section .container.in-view,
+.quote-inner.in-view,
+.col-text--full.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* The intro's accent rule grows from 0 to full width just after it fades in */
+.intro-rule {
+  width: 0;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s;
+}
+.intro-section .container.in-view .intro-rule {
+  width: 56px;
+}
+
+/* Stat items fade in slightly staggered, just after the band itself settles */
+.stat-item {
+  opacity: 0;
+  transition: opacity 0.5s ease 0.15s;
+}
+.stats-band.in-view .stat-item {
+  opacity: 1;
+}
+.stats-band.in-view .stat-item:nth-child(1) {
+  transition-delay: 0.15s;
+}
+.stats-band.in-view .stat-item:nth-child(3) {
+  transition-delay: 0.3s;
+}
+.stats-band.in-view .stat-item:nth-child(5) {
+  transition-delay: 0.45s;
+}
+
+/* Impact cards fade in with a stagger; opacity only, so the existing hover
+   lift/scale transform keeps working untouched. */
+.impact-card {
+  opacity: 0;
+  transition:
+    opacity 0.5s ease,
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
+}
+.col-text--full.in-view .impact-card {
+  opacity: 1;
+}
+.col-text--full.in-view .impact-card:nth-child(1) {
+  transition-delay: 0.05s;
+}
+.col-text--full.in-view .impact-card:nth-child(2) {
+  transition-delay: 0.15s;
+}
+.col-text--full.in-view .impact-card:nth-child(3) {
+  transition-delay: 0.25s;
+}
+.col-text--full.in-view .impact-card:nth-child(4) {
+  transition-delay: 0.35s;
+}
 
 /* ===== Our approach — full-bleed photo quote ===== */
 .quote-section {
@@ -830,9 +973,6 @@ onBeforeUnmount(() => {
   cursor: pointer;
   box-shadow: 0 10px 24px -14px rgba(22, 52, 42, 0.28);
   border: 1px solid rgba(22, 52, 42, 0.06);
-  transition:
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s ease;
 }
 .impact-card:focus-visible {
   outline: 2px solid var(--primary-color);
