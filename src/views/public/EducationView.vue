@@ -144,54 +144,20 @@ onBeforeUnmount(() => {
           <template v-for="(stat, i) in stats" :key="stat.label">
             <div class="stat-item">
               <span class="stat-icon">
-                <svg
-                  v-if="stat.icon === 'book'"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M4 19.5A2.5 2.5 0 016.5 17H20"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                  />
-                  <path
-                    d="M4 4.5A2.5 2.5 0 016.5 2H20v18H6.5A2.5 2.5 0 014 17.5v-13z"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linejoin="round"
-                  />
+                <svg v-if="stat.icon === 'book'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" />
+                  <path d="M4 4.5A2.5 2.5 0 016.5 2H20v18H6.5A2.5 2.5 0 014 17.5v-13z" stroke="currentColor"
+                    stroke-width="1.6" stroke-linejoin="round" />
                 </svg>
-                <svg
-                  v-else-if="stat.icon === 'library'"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="2"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                  />
-                  <path
-                    d="M9 8h6M9 12h6M9 16h4"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                  />
+                <svg v-else-if="stat.icon === 'library'" viewBox="0 0 24 24" fill="none"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M9 8h6M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
                 </svg>
                 <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6L12 2z"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6L12 2z" stroke="currentColor"
+                    stroke-width="1.6" stroke-linejoin="round" />
                 </svg>
               </span>
               <div class="stat-copy">
@@ -210,10 +176,7 @@ onBeforeUnmount(() => {
     <section class="section intro-section">
       <div class="container">
         <div class="intro-grid">
-          <div
-            :ref="(el) => setRevealRef(el, 0)"
-            class="reveal intro-content"
-          >
+          <div :ref="(el) => setRevealRef(el, 0)" class="reveal intro-content">
             <p class="section-eyebrow">Our Mission</p>
             <h2 class="section-title">Learning that starts at three years old</h2>
             <p class="intro-text">
@@ -223,17 +186,10 @@ onBeforeUnmount(() => {
               early learning through adolescence.
             </p>
           </div>
-          <div
-            :ref="(el) => setRevealRef(el, 1)"
-            class="reveal intro-image-wrap"
-          >
+          <div :ref="(el) => setRevealRef(el, 1)" class="reveal intro-image-wrap">
             <div class="intro-image-frame">
-              <img
-                src="https://images.unsplash.com/photo-1588072432836-e10032774350?w=700&q=80"
-                alt="Young children learning in a Cambodian pre-school classroom"
-                loading="lazy"
-                decoding="async"
-              />
+              <img src="/src/assets/child1.jpg" alt="Young children learning in a Cambodian pre-school classroom"
+                loading="lazy" decoding="async" />
             </div>
             <div class="intro-image-accent">
               <span class="accent-number">30+</span>
@@ -248,49 +204,30 @@ onBeforeUnmount(() => {
     <section class="section programs-section">
       <div class="container">
         <div class="two-col-grid">
-          <div
-            :ref="(el) => setRevealRef(el, 2)"
-            class="reveal col-text"
-          >
+          <div :ref="(el) => setRevealRef(el, 2)" class="reveal col-text">
             <p class="section-eyebrow">Our Work</p>
             <h2 class="section-title">What we do</h2>
             <ul class="check-grid">
               <li v-for="item in bulletsWhatWeDo" :key="item">
                 <span class="check-icon">
                   <svg viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M5 13l4 4L19 7"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
                 </span>
                 <span>{{ item }}</span>
               </li>
             </ul>
           </div>
-          <div
-            :ref="(el) => setRevealRef(el, 3)"
-            class="reveal col-image"
-          >
+          <div :ref="(el) => setRevealRef(el, 3)" class="reveal col-image">
             <div class="photo-duo">
               <div class="col-image-frame photo-back">
-                <img
-                  src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=80"
-                  alt="Children reading books at a community school"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <img src="/src/assets/child4.jpg" alt="Children reading books at a community school" loading="lazy"
+                  decoding="async" />
               </div>
               <div class="col-image-frame photo-front">
-                <img
-                  src="https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=600&q=80"
-                  alt="Teacher helping child with learning activity"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <img src="/src/assets/child6.jpg" alt="Teacher helping child with learning activity" loading="lazy"
+                  decoding="async" />
               </div>
             </div>
           </div>
@@ -300,13 +237,8 @@ onBeforeUnmount(() => {
 
     <!-- ════════════════════ OUR APPROACH ════════════════════ -->
     <section class="approach-section">
-      <div class="approach-bg" />
-      <div class="approach-overlay" />
       <div class="container approach-inner">
-        <div
-          :ref="(el) => setRevealRef(el, 4)"
-          class="reveal"
-        >
+        <div :ref="(el) => setRevealRef(el, 4)" class="reveal">
           <p class="section-eyebrow section-eyebrow--light text-center">Methodology</p>
           <h2 class="section-title section-title--light text-center">Our approach</h2>
           <p class="approach-text">
@@ -317,19 +249,10 @@ onBeforeUnmount(() => {
           </p>
         </div>
 
-        <div
-          :ref="(el) => setRevealRef(el, 5)"
-          class="reveal testimonial-block"
-        >
-          <svg
-            class="quote-mark"
-            viewBox="0 0 48 36"
-            fill="currentColor"
-            aria-hidden="true"
-          >
+        <div :ref="(el) => setRevealRef(el, 5)" class="reveal testimonial-block">
+          <svg class="quote-mark" viewBox="0 0 48 36" fill="currentColor" aria-hidden="true">
             <path
-              d="M0 36V20.8C0 8.6 6.9 1.4 18.4 0l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H0zm27.6 0V20.8c0-12.2 6.9-19.4 18.4-20.8l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H27.6z"
-            />
+              d="M0 36V20.8C0 8.6 6.9 1.4 18.4 0l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H0zm27.6 0V20.8c0-12.2 6.9-19.4 18.4-20.8l2 5.4c-7 1.9-10.5 6.2-10.5 12.9h9.1V36H27.6z" />
           </svg>
           <blockquote>
             <p class="quote-text">
@@ -345,80 +268,36 @@ onBeforeUnmount(() => {
     <!-- ════════════════════ TEAM ════════════════════ -->
     <section class="section team-section">
       <div class="container">
-        <div
-          :ref="(el) => setRevealRef(el, 6)"
-          class="reveal text-center"
-        >
+        <div :ref="(el) => setRevealRef(el, 6)" class="reveal text-center">
           <p class="section-eyebrow">Organizational Structure</p>
           <h2 class="section-title">Who delivers education on the ground</h2>
         </div>
 
         <div class="team-grid">
-          <div
-            v-for="(member, index) in teamCards"
-            :key="member.role"
-            :ref="(el) => setRevealRef(el, 7 + index)"
-            class="reveal team-card"
-            :style="{ transitionDelay: `${index * 0.08}s` }"
-          >
+          <div v-for="(member, index) in teamCards" :key="member.role" :ref="(el) => setRevealRef(el, 7 + index)"
+            class="reveal team-card" :style="{ transitionDelay: `${index * 0.08}s` }">
             <div class="team-icon-wrap">
-              <svg
-                v-if="member.icon === 'compass'"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg v-if="member.icon === 'compass'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
-                <path
-                  d="M16 8l-3 5-5 3 3-5 5-3z"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linejoin="round"
-                />
+                <path d="M16 8l-3 5-5 3 3-5 5-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
               </svg>
-              <svg
-                v-else-if="member.icon === 'map'"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linejoin="round"
-                />
+              <svg v-else-if="member.icon === 'map'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z" stroke="currentColor"
+                  stroke-width="1.6" stroke-linejoin="round" />
                 <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6" />
               </svg>
-              <svg
-                v-else-if="member.icon === 'heart'"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg v-else-if="member.icon === 'heart'" viewBox="0 0 24 24" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M12 21l-1.5-1.4C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1A5.7 5.7 0 0116.5 3C19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.1L12 21z"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linejoin="round"
-                />
+                  stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
               </svg>
               <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M18 20v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
+                <path d="M18 20v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round" />
                 <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.6" />
-                <path
-                  d="M18 8l3 3 3-3"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
+                <path d="M18 8l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                  stroke-linejoin="round" />
               </svg>
             </div>
             <h3 class="team-role">{{ member.role }}</h3>
@@ -432,51 +311,32 @@ onBeforeUnmount(() => {
     <section class="section impact-section">
       <div class="container">
         <div class="impact-layout">
-          <div
-            :ref="(el) => setRevealRef(el, 11)"
-            class="reveal impact-image-wrap"
-          >
+          <div :ref="(el) => setRevealRef(el, 11)" class="reveal impact-image-wrap">
             <div class="impact-image-frame">
-              <img
-                src="https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?w=700&q=80"
-                alt="Children studying together in a rural school"
-                loading="lazy"
-                decoding="async"
-              />
+              <img src="/src/assets/child5.jpg" alt="Children studying together in a rural school" loading="lazy"
+                decoding="async" />
             </div>
             <div class="impact-image-badge">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.8"
+                  stroke-linejoin="round" />
               </svg>
               <span>Every child deserves an education</span>
             </div>
           </div>
           <div class="impact-text-wrap">
-            <div
-              :ref="(el) => setRevealRef(el, 12)"
-              class="reveal"
-            >
+            <div :ref="(el) => setRevealRef(el, 12)" class="reveal">
               <p class="section-eyebrow">Impact</p>
               <h2 class="section-title">Why it matters</h2>
             </div>
             <div class="impact-card-grid">
-              <div
-                v-for="(item, index) in whyItems"
-                :key="item"
-                :ref="(el) => setRevealRef(el, 13 + index)"
-                class="reveal impact-card"
-                :style="{ transitionDelay: `${index * 0.1}s` }"
-              >
+              <div v-for="(item, index) in whyItems" :key="item" :ref="(el) => setRevealRef(el, 13 + index)"
+                class="reveal impact-card" :style="{ transitionDelay: `${index * 0.1}s` }">
                 <div class="impact-icon">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6" />
-                    <path
-                      d="M8 12.5l2.5 2.5 5-5"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
+                    <path d="M8 12.5l2.5 2.5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
                 </div>
                 <p class="impact-text">{{ item }}</p>
@@ -489,13 +349,8 @@ onBeforeUnmount(() => {
 
     <!-- ════════════════════ CTA ════════════════════ -->
     <section class="cta-section">
-      <div class="cta-bg" />
-      <div class="cta-overlay" />
       <div class="container cta-inner">
-        <div
-          :ref="(el) => setRevealRef(el, 17)"
-          class="reveal text-center"
-        >
+        <div :ref="(el) => setRevealRef(el, 17)" class="reveal text-center">
           <p class="cta-eyebrow">Get Involved</p>
           <h2 class="cta-title">Invest in a child's future today.</h2>
           <p class="cta-desc">
@@ -528,14 +383,12 @@ onBeforeUnmount(() => {
   overflow-x: hidden;
 }
 
-/* ─── Container ─── */
 .container {
   max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 var(--container-padding);
 }
 
-/* ─── Section Spacing ─── */
 .section {
   padding: 5rem 0;
 }
@@ -544,7 +397,6 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-/* ─── Scroll Reveal ─── */
 .reveal {
   opacity: 0;
   transform: translateY(32px);
@@ -566,7 +418,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* ─── Section Labels ─── */
 .section-eyebrow {
   color: var(--primary-color);
   font-weight: 700;
@@ -577,7 +428,7 @@ onBeforeUnmount(() => {
 }
 
 .section-eyebrow--light {
-  color: var(--primary-light);
+  color: var(--primary-color);
 }
 
 .section-title {
@@ -588,12 +439,8 @@ onBeforeUnmount(() => {
 }
 
 .section-title--light {
-  color: #ffffff;
+  color: var(--primary-dark);
 }
-
-/* ═══════════════════════════════════════════
-   PAGE HEADER — Clean & simple
-   ═══════════════════════════════════════════ */
 
 .page-header {
   background: var(--color-cream-soft);
@@ -617,10 +464,6 @@ onBeforeUnmount(() => {
   max-width: 620px;
   margin: 0 auto;
 }
-
-/* ═══════════════════════════════════════════
-   STATS BAND
-   ═══════════════════════════════════════════ */
 
 .stats-band-wrap {
   padding-top: 2rem;
@@ -695,10 +538,6 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-/* ═══════════════════════════════════════════
-   INTRO — Two column with image
-   ═══════════════════════════════════════════ */
-
 .intro-section {
   background: var(--color-cream);
   padding-top: 3.5rem;
@@ -730,6 +569,7 @@ onBeforeUnmount(() => {
 .intro-image-frame {
   border-radius: 20px;
   overflow: hidden;
+  border: 4px solid #ffffff;
   box-shadow: 0 20px 44px -16px rgba(22, 52, 42, 0.3);
   transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
@@ -778,10 +618,6 @@ onBeforeUnmount(() => {
   font-weight: 600;
   opacity: 0.9;
 }
-
-/* ═══════════════════════════════════════════
-   WHAT WE DO — Two column
-   ═══════════════════════════════════════════ */
 
 .programs-section {
   background: var(--color-cream-soft);
@@ -844,7 +680,6 @@ onBeforeUnmount(() => {
   height: 11px;
 }
 
-/* Photo duo — overlapping images */
 .photo-duo {
   position: relative;
   min-height: 420px;
@@ -854,10 +689,9 @@ onBeforeUnmount(() => {
   position: relative;
   border-radius: 20px;
   overflow: hidden;
+  border: 4px solid #ffffff;
   box-shadow: 0 16px 36px -18px rgba(22, 52, 42, 0.3);
-  transition:
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.4s ease;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
 }
 
 .col-image-frame:hover {
@@ -896,61 +730,38 @@ onBeforeUnmount(() => {
   box-shadow: 0 20px 44px -16px rgba(22, 52, 42, 0.4);
 }
 
-/* ═══════════════════════════════════════════
-   OUR APPROACH — Full-bleed photo section
-   ═══════════════════════════════════════════ */
-
 .approach-section {
-  position: relative;
   padding: 6rem 0;
-  overflow: hidden;
-}
-
-.approach-bg {
-  position: absolute;
-  inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1600&q=80');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-}
-
-.approach-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(6, 18, 13, 0.88) 0%,
-    rgba(6, 18, 13, 0.72) 50%,
-    rgba(6, 18, 13, 0.9) 100%
-  );
+  background: var(--color-cream-soft);
 }
 
 .approach-inner {
-  position: relative;
-  z-index: 1;
   text-align: center;
   max-width: 780px;
 }
 
 .approach-text {
   line-height: 1.8;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-ink-soft);
   font-size: 1.02rem;
   margin: 0 auto 3rem;
 }
 
-/* Testimonial */
 .testimonial-block {
   max-width: 680px;
   margin: 0 auto;
+  padding: 1.75rem 2rem;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(22, 52, 42, 0.06);
+  box-shadow: 0 10px 24px -14px rgba(22, 52, 42, 0.16);
 }
 
 .quote-mark {
   width: 44px;
   height: auto;
-  color: var(--primary-light);
-  opacity: 0.3;
+  color: var(--primary-color);
+  opacity: 0.45;
   margin-bottom: 1rem;
 }
 
@@ -963,19 +774,15 @@ onBeforeUnmount(() => {
   font-size: 1.5rem;
   font-style: italic;
   line-height: 1.6;
-  color: #ffffff;
+  color: var(--primary-dark);
   margin: 0 0 1rem;
 }
 
 .quote-cite {
   font-style: normal;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-ink-soft);
   font-size: 0.92rem;
 }
-
-/* ═══════════════════════════════════════════
-   TEAM SECTION
-   ═══════════════════════════════════════════ */
 
 .team-section {
   background: var(--color-cream-soft);
@@ -1047,10 +854,6 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-/* ═══════════════════════════════════════════
-   WHY IT MATTERS — Two column with image
-   ═══════════════════════════════════════════ */
-
 .impact-section {
   background: var(--color-cream);
 }
@@ -1069,6 +872,7 @@ onBeforeUnmount(() => {
 .impact-image-frame {
   border-radius: 20px;
   overflow: hidden;
+  border: 4px solid #ffffff;
   box-shadow: 0 20px 44px -16px rgba(22, 52, 42, 0.3);
   transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
@@ -1170,43 +974,17 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-/* ═══════════════════════════════════════════
-   CTA — with background image
-   ═══════════════════════════════════════════ */
-
 .cta-section {
-  position: relative;
   padding: 5rem 0;
-  overflow: hidden;
-}
-
-.cta-bg {
-  position: absolute;
-  inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1544717302-de2939b7ef71?w=1600&q=80');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-}
-
-.cta-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(6, 18, 13, 0.88) 0%,
-    rgba(6, 18, 13, 0.75) 100%
-  );
+  background: var(--color-cream);
 }
 
 .cta-inner {
-  position: relative;
-  z-index: 1;
   max-width: 640px;
 }
 
 .cta-eyebrow {
-  color: var(--primary-light);
+  color: var(--primary-color);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1216,13 +994,12 @@ onBeforeUnmount(() => {
 
 .cta-title {
   font-weight: 700;
-  color: #ffffff;
+  color: var(--primary-dark);
   margin-bottom: 0.75rem;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
 .cta-desc {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-ink-soft);
   line-height: 1.7;
   margin-bottom: 2rem;
   max-width: 520px;
@@ -1237,9 +1014,16 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-/* ═══════════════════════════════════════════
-   BUTTONS
-   ═══════════════════════════════════════════ */
+.cta-section .btn--outline {
+  background: #ffffff;
+  border-color: rgba(22, 52, 42, 0.14);
+  color: var(--primary-dark);
+}
+
+.cta-section .btn--outline:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-color);
+}
 
 .btn {
   display: inline-flex;
@@ -1296,10 +1080,6 @@ onBeforeUnmount(() => {
 .btn:hover .btn-arrow {
   transform: translateX(4px);
 }
-
-/* ═══════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════ */
 
 @media (max-width: 1024px) {
   .team-grid {
@@ -1389,7 +1169,6 @@ onBeforeUnmount(() => {
 
   .approach-section {
     padding: 4rem 0;
-    background-attachment: scroll;
   }
 
   .quote-text {
@@ -1398,14 +1177,6 @@ onBeforeUnmount(() => {
 
   .cta-section {
     padding: 3.5rem 0;
-  }
-
-  .cta-bg {
-    background-attachment: scroll;
-  }
-
-  .cta-bg {
-    background-attachment: scroll;
   }
 }
 
