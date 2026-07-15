@@ -2,7 +2,7 @@
 import { onMounted, ref, onUnmounted } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpact from '@/assets/hero-impact.jpg'
-import logoUrl from '@/assets/logo.png'
+import logoUrl from '@/assets/santi_sena_logo.png'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const { observe } = useScrollReveal({ threshold: 0.12 })
