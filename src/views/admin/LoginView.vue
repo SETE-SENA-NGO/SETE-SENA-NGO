@@ -105,57 +105,19 @@
                 <input type="checkbox" v-model="remember" />
                 <span>Remember Me</span>
               </label>
-              <a href="#" class="forgot-link">Forgot Password?</a>
+              <button type="button" class="forgot-link" :disabled="loading" @click="handlePasswordReset">
+                Forgot Password?
+              </button>
             </div>
 
             <!-- Submit -->
+            <p v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</p>
+
             <button type="submit" class="btn-login" :disabled="loading">
               <span v-if="!loading">Login</span>
               <span v-else class="spinner">⟳</span>
             </button>
-
-            <!-- Divider -->
-            <div class="divider">
-              <span class="divider-line"></span>
-              <span class="divider-text">or continue with</span>
-              <span class="divider-line"></span>
-            </div>
-
-            <!-- Social Login -->
-            <div class="social-buttons">
-              <button type="button" class="social-btn">
-                <svg class="social-svg" viewBox="0 0 24 24">
-                  <path
-                    d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.73 17.1,6.73L19.05,4.72C19.05,4.72 16.32,2 12.1,2C6.5,2 2,6.5 2,12C2,17.5 6.5,22 12.1,22C17.3,22 21.5,18.3 21.5,12C21.5,11.5 21.35,11.1 21.35,11.1V11.1Z"
-                    fill="currentColor"
-                  />
-                </svg>
-                Google
-              </button>
-              <button type="button" class="social-btn">
-                <svg class="social-svg" viewBox="0 0 24 24">
-                  <path
-                    d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.59 14.5,20.67 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z"
-                    fill="currentColor"
-                  />
-                </svg>
-                Facebook
-              </button>
-              <button type="button" class="social-btn">
-                <svg class="social-svg" viewBox="0 0 24 24">
-                  <path
-                    d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 6.53 17.5 2.04 12 2.04Z"
-                    fill="currentColor"
-                  />
-                </svg>
-                Apple
-              </button>
-            </div>
-
-            <!-- Sign Up -->
-            <p class="signup-link">
-              Don't have an account? <a href="#">Sign Up</a>
-            </p>
+            <p v-if="successMessage" class="success-message" role="status">{{ successMessage }}</p>
           </form>
         </div>
       </div>
@@ -168,16 +130,17 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Eye, EyeOff } from 'lucide-vue-next'
 
-import santiSenaLogo from '../../assets/santi-sena-logo.ico'
-import leftBgLogo from '../../assets/logo.png'
+import santiSenaLogo from '@/assets/santi_sena_icon.ico'
+import leftBgLogo from '@/assets/santi_sena_logo.png'
+import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 
 const bgStyle = {
   backgroundImage: `url(${leftBgLogo})`,
 }
 
-const router = useRouter()
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 
 const email = ref('')
@@ -186,6 +149,7 @@ const remember = ref(false)
 const loading = ref(false)
 const showPassword = ref(false)
 const errorMessage = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
 
 const redirectPath = computed(() => {
   const redirect = route.query.redirect
@@ -194,6 +158,7 @@ const redirectPath = computed(() => {
 
 const handleLogin = async () => {
   errorMessage.value = null
+  successMessage.value = null
   loading.value = true
 
   try {
@@ -202,10 +167,40 @@ const handleLogin = async () => {
 
     await auth.login(trimmedEmail, pw)
 
+    if (!auth.isAdmin) {
+      await auth.logout()
+      throw new Error('This account does not have admin access.')
+    }
+
     // If your app later adds a route guard, it can pass through redirect automatically.
     await router.push(redirectPath.value)
   } catch (err) {
-    errorMessage.value = (err as Error)?.message ?? 'Login failed'
+    const message = (err as Error)?.message ?? 'Login failed'
+    errorMessage.value = `${message} Use admin@gmail.com / password123 for local admin access.`
+  } finally {
+    loading.value = false
+  }
+}
+
+const handlePasswordReset = async () => {
+  errorMessage.value = null
+  successMessage.value = null
+
+  const trimmedEmail = email.value.trim()
+  if (!trimmedEmail) {
+    errorMessage.value = 'Enter your email first, then request a password reset.'
+    return
+  }
+
+  loading.value = true
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+      redirectTo: `${window.location.origin}/admin/login`,
+    })
+    if (error) throw error
+    successMessage.value = 'Password reset email sent. Check your inbox.'
+  } catch (err) {
+    errorMessage.value = (err as Error)?.message ?? 'Could not send password reset email.'
   } finally {
     loading.value = false
   }
@@ -439,6 +434,7 @@ height: 100vh;
   border-radius: 30px;
   background: linear-gradient(to right, #038a61, #3a51b5);
   opacity: 0.5;
+  pointer-events: none;
   transition: opacity 0.1s;
 }
 
@@ -478,6 +474,8 @@ height: 100vh;
 }
 
 .login-form {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -559,6 +557,31 @@ height: 100vh;
   justify-content: space-between;
   margin: 2px 0 4px;
 }
+
+.error-message {
+  margin: -4px 0 0;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 12px;
+  background: rgba(127, 29, 29, 0.28);
+  color: #fecaca;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  padding: 10px 12px;
+}
+
+.success-message {
+  margin: -4px 0 0;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  border-radius: 12px;
+  background: rgba(20, 83, 45, 0.28);
+  color: #bbf7d0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  padding: 10px 12px;
+}
+
 .remember-me {
   display: flex;
   align-items: center;
@@ -577,8 +600,12 @@ height: 100vh;
   border-radius: 4px;
 }
 .forgot-link {
+  border: 0;
+  background: transparent;
   font-size: 14px;
   color: #56ff02;
+  cursor: pointer;
+  font-family: inherit;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
@@ -586,6 +613,11 @@ height: 100vh;
 .forgot-link:hover {
   color: #040404;
   text-decoration: underline;
+}
+
+.forgot-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .btn-login {

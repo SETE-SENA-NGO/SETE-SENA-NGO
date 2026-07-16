@@ -18,38 +18,41 @@ withDefaults(defineProps<{ type?: 'primary' | 'secondary' | 'ghost' }>(), {
   padding: 0.55rem 1.1rem;
   border-radius: 0.45rem;
   border: 1px solid transparent;
-  background: #18181b;
-  color: var(--text);
+  background: var(--color-ink);
+  color: var(--color-white);
   cursor: pointer;
   font-weight: 500;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.15s;
 }
 .base-button:hover {
   transform: translateY(-1px);
 }
 .primary {
-  background: var(--green);
-  border-color: var(--green-dark);
-  color: #fff;
+  background: var(--primary-color);
+  border-color: var(--primary-dark);
+  color: var(--color-white);
   font-weight: 600;
 }
 .primary:hover {
-  background: var(--green-dark);
+  background: var(--primary-dark);
 }
 .secondary {
-  border-color: var(--green);
-  color: var(--green-light);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
   background: transparent;
 }
 .secondary:hover {
-  background: color-mix(in srgb, var(--green) 10%, transparent);
+  background: var(--primary-light);
 }
 .ghost {
   background: transparent;
-  border-color: var(--border);
+  border-color: var(--color-border);
 }
 .ghost:hover {
-  border-color: var(--green);
-  color: var(--green-light);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 </style>

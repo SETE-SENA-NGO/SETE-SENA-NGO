@@ -5,7 +5,12 @@ import { RouterLink } from 'vue-router'
 const contactBlocks = [
   {
     title: 'Address',
-    lines: ['Santi Sena Organization', 'Svay Rieng Town', 'Svay Rieng Province', 'Kingdom of Cambodia'],
+    lines: [
+      'Santi Sena Organization',
+      'Svay Rieng Town',
+      'Svay Rieng Province',
+      'Kingdom of Cambodia',
+    ],
   },
   {
     title: 'Email',
@@ -17,7 +22,11 @@ const contactBlocks = [
   },
   {
     title: 'Office hours',
-    lines: ['Monday - Friday', '8:00 - 17:00 (Cambodia time, ICT / UTC+7)', 'Saturday by appointment'],
+    lines: [
+      'Monday - Friday',
+      '8:00 - 17:00 (Cambodia time, ICT / UTC+7)',
+      'Saturday by appointment',
+    ],
   },
 ] as const
 
@@ -40,8 +49,8 @@ onMounted(() => {
         <p class="office-eyebrow">Contact - Head Office</p>
         <h1 id="office-heading">Visit us in Svay Rieng.</h1>
         <p>
-          Our headquarters sits in Svay Rieng town, walking distance from the provincial
-          pagoda where Santi Sena was founded thirty years ago.
+          Our headquarters sits in Svay Rieng town, walking distance from the provincial pagoda
+          where Santi Sena was founded thirty years ago.
         </p>
       </div>
     </section>
@@ -52,9 +61,7 @@ onMounted(() => {
           <section v-for="block in contactBlocks" :key="block.title" class="office-info">
             <h2>{{ block.title }}</h2>
             <p>
-              <template v-for="line in block.lines" :key="line">
-                {{ line }}<br />
-              </template>
+              <template v-for="line in block.lines" :key="line"> {{ line }}<br /> </template>
             </p>
           </section>
         </div>
@@ -69,9 +76,9 @@ onMounted(() => {
         <section class="visitor-section" aria-labelledby="visitor-heading">
           <h2 id="visitor-heading">Visitor guidance</h2>
           <p>
-            We welcome donors, partners and researchers. Please email us at least two weeks
-            ahead so we can arrange staff availability and, if you wish, a village field visit.
-            Modest dress is appreciated - many meetings begin at the pagoda.
+            We welcome donors, partners and researchers. Please email us at least two weeks ahead so
+            we can arrange staff availability and, if you wish, a village field visit. Modest dress
+            is appreciated - many meetings begin at the pagoda.
           </p>
         </section>
       </div>
@@ -80,7 +87,9 @@ onMounted(() => {
     <section class="office-cta" aria-label="Next step">
       <div class="office-cta__inner">
         <h2>Ready to take the next step?</h2>
-        <RouterLink to="/contact#write" class="office-cta__button">Send a message <span>-&gt;</span></RouterLink>
+        <RouterLink to="/contact#write" class="office-cta__button"
+          >Send a message <span>-&gt;</span></RouterLink
+        >
       </div>
     </section>
   </main>
@@ -88,26 +97,9 @@ onMounted(() => {
 
 <style scoped>
 .head-office-page {
-  --cream: #faf3e6;
-  --cream-soft: #fff8ed;
-  --green: #023f37;
-  --green-deep: #042f29;
-  --green-soft: #315b52;
-  --orange: #f47d24;
-  --border: rgba(4, 63, 55, 0.16);
-  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-
   min-height: 100vh;
-  background: var(--cream);
-  color: var(--green);
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .office-hero {
@@ -115,7 +107,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   background:
-    linear-gradient(90deg, rgba(3, 43, 35, 0.96) 0%, rgba(4, 62, 50, 0.74) 48%, rgba(4, 62, 50, 0.42) 100%),
+    linear-gradient(
+      90deg,
+      rgba(3, 43, 35, 0.96) 0%,
+      rgba(4, 62, 50, 0.74) 48%,
+      rgba(4, 62, 50, 0.42) 100%
+    ),
     linear-gradient(180deg, rgba(1, 29, 25, 0.08), rgba(1, 29, 25, 0.28)),
     url('https://images.unsplash.com/photo-1534330207526-8e81f10ec6fc?auto=format&fit=crop&w=1920&q=82')
       center 48% / cover;
@@ -124,17 +121,19 @@ onMounted(() => {
 .office-hero__content,
 .office-details__inner,
 .office-cta__inner {
-  width: min(100% - 3rem, 1238px);
+  width: 100%;
+  max-width: var(--container-max-width);
   margin: 0 auto;
+  padding-inline: var(--container-padding);
 }
 
 .office-hero__content {
-  padding: 4.8rem 0;
+  padding-block: 4.8rem;
 }
 
 .office-eyebrow {
   margin: 0 0 1rem;
-  color: var(--orange);
+  color: var(--primary-color);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0;
@@ -144,9 +143,7 @@ onMounted(() => {
 .office-hero h1 {
   max-width: 760px;
   margin: 0;
-  color: var(--cream-soft);
-  font-family: var(--serif);
-  font-size: clamp(3rem, 6vw, 4.65rem);
+  color: var(--color-white);
   font-weight: 700;
   line-height: 1.05;
 }
@@ -154,13 +151,13 @@ onMounted(() => {
 .office-hero p:last-child {
   max-width: 780px;
   margin: 1.45rem 0 0;
-  color: var(--cream-soft);
+  color: var(--color-white);
   font-size: 1.18rem;
   line-height: 1.45;
 }
 
 .office-details {
-  background: var(--cream);
+  background: var(--color-cream);
   border-top: 1px solid rgba(250, 243, 230, 0.82);
 }
 
@@ -181,19 +178,14 @@ onMounted(() => {
 .visitor-section h2,
 .office-cta h2 {
   margin: 0;
-  color: var(--green-deep);
-  font-family: var(--serif);
+  color: var(--color-ink);
   font-weight: 700;
   line-height: 1.15;
 }
 
-.office-info h2 {
-  font-size: 1.42rem;
-}
-
 .office-info p {
   margin: 0.8rem 0 0;
-  color: var(--green-soft);
+  color: var(--color-ink-soft);
   font-size: 0.94rem;
   line-height: 1.38;
 }
@@ -202,18 +194,13 @@ onMounted(() => {
   margin-top: 3.35rem;
 }
 
-.travel-section h2,
-.visitor-section h2 {
-  font-size: clamp(1.55rem, 2.4vw, 1.95rem);
-}
-
 .travel-section ul {
   display: grid;
   gap: 0.8rem;
   margin: 1.15rem 0 0;
   padding: 0;
   list-style: none;
-  color: var(--green);
+  color: var(--color-ink);
   font-size: 0.94rem;
   line-height: 1.45;
 }
@@ -231,7 +218,7 @@ onMounted(() => {
   width: 0.34rem;
   height: 0.34rem;
   border-radius: 50%;
-  background: var(--orange);
+  background: var(--primary-color);
 }
 
 .visitor-section {
@@ -241,13 +228,13 @@ onMounted(() => {
 
 .visitor-section p {
   margin: 0.9rem 0 0;
-  color: var(--green);
+  color: var(--color-ink);
   font-size: 0.94rem;
   line-height: 1.45;
 }
 
 .office-cta {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--color-border);
   background: rgba(255, 248, 237, 0.55);
 }
 
@@ -260,10 +247,6 @@ onMounted(() => {
   padding: 3rem 0;
 }
 
-.office-cta h2 {
-  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
-}
-
 .office-cta__button {
   display: inline-flex;
   min-height: 46px;
@@ -272,13 +255,13 @@ onMounted(() => {
   gap: 0.5rem;
   padding: 0.7rem 1.5rem;
   border-radius: 999px;
-  background: var(--orange);
+  background: var(--primary-color);
   color: #fff8ed;
   font-size: 0.9rem;
   font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 18px 42px rgba(244, 125, 36, 0.22);
+  box-shadow: 0 18px 42px rgba(27, 163, 79, 0.22);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -286,7 +269,7 @@ onMounted(() => {
 
 .office-cta__button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 22px 48px rgba(244, 125, 36, 0.28);
+  box-shadow: 0 22px 48px rgba(20, 129, 62, 0.28);
 }
 
 @media (max-width: 760px) {
@@ -295,22 +278,8 @@ onMounted(() => {
     background-position: center;
   }
 
-  .office-hero__content,
-  .office-details__inner,
-  .office-cta__inner {
-    width: min(100% - 2rem, 1238px);
-  }
-
   .office-hero__content {
-    padding: 3.5rem 0;
-  }
-
-  .office-hero h1 {
-    font-size: 2.6rem;
-  }
-
-  .office-hero p:last-child {
-    font-size: 1rem;
+    padding-block: 3.5rem;
   }
 
   .office-details__inner {
@@ -320,10 +289,6 @@ onMounted(() => {
   .office-info-grid {
     grid-template-columns: 1fr;
     row-gap: 2.35rem;
-  }
-
-  .office-info h2 {
-    font-size: 1.52rem;
   }
 
   .office-info p,

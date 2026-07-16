@@ -1,188 +1,416 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const heroSlides = [
-  {
-    image:
-      'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=1800&q=82',
-    alt: 'Community partners meeting outside',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1800&q=82',
-    alt: 'Children learning together in a rural community',
-  },
-  {
-    image:
-      'https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=1800&q=82',
-    alt: 'Volunteers working together in a village setting',
-  },
-]
+import heroImpact from '@/assets/hero-impact.jpg'
+import heroImpactForest from '@/assets/hero-impact-forest.jpg'
+import heroImpactVillage from '@/assets/hero-impact-village.jpg'
+import { useContentStore } from '@/stores/content.store'
 
-const proofPoints = [
-  {
-    value: '293',
-    label: 'Villages',
-    detail: 'reached across Svay Rieng and Prey Veng in 2016',
-  },
-  {
-    value: '43',
-    label: 'Communes',
-    detail: 'connected through local development programs',
-  },
-  {
-    value: '34',
-    label: 'Staff',
-    detail: 'with project-specific skills and continuing training',
-  },
-]
+defineOptions({ name: 'GetInvolvedPartnerView' })
 
-const partnershipSteps = [
-  {
-    step: '01',
-    label: 'Listen locally',
-    title: 'Start with community needs',
-    body: 'Santi Sena works with vulnerable and marginalized people, local authorities and stakeholders to identify practical community priorities.',
-  },
-  {
-    step: '02',
-    label: 'Coordinate technically',
-    title: 'Bring the right institutions together',
-    body: 'The report names cooperation with provincial departments, school leaders, commune committees, forest authorities and child protection bodies.',
-  },
-  {
-    step: '03',
-    label: 'Build capacity',
-    title: 'Strengthen people, not only projects',
-    body: 'Funding partners supported training in monitoring and evaluation, strategic planning, proposal writing and financial management.',
-  },
-  {
-    step: '04',
-    label: 'Reflect and improve',
-    title: 'Use learning to guide the next cycle',
-    body: 'Annual staff reflection gathered achievements, challenges, solutions and action plans for the following year.',
-  },
-]
+interface PartnerLink {
+  label: string
+  to: string
+}
 
-const engagementAreas = [
-  {
-    title: 'Environment and forestry',
-    body: 'Community forests, tree nurseries, National Tree Day activities and biodiversity conservation with local stakeholders.',
-  },
-  {
-    title: 'Livelihoods and agriculture',
-    body: 'Saving for Change groups, agriculture cooperatives, home gardens and biogas work with technical departments.',
-  },
-  {
-    title: 'WASH',
-    body: 'Safe water, school WASH committees, CLTS follow-up and practical hygiene behavior change.',
-  },
-  {
-    title: 'Education',
-    body: 'Community pre-schools, parenting groups, scholarships and mobile libraries for rural children.',
-  },
-  {
-    title: 'Buddhist preservation',
-    body: 'Dharma conversation, Buddhist primary schools and learning support for young monks.',
-  },
-  {
-    title: 'Child protection',
-    body: 'Commune and district networks that protect children from trafficking, exploitation, migration risks and abuse.',
-  },
-]
+interface PartnerSlide {
+  image: string
+  caption: string
+}
 
-const partnerLogos = [
-  {
-    name: 'terre des hommes',
-    tagline: 'Help for Children in Need',
-    mark: 'drop',
-    variant: 'tdh-germany',
-  },
-  {
-    name: 'german cooperation',
-    tagline: 'DEUTSCHE ZUSAMMENARBEIT',
-    mark: 'flag',
-    variant: 'german-coop',
-  },
-  {
-    name: 'rivers our life',
-    tagline: 'Community partnership',
-    mark: 'globe',
-    variant: 'rivers-life',
-  },
-  {
-    name: 'educo',
-    tagline: 'Member of ChildFund Alliance',
-    mark: 'person',
-    variant: 'educo',
-  },
-  {
-    name: 'HEIFER',
-    tagline: 'INTERNATIONAL CAMBODIA',
-    mark: 'goat',
-    variant: 'heifer',
-  },
-  {
-    name: 'Cambodia ACTs',
-    tagline: 'Child protection network',
-    mark: 'acts',
-    variant: 'cambodia-acts',
-  },
-  {
-    name: 'terre des hommes',
-    tagline: 'stops child exploitation',
-    mark: 'drop',
-    variant: 'tdh-netherlands',
-  },
-  {
-    name: 'Plan',
-    tagline: 'International Cambodia',
-    mark: 'child',
-    variant: 'plan',
-  },
-  {
-    name: 'Global Sanitation Fund',
-    tagline: 'Water, sanitation and hygiene',
-    mark: 'wave',
-    variant: 'global-sanitation',
-  },
-  {
-    name: 'Khyentse Foundation',
-    tagline: 'Education and Buddhist preservation',
-    mark: 'seal',
-    variant: 'khyentse',
-  },
-]
+interface PartnerHero {
+  eyebrow: string
+  title: string
+  description: string
+  primaryCta: PartnerLink
+  secondaryCta: PartnerLink
+  slides: PartnerSlide[]
+}
 
-const partnerLogoLoop = [...partnerLogos, ...partnerLogos]
+interface PartnerProject {
+  period: string
+  title: string
+  partner: string
+  focus: string
+  image: string
+}
 
-const commitments = [
-  'Honesty with donors, target groups, operational partners and working groups',
-  'Non-discrimination across disability, religion, color, race and political affiliation',
-  'Collective benefit and careful use of organizational property',
-  'Flexibility in responding to target groups, development partners and available resources',
-  'Transparency, accountability and consistency through finance, child protection, anti-corruption and grievance policies',
-]
+type PartnerProjectIcon = 'environment' | 'climate' | 'wash' | 'education' | 'rights'
 
-const activeSlide = ref(0)
+interface PartnerOperatingModel {
+  step: string
+  title: string
+  detail: string
+  metric: string
+}
 
-const description =
-  'Partner with Santi Sena through community-rooted programs in natural resources, livelihoods, WASH, education, Buddhist preservation and child protection.'
+interface PartnerStrategicTheme {
+  title: string
+  detail: string
+  action: string
+  icon?: 'growth' | 'strategy' | 'time' | 'investment' | 'chart' | 'global'
+}
+
+interface PartnerNetwork {
+  label: string
+  title: string
+  detail: string
+}
+
+interface PartnerFundingHistory {
+  name: string
+  detail: string
+}
+
+interface PartnerCta {
+  eyebrow: string
+  title: string
+  body: string
+  primaryCta: PartnerLink
+  secondaryCta: PartnerLink
+  image: string
+}
+
+interface PartnerPageContent {
+  hero: PartnerHero
+  activeProjects: PartnerProject[]
+  operatingModel: PartnerOperatingModel[]
+  strategicThemes: PartnerStrategicTheme[]
+  networks: PartnerNetwork[]
+  fundingHistory: PartnerFundingHistory[]
+  cta: PartnerCta
+}
+
+const PAGE_SLUG = 'get-involved-partner'
+
+const fallbackContent: PartnerPageContent = {
+  hero: {
+    eyebrow: 'Get involved - Partner',
+    title: 'Partner with Santi Sena',
+    description:
+      'Support practical programs with communities, local authorities, Buddhist networks and technical partners.',
+    primaryCta: { label: 'Start a partnership', to: '/contact' },
+    secondaryCta: { label: 'View portfolio', to: '#portfolio' },
+    slides: [
+      { image: heroImpactVillage, caption: '' },
+      { image: heroImpactForest, caption: '' },
+      { image: heroImpact, caption: '' },
+    ],
+  },
+  activeProjects: [
+    {
+      period: '2021-2024',
+      title: 'Healthy environment for children',
+      partner: 'Terre des Hommes Germany and BMZ',
+      focus: 'Health and environment support for disadvantaged families in Svay Rieng.',
+      image: '/images/programs/environment-hero1.jpg',
+    },
+    {
+      period: '2023-2026',
+      title: 'Mekong climate adaptation',
+      partner: 'Terre des Hommes Germany and BMZ',
+      focus: 'Children and youth action across Cambodia, Thailand, Laos PDR and Vietnam.',
+      image: '/images/programs/hero-4.jpg',
+    },
+    {
+      period: '2023-2025',
+      title: 'Food security, sanitation and hygiene',
+      partner: 'Lotus Outreach International',
+      focus: 'Food security, sanitation and hygiene with rural communities.',
+      image: '/images/programs/livelihood-hero2.jpg',
+    },
+    {
+      period: '2024-2026',
+      title: 'Buddhist primary education',
+      partner: 'Khyentse Foundation',
+      focus: 'Learning support through monastery-based primary schools.',
+      image: '/images/programs/education-hero.jpg',
+    },
+    {
+      period: '2023-2024',
+      title: 'My Planet, My Right in ASEAN',
+      partner: 'Terre des Hommes Germany',
+      focus: 'Child and youth advocacy for environmental rights.',
+      image: '/images/programs/child-protection2.jpg',
+    },
+  ],
+  operatingModel: [
+    {
+      step: '01',
+      title: 'Field teams',
+      detail:
+        'Project staff work with beneficiaries, local authorities and government stakeholders.',
+      metric: 'Local delivery',
+    },
+    {
+      step: '02',
+      title: 'Monthly plans',
+      detail: 'Teams prepare action plans, budgets and achievement reports.',
+      metric: 'Clear tracking',
+    },
+    {
+      step: '03',
+      title: 'Donor reports',
+      detail: 'Progress reports are shared every three months or as required.',
+      metric: 'Quarterly partner updates',
+    },
+    {
+      step: '04',
+      title: 'Monitoring and evaluation',
+      detail: 'M&E includes staff, beneficiaries and local authorities.',
+      metric: '3-month M&E rhythm',
+    },
+    {
+      step: '05',
+      title: 'Learning review',
+      detail: 'Final reports capture lessons for the next project cycle.',
+      metric: 'Lessons retained',
+    },
+  ],
+  strategicThemes: [
+    {
+      title: 'Diversified funding',
+      detail: 'Long-term donors and wider income sources improve stability.',
+      action: 'Multi-year grants and local income streams.',
+      icon: 'growth',
+    },
+    {
+      title: 'Research and knowledge management',
+      detail: 'Field learning can become research, evidence and advocacy.',
+      action: 'Studies, learning notes and technical support.',
+      icon: 'strategy',
+    },
+    {
+      title: 'Social enterprise and rural markets',
+      detail: 'Farmer groups and cooperatives need practical market links.',
+      action: 'Producer coaching and enterprise support.',
+      icon: 'investment',
+    },
+    {
+      title: 'Resource center and outreach library',
+      detail: 'Libraries connect children, youth and farmers to useful knowledge.',
+      action: 'Books, outreach and digital learning.',
+      icon: 'global',
+    },
+    {
+      title: 'Climate and WASH readiness',
+      detail: 'Villages need practical systems for water, hygiene and climate adaptation.',
+      action: 'Technical design, training and resilient infrastructure.',
+      icon: 'chart',
+    },
+    {
+      title: 'Child rights and safe migration',
+      detail: 'Young people benefit when protection networks can respond early.',
+      action: 'Safeguarding systems, outreach and peer education.',
+      icon: 'time',
+    },
+  ],
+  networks: [
+    {
+      label: 'National civil society',
+      title: 'NGO Forum and CRC Cambodia',
+      detail: 'Coordination on child rights, environment and development.',
+    },
+    {
+      label: 'Faith and peace',
+      title: 'United Religions Initiative',
+      detail: "A values-based network linked to Santi Sena's Buddhist roots.",
+    },
+    {
+      label: 'Regional biodiversity',
+      title: 'Working Group for Bio-diversity in Southeast Asia',
+      detail: 'Regional learning for natural resources and climate adaptation.',
+    },
+    {
+      label: 'Community intermediaries',
+      title: 'Monks, youth and child-peer promoters',
+      detail: 'Local people who carry awareness into villages.',
+    },
+  ],
+  fundingHistory: [
+    {
+      name: 'Development donors',
+      detail: 'CIDSE Cambodia, OXFAM G.B., Pact Cambodia, U.S. Embassy and CRS.',
+    },
+    {
+      name: 'UN and multilateral support',
+      detail: 'UNDP-GEF-SGP, UNDP-PTF-SGP and ADB through Plan Cambodia.',
+    },
+    {
+      name: 'Child and community partners',
+      detail: 'Tdh Netherlands, ChildFund, Heifer and Habitat Cambodia.',
+    },
+    {
+      name: 'WASH and education partners',
+      detail: 'Global Sanitation Fund through Plan International Cambodia and Khyentse Foundation.',
+    },
+  ],
+  cta: {
+    eyebrow: 'Partner with us',
+    title: 'Bring funding, technical skill or learning capacity into a working field system.',
+    body: 'Share your focus area and timeframe. The team can match it to current programs and community priorities.',
+    primaryCta: { label: 'Contact partnerships team', to: '/contact' },
+    secondaryCta: { label: 'Explore programs', to: '/programs' },
+    image: '/images/programs/hero-1.jpg',
+  },
+}
+
+const contentStore = useContentStore()
+const cmsContent = ref<Partial<PartnerPageContent> | null>(null)
+
+const pageContent = computed<PartnerPageContent>(() =>
+  mergePartnerContent(fallbackContent, cmsContent.value),
+)
+
+const portfolioStats = computed(() => [
+  {
+    value: '2023-2026',
+    label: 'Portfolio window',
+  },
+  {
+    value: '3 months',
+    label: 'M&E review cycle',
+  },
+  {
+    value: '10+',
+    label: 'Grant partners',
+  },
+])
+
+const fallbackFeaturedProject: PartnerProject = {
+  period: '2023-2026',
+  title: 'Current partnership portfolio',
+  partner: 'Santi Sena partners',
+  focus: 'Active project themes, timeframes and funding partners.',
+  image: heroImpactVillage,
+}
+
+const featuredPortfolioProject = computed<PartnerProject>(() => {
+  return pageContent.value.activeProjects[0] ?? fallbackFeaturedProject
+})
+
+const description = computed(
+  () =>
+    'Partner with Santi Sena through current and strategic programs in climate adaptation, WASH, education, child rights, research and community-led livelihoods.',
+)
 
 let previousTitle = ''
 let descriptionMeta: HTMLMetaElement | null = null
 let previousDescription: string | null = null
 let createdDescriptionMeta = false
-let slideTimer: number | undefined
+let revealObserver: IntersectionObserver | null = null
+const projectTrackRef = ref<HTMLElement | null>(null)
+const canScrollProjectsPrev = ref(false)
+const canScrollProjectsNext = ref(false)
 
-const setSlide = (index: number) => {
-  activeSlide.value = index
+function mergePartnerContent(
+  base: PartnerPageContent,
+  override: Partial<PartnerPageContent> | null,
+): PartnerPageContent {
+  if (!override) return base
+  const mergedHero = { ...base.hero, ...override.hero }
+  const overrideSlides = override.hero?.slides
+
+  return {
+    hero: {
+      ...mergedHero,
+      slides: normalizeSlides(overrideSlides, base.hero.slides),
+    },
+    activeProjects: Array.isArray(override.activeProjects)
+      ? override.activeProjects
+      : base.activeProjects,
+    operatingModel: Array.isArray(override.operatingModel)
+      ? override.operatingModel
+      : base.operatingModel,
+    strategicThemes: Array.isArray(override.strategicThemes)
+      ? override.strategicThemes
+      : base.strategicThemes,
+    networks: Array.isArray(override.networks) ? override.networks : base.networks,
+    fundingHistory: Array.isArray(override.fundingHistory)
+      ? override.fundingHistory
+      : base.fundingHistory,
+    cta: { ...base.cta, ...override.cta },
+  }
 }
 
-onMounted(() => {
-  previousTitle = document.title
-  document.title = 'Partner with Santi Sena'
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function normalizeSlides(value: unknown, fallback: PartnerSlide[]) {
+  if (!Array.isArray(value)) return fallback
+
+  const slides = value.filter(
+    (slide): slide is PartnerSlide =>
+      isObject(slide) && typeof slide.image === 'string' && slide.image.trim().length > 0,
+  )
+
+  return slides.length ? slides : fallback
+}
+
+function strategicIcon(theme: PartnerStrategicTheme, index: number) {
+  const icons = ['growth', 'strategy', 'time', 'investment', 'chart', 'global'] as const
+  return theme.icon ?? icons[index % icons.length]
+}
+
+function projectIcon(project: PartnerProject, index: number): PartnerProjectIcon {
+  const title = project.title.toLowerCase()
+
+  if (title.includes('environment')) return 'environment'
+  if (title.includes('climate') || title.includes('mekong')) return 'climate'
+  if (title.includes('food') || title.includes('sanitation') || title.includes('hygiene')) {
+    return 'wash'
+  }
+  if (title.includes('education') || title.includes('buddhist')) return 'education'
+  if (title.includes('right') || title.includes('planet')) return 'rights'
+
+  const icons = ['environment', 'climate', 'wash', 'education', 'rights'] as const
+  return icons[index % icons.length] ?? 'environment'
+}
+
+function scrollProjectTrack(direction: -1 | 1) {
+  const track = projectTrackRef.value
+  if (!track) return
+
+  track.scrollBy({
+    left: direction * track.clientWidth,
+    behavior: 'smooth',
+  })
+}
+
+function updateProjectNavState() {
+  const track = projectTrackRef.value
+  if (!track) {
+    canScrollProjectsPrev.value = false
+    canScrollProjectsNext.value = false
+    return
+  }
+
+  const maxScrollLeft = track.scrollWidth - track.clientWidth
+  canScrollProjectsPrev.value = track.scrollLeft > 4
+  canScrollProjectsNext.value = track.scrollLeft < maxScrollLeft - 4
+}
+
+async function loadCmsContent() {
+  try {
+    const page = await contentStore.fetchBySlug(PAGE_SLUG)
+    if (!page) return
+
+    const body = page.body.trim()
+    if (!body) return
+
+    const parsed = JSON.parse(body)
+    if (isObject(parsed)) {
+      cmsContent.value = parsed as Partial<PartnerPageContent>
+    }
+  } catch {
+    cmsContent.value = null
+  }
+}
+
+function setDocumentMeta() {
+  document.title = pageContent.value.hero.title
 
   descriptionMeta = document.querySelector('meta[name="description"]')
   previousDescription = descriptionMeta?.getAttribute('content') ?? null
@@ -194,19 +422,61 @@ onMounted(() => {
     createdDescriptionMeta = true
   }
 
-  descriptionMeta.setAttribute('content', description)
+  descriptionMeta.setAttribute('content', description.value)
+}
 
-  slideTimer = window.setInterval(() => {
-    activeSlide.value = (activeSlide.value + 1) % heroSlides.length
-  }, 5200)
+function revealStatic() {
+  document
+    .querySelectorAll<HTMLElement>('.pop-reveal')
+    .forEach((element) => element.classList.add('is-visible'))
+}
+
+function initScrollReveal() {
+  revealObserver?.disconnect()
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (!('IntersectionObserver' in window) || prefersReducedMotion) {
+    revealStatic()
+    return
+  }
+
+  const elements = Array.from(document.querySelectorAll<HTMLElement>('.pop-reveal'))
+
+  revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        entry.target.classList.add('is-visible')
+        revealObserver?.unobserve(entry.target)
+      })
+    },
+    {
+      rootMargin: '0px 0px -8% 0px',
+      threshold: 0.16,
+    },
+  )
+
+  elements.forEach((element, index) => {
+    element.style.setProperty('--pop-delay', `${Math.min(index * 55, 420)}ms`)
+    revealObserver?.observe(element)
+  })
+}
+
+onMounted(async () => {
+  previousTitle = document.title
+  setDocumentMeta()
+  await loadCmsContent()
+  setDocumentMeta()
+  await nextTick()
+  initScrollReveal()
+  updateProjectNavState()
+  window.addEventListener('resize', updateProjectNavState)
 })
 
 onUnmounted(() => {
+  revealObserver?.disconnect()
+  window.removeEventListener('resize', updateProjectNavState)
   document.title = previousTitle
-
-  if (slideTimer !== undefined) {
-    window.clearInterval(slideTimer)
-  }
 
   if (descriptionMeta && createdDescriptionMeta) {
     descriptionMeta.remove()
@@ -218,185 +488,374 @@ onUnmounted(() => {
 
 <template>
   <main class="partner-page">
-    <section class="partner-hero" aria-label="Partner with Santi Sena">
-      <div class="partner-hero__slides" aria-hidden="true">
-        <img
-          v-for="(slide, index) in heroSlides"
-          :key="slide.image"
-          :src="slide.image"
-          :alt="slide.alt"
-          class="partner-hero__slide"
-          :class="{ 'is-active': activeSlide === index }"
-        />
-      </div>
-      <div class="partner-hero__shade"></div>
-
-      <div class="partner-hero__content">
-        <p class="eyebrow">Get involved - Partner</p>
-        <h1>Partner with Santi Sena</h1>
-        <p class="lead">
-          Build practical village-level programs with a Cambodian organization rooted in local
-          authorities, schools, commune committees, technical departments and community groups.
-        </p>
-        <div class="hero-actions" aria-label="Partnership actions">
-          <RouterLink to="/contact" class="primary-button">Start a conversation</RouterLink>
-          <a href="#partnership-practice" class="secondary-link">See how partnership works</a>
-        </div>
-      </div>
-
-      <div class="hero-dots" aria-label="Choose hero image">
-        <button
-          v-for="(_, index) in heroSlides"
-          :key="index"
-          type="button"
-          class="hero-dot"
-          :class="{ 'is-active': activeSlide === index }"
-          :aria-label="`Show partnership image ${index + 1}`"
-          :aria-current="activeSlide === index ? 'true' : undefined"
-          @click="setSlide(index)"
-        ></button>
-      </div>
-    </section>
-
-    <section class="proof-band" aria-label="Partnership reach">
-      <div class="proof-band__inner">
-        <div v-for="point in proofPoints" :key="point.label" class="proof-item">
-          <strong>{{ point.value }}</strong>
-          <span>{{ point.label }}</span>
-          <p>{{ point.detail }}</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="partner-content" aria-labelledby="intro-heading">
-      <div class="intro-section">
-        <div class="intro-copy">
-          <div class="section-kicker">Partnership in practice</div>
-          <h2 id="intro-heading">Long-term cooperation, organized around village priorities.</h2>
-          <p>
-            The report describes Santi Sena's work as a field system: local leaders identify
-            priorities, technical departments strengthen the response, and partners help sustain the
-            training, monitoring and resources needed to keep projects moving.
+    <section id="portfolio" class="portfolio-section" aria-labelledby="portfolio-heading">
+      <div class="portfolio-feature">
+        <div class="portfolio-copy pop-reveal">
+          <p class="portfolio-pill">
+            <span aria-hidden="true"></span>
+            Recent and current portfolio
           </p>
-        </div>
-        <figure class="intro-image">
-          <img
-            src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=82"
-            alt="People placing their hands together in cooperation"
-          />
-          <figcaption>
-            Partnerships connect resources with people already leading change locally.
-          </figcaption>
-        </figure>
-      </div>
+          <h2 id="portfolio-heading">Current portfolio.</h2>
+          <p>
+            A quick view of active project themes, timeframes and funding partners moving through
+            the field system now.
+          </p>
 
-      <section
-        id="partnership-practice"
-        class="practice-section"
-        aria-labelledby="practice-heading"
-      >
-        <div class="section-heading">
-          <div>
-            <div class="section-kicker">Working rhythm</div>
-            <h2 id="practice-heading">How collaboration becomes action</h2>
+          <div class="portfolio-actions">
+            <RouterLink to="/contact" class="button button-primary">Start a partnership</RouterLink>
+            <RouterLink to="#portfolio-projects" class="portfolio-link">See active work</RouterLink>
           </div>
-          <p>
-            A good partnership with Santi Sena starts close to community reality and stays
-            accountable through technical coordination, staff capacity and annual reflection.
-          </p>
-        </div>
 
-        <div class="practice-layout">
-          <ol class="step-list">
-            <li v-for="item in partnershipSteps" :key="item.step">
-              <span class="step-number">{{ item.step }}</span>
-              <div>
-                <span class="step-label">{{ item.label }}</span>
-                <h3>{{ item.title }}</h3>
-                <p>{{ item.body }}</p>
-              </div>
-            </li>
-          </ol>
-          <div class="practice-media">
-            <img
-              src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=82"
-              alt="Community volunteers organizing supplies together"
-            />
-            <div class="media-note">
-              <strong>Field-led delivery</strong>
-              <span>Programs are shaped with local authorities, schools and community groups.</span>
+          <div class="portfolio-stat-strip" aria-label="Partner page highlights">
+            <div
+              v-for="stat in portfolioStats"
+              :key="stat.label"
+              class="portfolio-stat-item pop-reveal"
+            >
+              <strong>{{ stat.value }}</strong>
+              <span>{{ stat.label }}</span>
             </div>
           </div>
         </div>
-      </section>
 
-      <section class="areas-section" aria-labelledby="areas-heading">
-        <div class="areas-media" aria-hidden="true">
+        <div class="portfolio-visual pop-reveal">
           <img
-            src="https://images.unsplash.com/photo-1492496913980-501348b61469?auto=format&fit=crop&w=1200&q=82"
-            alt=""
+            :src="featuredPortfolioProject.image"
+            :alt="featuredPortfolioProject.title"
+            loading="lazy"
           />
-        </div>
-        <div class="areas-copy">
-          <div class="section-kicker">Where partners engage</div>
-          <h2 id="areas-heading">Program systems named in the report</h2>
-          <ul class="area-list">
-            <li v-for="area in engagementAreas" :key="area.title">
-              <h3>{{ area.title }}</h3>
-              <p>{{ area.body }}</p>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="logo-section" aria-labelledby="partner-logos-heading">
-        <div class="logo-section__header">
-          <div>
-            <div class="section-kicker">Our partners</div>
-            <h2 id="partner-logos-heading">Organizations supporting Santi Sena's work</h2>
+          <div class="portfolio-status-card">
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 12h4l3-7 4 14 3-7h2" />
+              </svg>
+            </span>
+            <div>
+              <strong>{{ featuredPortfolioProject.period }}</strong>
+              <small>Portfolio active</small>
+            </div>
           </div>
+          <div class="portfolio-partner-card">
+            <small>{{ featuredPortfolioProject.partner }}</small>
+            <p>{{ featuredPortfolioProject.focus }}</p>
+            <strong>{{ featuredPortfolioProject.title }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div id="portfolio-projects" class="project-showcase">
+        <div class="project-showcase__inner">
+          <div class="project-carousel">
+            <button
+              v-if="canScrollProjectsPrev"
+              class="project-nav project-nav--prev"
+              type="button"
+              aria-label="Previous projects"
+              @click="scrollProjectTrack(-1)"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+
+            <div
+              ref="projectTrackRef"
+              class="project-grid"
+              aria-label="Active project carousel"
+              tabindex="0"
+              @scroll.passive="updateProjectNavState"
+            >
+              <article
+                v-for="(project, index) in pageContent.activeProjects"
+                :key="project.title"
+                class="project-card pop-reveal"
+                :style="{ '--project-float-delay': `${index * 180}ms` }"
+              >
+                <img :src="project.image" :alt="project.title" loading="lazy" />
+                <div class="project-card__content">
+                  <span class="project-card__period">{{ project.period }}</span>
+                  <div class="project-card__icon">
+                    <svg
+                      v-if="projectIcon(project, index) === 'environment'"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path d="M24 39V24" />
+                      <path d="M24 24c-9 0-14-5-14-14 9 0 14 5 14 14z" />
+                      <path d="M24 29c10 0 15-6 15-15-10 0-15 6-15 15z" />
+                      <path d="M14 39h20" />
+                      <path d="M18 18l6 6" />
+                      <path d="M31 19l-7 7" />
+                    </svg>
+                    <svg
+                      v-else-if="projectIcon(project, index) === 'climate'"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <circle cx="24" cy="24" r="16" />
+                      <path d="M8 24h32" />
+                      <path d="M24 8c5 5 7 10 7 16s-2 11-7 16" />
+                      <path d="M24 8c-5 5-7 10-7 16s2 11 7 16" />
+                      <path d="M33 13l5-5" />
+                      <path d="M38 8v7" />
+                    </svg>
+                    <svg
+                      v-else-if="projectIcon(project, index) === 'wash'"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path d="M24 6s11 12 11 22a11 11 0 0 1-22 0C13 18 24 6 24 6z" />
+                      <path d="M19 30a5 5 0 0 0 7 4" />
+                      <path d="M7 40h34" />
+                      <path d="M10 34c5-3 10-3 14 0s9 3 14 0" />
+                    </svg>
+                    <svg
+                      v-else-if="projectIcon(project, index) === 'education'"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path d="M10 12h13a7 7 0 0 1 7 7v21H17a7 7 0 0 0-7-7z" />
+                      <path d="M38 12H25a7 7 0 0 0-7 7v21h13a7 7 0 0 1 7-7z" />
+                      <path d="M17 20h7" />
+                      <path d="M17 27h7" />
+                      <path d="M30 20h5" />
+                    </svg>
+                    <svg v-else viewBox="0 0 48 48" aria-hidden="true">
+                      <path
+                        d="M24 39s-14-8-14-20a8 8 0 0 1 14-5 8 8 0 0 1 14 5c0 12-14 20-14 20z"
+                      />
+                      <path d="M18 23h12" />
+                      <path d="M24 17v12" />
+                      <path d="M8 40h32" />
+                    </svg>
+                  </div>
+                  <h3>{{ project.title }}</h3>
+                  <strong>{{ project.partner }}</strong>
+                  <p>{{ project.focus }}</p>
+                </div>
+              </article>
+            </div>
+
+            <button
+              v-if="canScrollProjectsNext"
+              class="project-nav project-nav--next"
+              type="button"
+              aria-label="Next projects"
+              @click="scrollProjectTrack(1)"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="operating-section" aria-labelledby="operating-heading">
+      <div class="operating-inner">
+        <div class="operating-copy pop-reveal">
+          <p class="section-kicker">How partnership works</p>
+          <h2 id="operating-heading">Clear field rhythm.</h2>
+          <p>Support moves through planning, reporting, monitoring and learning.</p>
+        </div>
+
+        <ol class="operating-rail">
+          <li
+            v-for="item in pageContent.operatingModel"
+            :key="item.step"
+            class="operating-item pop-reveal"
+          >
+            <span class="operating-step">{{ item.step }}</span>
+            <div>
+              <strong>{{ item.metric }}</strong>
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.detail }}</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="strategy-section section-shell" aria-labelledby="strategy-heading">
+      <div class="section-intro pop-reveal">
+        <p class="section-kicker">Strategic partnership space</p>
+        <h2 id="strategy-heading">Where partners can help next.</h2>
+        <p>
+          Partners can strengthen the next cycle of village-led work through funding, learning,
+          technical systems and practical field support.
+        </p>
+      </div>
+
+      <div class="strategy-grid">
+        <article
+          v-for="(theme, index) in pageContent.strategicThemes"
+          :key="theme.title"
+          class="strategy-card pop-reveal"
+        >
+          <div class="strategy-icon" :class="`strategy-icon--${strategicIcon(theme, index)}`">
+            <svg
+              v-if="strategicIcon(theme, index) === 'growth'"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path d="M7 38h34" />
+              <path d="M12 38V25h7v13" />
+              <path d="M23 38V18h7v20" />
+              <path d="M34 38V10h7v28" />
+              <path d="M9 18l8-8 6 6 13-13" />
+              <path d="M31 3h5v5" />
+            </svg>
+            <svg
+              v-else-if="strategicIcon(theme, index) === 'strategy'"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path d="M9 13h24l6 7v18H9z" />
+              <path d="M33 13v8h6" />
+              <path d="M16 28h16" />
+              <path d="M16 34h11" />
+              <path d="M14 8l4-4 4 4" />
+              <path d="M18 4v13" />
+            </svg>
+            <svg
+              v-else-if="strategicIcon(theme, index) === 'time'"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <circle cx="24" cy="25" r="15" />
+              <path d="M24 15v11l7 5" />
+              <path d="M17 5h14" />
+              <path d="M24 5v5" />
+              <path d="M36 12l4-4" />
+            </svg>
+            <svg
+              v-else-if="strategicIcon(theme, index) === 'investment'"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path d="M24 40V22" />
+              <path d="M24 22c-9 0-13-5-13-12 9 0 13 5 13 12z" />
+              <path d="M24 27c9 0 13-5 13-12-9 0-13 5-13 12z" />
+              <circle cx="34" cy="12" r="5" />
+              <path d="M34 9v6" />
+              <path d="M31 12h6" />
+            </svg>
+            <svg
+              v-else-if="strategicIcon(theme, index) === 'chart'"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path d="M7 39h34" />
+              <path d="M12 34V24h6v10" />
+              <path d="M22 34V17h6v17" />
+              <path d="M32 34V10h6v24" />
+              <path d="M10 16l7-7 8 6 12-11" />
+              <path d="M32 4h5v5" />
+            </svg>
+            <svg v-else viewBox="0 0 48 48" aria-hidden="true">
+              <circle cx="29" cy="18" r="10" />
+              <path d="M19 18h20" />
+              <path d="M29 8c3 3 4 6 4 10s-1 7-4 10" />
+              <path d="M29 8c-3 3-4 6-4 10s1 7 4 10" />
+              <path d="M8 25h11v14H8z" />
+              <path d="M13 25v-5a4 4 0 0 1 8 0v5" />
+              <path d="M27 34h13" />
+            </svg>
+          </div>
+          <span class="strategy-number" aria-hidden="true">{{
+            String(index + 1).padStart(2, '0')
+          }}</span>
+          <h3>{{ theme.title }}</h3>
+          <p>{{ theme.detail }}</p>
+          <strong>{{ theme.action }}</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="network-section" aria-labelledby="network-heading">
+      <div class="network-inner">
+        <div class="network-panel pop-reveal">
+          <p class="section-kicker">Network layers</p>
+          <h2 id="network-heading">Connected beyond the office.</h2>
+          <p>Civil society, faith and youth networks help learning reach villages.</p>
+        </div>
+
+        <div class="network-grid">
+          <article
+            v-for="network in pageContent.networks"
+            :key="network.title"
+            class="network-card pop-reveal"
+          >
+            <span>{{ network.label }}</span>
+            <h3>{{ network.title }}</h3>
+            <p>{{ network.detail }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="funding-section" aria-labelledby="funding-heading">
+      <div class="funding-inner">
+        <div class="funding-header section-intro pop-reveal">
+          <p class="section-kicker">Funding history</p>
+          <h2 id="funding-heading">A wider support base.</h2>
           <p>
-            A rotating view of funding, technical, learning and program partners connected with
-            Santi Sena's community work.
+            Past supporters across development, multilateral, child-focused and education programs.
           </p>
         </div>
 
-        <div class="logo-marquee" aria-label="Partner logo slideshow">
-          <div class="logo-track">
-            <article
-              v-for="(partner, index) in partnerLogoLoop"
-              :key="`${partner.name}-${partner.variant}-${index}`"
-              class="logo-slide"
-              :class="`logo-slide--${partner.variant}`"
-              :aria-hidden="index >= partnerLogos.length ? 'true' : undefined"
-            >
-              <span class="logo-symbol" :class="`logo-symbol--${partner.mark}`"></span>
-              <span class="logo-wordmark">
-                <strong>{{ partner.name }}</strong>
-                <span>{{ partner.tagline }}</span>
-              </span>
-            </article>
-          </div>
+        <div class="funding-list" aria-label="Past funding partners">
+          <article
+            v-for="(item, index) in pageContent.fundingHistory"
+            :key="item.name"
+            class="funding-item pop-reveal"
+          >
+            <span class="funding-icon" aria-hidden="true">
+              <svg v-if="index === 0" viewBox="0 0 48 48">
+                <path d="M8 30h8l7 7 17-20" />
+                <path d="M12 18h16" />
+                <path d="M12 12h24" />
+              </svg>
+              <svg v-else-if="index === 1" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="15" />
+                <path d="M9 24h30" />
+                <path d="M24 9c5 5 7 10 7 15s-2 10-7 15" />
+                <path d="M24 9c-5 5-7 10-7 15s2 10 7 15" />
+              </svg>
+              <svg v-else-if="index === 2" viewBox="0 0 48 48">
+                <path d="M24 39s-13-8-13-20a8 8 0 0 1 13-6 8 8 0 0 1 13 6c0 12-13 20-13 20z" />
+                <path d="M18 23h12" />
+                <path d="M24 17v12" />
+              </svg>
+              <svg v-else viewBox="0 0 48 48">
+                <path d="M10 13h13a7 7 0 0 1 7 7v20H17a7 7 0 0 0-7-7z" />
+                <path d="M38 13H25a7 7 0 0 0-7 7v20h13a7 7 0 0 1 7-7z" />
+                <path d="M16 22h8" />
+                <path d="M30 22h4" />
+              </svg>
+            </span>
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.detail }}</p>
+          </article>
         </div>
-      </section>
-
-      <section class="commitments-section" aria-labelledby="commitments-heading">
-        <div class="commitment-copy">
-          <div class="section-kicker">Working values</div>
-          <h2 id="commitments-heading">What Santi Sena commits to partners</h2>
-        </div>
-        <ul class="commitment-list">
-          <li v-for="item in commitments" :key="item">{{ item }}</li>
-        </ul>
-      </section>
+      </div>
     </section>
 
-    <section class="cta-band" aria-label="Contact partnerships team">
-      <div class="cta-band__media" aria-hidden="true"></div>
-      <div class="cta-band__inner">
-        <p class="eyebrow">Build with us</p>
-        <h2>Ready to create a practical partnership?</h2>
-        <RouterLink to="/contact" class="primary-button">Contact our partnerships team</RouterLink>
+    <section class="cta-section" aria-label="Partnership contact">
+      <img :src="pageContent.cta.image" alt="" aria-hidden="true" loading="lazy" />
+      <div class="cta-content pop-reveal">
+        <p class="eyebrow">{{ pageContent.cta.eyebrow }}</p>
+        <h2>{{ pageContent.cta.title }}</h2>
+        <p>{{ pageContent.cta.body }}</p>
+        <div class="hero-actions">
+          <RouterLink :to="pageContent.cta.primaryCta.to" class="button button-primary">
+            {{ pageContent.cta.primaryCta.label }}
+          </RouterLink>
+          <RouterLink :to="pageContent.cta.secondaryCta.to" class="button button-ghost">
+            {{ pageContent.cta.secondaryCta.label }}
+          </RouterLink>
+        </div>
       </div>
     </section>
   </main>
@@ -404,936 +863,1595 @@ onUnmounted(() => {
 
 <style scoped>
 .partner-page {
-  --page: #f7f3ea;
-  --paper: #fffdf8;
-  --ink: #073f3a;
-  --muted: #315a55;
-  --line: #ddd1c0;
-  --orange: #e86f1d;
-  --blue: #2f6f8f;
-  --green: #0a463d;
-  --font-display: Cambria, Georgia, 'Times New Roman', serif;
-  --font-body: Aptos, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --partner-accent: var(--primary-color);
+  --partner-surface: var(--color-white);
+  --partner-dark: var(--primary-dark);
 
   min-height: 100vh;
-  background: var(--page);
-  color: var(--ink);
-  font-family: var(--font-body);
-}
-
-.partner-hero {
-  position: relative;
-  isolation: isolate;
-  min-height: min(650px, 82vh);
-  display: flex;
-  align-items: center;
   overflow: hidden;
-  background: #0b332f;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
-.partner-hero__slides,
-.partner-hero__shade,
-.partner-hero__slide {
+.hero-shade {
   position: absolute;
   inset: 0;
-}
-
-.partner-hero__slides {
-  z-index: -2;
-}
-
-.partner-hero__slide {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transform: scale(1.04);
-  transition:
-    opacity 900ms ease,
-    transform 6500ms ease;
-}
-
-.partner-hero__slide.is-active {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.partner-hero__shade {
-  z-index: -1;
   background:
-    linear-gradient(90deg, rgba(4, 42, 38, 0.92), rgba(4, 42, 38, 0.62), rgba(4, 42, 38, 0.16)),
-    linear-gradient(0deg, rgba(4, 42, 38, 0.32), transparent 46%);
+    linear-gradient(90deg, rgba(6, 18, 13, 0.86), rgba(6, 18, 13, 0.58) 46%, rgba(6, 18, 13, 0.16)),
+    linear-gradient(0deg, rgba(6, 18, 13, 0.32), transparent 42%);
 }
 
-.partner-hero__content,
-.partner-content,
-.proof-band__inner,
-.cta-band__inner {
-  width: min(100% - 3rem, 1220px);
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(260px, 0.36fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+  width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
 }
 
-.partner-hero__content {
-  padding: 6.25rem 0;
+.hero-copy {
+  max-width: 780px;
 }
 
 .eyebrow,
 .section-kicker {
   margin: 0;
-  color: var(--orange);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
+  color: var(--primary-light);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
-.partner-hero h1 {
-  max-width: 760px;
-  margin: 1.2rem 0 0;
-  color: #fffaf0;
-  font-family: var(--font-display);
-  font-size: clamp(3.1rem, 7vw, 6.6rem);
+.section-kicker {
+  color: var(--primary-color);
+}
+
+.hero-copy h1,
+.section-intro h2,
+.operating-copy h2,
+.network-panel h2,
+.cta-content h2 {
+  margin: 0;
   font-weight: 600;
-  line-height: 0.94;
+  line-height: 1.15;
+  letter-spacing: 0;
   text-wrap: balance;
 }
 
+.hero-copy h1 {
+  max-width: 760px;
+  margin-top: 1rem;
+  color: #fffaf0;
+}
+
 .lead {
-  max-width: 720px;
-  margin: 1.8rem 0 0;
+  max-width: 700px;
+  margin: 1.35rem 0 0;
   color: rgba(255, 250, 240, 0.9);
-  font-size: clamp(1.05rem, 1.55vw, 1.35rem);
-  font-weight: 500;
   line-height: 1.6;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  gap: 0.85rem;
   align-items: center;
-  gap: 1rem 1.35rem;
-  margin-top: 2.3rem;
+  margin-top: 2rem;
 }
 
-.primary-button,
-.secondary-link {
+.button {
   display: inline-flex;
+  min-height: 3.15rem;
   align-items: center;
   justify-content: center;
-  min-height: 3.25rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.82rem 1.35rem;
+  font-weight: 850;
+  line-height: 1.1;
+  text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.button-primary {
+  background: var(--primary-color);
+  color: var(--color-white);
+  box-shadow: 0 18px 34px rgba(27, 163, 79, 0.24);
+}
+
+.button-primary:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 22px 42px rgba(20, 129, 62, 0.32);
+}
+
+.button-ghost {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fffaf0;
+}
+
+.button-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.hero-brief {
+  align-self: end;
+  margin-bottom: 4rem;
+  border: 1px solid rgba(255, 250, 240, 0.2);
+  border-radius: 8px;
+  background: rgba(20, 129, 62, 0.42);
+  padding: 1.15rem;
+  color: #fffaf0;
+  backdrop-filter: none;
+}
+
+.hero-brief span {
+  display: block;
+  color: var(--primary-light);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero-brief strong {
+  display: block;
+  margin-top: 0.7rem;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.section-shell,
+.operating-inner,
+.network-inner,
+.cta-content {
+  width: min(100% - 3rem, var(--container-max-width));
+  margin: 0 auto;
+}
+
+.strategy-section,
+.funding-section {
+  padding: 5rem 0;
+}
+
+.portfolio-section {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(4rem, 8vw, 6.5rem) 0 0;
+  background:
+    linear-gradient(90deg, rgba(23, 118, 104, 0.07) 1px, transparent 1px) 0 0 / 33.333% 100%,
+    linear-gradient(180deg, #f9fdfb 0%, #eef9f6 100%);
+}
+
+.portfolio-feature {
+  width: min(100% - 3rem, var(--container-max-width));
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(360px, 1.18fr);
+  gap: clamp(2.5rem, 6vw, 5.5rem);
+  align-items: center;
+  margin: 0 auto;
+}
+
+.portfolio-copy {
+  min-width: 0;
+}
+
+.portfolio-pill {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 0 2.4rem;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 38%, transparent);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--primary-dark);
+  padding: 0.62rem 1.15rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary-color) 12%, transparent);
+}
+
+.portfolio-pill span {
+  width: 0.78rem;
+  height: 0.78rem;
+  border-radius: 999px;
+  background: var(--primary-color);
+}
+
+.portfolio-copy h2 {
+  max-width: 500px;
+  margin: 0;
+  color: #173240;
+  font-size: clamp(2.45rem, 4.6vw, 4rem);
+  font-weight: 600;
+  line-height: 1.04;
+}
+
+.portfolio-copy p:not(.portfolio-pill) {
+  max-width: 560px;
+  margin: 1.25rem 0 0;
+  color: #385a70;
+  font-size: clamp(0.98rem, 1.35vw, 1.12rem);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.portfolio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 2.35rem;
+}
+
+.portfolio-actions .button-primary {
+  background: var(--primary-color);
+  color: var(--color-white);
+  box-shadow: 0 16px 28px color-mix(in srgb, var(--primary-color) 24%, transparent);
+}
+
+.portfolio-actions .button-primary:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 20px 34px color-mix(in srgb, var(--primary-dark) 28%, transparent);
+}
+
+.portfolio-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--primary-dark);
   font-weight: 800;
   text-decoration: none;
 }
 
-.primary-button {
-  border-radius: 999px;
-  background: var(--orange);
-  color: #fffaf0;
-  padding: 0.85rem 1.55rem;
-  box-shadow: 0 18px 34px rgba(232, 111, 29, 0.25);
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+.portfolio-link::after {
+  font-size: 1.35rem;
+  line-height: 1;
+  content: '->';
 }
 
-.primary-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 20px 38px rgba(232, 111, 29, 0.32);
-}
-
-.secondary-link {
-  color: #fffaf0;
-  opacity: 0.86;
-}
-
-.secondary-link:hover {
-  opacity: 1;
-}
-
-.hero-dots {
-  position: absolute;
-  left: 50%;
-  bottom: 2rem;
-  display: flex;
-  gap: 0.65rem;
-  transform: translateX(-50%);
-}
-
-.hero-dot {
-  width: 0.72rem;
-  height: 0.72rem;
-  border: 1px solid rgba(255, 250, 240, 0.7);
-  border-radius: 999px;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease,
-    width 0.2s ease;
-}
-
-.hero-dot.is-active {
-  width: 2rem;
-  background: #fffaf0;
-}
-
-.proof-band {
-  border-bottom: 1px solid var(--line);
-  background: var(--paper);
-}
-
-.proof-band__inner {
+.portfolio-stat-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.8rem;
 }
 
-.proof-item {
-  min-height: 168px;
-  padding: 2.2rem 2rem;
-  border-left: 1px solid var(--line);
+.portfolio-stat-item {
+  min-height: 70px;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 0.28rem;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 16%, transparent);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 0.82rem 0.95rem;
+  text-align: left;
+  box-shadow: 0 10px 22px rgba(23, 118, 104, 0.07);
 }
 
-.proof-item:first-child {
-  border-left: 0;
-  padding-left: 0;
+.portfolio-stat-item + .portfolio-stat-item {
+  border-left: 1px solid color-mix(in srgb, var(--primary-color) 16%, transparent);
 }
 
-.proof-item strong {
-  display: block;
-  color: var(--blue);
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 5vw, 4.5rem);
-  font-weight: 500;
-  line-height: 0.95;
-}
-
-.proof-item span {
-  display: block;
-  margin-top: 0.7rem;
-  color: var(--ink);
-  font-size: 0.78rem;
+.portfolio-stat-item strong {
+  color: var(--primary-color);
+  font-size: clamp(1.08rem, 2vw, 1.36rem);
   font-weight: 900;
-  letter-spacing: 0.14em;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.portfolio-stat-item span {
+  color: #587485;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
   text-transform: uppercase;
 }
 
-.proof-item p {
-  max-width: 260px;
-  margin: 0.65rem 0 0;
-  color: var(--muted);
-  font-size: 0.98rem;
-  line-height: 1.5;
+.portfolio-visual {
+  position: relative;
+  min-height: clamp(420px, 48vw, 560px);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 22%, transparent);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.68);
+  padding: 0.75rem;
+  box-shadow:
+    0 26px 58px rgba(23, 50, 64, 0.16),
+    0 10px 24px color-mix(in srgb, var(--primary-color) 12%, transparent);
 }
 
-.partner-content {
-  padding: 5.5rem 0;
+.portfolio-visual > img {
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 18px 42px rgba(23, 50, 64, 0.18);
 }
 
-.partner-content h2,
-.cta-band h2 {
-  margin: 0;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 3.2vw, 3.1rem);
-  font-weight: 600;
-  line-height: 1.08;
-  text-wrap: balance;
+.portfolio-status-card,
+.portfolio-partner-card {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 36px rgba(23, 50, 64, 0.16);
 }
 
-.intro-section,
-.practice-layout,
-.areas-section,
-.logo-section,
-.commitments-section {
+.portfolio-status-card {
+  top: 1.35rem;
+  right: 1.35rem;
   display: grid;
-  gap: clamp(2rem, 5vw, 4.5rem);
-}
-
-.intro-section {
-  grid-template-columns: minmax(0, 0.82fr) minmax(320px, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
   align-items: center;
+  padding: 0.75rem 0.9rem;
 }
 
-.intro-copy p,
-.section-heading p,
-.logo-section__header p {
-  margin: 1.25rem 0 0;
-  color: var(--muted);
-  font-size: 1.08rem;
+.portfolio-status-card > span {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.portfolio-status-card svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.portfolio-status-card strong,
+.portfolio-partner-card strong {
+  display: block;
+  color: #173240;
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.portfolio-status-card small {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--primary-color);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.portfolio-partner-card {
+  left: clamp(-2.4rem, -4vw, -1rem);
+  bottom: -1.4rem;
+  width: min(480px, 88%);
+  padding: 1.35rem 1.5rem;
+}
+
+.portfolio-partner-card small {
+  display: block;
+  color: var(--primary-color);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.portfolio-partner-card p {
+  margin: 0.6rem 0 0.9rem;
+  color: #385a70;
+  font-size: 0.98rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.section-intro {
+  max-width: 780px;
+}
+
+.section-intro h2,
+.operating-copy h2,
+.network-panel h2 {
+  margin-top: 0.8rem;
+  color: var(--color-ink);
+}
+
+.section-intro p:not(.section-kicker),
+.operating-copy p,
+.network-panel p {
+  margin: 1rem 0 0;
+  color: var(--color-ink-soft);
+  line-height: 1.7;
+}
+
+.project-showcase {
+  margin-top: clamp(4rem, 7vw, 6rem);
+  background:
+    radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.16), transparent 26rem),
+    linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 46%, #6fb6c7), #6aaebd);
+  padding: clamp(4rem, 7vw, 5.8rem) 0;
+}
+
+.project-showcase__inner {
+  position: relative;
+  width: min(100% - 3rem, var(--container-max-width));
+  margin: 0 auto;
+}
+
+.project-showcase__intro {
+  max-width: 860px;
+  margin: 0 auto clamp(2.5rem, 5vw, 3.75rem);
+  color: var(--color-white);
+  text-align: center;
+}
+
+.project-showcase__intro h2 {
+  margin: 0;
+  color: var(--color-white);
+  font-size: clamp(2.35rem, 5vw, 4.25rem);
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.project-showcase__intro p {
+  max-width: 620px;
+  margin: 1rem auto 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-weight: 600;
   line-height: 1.65;
 }
 
-.intro-copy h2,
-.section-heading h2,
-.areas-copy h2,
-.logo-section__header h2,
-.commitment-copy h2 {
-  margin-top: 0.85rem;
+.project-carousel {
+  position: relative;
 }
 
-.intro-image {
-  margin: 0;
-}
+.project-grid {
+  --project-gap: clamp(1.2rem, 2.6vw, 2rem);
 
-.intro-image img,
-.practice-media img,
-.areas-media img {
-  display: block;
-  width: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.intro-image img {
-  aspect-ratio: 4 / 3;
-}
-
-.intro-image figcaption {
-  max-width: 520px;
-  margin-top: 0.85rem;
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.practice-section,
-.areas-section,
-.logo-section,
-.commitments-section {
-  margin-top: 6rem;
-}
-
-.section-heading {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(260px, 0.75fr);
-  gap: 2rem;
-  align-items: end;
+  grid-auto-columns: calc((100% - var(--project-gap) - var(--project-gap)) / 3);
+  grid-auto-flow: column;
+  grid-template-columns: none;
+  gap: var(--project-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.9rem 0.1rem 0.75rem;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 0.1rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
 }
 
-.practice-layout {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.78fr);
-  align-items: start;
-  margin-top: 2.6rem;
+.project-grid::-webkit-scrollbar {
+  display: none;
 }
 
-.step-list {
+.project-card {
+  position: relative;
+  isolation: isolate;
+  min-height: clamp(360px, 31vw, 430px);
   display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--line);
-}
-
-.step-list li {
-  display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-  gap: 1.6rem;
-  padding: 1.7rem 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.step-number {
-  color: var(--blue);
-  font-family: var(--font-display);
-  font-size: 2.4rem;
-  line-height: 1;
-}
-
-.step-label {
-  display: block;
-  color: var(--orange);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.step-list h3,
-.area-list h3 {
-  margin: 0.45rem 0 0;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 1.45rem;
-  font-weight: 600;
-  line-height: 1.15;
-}
-
-.step-list p,
-.area-list p {
-  margin: 0.65rem 0 0;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.practice-media {
-  position: sticky;
-  top: 2rem;
-}
-
-.practice-media img {
-  aspect-ratio: 5 / 6;
-}
-
-.media-note {
-  margin-top: 1rem;
-  border-left: 4px solid var(--orange);
-  padding-left: 1rem;
-  color: var(--muted);
-}
-
-.media-note strong,
-.media-note span {
-  display: block;
-}
-
-.media-note strong {
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 600;
-}
-
-.media-note span {
-  margin-top: 0.3rem;
-  line-height: 1.5;
-}
-
-.areas-section {
-  grid-template-columns: minmax(300px, 0.74fr) minmax(0, 1fr);
-  align-items: start;
-}
-
-.areas-media img {
-  aspect-ratio: 4 / 5;
-}
-
-.area-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 2rem;
-  margin: 2rem 0 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid var(--line);
-}
-
-.area-list li {
-  padding: 1.35rem 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.logo-section {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  padding-top: 5rem;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 22px;
+  background: #1c3f45;
+  scroll-snap-align: start;
 }
 
-.logo-section__header {
-  width: min(100% - 3rem, 1220px);
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.72fr);
-  gap: 2rem;
-  align-items: end;
+.project-card.is-visible {
+  animation: projectCardFloat 6.4s ease-in-out var(--project-float-delay, 0ms) infinite;
+  will-change: translate;
 }
 
-.logo-marquee {
-  width: 100%;
-  margin-top: 2.2rem;
-  overflow: hidden;
-  padding: 0.45rem 0;
-  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
-}
-
-.logo-track {
-  display: flex;
-  width: max-content;
-  gap: clamp(2.4rem, 5vw, 5rem);
-  animation: logo-scroll 38s linear infinite;
-}
-
-.logo-marquee:hover .logo-track {
+.project-card:hover {
   animation-play-state: paused;
 }
 
-.logo-slide {
-  position: relative;
-  flex: 0 0 clamp(132px, 14vw, 185px);
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-  gap: 0.52rem;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  color: var(--muted);
-  box-shadow: none;
+@keyframes projectCardFloat {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -6px;
+  }
 }
 
-.logo-symbol {
-  position: relative;
-  flex: 0 0 auto;
-  width: 1.75rem;
-  height: 1.75rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: transparent;
-  color: currentColor;
-}
-
-.logo-symbol::before,
-.logo-symbol::after {
-  content: '';
+.project-nav {
   position: absolute;
-}
-
-.logo-symbol--drop {
-  width: 1.35rem;
-  height: 1.35rem;
-  border-radius: 56% 56% 56% 0;
-  background: currentColor;
-  transform: rotate(-45deg);
-}
-
-.logo-symbol--drop::after {
-  inset: 0.35rem;
-  border-radius: 50%;
-  background: inherit;
-  filter: brightness(1.6);
-  opacity: 0.45;
-}
-
-.logo-symbol--flag {
-  width: 2.35rem;
-  height: 1.15rem;
-  border-radius: 58% 42% 56% 44%;
-  background: linear-gradient(180deg, #282828 0 33%, #d91d28 33% 66%, #ffc934 66% 100%);
-  transform: skewX(-14deg) rotate(7deg);
-}
-
-.logo-symbol--globe {
-  background:
-    radial-gradient(circle at 34% 38%, #fff 0 20%, transparent 21%),
-    radial-gradient(circle at 60% 62%, #fff 0 14%, transparent 15%), #45a647;
-}
-
-.logo-symbol--globe::after,
-.logo-symbol--wave::after {
-  inset: 1rem 0.65rem;
-  border-top: 3px solid #2f6f8f;
-  border-radius: 50%;
-  transform: rotate(58deg);
-}
-
-.logo-symbol--person {
-  border-radius: 48% 48% 48% 12%;
-  background: #69be59;
-}
-
-.logo-symbol--person::before {
-  top: 0.38rem;
-  width: 0.36rem;
-  height: 0.36rem;
-  border-radius: 50%;
-  background: #fff;
-}
-
-.logo-symbol--person::after {
-  top: 0.78rem;
-  width: 0.9rem;
-  height: 0.58rem;
-  border-radius: 999px 999px 0 0;
-  background: #fff;
-}
-
-.logo-symbol--goat::before,
-.logo-symbol--acts::before,
-.logo-symbol--child::before,
-.logo-symbol--seal::before {
-  position: static;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.logo-symbol--goat::before {
-  content: 'HI';
-  color: #8a6a45;
-}
-
-.logo-symbol--acts::before {
-  content: 'ACTs';
-  color: #b3323d;
-  font-size: 0.75rem;
-}
-
-.logo-symbol--child::before {
-  content: 'P';
-  color: #1f61c7;
-  font-size: 1.7rem;
-}
-
-.logo-symbol--wave {
-  background: radial-gradient(circle at 60% 44%, #fff 0 26%, transparent 27%), #8ed5ec;
-}
-
-.logo-symbol--seal::before {
-  content: 'KF';
-  color: #2f2f2f;
-}
-
-.logo-wordmark {
-  min-width: 0;
+  top: 50%;
+  z-index: 6;
+  width: 3.4rem;
+  height: 3.4rem;
   display: grid;
-  gap: 0.25rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1c3f45;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+  box-shadow: 0 16px 28px rgba(17, 68, 77, 0.22);
 }
 
-.logo-wordmark strong {
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: clamp(0.86rem, 1vw, 1.12rem);
-  font-weight: 700;
+.project-nav:hover {
+  background: var(--primary-color);
+  color: var(--color-white);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.project-nav--prev {
+  left: -1.7rem;
+}
+
+.project-nav--next {
+  right: -1.7rem;
+}
+
+.project-nav svg {
+  width: 1.45rem;
+  height: 1.45rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.8;
+}
+
+.project-card::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(9, 35, 38, 0.04) 0%,
+    rgba(9, 35, 38, 0.18) 42%,
+    rgba(9, 35, 38, 0.88) 100%
+  );
+  content: '';
+  transition: background 0.25s ease;
+}
+
+.project-card img {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.96) contrast(1.02) brightness(0.92);
+  transform: scale(1.02);
+  transition:
+    filter 0.25s ease,
+    transform 0.25s ease;
+}
+
+.project-card:hover::before {
+  background: linear-gradient(
+    180deg,
+    rgba(9, 35, 38, 0) 0%,
+    rgba(9, 35, 38, 0.12) 42%,
+    rgba(9, 35, 38, 0.84) 100%
+  );
+}
+
+.project-card:hover img {
+  filter: saturate(1.06) contrast(1.04) brightness(0.98);
+  transform: scale(1.05);
+}
+
+.project-card__content {
+  position: relative;
+  z-index: 2;
+  min-height: inherit;
+  display: grid;
+  align-content: end;
+  justify-items: start;
+  padding: 5rem clamp(1.25rem, 2.4vw, 1.65rem) clamp(1.25rem, 2.4vw, 1.65rem);
+  color: var(--color-white);
+  text-align: left;
+}
+
+.project-card__period {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.42rem 0.7rem;
+  color: var(--primary-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
   line-height: 1;
-  text-transform: none;
+  text-transform: uppercase;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.logo-wordmark span {
-  color: inherit;
-  font-size: 0.58rem;
-  font-weight: 800;
-  line-height: 1.2;
-  text-transform: none;
+.project-card:hover .project-card__period {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--color-white);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--primary-color) 34%, transparent);
 }
 
-.logo-slide--tdh-germany {
-  color: #b43d49;
+.project-card__icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 3.35rem;
+  height: 3.35rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(9, 35, 38, 0.32);
+  color: var(--color-white);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.logo-slide--tdh-germany .logo-wordmark strong,
-.logo-slide--tdh-germany .logo-wordmark span,
-.logo-slide--tdh-netherlands .logo-wordmark strong,
-.logo-slide--tdh-netherlands .logo-wordmark span {
-  color: currentColor;
+.project-card:hover .project-card__icon {
+  border-color: var(--primary-color);
+  background: var(--color-white);
+  color: var(--primary-color);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--primary-color) 24%, transparent);
 }
 
-.logo-slide--tdh-germany .logo-symbol {
-  color: #b43d49;
+.project-card__icon svg {
+  width: 2rem;
+  height: 2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.7;
 }
 
-.logo-slide--german-coop .logo-wordmark strong {
-  color: #3a3a3a;
-  font-family: var(--font-body);
+.project-card h3 {
+  max-width: 19rem;
+  margin: 0;
+  color: var(--color-white);
+  font-size: clamp(1.22rem, 1.7vw, 1.55rem);
   font-weight: 900;
+  line-height: 1.16;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  transition:
+    color 0.2s ease,
+    text-shadow 0.2s ease;
 }
 
-.logo-slide--german-coop .logo-wordmark span {
-  color: #d9242f;
+.project-card:hover h3 {
+  color: var(--primary-light);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.36);
 }
 
-.logo-slide--rivers-life .logo-wordmark strong {
-  color: #35a342;
-  font-family: var(--font-body);
-  font-weight: 900;
-}
-
-.logo-slide--rivers-life .logo-wordmark span {
-  color: #2f6f8f;
-}
-
-.logo-slide--educo .logo-wordmark strong {
-  color: #00aeb8;
-  font-family: var(--font-body);
-  font-size: clamp(1.28rem, 1.55vw, 1.72rem);
+.project-card strong {
+  max-width: 22rem;
+  display: block;
+  margin-top: 0.75rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.86rem;
   font-weight: 800;
+  line-height: 1.35;
 }
 
-.logo-slide--educo .logo-wordmark span {
-  color: #1f2d2d;
+.project-card p {
+  max-width: 22rem;
+  margin: 0.65rem 0 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.48;
+}
+
+.operating-section {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(5rem, 8vw, 6.5rem) 0;
+  background:
+    linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--primary-color) 7%, transparent) 1px,
+        transparent 1px
+      )
+      0 0 / 25% 100%,
+    radial-gradient(
+      circle at 12% 18%,
+      color-mix(in srgb, var(--primary-color) 16%, transparent),
+      transparent 24rem
+    ),
+    linear-gradient(180deg, #f7fcfa 0%, var(--primary-light) 100%);
+}
+
+.operating-inner {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.34fr) minmax(0, 1fr);
+  gap: clamp(2.2rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.operating-copy {
+  position: sticky;
+  top: 7rem;
+  border-left: 5px solid var(--primary-color);
+  padding-left: clamp(1.1rem, 2vw, 1.5rem);
+}
+
+.operating-copy h2 {
+  max-width: 330px;
+  color: var(--primary-dark);
+  font-size: clamp(2.15rem, 4.4vw, 3.4rem);
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.operating-copy p:not(.section-kicker) {
+  max-width: 360px;
+  color: #415d52;
   font-weight: 600;
 }
 
-.logo-slide--heifer .logo-wordmark strong {
-  color: #7a5a36;
-  font-size: clamp(1.12rem, 1.45vw, 1.55rem);
-}
-
-.logo-slide--heifer .logo-wordmark span {
-  color: #7a5a36;
-}
-
-.logo-slide--cambodia-acts .logo-wordmark strong {
-  color: #b3323d;
-}
-
-.logo-slide--tdh-netherlands {
-  color: #111;
-}
-
-.logo-slide--tdh-netherlands .logo-symbol {
-  color: #d54b3d;
-}
-
-.logo-slide--tdh-netherlands .logo-wordmark strong {
-  font-family: var(--font-body);
-  font-weight: 900;
-}
-
-.logo-slide--plan .logo-wordmark strong {
-  color: #1f61c7;
-  font-family: var(--font-body);
-  font-size: clamp(1.32rem, 1.65vw, 1.85rem);
-  font-weight: 900;
-}
-
-.logo-slide--global-sanitation .logo-wordmark strong {
-  color: #377f95;
-}
-
-.logo-slide--khyentse .logo-wordmark strong {
-  color: #2f2f2f;
-}
-
-.commitment-list {
+.operating-rail {
+  position: relative;
   display: grid;
-  gap: 0.65rem;
+  gap: 1.1rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.commitment-list li {
+.operating-rail::before {
+  position: absolute;
+  top: 1.25rem;
+  bottom: 1.25rem;
+  left: 2.15rem;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--primary-color),
+    color-mix(in srgb, var(--primary-color) 36%, transparent)
+  );
+  content: '';
+}
+
+.operating-item {
   position: relative;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-@keyframes logo-scroll {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(calc(-50% - clamp(1.2rem, 2.5vw, 2.5rem)));
-  }
-}
-
-.commitments-section {
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  gap: 1.15rem;
   align-items: start;
+  min-height: 132px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 18%, var(--color-border));
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(47, 111, 143, 0.2), transparent 42%), var(--green);
-  padding: clamp(2rem, 5vw, 3.5rem);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9)), var(--color-white);
+  padding: 1.2rem clamp(1.2rem, 2.4vw, 1.55rem);
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--primary-dark) 8%, transparent);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.commitments-section h2,
-.commitments-section .section-kicker,
-.commitment-list li {
+.operating-item::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--primary-color);
+  content: '';
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.operating-item:hover {
+  border-color: color-mix(in srgb, var(--primary-color) 42%, var(--color-border));
+  box-shadow: 0 24px 54px color-mix(in srgb, var(--primary-dark) 13%, transparent);
+}
+
+.operating-item:hover::before {
+  opacity: 1;
+}
+
+.operating-item > div {
+  min-width: 0;
+  padding-top: 0.12rem;
+}
+
+.operating-step {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 4rem;
+  height: 4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 5px solid color-mix(in srgb, var(--primary-light) 78%, #ffffff);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: #fffaf0;
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--primary-color) 24%, transparent);
+  font-size: 0.98rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.operating-item strong {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 24%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-light) 68%, #ffffff);
+  color: var(--primary-dark);
+  padding: 0.36rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.operating-item h3 {
+  margin: 0.68rem 0 0;
+  color: var(--color-ink);
+  font-size: clamp(1.08rem, 1.7vw, 1.28rem);
+  font-weight: 850;
+  line-height: 1.18;
+}
+
+.operating-item p {
+  max-width: 620px;
+  margin: 0.55rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.strategy-section {
+  width: 100%;
+  max-width: none;
+  background: var(--partner-surface);
+}
+
+.strategy-section .section-intro,
+.strategy-grid {
+  width: min(100% - 3rem, 1120px);
+  margin-inline: auto;
+}
+
+.strategy-section .section-intro {
+  max-width: none;
+  text-align: left;
+}
+
+.strategy-section .section-kicker {
+  color: #6fb7a2;
+}
+
+.strategy-section .section-intro h2 {
+  margin-top: 0.35rem;
+  color: #348f7a;
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  font-weight: 500;
+  line-height: 1.12;
+}
+
+.strategy-section .section-intro p:not(.section-kicker) {
+  max-width: 620px;
+  margin-top: 0.75rem;
+  color: #7e8f89;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(3.2rem, 6vw, 5.2rem) clamp(3rem, 7vw, 6.5rem);
+  margin-top: clamp(3.5rem, 7vw, 5.8rem);
+}
+
+.strategy-card {
+  position: relative;
+  min-height: 270px;
+  padding: 0 0 0.5rem;
+  background: transparent;
+  color: #263d37;
+}
+
+.strategy-icon {
+  width: 3.35rem;
+  height: 3.35rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #4fa994;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.strategy-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+}
+
+.strategy-number {
+  position: absolute;
+  top: 4.15rem;
+  left: -0.2rem;
+  z-index: 0;
+  color: rgba(105, 211, 184, 0.22);
+  font-size: clamp(4.8rem, 8vw, 6.4rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.8;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.strategy-card h3,
+.strategy-card p,
+.strategy-card strong {
+  position: relative;
+  z-index: 1;
+}
+
+.strategy-card h3 {
+  margin: 1.75rem 0 0;
+  color: #263d37;
+  font-size: 1.18rem;
+  font-weight: 800;
+  line-height: 1.28;
+  transition: color 0.2s ease;
+}
+
+.strategy-card:hover .strategy-icon {
+  border-color: color-mix(in srgb, var(--primary-color) 28%, transparent);
+  background: var(--primary-color);
+  color: var(--color-white);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--primary-color) 22%, transparent);
+}
+
+.strategy-card:hover .strategy-number {
+  color: color-mix(in srgb, var(--primary-color) 28%, transparent);
+}
+
+.strategy-card:hover h3 {
+  color: var(--primary-dark);
+}
+
+.strategy-card p {
+  margin: 0.7rem 0 0;
+  color: #6f7d78;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+.strategy-card strong {
+  display: block;
+  margin-top: 0.45rem;
+  color: #348f7a;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.network-section {
+  padding: 5rem 0;
+  background: var(--primary-dark);
   color: #fffaf0;
 }
 
-.commitments-section .section-kicker {
-  color: #ffb06e;
-}
-
-.commitment-list {
-  counter-reset: commitments;
-}
-
-.commitment-list li {
-  counter-increment: commitments;
+.network-inner {
   display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: minmax(260px, 0.38fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4rem);
   align-items: start;
-  padding: 1rem 0;
-  border-bottom: 1px solid rgba(255, 250, 240, 0.18);
 }
 
-.commitment-list li:first-child {
-  padding-top: 0;
+.network-panel {
+  border-left: 4px solid var(--primary-color);
+  padding-left: 1.35rem;
 }
 
-.commitment-list li::before {
-  content: counter(commitments, decimal-leading-zero);
-  color: #ffb06e;
-  font-family: var(--font-display);
-  font-size: 1.55rem;
-  line-height: 1;
+.network-panel h2,
+.cta-content h2 {
+  color: #fffaf0;
 }
 
-.cta-band {
+.network-panel p,
+.cta-content p {
+  color: rgba(255, 250, 240, 0.82);
+}
+
+.network-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.network-card {
+  min-height: 178px;
+  border: 1px solid rgba(255, 250, 240, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1.35rem;
+}
+
+.network-card span {
+  display: inline-flex;
+  border: 1px solid rgba(255, 250, 240, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--primary-light);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.network-card h3 {
+  margin: 0.8rem 0 0;
+  color: #fffaf0;
+  font-size: 1.1rem;
+  line-height: 1.25;
+}
+
+.network-card p {
+  margin: 0.65rem 0 0;
+  color: rgba(255, 250, 240, 0.8);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.funding-section {
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      color-mix(in srgb, var(--primary-color) 10%, transparent) 0 20%,
+      transparent 42%
+    ),
+    #fbfdfc;
+}
+
+.funding-inner {
+  width: min(100% - 3rem, 1080px);
+  margin: 0 auto;
+}
+
+.funding-header {
+  max-width: 620px;
+  margin: 0;
+  text-align: left;
+}
+
+.funding-header .section-kicker {
+  color: var(--primary-color);
+}
+
+.funding-header h2 {
+  margin-top: 0.42rem;
+  color: #25352f;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 850;
+  line-height: 1.12;
+}
+
+.funding-header p:not(.section-kicker) {
+  max-width: 520px;
+  margin: 0.7rem 0 0;
+  color: #697b73;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+.funding-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1rem, 2.4vw, 1.45rem);
+  align-items: stretch;
+  margin-top: clamp(2.7rem, 5vw, 4rem);
+}
+
+.funding-item {
   position: relative;
-  isolation: isolate;
+  height: 100%;
+  min-height: 178px;
+  display: block;
   overflow: hidden;
-  background: #0b332f;
-  padding: 5rem 0;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 12%, #dce8e0);
+  border-radius: 8px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  padding: 1.25rem 1.15rem 1.25rem;
+  text-align: left;
+  box-shadow: 0 18px 34px color-mix(in srgb, var(--primary-dark) 8%, transparent);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
-.cta-band__media {
+.funding-item::after {
+  position: absolute;
+  inset: auto 1.15rem 0;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: var(--primary-color);
+  content: '';
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.funding-item:hover {
+  border-color: color-mix(in srgb, var(--primary-color) 32%, #dce8e0);
+  box-shadow: 0 22px 46px color-mix(in srgb, var(--primary-dark) 14%, transparent);
+}
+
+.funding-item:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.funding-icon {
+  width: 3.2rem;
+  height: 3.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--primary-color);
+  color: var(--color-white);
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--primary-color) 28%, transparent);
+}
+
+.funding-icon svg {
+  width: 1.65rem;
+  height: 1.65rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.funding-item h3 {
+  margin: 1.05rem 0 0;
+  color: var(--primary-dark);
+  font-size: 0.98rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.funding-item p {
+  margin: 0.58rem 0 0;
+  color: #6a7a72;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.cta-section {
+  position: relative;
+  min-height: 420px;
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+  background: var(--primary-dark);
+  isolation: isolate;
+}
+
+.cta-section img {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: url('https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?auto=format&fit=crop&w=1800&q=82')
-    center / cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.92);
 }
 
-.cta-band::after {
-  content: '';
+.cta-section::after {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(90deg, rgba(4, 42, 38, 0.92), rgba(4, 42, 38, 0.62));
+  background:
+    linear-gradient(90deg, rgba(6, 18, 13, 0.9), rgba(6, 18, 13, 0.62) 55%, rgba(6, 18, 13, 0.3)),
+    linear-gradient(0deg, rgba(6, 18, 13, 0.3), transparent);
+  content: '';
 }
 
-.cta-band__inner {
-  max-width: min(100% - 3rem, 920px);
-  margin-left: max(1.5rem, calc((100vw - 1220px) / 2));
+.cta-content {
+  max-width: min(100% - 3rem, 860px);
+  margin-left: max(1.5rem, calc((100vw - var(--container-max-width)) / 2));
+  padding: 5rem 0;
 }
 
-.cta-band h2 {
+.cta-content h2 {
   max-width: 780px;
   margin-top: 0.8rem;
-  color: #fffaf0;
 }
 
-.cta-band .primary-button {
-  margin-top: 2rem;
+.cta-content p:not(.eyebrow) {
+  max-width: 680px;
+  margin: 1rem 0 0;
+  line-height: 1.7;
 }
 
-@media (max-width: 1060px) {
-  .intro-section,
-  .practice-layout,
-  .areas-section,
-  .logo-section,
-  .commitments-section,
-  .section-heading,
-  .logo-section__header {
+.pop-reveal {
+  opacity: 0;
+  filter: none;
+  transform: translateY(58px) scale(0.92);
+  transition:
+    opacity 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.72s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: var(--pop-delay, 0ms);
+}
+
+.pop-reveal.is-visible {
+  opacity: 1;
+  filter: none;
+  transform: translateY(0) scale(1);
+}
+
+.portfolio-stat-item,
+.project-card,
+.operating-item,
+.strategy-card,
+.network-card,
+.funding-item {
+  --hover-pop-y: -10px;
+  --hover-pop-scale: 1.018;
+
+  transform-origin: center;
+  will-change: transform;
+}
+
+.pop-reveal.is-visible:is(
+    .portfolio-stat-item,
+    .project-card,
+    .operating-item,
+    .strategy-card,
+    .network-card,
+    .funding-item
+  ):hover {
+  transform: translateY(var(--hover-pop-y)) scale(var(--hover-pop-scale));
+}
+
+@media (max-width: 1080px) {
+  .hero-grid,
+  .portfolio-feature,
+  .operating-inner,
+  .network-inner {
     grid-template-columns: 1fr;
   }
 
-  .practice-media {
+  .portfolio-visual {
+    min-height: 430px;
+  }
+
+  .portfolio-partner-card {
+    left: 1.25rem;
+  }
+
+  .hero-brief {
+    align-self: start;
+    max-width: 520px;
+    margin-bottom: 2rem;
+  }
+
+  .project-grid {
+    grid-auto-columns: calc((100% - var(--project-gap)) / 2);
+  }
+
+  .funding-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .strategy-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .operating-copy {
     position: static;
-  }
-
-  .practice-media img,
-  .areas-media img {
-    aspect-ratio: 16 / 10;
-  }
-
-  .logo-slide {
-    flex-basis: 170px;
   }
 }
 
 @media (max-width: 760px) {
-  .partner-hero {
-    min-height: min(570px, 86vh);
+  .section-shell,
+  .operating-inner,
+  .network-inner,
+  .cta-content {
+    width: min(100% - 2rem, var(--container-max-width));
   }
 
-  .partner-hero__content,
-  .partner-content,
-  .proof-band__inner,
-  .cta-band__inner {
-    width: min(100% - 2rem, 1220px);
+  .portfolio-feature,
+  .project-showcase__inner {
+    width: min(100% - 2rem, var(--container-max-width));
   }
 
-  .partner-hero__content {
-    padding: 5.2rem 0 5.8rem;
+  .strategy-section .section-intro,
+  .strategy-grid {
+    width: min(100% - 2rem, var(--container-max-width));
   }
 
-  .hero-actions {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .hero-dots {
-    bottom: 1.35rem;
-  }
-
-  .proof-band__inner,
-  .area-list {
-    grid-template-columns: 1fr;
-  }
-
-  .proof-item,
-  .proof-item:first-child {
-    min-height: auto;
-    border-left: 0;
-    border-top: 1px solid var(--line);
-    padding: 1.7rem 0;
-  }
-
-  .proof-item:first-child {
-    border-top: 0;
-  }
-
-  .partner-content {
-    padding: 4rem 0;
-  }
-
-  .practice-section,
-  .areas-section,
-  .logo-section,
-  .commitments-section {
-    margin-top: 4.5rem;
-  }
-
-  .step-list li {
-    grid-template-columns: 3.5rem minmax(0, 1fr);
+  .hero-grid {
+    width: min(100% - 2rem, var(--container-max-width));
+    align-content: center;
     gap: 1rem;
   }
 
-  .step-number {
-    font-size: 2rem;
+  .hero-copy h1 {
+    line-height: 1.12;
   }
 
-  .logo-section {
-    padding-top: 3.5rem;
+  .lead {
+    margin-top: 1rem;
+    line-height: 1.55;
   }
 
-  .logo-marquee {
-    mask-image: none;
+  .hero-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .logo-slide {
-    flex-basis: 150px;
-    min-height: 54px;
-    padding: 0;
+  .button {
+    width: 100%;
   }
 
-  .logo-symbol {
-    width: 1.5rem;
-    height: 1.5rem;
+  .hero-brief {
+    display: none;
   }
 
-  .commitments-section {
-    padding: 2rem;
+  .strategy-grid,
+  .network-grid,
+  .funding-list {
+    grid-template-columns: 1fr;
   }
 
-  .cta-band {
-    padding: 4rem 0;
+  .project-showcase {
+    margin-top: 3.5rem;
+    padding: 3.6rem 0;
   }
 
-  .cta-band__inner {
+  .project-showcase__intro h2 {
+    font-size: clamp(2.05rem, 10vw, 2.85rem);
+  }
+
+  .project-showcase__intro p {
+    font-size: 0.98rem;
+  }
+
+  .project-grid {
+    grid-auto-columns: 100%;
+  }
+
+  .project-nav {
+    top: 50%;
+    width: 3rem;
+    height: 3rem;
+    transform: translateY(-50%);
+  }
+
+  .project-nav:hover {
+    transform: translateY(-50%) scale(1.04);
+  }
+
+  .project-nav--prev {
+    left: 1rem;
+  }
+
+  .project-nav--next {
+    right: 1rem;
+  }
+
+  .portfolio-copy h2 {
+    font-size: clamp(2.45rem, 14vw, 3.45rem);
+    line-height: 1.02;
+  }
+
+  .portfolio-copy p:not(.portfolio-pill) {
+    font-size: 1rem;
+  }
+
+  .portfolio-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .portfolio-link {
+    justify-content: center;
+    min-height: 2.8rem;
+  }
+
+  .portfolio-stat-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-stat-item + .portfolio-stat-item {
+    border-top: 1px solid color-mix(in srgb, var(--primary-color) 16%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--primary-color) 16%, transparent);
+  }
+
+  .portfolio-visual {
+    min-height: 360px;
+    padding-bottom: 6.5rem;
+  }
+
+  .portfolio-status-card {
+    top: 0.9rem;
+    right: 0.9rem;
+  }
+
+  .portfolio-partner-card {
+    right: 1rem;
+    bottom: 0;
+    left: 1rem;
+    width: auto;
+  }
+
+  .portfolio-section,
+  .strategy-section,
+  .funding-section,
+  .operating-section,
+  .network-section {
+    padding: 4.5rem 0;
+  }
+
+  .portfolio-section {
+    padding-bottom: 0;
+  }
+
+  .project-card {
+    min-height: 360px;
+    border-radius: 18px;
+  }
+
+  .project-card__content {
+    padding: 4.5rem 1.2rem 1.25rem;
+  }
+
+  .project-card__icon {
+    top: 0.9rem;
+    right: 0.9rem;
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .project-card__icon svg {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .project-card h3 {
+    font-size: 1.28rem;
+  }
+
+  .project-card strong,
+  .project-card p {
+    font-size: 0.82rem;
+  }
+
+  .operating-rail::before {
+    display: none;
+  }
+
+  .operating-item {
+    grid-template-columns: 1fr;
+  }
+
+  .operating-step {
+    width: 3.4rem;
+    height: 3.4rem;
+  }
+
+  .strategy-card,
+  .network-card {
+    min-height: auto;
+  }
+
+  .strategy-section .section-intro h2 {
+    font-size: clamp(1.9rem, 9vw, 2.55rem);
+  }
+
+  .strategy-card {
+    min-height: 250px;
+    padding-right: 0.75rem;
+  }
+
+  .cta-content {
     margin-left: auto;
+    padding: 4rem 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .logo-track {
-    width: 100%;
-    flex-wrap: wrap;
+  .project-card img,
+  .button,
+  .pop-reveal {
+    transition: none;
+  }
+
+  .project-card.is-visible {
     animation: none;
   }
 
-  .logo-slide {
-    flex: 1 1 190px;
+  .pop-reveal.is-visible:is(
+      .portfolio-stat-item,
+      .project-card,
+      .operating-item,
+      .strategy-card,
+      .network-card,
+      .funding-item
+    ):hover {
+    transform: none;
+  }
+
+  .pop-reveal {
+    opacity: 1;
+    filter: none;
+    transform: none;
   }
 }
 </style>
