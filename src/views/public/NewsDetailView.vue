@@ -3,7 +3,10 @@ import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 
 const route = useRoute()
-const articleId = Number(route.params.id)
+const articleId = computed(() => {
+  const id = Number(route.params.id)
+  return Number.isFinite(id) ? id : 1
+})
 
 // ── Extended dummy data ──
 const articles = [
@@ -129,7 +132,7 @@ type Article = {
 const article = ref<Article | null>(null)
 
 onMounted(() => {
-  const found = (articles as Article[]).find((a) => a.id === articleId)
+  const found = (articles as Article[]).find((a) => a.id === articleId.value)
   article.value = found ?? null
 })
 

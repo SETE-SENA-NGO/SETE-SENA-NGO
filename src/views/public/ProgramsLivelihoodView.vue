@@ -189,7 +189,7 @@ onMounted(() => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             numberEls.forEach((el, i) => {
-              const { numeric, suffix } = parseStatNumber(stats[i].number)
+              const { numeric, suffix } = parseStatNumber(stats[i]?.number ?? '0')
               animateCount(el, numeric, suffix)
             })
             countObserver?.disconnect()
