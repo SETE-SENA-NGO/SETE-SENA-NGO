@@ -137,23 +137,23 @@ onMounted(() => {
 const relatedArticles = computed(() => {
   const current = article.value
   if (!current) return []
-  return articles.filter((a) => a.id !== current.id && a.category === current.category).slice(0, 3)
+  return articles
+    .filter((a) => a.id !== current.id && a.category === current.category)
+    .slice(0, 3)
 })
 
 // ─── Scroll‑triggered pop‑up for cards ──────────────────────────
 let observers: IntersectionObserver[] = []
 
 const setupObservers = () => {
-  // Clean up old observers
   observers.forEach((obs) => obs.disconnect())
   observers = []
 
-  // Target all cards that should pop up
   const selectors = [
-    '.sidebar-card', // includes stats, related, newsletter
+    '.sidebar-card',
     '.author-bio-card',
     '.share-section',
-    '.related-sidebar-item', // individual related links
+    '.related-sidebar-item',
   ]
   const elements = document.querySelectorAll(selectors.join(','))
   elements.forEach((el) => {
@@ -234,66 +234,90 @@ const copyLink = () => {
   <div class="news-detail">
     <!-- Toast notification -->
     <transition name="toast">
-      <div v-if="showToast" class="toast toast--success" role="status" aria-live="polite">
+      <div
+        v-if="showToast"
+        class="toast toast--success"
+        role="status"
+        aria-live="polite"
+      >
         <span class="toast__icon">✅</span>
         <span class="toast__text">{{ toastMessage }}</span>
       </div>
     </transition>
 
-    <!-- Hero -->
-    <section v-if="article" class="page-hero" :style="{ backgroundImage: `url(${article.image})` }">
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <RouterLink to="/news" class="back-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 12H5" />
-            <path d="M12 19l-7-7 7-7" />
-          </svg>
-          Back to all news
-        </RouterLink>
-        <div class="hero-badge">{{ article.category }}</div>
-        <h1>{{ article.title }}</h1>
-        <p class="hero-subtitle">{{ article.summary }}</p>
-        <div class="hero-meta">
-          <span class="meta-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            {{ article.author }}
-          </span>
-          <span class="meta-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            {{
-              new Date(article.date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })
-            }}
-          </span>
-          <span class="meta-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            {{ article.readTime }}
-          </span>
-          <span class="meta-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            {{ article.views }} views
-          </span>
+    <!-- ─── HEADER with wave image ─── -->
+    <header class="detail-header" v-if="article">
+      <div class="container">
+        <div class="header-grid">
+          <!-- Left: Text -->
+          <div class="header-left">
+            <RouterLink to="/news" class="back-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+              Back to all news
+            </RouterLink>
+
+            <div class="header-badge">{{ article.category }}</div>
+            <h1 class="header-title">{{ article.title }}</h1>
+            <p class="header-summary">{{ article.summary }}</p>
+
+            <div class="header-meta">
+              <span class="meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                {{ article.author }}
+              </span>
+              <span class="meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                {{
+                  new Date(article.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                }}
+              </span>
+              <span class="meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                {{ article.readTime }}
+              </span>
+              <span class="meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                {{ article.views }} views
+              </span>
+            </div>
+
+            <div class="header-accent"></div>
+          </div>
+
+          <!-- Right: Round image with wave animation -->
+          <div class="header-right">
+            <div class="image-wrapper wave">
+              <img
+                :src="article.image"
+                :alt="article.title"
+                class="header-round-image"
+              />
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+    </header>
 
     <!-- Article Body -->
     <div class="container">
@@ -307,7 +331,9 @@ const copyLink = () => {
             <div class="tags-section" v-if="article.tags && article.tags.length">
               <span class="tags-label">Tags</span>
               <div class="tags-list">
-                <span v-for="tag in article.tags" :key="tag" class="tag-item">#{{ tag }}</span>
+                <span v-for="tag in article.tags" :key="tag" class="tag-item"
+                  >#{{ tag }}</span
+                >
               </div>
             </div>
 
@@ -317,7 +343,9 @@ const copyLink = () => {
               <div class="share-buttons">
                 <button class="share-btn facebook" @click="shareOn('facebook')">
                   <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                    <path
+                      d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"
+                    />
                   </svg>
                 </button>
                 <button class="share-btn twitter" @click="shareOn('twitter')">
@@ -337,7 +365,12 @@ const copyLink = () => {
                   </svg>
                 </button>
                 <button class="share-btn email" @click="shareOn('email')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <path
                       d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
                     />
@@ -345,7 +378,12 @@ const copyLink = () => {
                   </svg>
                 </button>
                 <button class="share-btn copy" @click="copyLink">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                   </svg>
@@ -378,7 +416,7 @@ const copyLink = () => {
 
           <!-- Right: Sidebar -->
           <aside class="detail-sidebar">
-            <!-- Article stats (without icons) – now with pop‑up -->
+            <!-- Article stats -->
             <div class="sidebar-card stats-card">
               <h4>Article stats</h4>
               <div class="stat-row">
@@ -401,8 +439,11 @@ const copyLink = () => {
               </div>
             </div>
 
-            <!-- Related articles (pop‑up) -->
-            <div v-if="relatedArticles.length > 0" class="sidebar-card related-sidebar">
+            <!-- Related articles -->
+            <div
+              v-if="relatedArticles.length > 0"
+              class="sidebar-card related-sidebar"
+            >
               <h4>More from {{ article.category }}</h4>
               <RouterLink
                 v-for="item in relatedArticles"
@@ -426,12 +467,16 @@ const copyLink = () => {
               </RouterLink>
             </div>
 
-            <!-- Newsletter mini (pop‑up) -->
+            <!-- Newsletter mini -->
             <div class="sidebar-card newsletter-mini">
               <h4>📬 Never miss a story</h4>
               <p>Get the latest updates delivered to your inbox.</p>
               <div class="newsletter-mini-form">
-                <input type="email" placeholder="Your email" class="mini-input" />
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  class="mini-input"
+                />
                 <button class="mini-btn">Subscribe</button>
               </div>
             </div>
@@ -441,7 +486,12 @@ const copyLink = () => {
         <!-- Bottom navigation -->
         <div class="detail-footer-nav">
           <RouterLink to="/news" class="footer-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M19 12H5" />
               <path d="M12 19l-7-7 7-7" />
             </svg>
@@ -449,9 +499,19 @@ const copyLink = () => {
           </RouterLink>
           <button
             class="scroll-top-btn"
-            @click="$el?.ownerDocument?.defaultView?.scrollTo({ top: 0, behavior: 'smooth' })"
+            @click="
+              $el?.ownerDocument?.defaultView?.scrollTo({
+                top: 0,
+                behavior: 'smooth',
+              })
+            "
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M18 15l-6-6-6 6" />
             </svg>
           </button>
@@ -461,7 +521,9 @@ const copyLink = () => {
       <div v-else class="not-found">
         <h2>Article not found</h2>
         <p>The news you're looking for doesn't exist.</p>
-        <RouterLink to="/news" class="btn btn--read">Go back to news list</RouterLink>
+        <RouterLink to="/news" class="btn btn--read"
+          >Go back to news list</RouterLink
+        >
       </div>
     </div>
   </div>
@@ -498,69 +560,46 @@ const copyLink = () => {
   padding: 2rem clamp(1.25rem, 4vw, 3rem);
 }
 
-/* ── Hero ── */
-.page-hero {
-  position: relative;
-  background-size: cover;
-  background-position: center;
-  padding: 5rem 1.5rem 4rem;
-  min-height: 420px;
-  display: flex;
+/* ─── HEADER – Two columns with wave image ─── */
+.detail-header {
+  background: #c7edf380;
+  border-bottom: 1px solid var(--color-border);
+  padding: 3rem 0 2rem;
+}
+
+.header-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 3rem;
   align-items: center;
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(6, 18, 13, 0.92) 0%,
-    rgba(6, 18, 13, 0.6) 50%,
-    rgba(6, 18, 13, 0.3) 100%
-  );
-  z-index: 1;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 820px;
-  margin: 0 auto;
-  width: 100%;
+.header-left {
+  max-width: 840px;
 }
 
 .back-link {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: rgba(253, 248, 239, 0.92);
-  font-weight: 700;
+  color: var(--color-ink-soft);
+  font-weight: 600;
   text-decoration: none;
-  margin-bottom: 1rem;
-  padding: 0.6rem 0.9rem;
+  margin-bottom: 1.5rem;
+  padding: 0.4rem 1rem;
   border-radius: 999px;
-  border: 1px solid rgba(170, 214, 199, 0.35);
-  background: rgba(45, 122, 90, 0.2);
-  backdrop-filter: blur(8px);
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s,
-    background 0.2s,
-    border-color 0.2s;
-  font-size: 0.9rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-}
-
-.back-link {
-  border-color: rgba(232, 213, 163, 0.65);
-  background: rgba(201, 168, 76, 0.18);
+  border: 1px solid var(--color-border);
+  background: var(--color-cream);
+  transition: all var(--transition);
+  font-size: 0.85rem;
 }
 
 .back-link:hover {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
   transform: translateY(-2px);
-  background: rgba(215, 172, 52, 0.26);
-  border-color: rgba(232, 213, 163, 0.85);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 24px rgba(45, 122, 90, 0.15);
 }
 
 .back-link svg {
@@ -568,58 +607,143 @@ const copyLink = () => {
   height: 18px;
 }
 
-.hero-badge {
+.header-badge {
   display: inline-block;
   text-transform: uppercase;
   letter-spacing: 0.35em;
   font-size: 0.7rem;
   font-weight: 700;
-  color: rgb(21, 243, 21);
-  background: rgba(248, 247, 247, 0.08);
+  color: var(--primary-color);
+  background: rgba(45, 122, 90, 0.08);
   padding: 0.3rem 1.2rem;
   border-radius: 999px;
-  backdrop-filter: none;
   margin-bottom: 0.75rem;
+
 }
 
-.page-hero h1 {
-  font-size: clamp(2rem, 5vw, 3.6rem);
+.header-title {
+  font-size: clamp(2rem, 4vw, 3.2rem);
   font-weight: 700;
-  color: #fdf8ef;
-  margin: 0.5rem 0 0.5rem;
+  color: var(--primary-dark);
+  margin: 0 0 0.5rem;
   letter-spacing: -0.02em;
   line-height: 1.1;
+
+
 }
 
-.hero-subtitle {
+.header-summary {
   font-size: 1.1rem;
   line-height: 1.7;
-  color: rgba(253, 248, 239, 0.85);
+  color: var(--color-ink-soft);
   max-width: 700px;
+  margin: 0 0 1rem;
 }
 
-.hero-meta {
+.header-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
-  margin-top: 1.2rem;
   font-size: 0.85rem;
-  color: rgba(253, 248, 239, 0.75);
+  color: var(--color-ink-soft);
 }
 
-.meta-item {
+.header-meta .meta-item {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
 }
 
-.meta-item svg {
+.header-meta .meta-item svg {
   width: 18px;
   height: 18px;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
-/* ── Article Grid ── */
+.header-accent {
+  margin-top: 1.5rem;
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(to right, var(--primary-color), transparent);
+  border-radius: 4px;
+}
+
+/* ─── Right: Round image with WAVE animation ─── */
+.header-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-wrapper {
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid rgba(45, 122, 90, 0.08);
+  box-shadow: 0 12px 40px rgba(11, 61, 46, 0.12);
+  transition: box-shadow 0.5s ease, border-color 0.5s ease, transform 0.3s ease;
+  will-change: transform;
+}
+
+/* ── Wave animation ── */
+.image-wrapper.wave {
+  animation: waveFloat 4s ease-in-out infinite;
+}
+
+@keyframes waveFloat {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+  50% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(8px) rotate(-1.5deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+/* ── Hover: deeper shadow, scale, and stronger wave ── */
+.image-wrapper.wave:hover {
+  animation: waveFloatHover 1.6s ease-in-out infinite;
+  box-shadow: 0 24px 64px rgba(11, 61, 46, 0.25);
+  border-color: rgba(45, 122, 90, 0.3);
+}
+
+@keyframes waveFloatHover {
+  0% {
+    transform: translateY(0px) rotate(0deg) scale(1.02);
+  }
+  25% {
+    transform: translateY(-12px) rotate(2.5deg) scale(1.04);
+  }
+  50% {
+    transform: translateY(0px) rotate(0deg) scale(1.02);
+  }
+  75% {
+    transform: translateY(12px) rotate(-2.5deg) scale(1.04);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg) scale(1.02);
+  }
+}
+
+.header-round-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+/* ─── Article Grid ── */
 .detail-wrapper {
   padding: 2rem 0 3rem;
 }
@@ -702,7 +826,7 @@ const copyLink = () => {
   border: 1px solid var(--color-border);
 }
 
-/* ── Share Section (pop‑up) ── */
+/* ── Share Section ── */
 .share-section {
   margin-top: 2rem;
   padding-top: 1.5rem;
@@ -714,8 +838,7 @@ const copyLink = () => {
 
   opacity: 0;
   transform: translateY(20px) scale(0.97);
-  transition:
-    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -784,7 +907,7 @@ const copyLink = () => {
   background: var(--primary-dark);
 }
 
-/* ── Author Bio (pop‑up) ── */
+/* ── Author Bio ── */
 .author-bio-card {
   display: flex;
   gap: 1rem;
@@ -798,8 +921,7 @@ const copyLink = () => {
 
   opacity: 0;
   transform: translateY(20px) scale(0.97);
-  transition:
-    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -852,11 +974,9 @@ const copyLink = () => {
   box-shadow: var(--shadow-sm);
   border-radius: 20px;
 
-  /* pop‑up */
   opacity: 0;
   transform: translateY(20px) scale(0.97);
-  transition:
-    opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -874,7 +994,6 @@ const copyLink = () => {
   letter-spacing: 0.04em;
 }
 
-/* Stats card – no icons */
 .stats-card .stat-row {
   display: flex;
   align-items: center;
@@ -888,7 +1007,6 @@ const copyLink = () => {
   border-bottom: none;
 }
 
-/* Related sidebar items – also pop‑up */
 .related-sidebar-item {
   display: flex;
   gap: 0.75rem;
@@ -956,7 +1074,6 @@ const copyLink = () => {
   color: var(--color-ink-soft);
 }
 
-/* Newsletter mini */
 .newsletter-mini p {
   font-size: 0.85rem;
   color: var(--color-ink-soft);
@@ -1132,9 +1249,7 @@ const copyLink = () => {
 
 .toast-enter-active,
 .toast-leave-active {
-  transition:
-    opacity 220ms ease,
-    transform 220ms ease;
+  transition: opacity 220ms ease, transform 220ms ease;
 }
 
 .toast-enter-from,
@@ -1159,17 +1274,26 @@ const copyLink = () => {
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
   }
+  .header-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .header-right {
+    order: -1;
+  }
+  .image-wrapper {
+    max-width: 200px;
+  }
 }
 
 @media (max-width: 768px) {
-  .page-hero {
-    padding: 3rem 1.5rem 2.5rem;
-    min-height: 300px;
+  .detail-header {
+    padding: 2rem 0 1.5rem;
   }
-  .page-hero h1 {
+  .header-title {
     font-size: 1.8rem;
   }
-  .hero-meta {
+  .header-meta {
     flex-direction: column;
     gap: 0.4rem;
   }
@@ -1190,14 +1314,20 @@ const copyLink = () => {
   .share-buttons {
     justify-content: center;
   }
+  .image-wrapper {
+    max-width: 150px;
+  }
 }
 
 @media (max-width: 480px) {
-  .hero-subtitle {
+  .header-summary {
     font-size: 0.95rem;
   }
   .content-body {
     font-size: 0.95rem;
+  }
+  .image-wrapper {
+    max-width: 120px;
   }
 }
 </style>

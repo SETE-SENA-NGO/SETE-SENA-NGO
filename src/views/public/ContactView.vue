@@ -6,7 +6,7 @@ import cambodiaMap from '@/assets/maps/Cambodia Map.png'
 import locationIcon from '@/assets/maps/location_icon.png'
 import preyVengMap from '@/assets/maps/Prey_Veng.png'
 import svayRiengMap from '@/assets/maps/Svay_Rieng.png'
-import logoUrl from '@/assets/logo.png'
+import logoUrl from '@/assets/santi_sena_icon.ico'
 
 const headquarters = {
   name: 'Our headquarters in Svay Rieng',
