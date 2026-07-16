@@ -70,6 +70,11 @@ const pageGroups: PageGroup[] = [
     ],
   },
   {
+    slug: 'news',
+    label: 'News',
+    items: [{ slug: 'news-detail', label: 'News Detail' }],
+  },
+  {
     slug: 'contact',
     label: 'Contact',
     items: [],
