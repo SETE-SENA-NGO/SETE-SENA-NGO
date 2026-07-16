@@ -196,7 +196,6 @@ let previousDescription: string | null = null
 let createdDescriptionMeta = false
 let revealObserver: IntersectionObserver | null = null
 let lastScrollY = 0
-const statValues = ref<Map<string, number>>(new Map())
 
 onMounted(async () => {
   previousTitle = document.title
@@ -211,7 +210,7 @@ onMounted(async () => {
   }
 
   await nextTick()
-  setupAnimations()
+  setupPopReveal()
 })
 
 onUnmounted(() => {
@@ -293,15 +292,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function setupAnimations() {
+function setupPopReveal() {
   revealObserver?.disconnect()
 
+  const elements = Array.from(
+    document.querySelectorAll<HTMLElement>('.get-involved-page .pop-reveal'),
+  )
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   if (!('IntersectionObserver' in window) || prefersReducedMotion) {
-    document.querySelectorAll('.get-involved-page .pop-reveal').forEach((el) => {
-      el.classList.add('is-visible')
-    })
+    elements.forEach((element) => element.classList.add('is-visible'))
     return
   }
 
@@ -330,69 +330,10 @@ function setupAnimations() {
     { rootMargin: '-4% 0px -8% 0px', threshold: 0.12 },
   )
 
-  // Setup staggered delays based on animation group
-  const staggeredGroups = document.querySelectorAll<HTMLElement>('[data-stagger]')
-  staggeredGroups.forEach((group) => {
-    const baseDelay = parseInt(group.getAttribute('data-stagger') || '120', 10)
-    const items = group.querySelectorAll<HTMLElement>('.pop-reveal')
-    items.forEach((element, index) => {
-      element.style.setProperty('--pop-delay', `${index * baseDelay}ms`)
-      revealObserver?.observe(element)
-    })
+  elements.forEach((element, index) => {
+    element.style.setProperty('--pop-delay', `${Math.min(index * 38, 260)}ms`)
+    revealObserver?.observe(element)
   })
-
-  // Observe standalone pop-reveal elements
-  document.querySelectorAll<HTMLElement>('.get-involved-page .pop-reveal').forEach((element) => {
-    if (!element.closest('[data-stagger]')) {
-      revealObserver?.observe(element)
-    }
-  })
-
-  // Trigger counter animation for stat numbers
-  setupStatCounters()
-}
-
-function setupStatCounters() {
-  const statElements = document.querySelectorAll<HTMLElement>('[data-count-to]')
-  if (!statElements.length) return
-
-  const counterObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const target = entry.target as HTMLElement
-          const targetValue = parseInt(target.getAttribute('data-count-to') || '0', 10)
-          animateCounter(target, targetValue)
-          counterObserver.unobserve(target)
-        }
-      })
-    },
-    { rootMargin: '0px 0px -20% 0px' },
-  )
-
-  statElements.forEach((el) => counterObserver.observe(el))
-}
-
-function animateCounter(element: HTMLElement, target: number) {
-  const duration = 2000
-  const start = performance.now()
-
-  function update(now: number) {
-    const elapsed = now - start
-    const progress = Math.min(elapsed / duration, 1)
-    // Ease-out cubic
-    const eased = 1 - Math.pow(1 - progress, 3)
-    const current = Math.round(eased * target)
-    element.textContent = current.toString()
-
-    if (progress < 1) {
-      requestAnimationFrame(update)
-    } else {
-      element.textContent = target.toString()
-    }
-  }
-
-  requestAnimationFrame(update)
 }
 
 function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
@@ -414,21 +355,21 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
       </div>
 
       <div class="hero-shell">
-        <div class="hero-copy pop-reveal fade-in-down">
+        <div class="hero-copy pop-reveal pop-content">
           <p class="eyebrow">{{ pageContent.hero.eyebrow }}</p>
           <h1 id="get-involved-title">{{ pageContent.hero.title }}</h1>
           <p class="hero-description">{{ pageContent.hero.description }}</p>
           <div class="hero-actions">
-            <RouterLink :to="pageContent.hero.primaryCta.to" class="button button-primary btn-anim">
+            <RouterLink :to="pageContent.hero.primaryCta.to" class="button button-primary">
               {{ pageContent.hero.primaryCta.label }}
             </RouterLink>
-            <RouterLink :to="pageContent.hero.secondaryCta.to" class="button button-secondary btn-anim">
+            <RouterLink :to="pageContent.hero.secondaryCta.to" class="button button-secondary">
               {{ pageContent.hero.secondaryCta.label }}
             </RouterLink>
           </div>
         </div>
 
-        <div class="hero-card-grid" data-stagger="120" aria-label="Ways to support">
+        <div class="hero-card-grid" aria-label="Ways to support">
           <svg class="hero-tree-lines" viewBox="0 0 640 660" aria-hidden="true" focusable="false">
             <path
               class="hero-tree-trunk"
@@ -446,10 +387,10 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
           <article
             v-for="(card, index) in pageContent.hero.cards"
             :key="card.title"
-            class="hero-card vision-card pop-reveal pop-card"
+            class="hero-card pop-reveal pop-card"
           >
             <div class="hero-card-content">
-              <span class="hero-card-icon icon-wrapper" aria-hidden="true">
+              <span class="hero-card-icon" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false">
                   <g v-if="resolveHeroIcon(card.icon, index) === 'support'">
                     <path d="M10 27h8l5 5h9" />
@@ -483,7 +424,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
               <p class="hero-card-body">{{ card.body }}</p>
               <strong class="hero-card-stat">{{ card.stat }}</strong>
             </div>
-            <div class="shimmer-overlay" aria-hidden="true"></div>
           </article>
         </div>
       </div>
@@ -491,7 +431,7 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 
     <section id="ways-to-help" class="about-section" aria-labelledby="support-heading">
       <div class="about-shell">
-        <div class="about-copy content-slide-left pop-reveal">
+        <div class="about-copy pop-reveal pop-content">
           <p class="eyebrow">About</p>
           <h2 id="support-heading">Support real community work.</h2>
           <p>
@@ -500,11 +440,11 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
           </p>
         </div>
 
-        <div class="about-card-grid" data-stagger="100">
+        <div class="about-card-grid">
           <article
             v-for="card in pageContent.supportCards"
             :key="card.title"
-            class="about-card mission-card pop-reveal pop-card"
+            class="about-card pop-reveal pop-card"
           >
             <figure>
               <img :src="card.image" :alt="card.alt" loading="lazy" />
@@ -522,29 +462,29 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 
     <section class="quote-section" aria-labelledby="strategy-heading">
       <div class="quote-shell">
-        <article class="quote-panel quote-panel-left pop-reveal pop-quote">
-          <span class="quote-mark quote-mark-large quote-icon-float" aria-hidden="true">&ldquo;</span>
+        <article class="quote-panel quote-panel-left pop-reveal pop-left">
+          <span class="quote-mark quote-mark-large" aria-hidden="true">&ldquo;</span>
           <blockquote id="strategy-heading">
             {{ pageContent.quotePanel.quote }}
           </blockquote>
         </article>
 
-        <div class="quote-detail pop-reveal pop-quote">
+        <div class="quote-detail pop-reveal pop-right">
           <p>{{ pageContent.quotePanel.body }}</p>
-          <span class="quote-mark quote-mark-detail quote-icon-float-alt" aria-hidden="true">&rdquo;</span>
+          <span class="quote-mark quote-mark-detail" aria-hidden="true">&rdquo;</span>
         </div>
       </div>
     </section>
 
     <section class="journey-section" aria-labelledby="journey-heading">
-      <div class="journey-intro pop-reveal fade-in-down">
+      <div class="journey-intro pop-reveal pop-content">
         <p class="eyebrow">Your path</p>
         <h2 id="journey-heading">Choose your path.</h2>
         <p class="journey-summary">Choose one route and connect it to real field needs.</p>
       </div>
 
-      <ol class="journey-list" data-stagger="100">
-        <li v-for="item in pageContent.journey" :key="item.step" class="journey-item pop-reveal pop-card">
+      <ol class="journey-list">
+        <li v-for="item in pageContent.journey" :key="item.step" class="pop-reveal pop-card">
           <span>{{ item.step }}</span>
           <div>
             <h3>{{ item.title }}</h3>
@@ -554,33 +494,33 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
       </ol>
     </section>
 
-    <section class="closing-section cta-section" aria-labelledby="closing-heading">
+    <section class="closing-section" aria-labelledby="closing-heading">
       <div class="closing-panel">
         <div class="closing-header">
-          <h2 id="closing-heading" class="pop-reveal fade-in-down">
+          <h2 id="closing-heading" class="pop-reveal pop-content">
             {{ pageContent.closing.title }}
           </h2>
-          <p class="eyebrow closing-eyebrow pop-reveal fade-in-down">
+          <p class="eyebrow closing-eyebrow pop-reveal pop-content">
             {{ pageContent.closing.eyebrow }}
           </p>
         </div>
 
         <div class="closing-body">
-          <p class="closing-copy pop-reveal pop-fade-up">{{ pageContent.closing.body }}</p>
+          <p class="closing-copy pop-reveal pop-content">{{ pageContent.closing.body }}</p>
           <div class="closing-action-column">
-            <p class="pop-reveal pop-fade-up">
+            <p class="pop-reveal pop-content">
               Start with a conversation or a local donation path.
             </p>
             <div class="closing-actions">
               <RouterLink
                 :to="pageContent.closing.primaryCta.to"
-                class="button button-primary btn-anim pop-reveal pop-card"
+                class="button button-primary pop-reveal pop-card"
               >
                 {{ pageContent.closing.primaryCta.label }}
               </RouterLink>
               <RouterLink
                 :to="pageContent.closing.secondaryCta.to"
-                class="button button-secondary btn-anim pop-reveal pop-card"
+                class="button button-secondary pop-reveal pop-card"
               >
                 {{ pageContent.closing.secondaryCta.label }}
               </RouterLink>
@@ -606,8 +546,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   --quote-bg: var(--primary-dark);
   --quote-accent: var(--primary-light);
   --shadow: 0 16px 34px rgba(43, 43, 40, 0.1);
-  --spring-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
   min-height: 100vh;
   overflow: hidden;
@@ -780,6 +718,15 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   letter-spacing: 0;
   line-height: 1.1;
   text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
 }
 
 .button-primary {
@@ -872,6 +819,9 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
     inset 0 0 0 2px color-mix(in srgb, var(--accent-dark) 14%, transparent),
     0 18px 34px rgba(43, 43, 40, 0.18);
   text-align: center;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .hero-card::before {
@@ -948,55 +898,14 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   transform-origin: left center;
 }
 
-/* ============= VISION CARD HOVER EFFECTS ============= */
-.vision-card {
-  transition:
-    transform 0.4s var(--spring-ease),
-    box-shadow 0.4s var(--spring-ease);
-}
-
-.vision-card:hover {
-  transform: translateY(-6px) scale(1.02);
+.hero-card:hover {
   box-shadow:
-    inset 0 0 0 2px color-mix(in srgb, var(--accent) 28%, transparent),
-    0 0 24px color-mix(in srgb, var(--accent) 18%, transparent),
-    0 24px 48px rgba(43, 43, 40, 0.16);
+    inset 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 20px 38px rgba(43, 43, 40, 0.14);
+  transform: translateY(-3px);
 }
 
-/* Shimmer overlay sweep */
-.shimmer-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    105deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.3) 45%,
-    rgba(255, 255, 255, 0.5) 50%,
-    rgba(255, 255, 255, 0.3) 55%,
-    transparent 70%
-  );
-  background-size: 300% 100%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.vision-card:hover .shimmer-overlay {
-  opacity: 1;
-  animation: shimmerSweep 0.8s ease-out forwards;
-}
-
-@keyframes shimmerSweep {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -100% 0;
-  }
-}
-
-/* ============= ICON WRAPPER BOUNCE ============= */
-.icon-wrapper {
+.hero-card-icon {
   width: 54px;
   height: 54px;
   display: grid;
@@ -1010,13 +919,13 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
     inset 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent),
     0 8px 18px color-mix(in srgb, var(--accent) 10%, transparent);
   transition:
-    background 0.3s var(--spring-ease),
-    box-shadow 0.3s var(--spring-ease),
-    color 0.3s var(--spring-ease),
-    transform 0.4s var(--spring-ease);
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.icon-wrapper svg {
+.hero-card-icon svg {
   width: 27px;
   height: 27px;
   fill: none;
@@ -1026,7 +935,7 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   stroke-width: 2.45;
 }
 
-.vision-card:hover .icon-wrapper {
+.hero-card:hover .hero-card-icon {
   background:
     radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.22), transparent 34%),
     linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -1034,7 +943,7 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.16),
     0 12px 24px color-mix(in srgb, var(--accent) 28%, transparent);
-  transform: scale(1.15) rotate(8deg);
+  transform: scale(1.04);
 }
 
 .hero-card-label {
@@ -1094,18 +1003,15 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   text-transform: uppercase;
   white-space: nowrap;
   transition:
-    background 0.3s var(--spring-ease),
-    color 0.3s var(--spring-ease),
-    transform 0.3s var(--spring-ease);
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
-.vision-card:hover .hero-card-stat {
+.hero-card:hover .hero-card-stat {
   background: color-mix(in srgb, var(--accent) 16%, var(--surface));
   color: var(--accent);
-  transform: scale(1.08);
 }
 
-/* ============= ABOUT / MISSION SECTION ============= */
 .about-section {
   background: linear-gradient(180deg, var(--surface-soft), var(--page-bg));
   padding: 4.5rem 0;
@@ -1176,6 +1082,14 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.about-card:hover {
+  box-shadow: 0 20px 38px rgba(43, 43, 40, 0.14);
+  transform: translateY(-8px);
 }
 
 .about-card figure {
@@ -1191,7 +1105,7 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s var(--spring-smooth);
+  transition: transform 0.3s ease;
 }
 
 .about-card:hover img {
@@ -1251,35 +1165,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   color: var(--accent);
 }
 
-/* Mission card hover effects */
-.mission-card {
-  position: relative;
-  transition:
-    transform 0.4s var(--spring-ease),
-    box-shadow 0.4s var(--spring-ease);
-}
-
-.mission-card::after {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 3px;
-  height: 0;
-  background: var(--accent);
-  content: '';
-  transition: height 0.4s var(--spring-ease);
-}
-
-.mission-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 38px rgba(43, 43, 40, 0.14);
-}
-
-.mission-card:hover::after {
-  height: 100%;
-}
-
-/* ============= QUOTE SECTION ============= */
 .quote-section {
   overflow: hidden;
   background: var(--quote-bg);
@@ -1349,36 +1234,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   transform: translate(0.15rem, -0.1rem);
 }
 
-/* Quote icon floating animation */
-.quote-icon-float {
-  display: inline-block;
-  animation: quoteFloat 3.5s ease-in-out infinite;
-}
-
-.quote-icon-float-alt {
-  display: inline-block;
-  animation: quoteFloatAlt 4s ease-in-out infinite;
-}
-
-@keyframes quoteFloat {
-  0%, 100% {
-    transform: translateX(-0.22rem) translateY(0);
-  }
-  50% {
-    transform: translateX(-0.22rem) translateY(-6px);
-  }
-}
-
-@keyframes quoteFloatAlt {
-  0%, 100% {
-    transform: translate(0.15rem, -0.1rem) translateY(0);
-  }
-  50% {
-    transform: translate(0.15rem, -0.1rem) translateY(-4px);
-  }
-}
-
-/* ============= JOURNEY SECTION ============= */
 .journey-section {
   display: grid;
   gap: 2rem;
@@ -1429,23 +1284,16 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   background: var(--surface);
   padding: 1.15rem 1.1rem 1.25rem;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .journey-list li:hover {
   border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
   box-shadow: 0 14px 28px rgba(43, 43, 40, 0.1);
   transform: translateY(-2px);
-}
-
-.journey-item {
-  transition:
-    transform 0.3s var(--spring-ease),
-    border-color 0.3s var(--spring-ease),
-    box-shadow 0.3s var(--spring-ease);
-}
-
-.journey-item:hover {
-  transform: translateY(-4px) !important;
 }
 
 .journey-list span {
@@ -1475,7 +1323,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   line-height: 1.62;
 }
 
-/* ============= CLOSING / CTA SECTION ============= */
 .closing-section {
   border-top: 0;
   padding: 2.25rem 0 4.75rem;
@@ -1627,25 +1474,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   background: var(--accent-soft);
 }
 
-/* ============= BUTTON SPRING ANIMATIONS ============= */
-.btn-anim {
-  transition:
-    transform 0.35s var(--spring-ease),
-    box-shadow 0.35s var(--spring-ease),
-    background 0.35s var(--spring-ease),
-    border-color 0.35s var(--spring-ease);
-}
-
-.btn-anim:hover {
-  transform: translateY(-3px) scale(1.03);
-}
-
-.btn-anim:active {
-  transform: translateY(0) scale(0.97);
-  transition-duration: 0.08s;
-}
-
-/* ============= POP / SCROLL REVEAL ANIMATIONS ============= */
 .pop-reveal {
   --pop-blur: 10px;
   --pop-offset: 28px;
@@ -1686,44 +1514,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   filter: saturate(0.9);
 }
 
-/* Fade-in-down for section headers */
-.fade-in-down {
-  --pop-offset: -30px;
-  --pop-blur: 6px;
-  --pop-scale: 0.98;
-}
-
-.fade-in-down.pop-from-up {
-  --pop-offset: 30px;
-}
-
-/* Slide in from left for mission content */
-.content-slide-left {
-  --pop-x: -42px;
-  --pop-offset: 0px;
-  --pop-blur: 8px;
-  --pop-scale: 0.985;
-}
-
-.content-slide-left.pop-from-up {
-  --pop-offset: 0px;
-}
-
-/* Quote block scale + fade */
-.pop-quote {
-  --pop-scale: 0.92;
-  --pop-blur: 8px;
-  --pop-offset: 0px;
-}
-
-/* Fade-up for CTA */
-.pop-fade-up {
-  --pop-offset: 24px;
-  --pop-blur: 6px;
-  --pop-scale: 0.99;
-}
-
-/* Scroll direction variants */
 .pop-reveal.pop-from-up {
   --pop-offset: -26px;
 }
@@ -1747,41 +1537,26 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   --pop-offset: 0px;
 }
 
-/* Visible state */
 .pop-reveal.is-visible {
   opacity: 1;
   filter: blur(0) saturate(1);
   transform: translate3d(0, 0, 0) scale(1);
 }
 
-/* Maintain hover transforms on visible interactive elements */
-.vision-card.pop-reveal.is-visible:hover {
-  transform: translateY(-6px) scale(1.02) !important;
+.button.pop-reveal.is-visible:hover {
+  transform: translateY(-2px);
 }
 
-.mission-card.pop-reveal.is-visible:hover {
-  transform: translateY(-5px) !important;
+.hero-card.pop-reveal.is-visible:hover {
+  transform: translateY(-3px) scale(1.006);
 }
 
-.journey-item.pop-reveal.is-visible:hover {
-  transform: translateY(-4px) !important;
+.about-card.pop-reveal.is-visible:hover {
+  transform: translateY(-8px) scale(1.015);
 }
 
-.btn-anim.pop-reveal.is-visible:hover {
-  transform: translateY(-3px) scale(1.03) !important;
-}
-
-.pop-reveal.is-visible .quote-icon-float,
-.pop-reveal.is-visible .quote-icon-float-alt {
-  animation: none;
-}
-
-.pop-reveal.is-visible .quote-icon-float {
-  animation: quoteFloat 3.5s ease-in-out infinite;
-}
-
-.pop-reveal.is-visible .quote-icon-float-alt {
-  animation: quoteFloatAlt 4s ease-in-out infinite;
+.journey-list li.pop-reveal.is-visible:hover {
+  transform: translateY(-4px) scale(1.008);
 }
 
 @media (max-width: 1120px) {
@@ -1941,27 +1716,14 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 
 @media (prefers-reduced-motion: reduce) {
   .pop-reveal,
-  .pop-reveal.is-visible {
+  .pop-reveal.is-visible,
+  .hero-card.pop-reveal.is-visible:hover,
+  .about-card.pop-reveal.is-visible:hover,
+  .journey-list li.pop-reveal.is-visible:hover {
     opacity: 1;
     filter: none;
     transform: none;
     transition: none;
-  }
-
-  .vision-card:hover,
-  .mission-card:hover,
-  .journey-item:hover,
-  .btn-anim:hover {
-    transform: none !important;
-  }
-
-  .shimmer-overlay {
-    display: none !important;
-  }
-
-  .quote-icon-float,
-  .quote-icon-float-alt {
-    animation: none !important;
   }
 
   .closing-panel::before,
