@@ -1,30 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
 import heroImage from '@/assets/hero-impact.jpg'
 import heroForest from '@/assets/hero-impact-forest.jpg'
 import heroVillage from '@/assets/hero-impact-village.jpg'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
-const heroPhotos = [
-  { src: heroImage, alt: 'Community gathering', label: 'Community impact' },
-  { src: heroForest, alt: 'Forest restoration', label: 'Forest restoration' },
-  { src: heroVillage, alt: 'Village life', label: 'Village life' },
+const slideItems = [
+  { image: heroImage, caption: '' },
+  { image: heroForest, caption: '' },
+  { image: heroVillage, caption: '' },
 ]
-
-const currentHeroIndex = ref(0)
-let heroInterval: number | undefined
-const currentHero = computed(() => heroPhotos[currentHeroIndex.value])
-
-onMounted(() => {
-  heroInterval = window.setInterval(() => {
-    currentHeroIndex.value = (currentHeroIndex.value + 1) % heroPhotos.length
-  }, 5000)
-})
-
-onUnmounted(() => {
-  if (heroInterval) {
-    window.clearInterval(heroInterval)
-  }
-})
 
 const stats = [
   {
@@ -92,17 +76,7 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
 
 <template>
   <div class="impact-page">
-    <section class="hero-section">
-      <div class="hero-images">
-        <div
-          v-for="(photo, index) in heroPhotos"
-          :key="photo.alt"
-          class="hero-background"
-          :class="{ active: index === currentHeroIndex }"
-          :style="{ backgroundImage: `url(${photo.src})` }"
-          aria-hidden="true"
-        />
-      </div>
+    <Slideshow :slides="slideItems">
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Our Impact</span>
@@ -111,9 +85,14 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
           Every number below is a household with a safer roof, a child with a teacher, a forest still standing.
         </p>
       </div>
-    </section>
+    </Slideshow>
 
     <section id="numbers" class="stats-section">
+      <div class="stats-header">
+        <span class="eyebrow">Impact by the Numbers</span>
+        <h2>Thirty years of measurable change.</h2>
+        <p>Every number represents a household strengthened, a forest protected, a life improved.</p>
+      </div>
       <div class="stats-grid">
         <article v-for="stat in stats" :key="stat.label" class="stat-card">
           <div class="stat-value">{{ stat.value }}</div>
@@ -170,33 +149,47 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #fdf8ee;
-  color: #1f2937;
-}
-
-.hero-section {
-  position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid rgba(78, 48, 15, 0.25);
-  min-height: 320px;
-  display: flex;
-  align-items: center;
+  background: var(--color-cream);
+  color: var(--color-ink);
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(122, 201, 165, 0.92), rgba(87, 100, 99, 0.72), rgba(39, 143, 107, 0.72));
-  z-index: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 40%,
+    rgba(6, 18, 13, 0.22) 68%,
+    transparent 100%
+  );
 }
 
 .hero-content {
-  position: relative;
-  z-index: 1;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 5rem 1.5rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 720px;
+  margin: 0;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   color: #fffdf8;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .eyebrow {
@@ -204,21 +197,19 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
   text-transform: uppercase;
   letter-spacing: 0.3em;
   font-size: 0.8rem;
-  color: #f2c46d;
+  color: var(--primary-color);
   font-weight: 700;
 }
 
 h1,
 h2 {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
 }
 
 h1 {
   margin-top: 1rem;
-  margin-right: 400px;
   max-width: 720px;
-  font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+  color: #fffdf8;
 }
 
 .hero-content p {
@@ -229,33 +220,33 @@ h1 {
   color: rgba(255, 253, 248, 0.85);
 }
 
-.hero-images {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.hero-background {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-}
-
-.hero-background.active {
-  opacity: 1;
-}
-
 .stats-section,
 .timeline-section,
 .partners-section {
-  padding: 4.5rem 1.5rem;
+  padding: 4rem 1.5rem;
+}
+
+.stats-header {
+  max-width: var(--container-max-width);
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.stats-header h2 {
+  margin: 0.75rem 0 0.5rem;
+  color: var(--color-ink);
+}
+
+.stats-header p {
+  max-width: 560px;
+  margin: 0 auto;
+  color: var(--color-ink-soft);
+  line-height: 1.7;
+  font-size: 0.95rem;
 }
 
 .stats-grid {
-  max-width: 1120px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   display: grid;
   gap: 1px;
@@ -267,27 +258,27 @@ h1 {
 
 .stat-card {
   background: #fffdfa;
-  padding: 2rem;
+  padding: 1.75rem;
 }
 
 .stat-value {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 2.4rem;
-  color: #a6541a;
+  font-size: 2rem;
+  color: var(--primary-dark);
 }
 
 .stat-label {
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #5e3818;
+  color: var(--color-ink-soft);
 }
 
 .stat-description {
-  margin-top: 0.8rem;
+  margin-top: 0.6rem;
   line-height: 1.6;
+  font-size: 0.9rem;
   color: rgba(31, 41, 55, 0.72);
 }
 
@@ -298,15 +289,14 @@ h1 {
 
 .timeline-shell h2 {
   margin-top: 1rem;
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
-  color: #5e3818;
+  color: var(--color-ink);
 }
 
 .timeline-list {
   margin: 2.2rem 0 0;
   padding: 0 0 0 1.5rem;
   list-style: none;
-  border-left: 2px solid rgba(242, 196, 109, 0.45);
+  border-left: 2px solid color-mix(in srgb, var(--primary-color) 45%, transparent);
 }
 
 .timeline-item {
@@ -322,19 +312,18 @@ h1 {
   width: 0.9rem;
   height: 0.9rem;
   border-radius: 50%;
-  background: #f2c46d;
+  background: var(--primary-color);
 }
 
 .timeline-year {
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.7rem;
-  color: #a6541a;
+  color: var(--primary-dark);
 }
 
 .timeline-title {
   margin-top: 0.15rem;
   font-weight: 700;
-  color: #5e3818;
+  color: var(--color-ink);
 }
 
 .timeline-description {
@@ -351,8 +340,7 @@ h1 {
 
 .partners-heading h2 {
   margin-top: 1rem;
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
-  color: #5e3818;
+  color: var(--color-ink);
 }
 
 .partners-heading p {
@@ -377,10 +365,9 @@ h1 {
 
 .partner-name {
   white-space: nowrap;
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.6rem;
   font-weight: 600;
-  color: rgba(94, 56, 24, 0.6);
+  color: color-mix(in srgb, var(--color-ink) 60%, transparent);
 }
 
 @keyframes marquee {

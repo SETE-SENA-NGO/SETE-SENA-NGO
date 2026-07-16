@@ -2,14 +2,34 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import type { UserProfile } from '@/types/user'
+
+const adminRoles = new Set<UserProfile['role']>(['super_admin', 'admin', 'editor'])
+
+export type Profile = {
+  id: string
+  role: string
+}
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
-  const profile = ref<unknown>(null)
+  const profile = ref<Profile | null>(null)
   const loading = ref(false)
   const initialized = ref(false)
 
   const isAuthenticated = computed(() => !!user.value)
+  const isAdmin = computed(() =>
+    profile.value?.role ? adminRoles.has(profile.value.role as UserProfile['role']) : false,
+  )
+
+  async function loadProfile(userId: string) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, role')
+      .eq('id', userId)
+      .maybeSingle()
+    profile.value = (data as Profile | null) ?? { id: userId, role: 'viewer' }
+  }
 
   async function init() {
     if (initialized.value) return
@@ -20,12 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
       } = await supabase.auth.getSession()
       user.value = session?.user ?? null
       if (user.value) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.value.id)
-          .maybeSingle()
-        profile.value = data ?? { id: user.value.id, email: user.value.email ?? '', role: 'viewer' }
+        await loadProfile(user.value.id)
       }
     } finally {
       loading.value = false
@@ -35,23 +50,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(email: string, password: string) {
     loading.value = true
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      user.value = data.user
+      await loadProfile(data.user.id)
+    } finally {
       loading.value = false
-      throw error
     }
-    user.value = data.user
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', data.user.id)
-      .maybeSingle()
-    profile.value = profileData ?? {
-      id: data.user.id,
-      email: data.user.email ?? '',
-      role: 'viewer',
-    }
-    loading.value = false
   }
 
   async function logout() {
@@ -60,5 +66,5 @@ export const useAuthStore = defineStore('auth', () => {
     profile.value = null
   }
 
-  return { user, profile, loading, initialized, isAuthenticated, init, login, logout }
+  return { user, profile, loading, initialized, isAuthenticated, isAdmin, init, login, logout }
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
 
 interface ProgramGoal {
   number: string
@@ -31,12 +31,13 @@ const goals: ProgramGoal[] = [
     tag: 'GOAL 02',
     title: 'Education',
     intro:
-      'Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six..',
+      "Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six.",
     whatWeDo:
       'Set up village pre-schools, train local teachers, stock small libraries, and support scholarships for at-risk children — especially girls.',
     whyItMatters:
       'In the districts we work in, many hamlets are more than an hour is walk from the nearest school. Early learning centres change that.',
-    quote: 'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
+    quote:
+      'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
     image: '/images/programs/education.jpg',
   },
   {
@@ -49,7 +50,8 @@ const goals: ProgramGoal[] = [
       'Train Saving-for-Change facilitators, seed household enterprises and link cooperatives to fair-price buyers.',
     whyItMatters:
       'Cash predictability is what lets a family send their child to school this term instead of to a garment factory.',
-    quote: 'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
+    quote:
+      'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
     image: '/images/programs/livelihood.jpg',
   },
   {
@@ -68,86 +70,104 @@ const goals: ProgramGoal[] = [
 ]
 
 const priorities = [
-  'Strengthened governance and accountability',
-  'Staff and volunteer development',
-  'Income and funding diversification',
-  'Research and knowledge management',
-  'Public advocacy',
+  {
+    title: 'Strengthened governance and accountability',
+    icon: 'shield',
+  },
+  {
+    title: 'Staff and volunteer development',
+    icon: 'users',
+  },
+  {
+    title: 'Income and funding diversification',
+    icon: 'sprout',
+  },
+  {
+    title: 'Research and knowledge management',
+    icon: 'book',
+  },
+  {
+    title: 'Public advocacy',
+    icon: 'megaphone',
+  },
 ]
 
-// --- Hero slideshow ---
-// Add more files (slide-2.jpg, slide-3.jpg, ...) into public/images/programs/hero/
-// and list them here. It still works fine with just one image.
-const heroSlides = [
-  '/images/programs/hero-1.jpg',
-  '/images/programs/hero-2.jpg',
-  '/images/programs/hero-3.jpg',
-  '/images/programs/hero-4.jpg',
-]
+// Inline SVG icons — no external icon package required.
+// Line-style icons using currentColor so they inherit the .priority-icon color.
+const priorityIconSvg: Record<string, string> = {
+  shield: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>`,
+  users: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5"/><path d="M10 20c0-3 3-5 6-5s6 2 6 5"/></svg>`,
+  sprout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10c0-3 2-5 5-5 0 3-2 5-5 5z"/><path d="M12 13c0-3-2-5-5-5 0 3 2 5 5 5z"/></svg>`,
+  book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"/></svg>`,
+  megaphone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l3 5V6l-3 5H5a2 2 0 0 0-2 2z"/><path d="M13 8a4 4 0 0 1 0 8"/><path d="M17 6a8 8 0 0 1 0 12"/></svg>`,
+}
 
-const currentSlide = ref(0)
-let slideTimer: ReturnType<typeof setInterval> | undefined
+// Scroll-triggered reveal: each goal card (and the priorities grid) animates in once visible
+const cardRefs = ref<HTMLElement[]>([])
+const priorityWaveRef = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+function setCardRef(el: unknown | null, index: number) {
+  if (el && el instanceof Element) {
+    cardRefs.value[index] = el as HTMLElement
+  }
+}
 
 onMounted(() => {
-  if (heroSlides.length > 1) {
-    slideTimer = setInterval(() => {
-      currentSlide.value = (currentSlide.value + 1) % heroSlides.length
-    }, 5000)
-  }
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer?.unobserve(entry.target)
+        }
+      })
+    },
+    { threshold: 0.2, rootMargin: '0px 0px -10% 0px' },
+  )
+
+  cardRefs.value.forEach((el) => el && observer?.observe(el))
+  if (priorityWaveRef.value) observer.observe(priorityWaveRef.value)
 })
-onUnmounted(() => {
-  if (slideTimer) clearInterval(slideTimer)
+
+onBeforeUnmount(() => {
+  observer?.disconnect()
 })
 </script>
 
 <template>
   <div class="programs-page">
-    <!-- HERO SLIDESHOW -->
-    <section class="hero">
-      <div class="hero-slides">
-        <div
-          v-for="(slide, i) in heroSlides"
-          :key="slide"
-          class="hero-slide"
-          :class="{ active: i === currentSlide }"
-          :style="{ backgroundImage: `url('${slide}')` }"
-        />
-        <div class="hero-overlay" />
-      </div>
-      <div class="hero-content">
-        <p class="eyebrow">OUR PROGRAMS</p>
-        <h1>Four roots. One tree of peace.</h1>
-        <p class="lead">
-          Santi Sena's work follows four interwoven strategic goals — environment, 
-          education, livelihoods and child protection — each delivered with and by 
-          the communities themselves.
-        </p>
-      </div>
-    </section>
 
     <!-- GOALS -->
-    <section
-      v-for="(goal, index) in goals"
-      :key="goal.number"
-      class="goal-block"
-      :class="{ reverse: index % 2 === 1 }"
-    >
-      <div class="goal-media">
-        <img :src="goal.image" :alt="goal.title" />
-      </div>
-      <div class="goal-text">
-        <p class="tag">{{ goal.tag }}</p>
-        <h2>{{ goal.title }}</h2>
-        <p class="intro">{{ goal.intro }}</p>
+    <section class="goals-wrap">
+      <article
+        v-for="(goal, index) in goals"
+        :key="goal.number"
+        :ref="(el) => setCardRef(el, index)"
+        class="goal-card"
+        :class="{ reverse: index % 2 === 1 }"
+      >
+        <div class="goal-media" :style="{ backgroundImage: `url(${goal.image})` }" />
+        <div class="goal-overlay" />
 
-        <h3>What we do</h3>
-        <p>{{ goal.whatWeDo }}</p>
+        <div class="goal-content">
+          <p class="tag">{{ goal.tag }}</p>
+          <h2>{{ goal.title }}</h2>
+          <p class="intro">{{ goal.intro }}</p>
 
-        <h3>Why it matters</h3>
-        <p>{{ goal.whyItMatters }}</p>
+          <div class="goal-detail">
+            <h3>What we do</h3>
+            <p>{{ goal.whatWeDo }}</p>
+          </div>
 
-        <blockquote>"{{ goal.quote }}"</blockquote>
-      </div>
+          <div class="goal-detail">
+            <h3>Why it matters</h3>
+            <p>{{ goal.whyItMatters }}</p>
+          </div>
+
+          <blockquote>"{{ goal.quote }}"</blockquote>
+        </div>
+      </article>
     </section>
 
     <!-- OPERATIONAL PRIORITIES -->
@@ -156,9 +176,23 @@ onUnmounted(() => {
         <span class="line" /> OPERATIONAL PRIORITIES <span class="line" />
       </p>
       <h2 class="center">How we keep the tree alive</h2>
-      <div class="priorities-grid">
-        <div v-for="item in priorities" :key="item" class="priority-card">
-          {{ item }}
+
+      <div ref="priorityWaveRef" class="priorities-grid">
+        <div
+          v-for="(item, idx) in priorities"
+          :key="item.title"
+          class="priority-card"
+          :style="{ transitionDelay: idx * 90 + 'ms' }"
+        >
+          <div class="priority-step">
+            <span class="step-number">{{ String(idx + 1).padStart(2, '0') }}</span>
+            <span class="step-connector" />
+          </div>
+
+          <div class="priority-body">
+            <div class="priority-icon" v-html="priorityIconSvg[item.icon]" />
+            <p class="priority-label">{{ item.title }}</p>
+          </div>
         </div>
       </div>
     </section>
@@ -166,79 +200,50 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap');
-
 .programs-page {
-  --p-bg: #f7f1e4;
-  --p-panel: #fffdf8;
-  --p-green: #1f3d2e;
-  --p-orange: #d9793a;
-  --p-muted: #5a6b5f;
-  --font-heading: 'Playfair Display', Georgia, serif;
-  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
-
-  background: var(--p-bg);
-  color: var(--p-green);
-  font-family: var(--font-body);
-}
-
-.programs-page h1,
-.programs-page h2,
-.programs-page h3 {
-  font-family: var(--font-heading);
-}
-.programs-page p,
-.programs-page blockquote,
-.programs-page .priority-card,
-.programs-page .tag,
-.programs-page .eyebrow {
-  font-family: var(--font-body);
+  background: var(--color-cream);
+  color: var(--primary-dark);
 }
 
 /* HERO */
-.hero {
-  position: relative;
-  min-height: 560px;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-.hero-slides {
-  position: absolute;
-  inset: 0;
-}
-.hero-slide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 1.2s ease-in-out;
-}
-.hero-slide.active {
-  opacity: 1;
-}
 .hero-overlay {
   position: absolute;
   inset: 0;
-  /* dull olive/forest-green tint over the photo, like the reference design */
   background: linear-gradient(
-    180deg,
-    rgba(38, 61, 43, 0.65) 0%,
-    rgba(38, 61, 43, 0.45) 55%,
-    rgba(38, 61, 43, 0.6) 100%
+    90deg,
+    rgba(6, 18, 13, 0.85) 0%,
+    rgba(6, 18, 13, 0.55) 42%,
+    rgba(6, 18, 13, 0.22) 70%,
+    transparent 100%
   );
-  mix-blend-mode: multiply;
 }
 .hero-content {
-  position: relative;
-  z-index: 1;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
   max-width: 700px;
-  padding: 0 3rem;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
   color: #fff;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .eyebrow {
-  color: var(--p-orange);
+  color: var(--primary-light);
   letter-spacing: 0.15em;
   font-size: 0.8rem;
   font-weight: 700;
@@ -246,121 +251,379 @@ onUnmounted(() => {
 }
 .hero-content h1 {
   font-weight: 600;
-  font-size: 3rem;
   line-height: 1.2;
   margin: 0 0 1rem;
-  
+  color: #fff;
 }
 .hero-content .lead {
-  font-size: 1.05rem;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.92);
 }
 
-/* GOAL BLOCKS */
-.goal-block {
-  display: flex;
-  align-items: center;
-  gap: 3.5rem;
-  max-width: 1200px;
+/* GOAL CARDS — content sits inside the photo */
+.goals-wrap {
+  max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
 }
-.goal-block.reverse {
-  flex-direction: row-reverse;
+
+.goal-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 560px;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background-color: #e5ddc8; /* fallback while image loads */
+
+  /* scroll-reveal: card fades/rises in, image is clipped by overflow:hidden above */
+  opacity: 0;
+  transform: translateY(56px);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.goal-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .goal-media {
-  flex: 1 1 45%;
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.14);
+  transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.goal-media img {
-  width: 100%;
-  border-radius: 1rem;
-  display: block;
-  object-fit: cover;
-  aspect-ratio: 4 / 3;
-  background: #e5ddc8;
+.goal-card.is-visible .goal-media {
+  transform: scale(1);
 }
-.goal-text {
-  flex: 1 1 55%;
+
+.goal-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
+  );
 }
-.goal-text .tag {
-  color: var(--p-orange);
+
+.goal-card.reverse {
+  justify-content: flex-end;
+}
+.goal-card.reverse .goal-overlay {
+  background: linear-gradient(
+    270deg,
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
+  );
+}
+
+.goal-content {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  padding: 3rem 3.5rem;
+  color: #fff;
+
+  /* text settles in just after the image starts revealing */
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s ease 0.25s,
+    transform 0.7s ease 0.25s;
+}
+.goal-card.is-visible .goal-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.goal-content .tag {
+  color: var(--primary-light);
   font-weight: 700;
   letter-spacing: 0.05em;
   font-size: 0.85rem;
   margin-bottom: 0.5rem;
 }
-.goal-text h2 {
+.goal-content h2 {
   font-weight: 600;
-  font-size: 2rem;
   margin: 0 0 0.75rem;
+  color: #fff;
 }
-.goal-text .intro {
-  font-size: 1.05rem;
-  color: var(--p-muted);
+.goal-content .intro {
+  color: rgba(255, 255, 255, 0.88);
   margin-bottom: 1.5rem;
-}
-.goal-text h3 {
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin: 1.25rem 0 0.35rem;
-}
-.goal-text p {
-  color: var(--p-muted);
   line-height: 1.7;
 }
-.goal-text blockquote {
+.goal-detail {
+  margin-bottom: 1.1rem;
+}
+.goal-content h3 {
+  font-weight: 600;
+  margin: 0 0 0.3rem;
+  color: #fff;
+  font-size: 1rem;
+}
+.goal-content .goal-detail p {
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.7;
+  margin: 0;
+}
+.goal-content blockquote {
   margin: 1.5rem 0 0;
   padding-left: 1rem;
-  border-left: 3px solid var(--p-orange);
+  border-left: 3px solid var(--primary-light);
   font-style: italic;
-  color: var(--p-green);
+  color: #fff;
 }
 
-/* PRIORITIES */
+/* ===== PRIORITIES — clean, professional stepper with cards ===== */
 .priorities {
+  position: relative;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
   padding: 5rem 3rem 6rem;
   text-align: center;
+  overflow: hidden;
+}
+/* Soft ambient glow behind the whole section for depth */
+.priorities::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 500px;
+  background: radial-gradient(ellipse at center, rgba(20, 129, 62, 0.07) 0%, rgba(20, 129, 62, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 .eyebrow.center {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  color: var(--primary-color);
 }
 .eyebrow .line {
   width: 2rem;
   height: 1px;
-  background: var(--p-orange);
+  background: var(--primary-color);
   display: inline-block;
 }
 .priorities h2 {
+  position: relative;
+  z-index: 1;
   font-weight: 600;
-  font-size: 2rem;
-  margin: 0.5rem 0 2.5rem;
+  margin: 0.5rem 0 3.5rem;
 }
+
+/* Straight, evenly-spaced stepper row instead of the zigzag wave */
 .priorities-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.75rem;
+  align-items: start;
 }
+
 .priority-card {
-  background: var(--p-panel);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  max-width: 220px;
-  color: var(--p-green);
-  box-shadow: 0 2px 10px rgba(31, 61, 46, 0.06);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+.priorities-grid.is-visible .priority-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Numbered node + connecting line */
+.priority-step {
+  position: relative;
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+.step-number {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 14px -4px rgba(20, 129, 62, 0.5);
+}
+.step-connector {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100% + 1.75rem);
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+  opacity: 0.35;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+.priority-card:last-child .step-connector {
+  display: none;
+}
+
+/* Card body */
+.priority-body {
+  width: 100%;
+  background: var(--color-white);
+  border-radius: 18px;
+  border: 1px solid rgba(20, 129, 62, 0.1);
+  padding: 1.85rem 1.1rem 1.5rem;
+  box-shadow:
+    0 4px 10px rgba(20, 129, 62, 0.06),
+    0 16px 32px -14px rgba(20, 129, 62, 0.18);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+.priority-card:hover .priority-body {
+  transform: translateY(-6px);
+  border-color: rgba(20, 129, 62, 0.28);
+  box-shadow:
+    0 6px 14px rgba(20, 129, 62, 0.1),
+    0 24px 44px -16px rgba(20, 129, 62, 0.3);
+}
+
+.priority-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(160deg, var(--color-white) 0%, rgba(20, 129, 62, 0.08) 100%);
+  border: 1.5px solid rgba(20, 129, 62, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 8px 18px -8px rgba(20, 129, 62, 0.35);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+.priority-card:hover .priority-icon {
+  transform: scale(1.08);
+  border-color: var(--primary-color);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 10px 22px -8px rgba(20, 129, 62, 0.5);
+}
+.priority-icon :deep(svg) {
+  width: 24px;
+  height: 24px;
+}
+.priority-label {
+  margin: 0;
+  font-weight: 400;
+  color: #6b7280;
+  line-height: 1.45;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+.priority-card:hover .priority-label {
+  color: #6b7280;
 }
 
 @media (max-width: 860px) {
-  .goal-block,
-  .goal-block.reverse {
-    flex-direction: column;
+  .goals-wrap {
+    padding: 3rem 1.25rem;
   }
-  .hero-content h1 {
-    font-size: 2.2rem;
+  .goal-card {
+    min-height: 480px;
+    justify-content: flex-start;
+  }
+  .goal-content {
+    max-width: 100%;
+    padding: 2rem 1.5rem;
+  }
+  .priorities {
+    padding: 3.5rem 1.25rem 4rem;
+  }
+
+  .priorities-grid {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+  }
+  .priority-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+  .priority-step {
+    width: auto;
+    height: auto;
+    margin-bottom: 0;
+  }
+  .step-connector {
+    display: none;
+  }
+  .priority-body {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 1.1rem;
+  }
+  .priority-icon {
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .priority-label {
+    text-align: left;
+  }
+  .hero-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goal-card,
+  .goal-media,
+  .goal-content,
+  .priority-card {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 </style>
