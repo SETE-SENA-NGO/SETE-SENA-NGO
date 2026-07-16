@@ -30,6 +30,14 @@ const stats = [
   },
 ]
 
+// Inline SVG paths for the stat icons — no external icon library needed.
+// Keyed by the same strings used in `stats[i].icon`.
+const statIcons: Record<string, string> = {
+  wallet: `<path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1h-3.5a3.5 3.5 0 0 0 0 7H19v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/><circle cx="15.5" cy="12" r="1.3" fill="currentColor" stroke="none"/>`,
+  users: `<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.5-5.5 5.5-5.5s5.5 2.5 5.5 5.5"/><circle cx="17" cy="9" r="2.2"/><path d="M15 14.3c2.2.4 4 2.3 4 5.2"/>`,
+  building: `<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/><path d="M10 21v-4h4v4"/>`,
+}
+
 interface WorkItem {
   title: string
   text: string
@@ -211,7 +219,15 @@ onBeforeUnmount(() => {
         <template v-for="(stat, i) in stats" :key="stat.label">
           <div class="stat-item">
             <span class="stat-icon">
-              <font-awesome-icon :icon="stat.icon" />
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                v-html="statIcons[stat.icon]"
+              ></svg>
             </span>
             <div class="stat-copy">
               <h2 class="stat-number">{{ stat.number }}</h2>
@@ -520,6 +536,10 @@ onBeforeUnmount(() => {
   color: var(--primary-color);
 }
 .stat-icon :deep(.svg-inline--fa) {
+  width: 20px;
+  height: 20px;
+}
+.stat-icon svg {
   width: 20px;
   height: 20px;
 }

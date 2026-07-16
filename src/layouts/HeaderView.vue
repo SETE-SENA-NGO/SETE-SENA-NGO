@@ -72,7 +72,7 @@ const menus: Menu[] = [
         to: '/get-involved',
       },
       {
-        title: 'Support Us',
+        title: 'Donate',
         desc: 'Support community programs in Svay Rieng and Prey Veng.',
         to: '/get-involved/donate',
       },
@@ -278,7 +278,7 @@ onUnmounted(() => {
         </div>
 
         <RouterLink to="/qr-donate" class="btn-support btn-support--desktop" @click="closeAll">
-          Support Us
+          Donate
         </RouterLink>
 
         <button
@@ -322,7 +322,7 @@ onUnmounted(() => {
         class="btn-support btn-support--mobile"
         @click="closeAll"
       >
-        Support Us →
+        Donate →
       </RouterLink>
     </div>
   </header>
