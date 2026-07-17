@@ -5,7 +5,12 @@ import { RouterLink } from 'vue-router'
 const contactBlocks = [
   {
     title: 'Address',
-    lines: ['Santi Sena Organization', 'Svay Rieng Town', 'Svay Rieng Province', 'Kingdom of Cambodia'],
+    lines: [
+      'Santi Sena Organization',
+      'Svay Rieng Town',
+      'Svay Rieng Province',
+      'Kingdom of Cambodia',
+    ],
   },
   {
     title: 'Email',
@@ -17,7 +22,11 @@ const contactBlocks = [
   },
   {
     title: 'Office hours',
-    lines: ['Monday - Friday', '8:00 - 17:00 (Cambodia time, ICT / UTC+7)', 'Saturday by appointment'],
+    lines: [
+      'Monday - Friday',
+      '8:00 - 17:00 (Cambodia time, ICT / UTC+7)',
+      'Saturday by appointment',
+    ],
   },
 ] as const
 
@@ -40,8 +49,8 @@ onMounted(() => {
         <p class="office-eyebrow">Contact - Head Office</p>
         <h1 id="office-heading">Visit us in Svay Rieng.</h1>
         <p>
-          Our headquarters sits in Svay Rieng town, walking distance from the provincial
-          pagoda where Santi Sena was founded thirty years ago.
+          Our headquarters sits in Svay Rieng town, walking distance from the provincial pagoda
+          where Santi Sena was founded thirty years ago.
         </p>
       </div>
     </section>
@@ -52,9 +61,7 @@ onMounted(() => {
           <section v-for="block in contactBlocks" :key="block.title" class="office-info">
             <h2>{{ block.title }}</h2>
             <p>
-              <template v-for="line in block.lines" :key="line">
-                {{ line }}<br />
-              </template>
+              <template v-for="line in block.lines" :key="line"> {{ line }}<br /> </template>
             </p>
           </section>
         </div>
@@ -69,9 +76,9 @@ onMounted(() => {
         <section class="visitor-section" aria-labelledby="visitor-heading">
           <h2 id="visitor-heading">Visitor guidance</h2>
           <p>
-            We welcome donors, partners and researchers. Please email us at least two weeks
-            ahead so we can arrange staff availability and, if you wish, a village field visit.
-            Modest dress is appreciated - many meetings begin at the pagoda.
+            We welcome donors, partners and researchers. Please email us at least two weeks ahead so
+            we can arrange staff availability and, if you wish, a village field visit. Modest dress
+            is appreciated - many meetings begin at the pagoda.
           </p>
         </section>
       </div>
@@ -80,7 +87,9 @@ onMounted(() => {
     <section class="office-cta" aria-label="Next step">
       <div class="office-cta__inner">
         <h2>Ready to take the next step?</h2>
-        <RouterLink to="/contact#write" class="office-cta__button">Send a message <span>-&gt;</span></RouterLink>
+        <RouterLink to="/contact#write" class="office-cta__button"
+          >Send a message <span>-&gt;</span></RouterLink
+        >
       </div>
     </section>
   </main>
@@ -98,7 +107,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   background:
-    linear-gradient(90deg, rgba(3, 43, 35, 0.96) 0%, rgba(4, 62, 50, 0.74) 48%, rgba(4, 62, 50, 0.42) 100%),
+    linear-gradient(
+      90deg,
+      rgba(3, 43, 35, 0.96) 0%,
+      rgba(4, 62, 50, 0.74) 48%,
+      rgba(4, 62, 50, 0.42) 100%
+    ),
     linear-gradient(180deg, rgba(1, 29, 25, 0.08), rgba(1, 29, 25, 0.28)),
     url('https://images.unsplash.com/photo-1534330207526-8e81f10ec6fc?auto=format&fit=crop&w=1920&q=82')
       center 48% / cover;

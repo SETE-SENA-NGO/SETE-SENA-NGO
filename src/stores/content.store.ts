@@ -16,7 +16,7 @@ export const useContentStore = defineStore('content', () => {
       loading.value = false
       throw error
     }
-    pages.value = data.reduce(
+    pages.value = ((data ?? []) as PageContent[]).reduce(
       (acc, item) => {
         acc[item.slug] = item
         return acc
@@ -26,23 +26,51 @@ export const useContentStore = defineStore('content', () => {
     loading.value = false
   }
 
-  async function fetchBySlug(slug: string) {
+  async function fetchBySlug(slug: string): Promise<PageContent | null> {
     if (pages.value[slug]) return pages.value[slug]
     loading.value = true
-    const { data, error } = await supabase.from('pages').select('*').eq('slug', slug).single()
+
+    const { data, error } = await supabase.from('pages').select('*').eq('slug', slug).maybeSingle()
+
     if (error) {
       loading.value = false
       throw error
     }
-    pages.value[slug] = data
+
+    if (!data) {
+      loading.value = false
+      return null
+    }
+
+    pages.value[slug] = data as PageContent
     loading.value = false
-    return data
+    return data as PageContent
   }
 
   async function upsert(page: PageContent) {
-    const { error } = await supabase.from('pages').upsert(page)
+    const payload: Partial<PageContent> = {
+      slug: page.slug.trim(),
+      title: page.title.trim(),
+      body: page.body,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (page.id) {
+      payload.id = page.id
+    }
+
+    const { data, error } = await supabase
+      .from('pages')
+      .upsert(payload, { onConflict: 'slug' })
+      .select('*')
+      .single()
+
     if (error) throw error
-    pages.value[page.slug] = page
+    if (!data) throw new Error('Page save did not return a row')
+
+    const savedPage = data as PageContent
+    pages.value[savedPage.slug] = savedPage
+    return savedPage
   }
 
   return { pages, loading, getAll, fetchAll, fetchBySlug, upsert }

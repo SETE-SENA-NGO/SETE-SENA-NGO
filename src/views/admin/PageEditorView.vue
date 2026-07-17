@@ -17,6 +17,7 @@ type EditableSection = {
 type PageDraft = {
   slug: string
   route: string
+  previewRoute?: string
   group: string
   title: string
   eyebrow: string
@@ -52,6 +53,73 @@ const contentKind = 'santi-sena-page-content'
 
 const defaultPages: PageDraft[] = [
   {
+    slug: 'news',
+    route: '/news',
+    group: 'News',
+    title: 'News',
+    eyebrow: 'News manager',
+    headline: 'News',
+    intro: '',
+    primaryAction: '',
+    secondaryAction: '',
+    sections: [
+      {
+        id: 'news-list',
+        label: 'News list',
+        heading: 'News list',
+        body: 'Used by the News manager editor page.',
+        items: '',
+      },
+    ],
+    updatedAt: '',
+  },
+  {
+    slug: 'news-detail',
+    route: '/news/:id',
+    previewRoute: '/news/1',
+    group: 'News',
+    title: 'News Detail',
+    eyebrow: 'News detail',
+    headline: 'Community stories, updates and field notes.',
+    intro:
+      'A detail page template for public news stories, including the article header, body content, related updates and donation call to action.',
+    primaryAction: 'All news',
+    secondaryAction: '',
+    sections: [
+      {
+        id: 'news-detail-hero',
+        label: 'Article header',
+        heading: 'Story header',
+        body: 'Controls the headline area shown on individual public news stories.',
+        items:
+          'Category | Community update\nDate | Published date\nAuthor | Santi Sena team\nReading time | 5 min read',
+      },
+      {
+        id: 'news-detail-body',
+        label: 'Article body',
+        heading: 'Story content',
+        body: 'Use this section for the article introduction, main body and closing note.',
+        items:
+          'Introduction | Open with the community need or program moment.\nMain story | Describe the people, place, activities and outcomes.\nClosing note | Invite readers to continue learning or supporting the work.',
+      },
+      {
+        id: 'news-detail-related',
+        label: 'Related stories',
+        heading: 'More from Santi Sena',
+        body: 'Related news cards shown near the end of a story.',
+        items: 'Environment updates\nEducation stories\nLivelihood field notes\nChild protection news',
+      },
+      {
+        id: 'news-detail-cta',
+        label: 'Call to action',
+        heading: 'Stand with village-led change.',
+        body: 'A short donation or support invitation that appears after a news article.',
+        items: 'Donate\nGet involved\nContact us',
+      },
+    ],
+    updatedAt: '',
+  },
+  {
     slug: 'home',
     route: '/',
     group: 'Home',
@@ -75,8 +143,7 @@ const defaultPages: PageDraft[] = [
         id: 'home-mission',
         label: 'Mission',
         heading: 'Peace is planted, not declared.',
-        body:
-          'Santi Sena, the Peace Army, was founded by Cambodian Buddhist monks in 1994 to alleviate poverty and rebuild moral, environmental and economic life after decades of conflict.',
+        body: 'Santi Sena, the Peace Army, was founded by Cambodian Buddhist monks in 1994 to alleviate poverty and rebuild moral, environmental and economic life after decades of conflict.',
         items: '',
       },
       {
@@ -113,8 +180,7 @@ const defaultPages: PageDraft[] = [
         id: 'about-vmg',
         label: 'Vision, mission, goal',
         heading: 'Vision, Mission, Goal',
-        body:
-          'Vision: A Cambodia where peace, justice and harmony flourish. Mission: Alleviate poverty through community-led development rooted in Buddhist ethics. Goal: Better work and living situations for vulnerable rural households.',
+        body: 'Vision: A Cambodia where peace, justice and harmony flourish. Mission: Alleviate poverty through community-led development rooted in Buddhist ethics. Goal: Better work and living situations for vulnerable rural households.',
         items:
           'Vision | A Cambodia where peace, justice and harmony flourish across every village and generation.\nMission | To alleviate poverty through community-led development rooted in Buddhist ethics.\nGoal | Better work and living situations for the most vulnerable rural households of southeastern Cambodia.',
       },
@@ -488,8 +554,7 @@ const defaultPages: PageDraft[] = [
     title: 'Impact Timeline',
     eyebrow: 'Timeline',
     headline: 'Thirty years of walking with villages.',
-    intro:
-      'Progress built through patient partnership from founding in Svay Rieng to today.',
+    intro: 'Progress built through patient partnership from founding in Svay Rieng to today.',
     primaryAction: 'Take the next step',
     secondaryAction: '',
     sections: [
@@ -896,6 +961,7 @@ const activePage = computed<PageDraft>(() => {
 })
 
 const activePageDirty = computed(() => isDirty(activePage.value.slug))
+const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
 
 const previewItems = computed(() => {
   return activePage.value.sections.map((section) => ({
@@ -930,6 +996,11 @@ function clonePage(page: PageDraft): PageDraft {
     ...page,
     sections: page.sections.map((section) => ({ ...section })),
   }
+}
+
+function getPreviewRoute(page: PageDraft) {
+  if (page.previewRoute) return page.previewRoute
+  return page.route.replace(/:id\b/g, '1')
 }
 
 function cloneSection(section?: Partial<EditableSection>): EditableSection {
@@ -1211,7 +1282,6 @@ function formatDate(value: string) {
     timeStyle: 'short',
   }).format(date)
 }
-
 </script>
 
 <template>
@@ -1702,6 +1772,13 @@ function formatDate(value: string) {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   transition: padding-left 0.25s ease;
 }
 
@@ -2074,6 +2151,7 @@ function formatDate(value: string) {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--admin-muted);
+  font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
 }
 
 .status-left {
@@ -2148,6 +2226,7 @@ function formatDate(value: string) {
 
 .step.active .step-indicator {
   background: var(--admin-blue);
+  border-color: var(--admin-blue);
   color: #ffffff;
 }
 
@@ -2324,8 +2403,8 @@ function formatDate(value: string) {
 
 input, textarea {
   width: 100%;
-  border: 1px solid var(--admin-border-strong);
-  border-radius: 8px;
+  border: 1.5px solid var(--admin-border-strong);
+  border-radius: 10px;
   background: var(--admin-surface);
   color: var(--admin-text);
   padding: 0.62rem 0.78rem;
@@ -2637,8 +2716,8 @@ input::placeholder, textarea::placeholder {
   height: 10px;
   flex-shrink: 0;
   border-radius: 999px;
-  background: #16a34a;
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+  background: var(--admin-blue);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--admin-blue) 18%, transparent);
 }
 
 .save-dot-large.dirty {
