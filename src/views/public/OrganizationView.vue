@@ -134,7 +134,7 @@ onMounted(() => {
         <div class="team-header">
           <span class="section-badge">Structure</span>
           <h2 class="team-heading-title">How we are <span class="txt-gradient">organized</span></h2>
-          <p class="team-lead">Leadership, technical support and field teams — connected from strategy to village
+          <p class="team-lead">Leadership, technical support and field teams connected from strategy to village
             action.</p>
         </div>
 
