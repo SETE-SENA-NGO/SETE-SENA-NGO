@@ -2,12 +2,6 @@
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
-import certiImage from '@/assets/maps/certi.png'
-import preSchoolImage from '@/assets/maps/pre-school.png'
-import studentImage from '@/assets/maps/student.png'
-import washImage from '@/assets/maps/wash.png'
-import waterImage from '@/assets/maps/water.png'
-
 // ─── Dummy news data ────────────────────────────────────────────────
 const newsItems = ref([
   {
@@ -15,7 +9,7 @@ const newsItems = ref([
     title: 'New community pre‑school opens in Svay Rieng',
     summary:
       'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
-    image: studentImage,
+    image: 'src/assets/maps/student.png',
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
@@ -32,7 +26,7 @@ const newsItems = ref([
     title: 'Forest Guardians celebrate 500 hectares of protected land',
     summary:
       'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
-    image: washImage,
+    image: 'src/assets/maps/wash.png',
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
@@ -49,7 +43,7 @@ const newsItems = ref([
     title: 'Youth leaders trained in child protection advocacy',
     summary:
       'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
-    image: certiImage,
+    image: 'src/assets/maps/certi.png',
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
@@ -66,7 +60,7 @@ const newsItems = ref([
     title: 'Saving‑for‑Change groups reach 10,000 members',
     summary:
       'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
-    image: preSchoolImage,
+    image: 'src/assets/maps/pre-school.png',
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
@@ -83,7 +77,7 @@ const newsItems = ref([
     title: 'New partnership to expand clean water access',
     summary:
       'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
-    image: waterImage,
+    image: 'src/assets/maps/water.png',
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
@@ -273,7 +267,7 @@ const scrollToTop = () => {
       </div>
     </transition>
 
-    <!-- ─── NEW STATIC HERO (no slideshow) ──────────────────────── -->
+    <!-- ─── BALANCED HERO (shifted right) ────────────────────── -->
     <header class="hero-static">
       <div class="hero-static-inner">
         <div class="hero-badge">
@@ -335,9 +329,7 @@ const scrollToTop = () => {
                   class="author-avatar"
                   :style="{ backgroundImage: `url(${featuredArticle.authorAvatar})` }"
                 >
-                  <span v-if="!featuredArticle.authorAvatar">{{
-                    getInitials(featuredArticle.author)
-                  }}</span>
+                  <span v-if="!featuredArticle.authorAvatar">{{ getInitials(featuredArticle.author) }}</span>
                 </div>
                 <span class="news-author">{{ featuredArticle.author }}</span>
               </div>
@@ -421,7 +413,7 @@ const scrollToTop = () => {
         </div>
       </div>
 
-      <!-- News Grid – each card gets a scroll‑triggered pop‑up (re‑appears on each scroll) -->
+      <!-- News Grid -->
       <div v-if="regularArticles.length > 0" class="news-grid">
         <article
           v-for="item in regularArticles"
@@ -526,7 +518,7 @@ const scrollToTop = () => {
         <p>No articles found.</p>
       </div>
 
-      <!-- ─── NEWSLETTER – scale from small → big on scroll (stays big) ── -->
+      <!-- ─── NEWSLETTER ───────────────────────────────────────── -->
       <div class="newsletter-section" ref="newsletterRef">
         <div class="newsletter-card" :class="{ 'newsletter-visible': newsletterVisible }">
           <div class="newsletter-icon">✉</div>
@@ -567,7 +559,6 @@ const scrollToTop = () => {
 </template>
 
 <style scoped>
-/* ── CSS Variables ── */
 :root {
   --color-cream: #faf8f5;
   --color-border: #e8e3dc;
@@ -583,14 +574,10 @@ const scrollToTop = () => {
   --shadow-md: 0 8px 32px rgba(30, 26, 22, 0.06);
   --shadow-lg: 0 16px 56px rgba(30, 26, 22, 0.1);
   --shadow-xl: 0 24px 80px rgba(30, 26, 22, 0.14);
-  --radius-sm: 8px;
   --radius-md: 20px;
-  --radius-lg: 28px;
-  --radius-xl: 32px;
   --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* ── Base ── */
 .news-view {
   min-height: 90vh;
   background: var(--color-cream);
@@ -602,7 +589,7 @@ const scrollToTop = () => {
   padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 
-/* ── STATIC HERO (new) ── */
+/* ─── BALANCED HERO (shifted right) ────────────────────────── */
 .hero-static {
   background: linear-gradient(135deg, #f0f7f4, #ffffff);
   padding: 4rem 1.5rem 3rem;
@@ -613,8 +600,10 @@ const scrollToTop = () => {
 .hero-static-inner {
   max-width: 820px;
   margin: 0 auto;
-  padding: 0 1.5rem;
-  text-align: center;
+  padding: 0 1.5rem 0 clamp(2rem, 10vw, 8rem); /* 👈 shifts content right */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .hero-static .hero-badge {
@@ -631,7 +620,6 @@ const scrollToTop = () => {
   border-radius: 999px;
   border: 1px solid rgba(45, 122, 90, 0.1);
   margin-bottom: 1rem;
-  margin-left: 0;
 }
 
 .pulse-dot {
@@ -640,7 +628,6 @@ const scrollToTop = () => {
   border-radius: 50%;
   background: #4ade80;
   animation: pulse-dot 2s ease-in-out infinite;
-
 }
 
 @keyframes pulse-dot {
@@ -653,8 +640,8 @@ const scrollToTop = () => {
   font-weight: 700;
   color: var(--primary-dark);
   letter-spacing: -0.03em;
-  line-height: 0.95;
-  margin: 0 0 0.75rem;
+  line-height: 1.05;
+  margin: 0 0 0.5rem;
 }
 
 .hero-static h1 .highlight {
@@ -669,21 +656,18 @@ const scrollToTop = () => {
   line-height: 1.7;
   color: var(--color-ink-soft);
   max-width: 680px;
-  margin: 0 auto 2rem;
+  margin: 0 0 2rem;
 }
 
 .hero-static .hero-stats {
   display: flex;
   gap: 2.5rem;
   flex-wrap: wrap;
-  justify-content: center;
 }
 
 .hero-static .hero-stat {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-left: 0;
 }
 
 .hero-static .stat-number {
@@ -691,7 +675,6 @@ const scrollToTop = () => {
   font-weight: 700;
   color: var(--primary-color);
   letter-spacing: -0.02em;
-  margin-left: 0;
 }
 
 .hero-static .stat-label {
@@ -1485,34 +1468,16 @@ const scrollToTop = () => {
     padding: 3rem 1.5rem 2rem;
   }
   .hero-static-inner {
-    padding: 0;
-  }
-  .hero-static .hero-badge {
-    max-width: 100%;
-    letter-spacing: 0.18em;
-    padding: 0.4rem 1rem;
+    padding-left: clamp(1rem, 4vw, 2rem); /* reduce indent on tablet */
   }
   .hero-static h1 {
-    font-size: clamp(2rem, 12vw, 3rem);
-    line-height: 1.05;
-    margin-right: 10px;
-  }
-  .hero-static .hero-subtitle {
-    font-size: 1rem;
-    line-height: 1.6;
-    
+    font-size: 2rem;
   }
   .hero-static .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem;
+    gap: 1.5rem;
   }
   .hero-static .stat-number {
-    font-size: 1.55rem;
-  }
-  .hero-static .stat-label {
-    font-size: 0.68rem;
-    line-height: 1.35;
+    font-size: 1.2rem;
   }
   .featured-actions {
     flex-direction: column;
@@ -1543,19 +1508,6 @@ const scrollToTop = () => {
 }
 
 @media (max-width: 600px) {
-  .hero-static {
-    padding: 2.5rem 1rem 1.75rem;
-  }
-  .hero-static .hero-stats {
-    grid-template-columns: 1fr;
-    gap: 0.85rem;
-  }
-  .hero-static .hero-stat {
-    padding: 0.75rem 1rem;
-    border: 1px solid rgba(45, 122, 90, 0.1);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.5);
-  }
   .news-grid {
     grid-template-columns: 1fr;
     gap: 1.25rem;
@@ -1591,6 +1543,36 @@ const scrollToTop = () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+  .hero-static-inner {
+    padding-left: 0.5rem; /* minimal indent on mobile */
+  }
+  .hero-static h1 {
+    font-size: 1.8rem;
+  }
+  .hero-static .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  .hero-static .stat-number {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .hero-static .hero-stats {
+    gap: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hero-static .hero-stat {
+    width: 100%;
+  }
+  .hero-static h1 {
+    font-size: 1.5rem;
+  }
+  .hero-static .hero-badge {
+    font-size: 0.5rem;
+    padding: 0.3rem 1rem;
   }
 }
 </style>
