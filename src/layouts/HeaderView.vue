@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import FlagUK from '@/components/icons/FlagUK.vue'
 import FlagKH from '@/components/icons/FlagKH.vue'
-import logoUrl from '@/assets/santi_sena_icon.ico'
+import logoUrl from '@/assets/santi_sena_logo.png'
 
 type MenuItem = { title: string; desc: string; to: string }
 type Menu = { label: string; to?: string; items: MenuItem[] }

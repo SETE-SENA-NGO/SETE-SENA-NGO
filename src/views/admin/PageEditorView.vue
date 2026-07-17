@@ -75,6 +75,7 @@ const defaultPages: PageDraft[] = [
   {
     slug: 'news-detail',
     route: '/news/:id',
+    previewRoute: '/news/1',
     group: 'News',
     title: 'News Detail',
     eyebrow: 'News detail',
@@ -957,6 +958,7 @@ const activePage = computed<PageDraft>(() => {
 })
 
 const activePageDirty = computed(() => isDirty(activePage.value.slug))
+const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
 
 onMounted(() => {
   void loadPages()
@@ -977,6 +979,11 @@ function clonePage(page: PageDraft): PageDraft {
     ...page,
     sections: page.sections.map((section) => ({ ...section })),
   }
+}
+
+function getPreviewRoute(page: PageDraft) {
+  if (page.previewRoute) return page.previewRoute
+  return page.route.replace(/:id\b/g, '1')
 }
 
 function cloneSection(section?: Partial<EditableSection>): EditableSection {
@@ -1294,7 +1301,7 @@ function formatDate(value: string) {
                 <RouterLink
                   v-if="activePage.route !== 'global'"
                   class="button button-secondary"
-                  :to="activePage.route"
+                  :to="activePreviewRoute"
                 >
                   <span class="btn-icon" aria-hidden="true">👁</span>
                   View

@@ -11,7 +11,6 @@ type PageItem = {
 
 type NavItem = {
   to: string
-  
   label: string
   icon: string
 }
@@ -70,6 +69,11 @@ const pageGroups: PageGroup[] = [
       { slug: 'get-involved-volunteer', label: 'Volunteer' },
       { slug: 'get-involved-partner', label: 'Partner' },
     ],
+  },
+  {
+    slug: 'news',
+    label: 'News',
+    items: [{ slug: 'news-detail', label: 'News Detail' }],
   },
   {
     slug: 'contact',
