@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import heroImage from '@/assets/hero-impact.jpg'
-import heroForest from '@/assets/hero-impact-forest.jpg'
-import heroVillage from '@/assets/hero-impact-village.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
+import { imageUrls } from '@/lib/imageUrls'
+
+const heroImage = imageUrls.impact.hero
+const heroForest = imageUrls.impact.forest
+const heroVillage = imageUrls.impact.village
 
 const slideItems = [
   { image: heroImage, caption: '' },

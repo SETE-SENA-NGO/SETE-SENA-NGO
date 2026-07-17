@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref, onUnmounted } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
-import heroImpact from '@/assets/hero-impact.jpg'
-import logoUrl from '@/assets/santi_sena_logo.png'
+import { imageUrls } from '@/lib/imageUrls'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+
+const cambodiaMap = imageUrls.maps.cambodiaOffices
+const logoUrl = imageUrls.logo
 
 const { observe } = useScrollReveal({ threshold: 0.12 })
 
@@ -191,7 +192,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
           <div class="story-visual">
             <div class="photo-frame" ref="photoFrameRef">
               <div class="photo-inner" ref="photoInnerRef">
-                <img class="photo-img" src="/src/assets/maps/Cambodia%20Map.png"
+                <img class="photo-img" :src="cambodiaMap"
                   alt="Santi Sena operations across Cambodia" loading="lazy" />
                 <!-- Reveal sweep overlay -->
                 <div class="photo-sweep" aria-hidden="true"></div>

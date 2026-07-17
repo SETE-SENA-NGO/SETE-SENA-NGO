@@ -1,15 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
-import { supabase } from '@/lib/supabase'
-import {
-  MEDIA_BUCKET,
-  imageUploadHelpText,
-  isAllowedImageFile,
-  safeStorageFileName,
-} from '@/lib/media'
 import {
   createDonationMethod,
   defaultDonationMethods,
@@ -21,8 +14,6 @@ import {
 const ui = useUiStore()
 
 const methods = ref<DonationMethod[]>(defaultDonationMethods())
-const pendingFiles = reactive<Record<string, File>>({})
-const previews = reactive<Record<string, string>>({})
 
 const loading = ref(true)
 const saving = ref(false)
@@ -40,41 +31,11 @@ onMounted(async () => {
   }
 })
 
-onBeforeUnmount(() => {
-  for (const id of Object.keys(previews)) revokePreview(id)
-})
-
-function revokePreview(id: string) {
-  if (previews[id]) {
-    URL.revokeObjectURL(previews[id])
-    delete previews[id]
-  }
-}
-
 function displayedQr(method: DonationMethod) {
-  return previews[method.id] || method.qrUrl
-}
-
-function onFileChange(method: DonationMethod, event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (!file) return
-
-  if (!isAllowedImageFile(file)) {
-    showMessage(`Please choose ${imageUploadHelpText()}`, 'error')
-    return
-  }
-
-  revokePreview(method.id)
-  pendingFiles[method.id] = file
-  previews[method.id] = URL.createObjectURL(file)
-  message.value = ''
+  return method.qrUrl.trim()
 }
 
 function removeQr(method: DonationMethod) {
-  revokePreview(method.id)
-  delete pendingFiles[method.id]
   method.qrUrl = ''
 }
 
@@ -84,8 +45,6 @@ function addBank() {
 }
 
 function removeBank(method: DonationMethod) {
-  revokePreview(method.id)
-  delete pendingFiles[method.id]
   methods.value = methods.value.filter((m) => m.id !== method.id)
   message.value = ''
 }
@@ -93,34 +52,6 @@ function removeBank(method: DonationMethod) {
 function showMessage(text: string, type: 'success' | 'error') {
   message.value = text
   messageType.value = type
-}
-
-async function uploadQr(method: DonationMethod, file: File) {
-  const safeId = method.id.replace(/[^a-zA-Z0-9_-]/g, '')
-  const path = `donation-qr/${safeId}-${Date.now()}-${safeStorageFileName(file.name)}`
-
-  const { error: uploadError } = await supabase.storage
-    .from(MEDIA_BUCKET)
-    .upload(path, file, { upsert: true })
-  if (uploadError) throw uploadError
-
-  const publicUrl = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl
-  const { error: assetError } = await supabase.from('media_assets').upsert(
-    {
-      bucket: MEDIA_BUCKET,
-      path,
-      public_url: publicUrl,
-      file_name: file.name,
-      mime_type: file.type,
-      file_size: file.size,
-      folder: 'donation-qr',
-    },
-    { onConflict: 'bucket,path' },
-  )
-
-  if (assetError) throw assetError
-
-  return publicUrl
 }
 
 async function save() {
@@ -139,15 +70,6 @@ async function save() {
   message.value = ''
 
   try {
-    for (const method of methods.value) {
-      const file = pendingFiles[method.id]
-      if (file) {
-        method.qrUrl = await uploadQr(method, file)
-        delete pendingFiles[method.id]
-        revokePreview(method.id)
-      }
-    }
-
     await saveDonationMethods(methods.value)
 
     showMessage('Donation settings saved. The Support Us page is now updated.', 'success')
@@ -171,8 +93,9 @@ async function save() {
               <p class="eyebrow">Support Us</p>
               <h1>Donation Banks & QR Codes</h1>
               <p>
-                Manage the banks shown on the public Support Us page — upload each bank's QR code,
-                edit account details, or add a new bank. Changes go live as soon as you save.
+                Manage the banks shown on the public Support Us page. Paste each Google Drive QR
+                image URL, edit account details, or add a new bank. Changes go live as soon as you
+                save.
               </p>
             </div>
             <button class="add-btn" type="button" :disabled="loading" @click="addBank">
@@ -208,21 +131,20 @@ async function save() {
                   />
                   <div v-else class="qr-empty">
                     <span class="qr-empty-icon" aria-hidden="true">&#9635;</span>
-                    <span>No QR uploaded yet</span>
+                    <span>No QR URL yet</span>
                   </div>
-                  <span v-if="pendingFiles[method.id]" class="pending-tag">Not saved yet</span>
+                </div>
+
+                <div class="field">
+                  <label :for="`${method.id}-qr-url`">Google Drive QR image URL</label>
+                  <input
+                    :id="`${method.id}-qr-url`"
+                    v-model="method.qrUrl"
+                    placeholder="https://lh3.googleusercontent.com/d/..."
+                  />
                 </div>
 
                 <div class="qr-actions">
-                  <label class="upload-btn">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      class="sr-only"
-                      @change="onFileChange(method, $event)"
-                    />
-                    {{ displayedQr(method) ? 'Replace QR image' : 'Upload QR image' }}
-                  </label>
                   <button
                     v-if="displayedQr(method)"
                     type="button"
@@ -501,54 +423,10 @@ h1 {
   font-size: 2rem;
 }
 
-.pending-tag {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  background: #d9ad2f;
-  color: #1d3d5c;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 0.25rem 0.55rem;
-  border-radius: 999px;
-}
-
 .qr-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-}
-
-.upload-btn {
-  display: inline-flex;
-  align-items: center;
-  min-height: 42px;
-  border: 1px solid var(--admin-blue);
-  border-radius: 10px;
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-  color: #ffffff;
-  padding: 0.5rem 1rem;
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-  box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.18s ease;
-}
-
-.upload-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px rgba(15, 125, 56, 0.3);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
 }
 
 .remove-btn {

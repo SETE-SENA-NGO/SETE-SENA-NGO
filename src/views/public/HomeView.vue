@@ -2,10 +2,12 @@
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
-import environmentImg from '@/assets/home-image/environtment.jpg'
-import educationImg from '@/assets/home-image/education.jpg'
-import livelihoodImg from '@/assets/home-image/livelihood.jpg'
-import childImg from '@/assets/home-image/child.jpg'
+import { imageUrls } from '@/lib/imageUrls'
+
+const environmentImg = imageUrls.home.environment
+const educationImg = imageUrls.home.education
+const livelihoodImg = imageUrls.home.livelihood
+const childImg = imageUrls.home.child
 
 const stats = [
   { value: '293', label: 'Villages Reached' },
@@ -30,7 +32,7 @@ interface NgoSlide {
 
 const slideItems: NgoSlide[] = [
   {
-    image: '/images/programs/education-hero.jpg',
+    image: imageUrls.programs.educationHero,
     caption: '',
     alt: 'Children learning with Santi Sena education support',
     eyebrow: 'Education and Buddhist learning',
@@ -44,7 +46,7 @@ const slideItems: NgoSlide[] = [
     position: 'center',
   },
   {
-    image: '/images/programs/environment.jpg',
+    image: imageUrls.programs.environment,
     caption: '',
     alt: 'Community environmental activity in rural Cambodia',
     eyebrow: 'Environment and climate action',
@@ -58,7 +60,7 @@ const slideItems: NgoSlide[] = [
     position: 'center',
   },
   {
-    image: '/images/programs/livelihood-hero2.jpg',
+    image: imageUrls.programs.livelihoodHero2,
     caption: '',
     alt: 'Rural livelihood activity with community members',
     eyebrow: 'Livelihoods and family resilience',
@@ -72,7 +74,7 @@ const slideItems: NgoSlide[] = [
     position: 'center',
   },
   {
-    image: '/images/programs/child-protection1.jpg',
+    image: imageUrls.programs.childProtection1,
     caption: '',
     alt: 'Children and community members participating in a protection activity',
     eyebrow: 'Child protection and dignity',

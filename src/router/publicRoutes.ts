@@ -1,67 +1,117 @@
-import HomeView from '@/views/public/HomeView.vue'
-import AboutView from '@/views/public/AboutView.vue'
-import AboutVisionView from '@/views/public/AboutVisionView.vue'
-import ProgramEnviromentView from '@/views/public/ProgramEnviromentView.vue'
-import OrganizationView from '@/views/public/OrganizationView.vue'
-import EducationView from '@/views/public/EducationView.vue'
-import ImpactPartnersView from '@/views/public/ImpactPartnersView.vue'
-import ContactView from '@/views/public/ContactView.vue'
-import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
-import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
+import type { RouteRecordRaw } from 'vue-router'
 
-import GetInvolvedView from '@/views/public/GetInvolvedView.vue'
+type ViewLoader = () => Promise<unknown>
 
-import DonateView from '@/views/public/Getinvolved.donat.vue'
-import VolunteerView from '@/views/public/Getinvolved.volunteer.vue'
-import PartnerView from '@/views/public/Getinvolved.partner.vue'
+function managedRoute(
+  path: string,
+  contentSlug: string,
+  fallbackComponent: ViewLoader,
+  name?: string,
+): RouteRecordRaw {
+  return {
+    path,
+    component: () => import('@/views/public/ManagedPublicPageView.vue'),
+    meta: { contentSlug, fallbackComponent },
+    ...(name ? { name } : {}),
+  }
+}
 
-import ProgramsView from '@/views/public/ProgramsView.vue'
-import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
-import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
-import QrDonateView from '@/views/public/DonateView.vue'
+export const publicRoutes: RouteRecordRaw[] = [
+  managedRoute('/', 'home', () => import('@/views/public/HomeView.vue')),
 
-// 👇 NEW: import news views
-import NewsView from '@/views/public/NewsView.vue'
-import NewsDetailView from '@/views/public/NewsDetailView.vue'
+  managedRoute('/about', 'about', () => import('@/views/public/AboutView.vue')),
+  managedRoute(
+    '/about/vision',
+    'about-vision',
+    () => import('@/views/public/AboutVisionView.vue'),
+  ),
+  managedRoute(
+    '/about/organization',
+    'about-organization',
+    () => import('@/views/public/OrganizationView.vue'),
+  ),
 
-export const publicRoutes = [
-  // Home
-  { path: '/', component: HomeView },
+  managedRoute('/programs', 'programs', () => import('@/views/public/ProgramsView.vue'), 'programs'),
+  managedRoute(
+    '/programs/environment',
+    'programs-environment',
+    () => import('@/views/public/ProgramEnvironmentView.vue'),
+  ),
+  managedRoute(
+    '/programs/education',
+    'programs-education',
+    () => import('@/views/public/EducationView.vue'),
+  ),
+  managedRoute(
+    '/programs/livelihood',
+    'programs-livelihood',
+    () => import('@/views/public/ProgramsLivelihoodView.vue'),
+    'programs-livelihood',
+  ),
+  managedRoute(
+    '/programs/child-protection',
+    'programs-child-protection',
+    () => import('@/views/public/ProgramsChildProtectionView.vue'),
+    'programs-child-protection',
+  ),
 
-  // About
-  { path: '/about', component: AboutView },
-  { path: '/about/vision', component: AboutVisionView },
-  { path: '/about/organization', component: OrganizationView },
+  managedRoute(
+    '/impact/numbers',
+    'impact-numbers',
+    () => import('@/views/public/ImpactNumbersView.vue'),
+  ),
+  managedRoute(
+    '/impact/partners',
+    'impact-partners',
+    () => import('@/views/public/ImpactPartnersView.vue'),
+  ),
+  managedRoute(
+    '/impact/timeline',
+    'impact-timeline',
+    () => import('@/views/public/ImpactTimelineView.vue'),
+  ),
 
-  // Programs
-  { path: '/programs', component: ProgramsView, name: 'programs' },
-  { path: '/programs/environment', component: ProgramEnviromentView },
-  { path: '/programs/education', component: EducationView },
-  { path: '/programs/livelihood', component: ProgramsLivelihoodView, name: 'programs-livelihood' },
-  {
-    path: '/programs/child-protection',
-    component: ProgramsChildProtectionView,
-    name: 'programs-child-protection',
-  },
+  managedRoute(
+    '/get-involved',
+    'get-involved',
+    () => import('@/views/public/GetInvolvedView.vue'),
+  ),
+  managedRoute(
+    '/get-involved/donate',
+    'get-involved-donate',
+    () => import('@/views/public/GetInvolvedDonateView.vue'),
+  ),
+  managedRoute(
+    '/get-involved/volunteer',
+    'get-involved-volunteer',
+    () => import('@/views/public/GetInvolvedVolunteerView.vue'),
+  ),
+  managedRoute(
+    '/get-involved/partner',
+    'get-involved-partner',
+    () => import('@/views/public/GetInvolvedPartnerView.vue'),
+  ),
 
-  // Impact
-  { path: '/impact/numbers', component: ImpactNumbersView },
-  { path: '/impact/partners', component: ImpactPartnersView },
-  { path: '/impact/timeline', component: ImpactTimelineView },
+  managedRoute('/contact', 'contact', () => import('@/views/public/ContactView.vue')),
+  managedRoute(
+    '/contact/head-office',
+    'contact-head-office',
+    () => import('@/views/public/HeadOfficeView.vue'),
+  ),
+  managedRoute(
+    '/contact/field-offices',
+    'contact-field-offices',
+    () => import('@/views/public/FieldOfficesView.vue'),
+  ),
+  { path: '/contact/headoffice', redirect: '/contact/head-office' },
+  { path: '/contact/fieldoffice', redirect: '/contact/field-offices' },
+  managedRoute('/qr-donate', 'qr-donate', () => import('@/views/public/DonateView.vue')),
 
-  // Get Involved
-  { path: '/get-involved', component: GetInvolvedView },
-  { path: '/get-involved/donate', component: DonateView },
-  { path: '/get-involved/volunteer', component: VolunteerView },
-  { path: '/get-involved/partner', component: PartnerView },
-
-  // Contact
-  { path: '/contact', component: ContactView },
-
-  // Donation (QR)
-  { path: '/qr-donate', component: QrDonateView },
-
-  // 👇 NEW: News routes
-  { path: '/news', component: NewsView, name: 'news' },
-  { path: '/news/:id', component: NewsDetailView, name: 'news-detail' },
+  managedRoute('/news', 'news', () => import('@/views/public/NewsView.vue'), 'news'),
+  managedRoute(
+    '/news/:id',
+    'news-detail',
+    () => import('@/views/public/NewsDetailView.vue'),
+    'news-detail',
+  ),
 ]

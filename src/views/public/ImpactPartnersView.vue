@@ -195,55 +195,55 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
+import { imageUrls } from '@/lib/imageUrls'
 
 // Partner data
 const partners = [
-  { name: 'UNDP', logo: 'UNDP', image: new URL('@/assets/image.png', import.meta.url).href },
+  { name: 'UNDP', logo: 'UNDP', image: imageUrls.partners.undp },
   {
     name: 'Asian Development Bank',
     logo: 'ADB',
-    image: new URL('@/assets/image copy.png', import.meta.url).href,
+    image: imageUrls.partners.adb,
   },
   {
     name: 'Oxfam',
     logo: 'OXFAM',
-    image: new URL('@/assets/image copy 2.png', import.meta.url).href,
+    image: imageUrls.partners.oxfam,
   },
   {
     name: 'Bread for the World',
     logo: 'BFW',
-    image: new URL('@/assets/image copy 3.png', import.meta.url).href,
+    image: imageUrls.partners.breadForTheWorld,
   },
   {
     name: 'Misereor',
     logo: 'MIS',
-    image: new URL('@/assets/image copy 4.png', import.meta.url).href,
+    image: imageUrls.partners.misereor,
   },
   {
     name: 'European Union',
     logo: 'EU',
-    image: new URL('@/assets/image copy 5.png', import.meta.url).href,
+    image: imageUrls.partners.europeanUnion,
   },
   {
     name: 'USAID / Winrock',
     logo: 'USAID',
-    image: new URL('@/assets/image copy 6.png', import.meta.url).href,
+    image: imageUrls.partners.usaidWinrock,
   },
   {
     name: 'Diakonia',
     logo: 'DIA',
-    image: new URL('@/assets/image copy 7.png', import.meta.url).href,
+    image: imageUrls.partners.diakonia,
   },
   {
     name: 'Heinrich Böll Stiftung',
     logo: 'HBS',
-    image: new URL('@/assets/image copy 8.png', import.meta.url).href,
+    image: imageUrls.partners.heinrichBoll,
   },
   {
     name: 'Caritas',
     logo: 'CAR',
-    image: new URL('@/assets/image copy 9.png', import.meta.url).href,
+    image: imageUrls.partners.caritas,
   },
 ]
 

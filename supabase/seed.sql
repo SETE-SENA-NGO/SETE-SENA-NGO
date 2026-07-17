@@ -49,8 +49,8 @@ VALUES
   (E'get-involved-volunteer', E'/get-involved/volunteer', E'Get Involved', E'Volunteer', E'Volunteer', E'Bring your skills to community-led work in Cambodia.', E'Volunteers support practical field work across forestry, livelihoods, WASH, education, child protection and Buddhist values.', E'Tell Santi Sena what you can bring', null, 17),
   (E'get-involved-partner', E'/get-involved/partner', E'Get Involved', E'Partner', E'Partner', E'Partner with Santi Sena', E'Long-term cooperation is organized around village priorities and practical community systems.', E'Create a practical partnership', null, 18),
   (E'contact', E'/contact', E'Contact', E'Contact', E'Contact', E'Write to us. We read every letter.', E'Whether you wish to partner, donate, visit or simply learn more, our team in Cambodia is ready to hear from you.', E'Send message', null, 19),
-  (E'contact-head-office', E'/contact/headoffice', E'Contact', E'Head Office', E'Contact - Head Office', E'Visit us in Svay Rieng.', E'Our headquarters sits in Svay Rieng town, walking distance from the provincial pagoda where Santi Sena was founded thirty years ago.', E'Send a message', null, 20),
-  (E'contact-field-offices', E'/contact/fieldoffice', E'Contact', E'Field Offices', E'Contact - Field Offices', E'Where the work actually happens.', E'Our two provincial field offices are the daily home of the staff who walk into villages and the easiest way to reach a program directly.', E'Visit head office', null, 21),
+  (E'contact-head-office', E'/contact/head-office', E'Contact', E'Head Office', E'Contact - Head Office', E'Visit us in Svay Rieng.', E'Our headquarters sits in Svay Rieng town, walking distance from the provincial pagoda where Santi Sena was founded thirty years ago.', E'Send a message', null, 20),
+  (E'contact-field-offices', E'/contact/field-offices', E'Contact', E'Field Offices', E'Contact - Field Offices', E'Where the work actually happens.', E'Our two provincial field offices are the daily home of the staff who walk into villages and the easiest way to reach a program directly.', E'Visit head office', null, 21),
   (E'qr-donate', E'/qr-donate', E'Get Involved', E'QR Donate', E'Donate Locally', E'Donate Locally in Cambodia', E'Scan with your banking app. No internet transfer fees. Your contribution directly supports the education of disabled children.', E'Pay with QR', E'Pay with credit card', 22),
   (E'site-footer', E'global', E'Global', E'Header & Footer', E'Global content', E'Santi Sena', E'A Buddhist NGO founded in 1994, walking with Cambodian communities toward peace, sustainability and dignified livelihoods.', E'Support Us', null, 23);
 
@@ -473,11 +473,11 @@ SELECT
   jsonb_build_object('image_path', data.image_path, 'seed', 'santi-sena-default')
 FROM (
   VALUES
-    (1, 'new-community-pre-school-opens-in-svay-rieng', 'education', 'New community pre-school opens in Svay Rieng', 'With support from local partners, Santi Sena inaugurated a new pre-school serving 60 children in a remote village.', '<p>The new pre-school gives rural children a safe place to learn, play and receive early support from trained teachers.</p>', true, 'Santi Sena Communications Team', '3 min read', '2025-03-15', '/src/assets/maps/student.png'),
-    (2, 'forest-guardians-celebrate-500-hectares', 'environment', 'Forest Guardians celebrate 500 hectares of protected land', 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.', '<p>Community forestry committees in Prey Veng continue to restore land, prevent illegal logging and protect biodiversity.</p>', false, 'Santi Sena Environment Team', '4 min read', '2025-02-28', '/src/assets/maps/wash.png'),
-    (3, 'youth-leaders-trained-in-child-protection-advocacy', 'child-protection', 'Youth leaders trained in child protection advocacy', 'Over 40 young volunteers completed training on child rights and protection, ready to act as peer educators in their villages.', '<p>Young volunteers learned child rights, reporting pathways and community awareness methods.</p>', false, 'Santi Sena Child Protection Team', '2 min read', '2025-02-10', '/src/assets/maps/certi.png'),
-    (4, 'saving-for-change-groups-reach-10000-members', 'livelihood', 'Saving-for-Change groups reach 10,000 members', 'The village savings program now has more than 10,000 active members, providing financial security to hundreds of families.', '<p>Saving groups help families manage emergencies, invest in small businesses and support children in school.</p>', false, 'Santi Sena Livelihood Unit', '3 min read', '2025-01-20', '/src/assets/maps/pre-school.png'),
-    (5, 'new-partnership-to-expand-clean-water-access', 'wash', 'New partnership to expand clean water access', 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.', '<p>The partnership supports boreholes, purification systems and hygiene training for rural households.</p>', false, 'Santi Sena WASH Team', '5 min read', '2025-01-05', '/src/assets/maps/water.png')
+    (1, 'new-community-pre-school-opens-in-svay-rieng', 'education', 'New community pre-school opens in Svay Rieng', 'With support from local partners, Santi Sena inaugurated a new pre-school serving 60 children in a remote village.', '<p>The new pre-school gives rural children a safe place to learn, play and receive early support from trained teachers.</p>', true, 'Santi Sena Communications Team', '3 min read', '2025-03-15', 'https://lh3.googleusercontent.com/d/16aBVVPZFAeCLfRk8flYXrYZ-jxVg0zsh'),
+    (2, 'forest-guardians-celebrate-500-hectares', 'environment', 'Forest Guardians celebrate 500 hectares of protected land', 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.', '<p>Community forestry committees in Prey Veng continue to restore land, prevent illegal logging and protect biodiversity.</p>', false, 'Santi Sena Environment Team', '4 min read', '2025-02-28', 'https://lh3.googleusercontent.com/d/1Ox0LNIT0ZZ1xprkuwPsKTtXU--DW_KIh'),
+    (3, 'youth-leaders-trained-in-child-protection-advocacy', 'child-protection', 'Youth leaders trained in child protection advocacy', 'Over 40 young volunteers completed training on child rights and protection, ready to act as peer educators in their villages.', '<p>Young volunteers learned child rights, reporting pathways and community awareness methods.</p>', false, 'Santi Sena Child Protection Team', '2 min read', '2025-02-10', 'https://lh3.googleusercontent.com/d/1hX1B6dQBpobmdcqcJ1NYi50jsyXAIpu5'),
+    (4, 'saving-for-change-groups-reach-10000-members', 'livelihood', 'Saving-for-Change groups reach 10,000 members', 'The village savings program now has more than 10,000 active members, providing financial security to hundreds of families.', '<p>Saving groups help families manage emergencies, invest in small businesses and support children in school.</p>', false, 'Santi Sena Livelihood Unit', '3 min read', '2025-01-20', 'https://lh3.googleusercontent.com/d/13Dc1t4n20sJz82rCno0tkI9YiG2u3vhC'),
+    (5, 'new-partnership-to-expand-clean-water-access', 'wash', 'New partnership to expand clean water access', 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.', '<p>The partnership supports boreholes, purification systems and hygiene training for rural households.</p>', false, 'Santi Sena WASH Team', '5 min read', '2025-01-05', 'https://lh3.googleusercontent.com/d/1KVZgPZ7vq0CgKtBbS-dl8oJBeYdTkBx4')
 ) AS data(legacy_id, slug, category_slug, title, excerpt, body, is_featured, author_name, read_time, published_at, image_path)
 JOIN public.news_categories c ON c.slug = data.category_slug
 ON CONFLICT (slug) DO UPDATE
@@ -623,8 +623,42 @@ INSERT INTO public.donation_methods (
   metadata
 )
 VALUES
-  ('aba-pay', 'ABA Pay', 'bank_qr', 'Scan with ABA Pay or send a transfer to the Santi Sena account.', 'SANTI SENA', '000 000 000', 'KHR / USD', 1, true, jsonb_build_object('bank', 'ABA BANK - CAMBODIA', 'seed', 'santi-sena-default')),
-  ('acleda-bank', 'ACLEDA Bank', 'bank_qr', 'Scan with ACLEDA mobile or transfer to the Santi Sena account.', 'SANTI SENA', '0000 0000 000', 'KHR / USD', 2, true, jsonb_build_object('bank', 'ACLEDA - CAMBODIA', 'seed', 'santi-sena-default'))
+  (
+    'aba-pay',
+    'ABA Pay',
+    'bank_qr',
+    'ABA BANK - CAMBODIA',
+    'SANTI SENA',
+    '000 000 000',
+    'KHR / USD',
+    1,
+    true,
+    jsonb_build_object(
+      'bank', 'ABA BANK - CAMBODIA',
+      'subtitle', 'ABA BANK - CAMBODIA',
+      'header_color', '#0d2c63',
+      'qr_url', '',
+      'seed', 'santi-sena-default'
+    )
+  ),
+  (
+    'acleda-bank',
+    'ACLEDA Bank',
+    'bank_qr',
+    'ACLEDA - CAMBODIA',
+    'SANTI SENA',
+    '0000 0000 000',
+    'KHR / USD',
+    2,
+    true,
+    jsonb_build_object(
+      'bank', 'ACLEDA - CAMBODIA',
+      'subtitle', 'ACLEDA - CAMBODIA',
+      'header_color', '#1d3d5c',
+      'qr_url', '',
+      'seed', 'santi-sena-default'
+    )
+  )
 ON CONFLICT (slug) DO UPDATE
 SET
   name = EXCLUDED.name,

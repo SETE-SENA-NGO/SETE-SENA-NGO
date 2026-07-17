@@ -6,27 +6,15 @@ import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
-type PageRow = {
-  slug: string
-  title: string
-  body: string
-  updated_at: string | null
-}
-
 const loading = ref(false)
 const pageCount = ref(0)
 const savedCount = ref(0)
+const programCount = ref(0)
+const newsCount = ref(0)
+const partnerCount = ref(0)
+const userCount = ref(0)
 const latestUpdate = ref('')
 const ui = useUiStore()
-
-const monthlyVisitors = [
-  { month: 'Jan', visitors: 4200, views: 12800 },
-  { month: 'Feb', visitors: 5100, views: 14300 },
-  { month: 'Mar', visitors: 6800, views: 18100 },
-  { month: 'Apr', visitors: 6200, views: 17200 },
-  { month: 'May', visitors: 7900, views: 20900 },
-  { month: 'Jun', visitors: 8600, views: 23600 },
-]
 
 const quickActions = [
   {
@@ -36,10 +24,16 @@ const quickActions = [
     tone: 'blue',
   },
   {
+    label: 'Media URLs',
+    detail: 'Save public Google Drive images',
+    to: '/admin/media',
+    tone: 'green',
+  },
+  {
     label: 'New Program',
     detail: 'Open program content workflow',
     to: '/admin/modules/programs',
-    tone: 'green',
+    tone: 'blue',
   },
   {
     label: 'New News',
@@ -55,39 +49,47 @@ const quickActions = [
   },
 ]
 
-const maxVisitors = computed(() => {
-  return Math.max(1, ...monthlyVisitors.map((item) => item.visitors))
+const contentInventory = computed(() => [
+  { label: 'Pages', items: pageCount.value },
+  { label: 'Programs', items: programCount.value },
+  { label: 'News', items: newsCount.value },
+  { label: 'Partners', items: partnerCount.value },
+  { label: 'Users', items: userCount.value },
+])
+
+const maxInventory = computed(() => {
+  return Math.max(1, ...contentInventory.value.map((item) => item.items))
 })
 
 const dashboardStats = computed(() => [
   {
-    label: 'Total Visitors',
-    value: '42.8K',
-    tone: 'blue',
-  },
-  {
     label: 'Public Pages',
     value: String(pageCount.value),
-    tone: 'green',
+    tone: 'blue',
   },
   {
     label: 'Saved Pages',
     value: String(savedCount.value),
-    tone: 'blue',
-  },
-  {
-    label: 'Content Modules',
-    value: '6',
-    tone: 'orange',
-  },
-  {
-    label: 'Total Programs',
-    value: '4',
     tone: 'green',
   },
   {
-    label: 'Registered Users',
-    value: '8',
+    label: 'Programs',
+    value: String(programCount.value),
+    tone: 'blue',
+  },
+  {
+    label: 'News Posts',
+    value: String(newsCount.value),
+    tone: 'orange',
+  },
+  {
+    label: 'Partners',
+    value: String(partnerCount.value),
+    tone: 'green',
+  },
+  {
+    label: 'Admin Users',
+    value: String(userCount.value),
     tone: 'slate',
   },
 ])
@@ -99,11 +101,22 @@ onMounted(() => {
 async function loadPageStats() {
   loading.value = true
   try {
-    const { data, error } = await supabase.from('pages').select('slug, updated_at')
+    const [pagesResult, programs, news, partners, users] = await Promise.all([
+      supabase.from('pages').select('slug, updated_at'),
+      countRows('programs'),
+      countRows('news_posts'),
+      countRows('partners'),
+      countRows('profiles'),
+    ])
 
-    if (error) throw error
+    programCount.value = programs
+    newsCount.value = news
+    partnerCount.value = partners
+    userCount.value = users
 
-    const rows = (data ?? []) as { slug: string; updated_at: string | null }[]
+    if (pagesResult.error) throw pagesResult.error
+
+    const rows = (pagesResult.data ?? []) as { slug: string; updated_at: string | null }[]
     pageCount.value = rows.length
     savedCount.value = rows.filter((row) => row.updated_at).length
 
@@ -118,6 +131,15 @@ async function loadPageStats() {
   } finally {
     loading.value = false
   }
+}
+
+async function countRows(table: string) {
+  const { count, error } = await supabase.from(table).select('id', {
+    count: 'exact',
+    head: true,
+  })
+
+  return error ? 0 : (count ?? 0)
 }
 
 function formatDate(value: string) {
@@ -166,18 +188,18 @@ function barWidth(value: number, total: number) {
             <article class="dashboard-panel visitors-panel">
               <header>
                 <div>
-                  <p class="eyebrow">Analytics</p>
-                  <h2>Monthly visitors</h2>
+                  <p class="eyebrow">Inventory</p>
+                  <h2>Content inventory</h2>
                 </div>
-                <strong>Last 6 months</strong>
+                <strong>{{ loading ? 'Syncing...' : 'Live CMS tables' }}</strong>
               </header>
               <div class="visitor-chart">
-                <div v-for="month in monthlyVisitors" :key="month.month" class="visitor-bar">
+                <div v-for="item in contentInventory" :key="item.label" class="visitor-bar">
                   <span
-                    :style="{ height: barWidth(month.visitors, maxVisitors) }"
-                    :aria-label="`${month.month}: ${month.visitors} visitors`"
+                    :style="{ height: barWidth(item.items, maxInventory) }"
+                    :aria-label="`${item.label}: ${item.items} items`"
                   ></span>
-                  <small>{{ month.month }}</small>
+                  <small>{{ item.label }}</small>
                 </div>
               </div>
             </article>

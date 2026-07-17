@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import { imageUrlHelpText } from '@/lib/media'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
@@ -11,6 +12,7 @@ type EditableSection = {
   label: string
   heading: string
   body: string
+  imageUrl?: string
   items: string
 }
 
@@ -23,6 +25,7 @@ type PageDraft = {
   eyebrow: string
   headline: string
   intro: string
+  heroImageUrl?: string
   primaryAction: string
   secondaryAction: string
   sections: EditableSection[]
@@ -44,12 +47,14 @@ type StoredPageBody = {
   eyebrow: string
   headline: string
   intro: string
+  heroImageUrl: string
   primaryAction: string
   secondaryAction: string
   sections: EditableSection[]
 }
 
 const contentKind = 'santi-sena-page-content'
+const imageUrlHint = imageUrlHelpText()
 
 const defaultPages: PageDraft[] = [
   {
@@ -799,7 +804,7 @@ const defaultPages: PageDraft[] = [
   },
   {
     slug: 'contact-head-office',
-    route: '/contact/headoffice',
+    route: '/contact/head-office',
     group: 'Contact',
     title: 'Head Office',
     eyebrow: 'Contact - Head Office',
@@ -837,7 +842,7 @@ const defaultPages: PageDraft[] = [
   },
   {
     slug: 'contact-field-offices',
-    route: '/contact/fieldoffice',
+    route: '/contact/field-offices',
     group: 'Contact',
     title: 'Field Offices',
     eyebrow: 'Contact - Field Offices',
@@ -993,6 +998,7 @@ function cloneSection(section?: Partial<EditableSection>): EditableSection {
     label: section?.label || 'New section',
     heading: section?.heading || '',
     body: section?.body || '',
+    imageUrl: section?.imageUrl || '',
     items: section?.items || '',
   }
 }
@@ -1010,6 +1016,7 @@ function pageBody(page: PageDraft): StoredPageBody {
     eyebrow: page.eyebrow,
     headline: page.headline,
     intro: page.intro,
+    heroImageUrl: page.heroImageUrl ?? '',
     primaryAction: page.primaryAction,
     secondaryAction: page.secondaryAction,
     sections: page.sections.map((section) => ({ ...section })),
@@ -1044,6 +1051,7 @@ function parseStoredBody(body: string): Partial<StoredPageBody> | null {
       eyebrow: getString(parsed, 'eyebrow'),
       headline: getString(parsed, 'headline'),
       intro: getString(parsed, 'intro'),
+      heroImageUrl: getString(parsed, 'heroImageUrl'),
       primaryAction: getString(parsed, 'primaryAction'),
       secondaryAction: getString(parsed, 'secondaryAction'),
       sections: getSections(parsed.sections),
@@ -1062,6 +1070,7 @@ function getSections(value: unknown): EditableSection[] {
       label: getString(section, 'label') || 'Section',
       heading: getString(section, 'heading'),
       body: getString(section, 'body'),
+      imageUrl: getString(section, 'imageUrl'),
       items: getString(section, 'items'),
     }),
   )
@@ -1084,6 +1093,7 @@ function mergeRow(defaultPage: PageDraft, row: PageRow): PageDraft {
       ...clonePage(defaultPage),
       title: row.title || defaultPage.title,
       intro: row.body || defaultPage.intro,
+      heroImageUrl: defaultPage.heroImageUrl ?? '',
       updatedAt: row.updated_at ?? '',
     }
   }
@@ -1096,6 +1106,7 @@ function mergeRow(defaultPage: PageDraft, row: PageRow): PageDraft {
     eyebrow: parsed.eyebrow ?? defaultPage.eyebrow,
     headline: parsed.headline ?? defaultPage.headline,
     intro: parsed.intro ?? defaultPage.intro,
+    heroImageUrl: parsed.heroImageUrl ?? defaultPage.heroImageUrl ?? '',
     primaryAction: parsed.primaryAction ?? defaultPage.primaryAction,
     secondaryAction: parsed.secondaryAction ?? defaultPage.secondaryAction,
     sections: parsed.sections?.length
@@ -1397,6 +1408,17 @@ function formatDate(value: string) {
                     <textarea v-model="activePage.intro" name="page-intro" rows="4"></textarea>
                   </label>
 
+                  <label class="field-block">
+                    <span>Hero image URL</span>
+                    <input
+                      v-model="activePage.heroImageUrl"
+                      name="page-hero-image-url"
+                      type="url"
+                      placeholder="https://lh3.googleusercontent.com/d/..."
+                    />
+                    <small class="field-hint">{{ imageUrlHint }}</small>
+                  </label>
+
                   <div class="form-grid">
                     <label>
                       <span>Primary action</span>
@@ -1493,6 +1515,17 @@ function formatDate(value: string) {
                           :name="`section-${section.id}-body`"
                           rows="4"
                         ></textarea>
+                      </label>
+
+                      <label class="field-block">
+                        <span>Section image URL</span>
+                        <input
+                          v-model="section.imageUrl"
+                          :name="`section-${section.id}-image-url`"
+                          type="url"
+                          placeholder="https://lh3.googleusercontent.com/d/..."
+                        />
+                        <small class="field-hint">{{ imageUrlHint }}</small>
                       </label>
 
                       <label class="field-block">
@@ -1926,6 +1959,13 @@ label {
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--admin-contrast-soft);
+}
+
+.field-hint {
+  color: var(--admin-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
 .field-block {

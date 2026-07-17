@@ -1,21 +1,24 @@
-export const MEDIA_BUCKET = 'media'
-export const MAX_IMAGE_UPLOAD_SIZE = 5 * 1024 * 1024
+export const EXTERNAL_MEDIA_BUCKET = 'google-drive'
 
-export const ALLOWED_IMAGE_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-])
-
-export function isAllowedImageFile(file: File) {
-  return ALLOWED_IMAGE_MIME_TYPES.has(file.type) && file.size <= MAX_IMAGE_UPLOAD_SIZE
+export function isSupportedImageUrl(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:'
+  } catch {
+    return false
+  }
 }
 
-export function imageUploadHelpText() {
-  return 'JPG, PNG, WebP or GIF up to 5MB.'
+export function imageUrlHelpText() {
+  return 'Paste a public Google Drive image URL.'
 }
 
-export function safeStorageFileName(fileName: string) {
-  return fileName.replace(/[^a-zA-Z0-9._-]/g, '_')
+export function imageNameFromUrl(value: string) {
+  try {
+    const url = new URL(value)
+    const lastSegment = decodeURIComponent(url.pathname.split('/').filter(Boolean).at(-1) ?? '')
+    return lastSegment || url.hostname
+  } catch {
+    return 'Google Drive image'
+  }
 }

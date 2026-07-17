@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 
 const fieldOffices = [
   {

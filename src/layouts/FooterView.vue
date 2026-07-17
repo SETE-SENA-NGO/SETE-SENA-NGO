@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import logoUrl from '@/assets/santi_sena_logo.png'
+import { imageUrls } from '@/lib/imageUrls'
+
+const logoUrl = imageUrls.logo
 
 const exploreLinks = [
   { label: 'About', to: '/about' },

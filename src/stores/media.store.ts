@@ -1,16 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
-import {
-  MEDIA_BUCKET,
-  MAX_IMAGE_UPLOAD_SIZE,
-  imageUploadHelpText,
-  isAllowedImageFile,
-  safeStorageFileName,
-} from '@/lib/media'
+import { EXTERNAL_MEDIA_BUCKET, imageNameFromUrl, imageUrlHelpText, isSupportedImageUrl } from '@/lib/media'
 
 export interface MediaItem {
   id: string
+  bucket: string
+  path: string
   name: string
   url: string
   mime_type: string
@@ -19,6 +15,8 @@ export interface MediaItem {
 }
 
 type MediaAssetRow = {
+  id: string
+  bucket: string
   path: string
   public_url: string | null
   file_name: string
@@ -29,106 +27,93 @@ type MediaAssetRow = {
 
 export const useMediaStore = defineStore('media', () => {
   const items = ref<MediaItem[]>([])
-  const uploading = ref(false)
+  const saving = ref(false)
   const progress = ref(0)
   const error = ref<string | null>(null)
+
+  function toMediaItem(file: MediaAssetRow): MediaItem {
+    return {
+      id: file.id,
+      bucket: file.bucket,
+      path: file.path,
+      name: file.file_name,
+      url: file.public_url ?? file.path,
+      mime_type: file.mime_type ?? 'image/external-url',
+      size: file.file_size ?? 0,
+      created_at: file.created_at,
+    }
+  }
 
   async function list() {
     const { data, error: listError } = await supabase
       .from('media_assets')
-      .select('path, public_url, file_name, mime_type, file_size, created_at')
-      .eq('bucket', MEDIA_BUCKET)
+      .select('id, bucket, path, public_url, file_name, mime_type, file_size, created_at')
       .order('created_at', { ascending: false })
       .limit(200)
     if (listError) throw listError
 
-    items.value = ((data ?? []) as MediaAssetRow[]).map((file) => ({
-      id: file.path,
-      name: file.file_name,
-      url:
-        file.public_url ??
-        supabase.storage.from(MEDIA_BUCKET).getPublicUrl(file.path).data.publicUrl,
-      mime_type: file.mime_type ?? 'application/octet-stream',
-      size: file.file_size ?? 0,
-      created_at: file.created_at,
-    }))
+    items.value = ((data ?? []) as MediaAssetRow[]).map(toMediaItem)
   }
 
-  async function upload(file: File) {
-    if (!isAllowedImageFile(file)) {
-      throw new Error(`Upload ${imageUploadHelpText()}`)
+  async function addUrl(url: string, name?: string) {
+    const trimmedUrl = url.trim()
+    const fileName = name?.trim() || imageNameFromUrl(trimmedUrl)
+
+    if (!isSupportedImageUrl(trimmedUrl)) {
+      throw new Error(imageUrlHelpText())
     }
 
-    uploading.value = true
+    saving.value = true
     progress.value = 0
     error.value = null
 
-    const path = `website-images/${Date.now()}_${safeStorageFileName(file.name)}`
-
     try {
-      const { data, error: uploadError } = await supabase.storage
-        .from(MEDIA_BUCKET)
-        .upload(path, file, { upsert: false })
-
-      if (uploadError) throw uploadError
-
-      const publicUrl = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl
-
-      const { error: assetError } = await supabase.from('media_assets').upsert(
-        {
-          bucket: MEDIA_BUCKET,
-          path: data.path,
-          public_url: publicUrl,
-          file_name: file.name,
-          mime_type: file.type,
-          file_size: file.size,
-          folder: 'website-images',
-        },
-        { onConflict: 'bucket,path' },
-      )
+      const { data, error: assetError } = await supabase
+        .from('media_assets')
+        .upsert(
+          {
+            bucket: EXTERNAL_MEDIA_BUCKET,
+            path: trimmedUrl,
+            public_url: trimmedUrl,
+            file_name: fileName,
+            mime_type: 'image/external-url',
+            file_size: 0,
+            folder: 'google-drive',
+          },
+          { onConflict: 'bucket,path' },
+        )
+        .select('id, bucket, path, public_url, file_name, mime_type, file_size, created_at')
+        .single()
 
       if (assetError) throw assetError
 
-      items.value.unshift({
-        id: data.path,
-        name: file.name,
-        url: publicUrl,
-        mime_type: file.type || 'application/octet-stream',
-        size: file.size,
-        created_at: new Date().toISOString(),
-      })
+      const item = toMediaItem(data as MediaAssetRow)
+      items.value = [item, ...items.value.filter((existing) => existing.id !== item.id)]
 
       progress.value = 100
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Upload failed'
+      error.value = e instanceof Error ? e.message : 'Could not save image URL'
       throw e
     } finally {
-      uploading.value = false
+      saving.value = false
     }
   }
 
-  async function remove(path: string) {
-    const { error: removeError } = await supabase.storage.from(MEDIA_BUCKET).remove([path])
-    if (removeError) throw removeError
-
-    const { error: assetError } = await supabase
-      .from('media_assets')
-      .delete()
-      .eq('bucket', MEDIA_BUCKET)
-      .eq('path', path)
+  async function remove(id: string) {
+    const { error: assetError } = await supabase.from('media_assets').delete().eq('id', id)
 
     if (assetError) throw assetError
-    items.value = items.value.filter((item) => item.id !== path)
+    items.value = items.value.filter((item) => item.id !== id)
   }
 
   return {
     items,
-    uploading,
+    saving,
     progress,
     error,
-    maxFileSize: MAX_IMAGE_UPLOAD_SIZE,
+    urlHelpText: imageUrlHelpText,
     list,
-    upload,
+    addUrl,
     remove,
   }
 })

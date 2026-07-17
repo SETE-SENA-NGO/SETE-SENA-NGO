@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
+import { imageUrls } from '@/lib/imageUrls'
+
+const heroTimelineImage = imageUrls.impact.hero
+const introImpactImage = imageUrls.impact.village
 
 // ─── Milestones data ──────────────────────────────────────────────
 const allMilestones = [
@@ -10,7 +14,7 @@ const allMilestones = [
       'New five-year strategy to deepen quality, diversify funding and invest in youth leadership.',
     detail:
       'The plan prioritises three pillars: (1) expanding community-led education programmes, (2) strengthening child protection systems, and (3) launching a dedicated youth innovation fund. Over 50 community dialogues were held to co‑design the strategy.',
-    image: new URL('@/assets/maps/2024.png', import.meta.url).href,
+    image: imageUrls.maps.timeline2024,
   },
   {
     year: '2022',
@@ -19,7 +23,7 @@ const allMilestones = [
       'Village forest guardians launch a rural enterprise from non-timber forest products.',
     detail:
       'With technical support from Santi Sena, 12 village cooperatives now sustainably harvest melaleuca leaves, producing essential oils sold locally and exported. The enterprise provides income for 200 families while preserving the forest.',
-    image: new URL('@/assets/maps/2022.png', import.meta.url).href,
+    image: imageUrls.maps.timeline2022,
   },
   {
     year: '2020',
@@ -27,7 +31,7 @@ const allMilestones = [
     description: 'Emergency food, hygiene and remote-learning kits reach more than 200 villages.',
     detail:
       'In partnership with local authorities, we distributed 3,500 food packs, 5,000 hygiene kits, and 2,000 radio‑based learning materials to keep children learning despite school closures.',
-    image: new URL('@/assets/maps/2019.png', import.meta.url).href,
+    image: imageUrls.maps.timeline2019,
   },
   {
     year: '2018',
@@ -35,7 +39,7 @@ const allMilestones = [
     description: 'CPNs become active across 43 communes with 24/7 referral pathways.',
     detail:
       'Each network includes trained volunteers, social workers, and local police. They have handled over 1,200 cases, ensuring vulnerable children receive immediate care and legal support.',
-    image: new URL('@/assets/maps/2018.png', import.meta.url).href,
+    image: imageUrls.maps.timeline2018,
   },
   {
     year: '2014',
@@ -44,7 +48,7 @@ const allMilestones = [
       'Kratie office opens. Programs extend to a third province and staff grows past 30 full-time.',
     detail:
       'The expansion to Kratie brought our integrated approach to another province, reaching an additional 80 villages. We also launched our first youth leadership camp that year.',
-    image: new URL('@/assets/maps/2014.png', import.meta.url).href,
+    image: imageUrls.maps.timeline2014,
   },
   {
     year: '2011',
@@ -52,7 +56,7 @@ const allMilestones = [
     description: 'Household biogas units begin replacing firewood in remote kitchens.',
     detail:
       'By 2015, we had installed over 400 biogas units, reducing deforestation and improving indoor air quality. The program also trains local technicians to maintain the systems.',
-    image: new URL('@/assets/maps/2011.png', import.meta.url).href,
+    image: imageUrls.maps.timeline2011,
   },
   {
     year: '2007',
@@ -60,7 +64,7 @@ const allMilestones = [
     description: 'Education and child protection programming reaches a second province.',
     detail:
       'We partnered with the provincial government to replicate the Svay Rieng model, focusing on school enrolment and community‑based child protection committees.',
-    image: new URL('@/assets/maps/2007.png', import.meta.url).href,
+    image: imageUrls.maps.timeline2007,
   },
   {
     year: '2003',
@@ -69,7 +73,7 @@ const allMilestones = [
       'First women-led savings circles launched in Svay Rieng; the model becomes a program backbone.',
     detail:
       'Today, over 500 savings groups exist, with more than 12,000 members. The groups provide micro‑loans and financial literacy training, empowering women to start small businesses.',
-    image: new URL('@/assets/maps/2003.png', import.meta.url).href,
+    image: imageUrls.maps.timeline2003,
   },
   {
     year: '1998',
@@ -77,7 +81,7 @@ const allMilestones = [
     description: 'Village committees take legal stewardship of 120 hectares of degraded forest.',
     detail:
       'The site has since become a model for community‑led reforestation, with over 50,000 trees planted and a thriving biodiversity corridor. It now serves as a learning hub for other villages.',
-    image: new URL('@/assets/maps/1998.png', import.meta.url).href,
+    image: imageUrls.maps.timeline1998,
   },
   {
     year: '1994',
@@ -86,7 +90,7 @@ const allMilestones = [
       'Buddhist monks and community elders establish the Peace Army after the war, focused on moral regeneration and rural recovery.',
     detail:
       'The founding team began with just five monks and a handful of volunteers. Their first project was rebuilding a primary school destroyed during the conflict, which became the spark for decades of community development.',
-    image: new URL('@/assets/maps/1994.png', import.meta.url).href,
+    image: imageUrls.maps.timeline1994,
   },
 ]
 
@@ -223,7 +227,7 @@ onBeforeUnmount(() => {
         <div class="hero-image-col">
           <div class="image-frame">
             <img
-              src="https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=lvEwaw1VE28Q7kNvwF0oeBX&_nc_oc=AdoM-LuhRR9j2YGIxqYi2OJiGUP-ZSRIwiF5h86kvDtDqSOWZHzFau8Sp9m75Ckbn80&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=a1JVpq_FPUd9S2mq43fsuQ&_nc_ss=7b289&oh=00_AQDNWYKPBBXGQ50NyyHleSxn6D2Z25OJKoc40CtgNI3mFw&oe=6A7D5DD8"
+              :src="heroTimelineImage"
               alt="Santi Sena project"
               class="hero-image"
             />
@@ -339,7 +343,7 @@ onBeforeUnmount(() => {
           <div class="intro-image-wrapper">
             <img
               class="intro-image"
-              src="https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/505525876_3181813175305341_2459654488011023770_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=KbphgVDtLEUQ7kNvwHwZoMd&_nc_oc=AdoEQdWJwc0WofG5wZkcxZUirfqYT4NJTaUZEmHge-clF78G4Ktd1xWu97cfyLoW4Jo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=mM-k-o8joxyLISffyX9ncQ&_nc_ss=7b289&oh=00_AQBe77By6MxWzjiOTY8RROyjc3kuPm7orwHcP0SaARI5Xg&oe=6A566409"
+              :src="introImpactImage"
               alt="Santi Sena Cambodia"
             />
           </div>

@@ -63,7 +63,7 @@ $$;
 
 CREATE TABLE IF NOT EXISTS public.media_assets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  bucket text NOT NULL DEFAULT 'media',
+  bucket text NOT NULL DEFAULT 'google-drive',
   path text NOT NULL,
   public_url text,
   file_name text NOT NULL,
@@ -619,46 +619,5 @@ CREATE POLICY "Content admins can insert revisions"
   ON public.content_revisions FOR INSERT
   WITH CHECK (public.is_content_admin());
 
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'media',
-  'media',
-  true,
-  10485760,
-  ARRAY[
-    'image/jpeg',
-    'image/png',
-    'image/webp',
-    'image/gif',
-    'video/mp4',
-    'audio/mpeg',
-    'application/pdf'
-  ]::text[]
-)
-ON CONFLICT (id) DO UPDATE
-SET
-  public = EXCLUDED.public,
-  file_size_limit = EXCLUDED.file_size_limit,
-  allowed_mime_types = EXCLUDED.allowed_mime_types;
-
-DROP POLICY IF EXISTS "Media bucket public read" ON storage.objects;
-DROP POLICY IF EXISTS "Media bucket admin insert" ON storage.objects;
-DROP POLICY IF EXISTS "Media bucket admin update" ON storage.objects;
-DROP POLICY IF EXISTS "Media bucket admin delete" ON storage.objects;
-
-CREATE POLICY "Media bucket public read"
-  ON storage.objects FOR SELECT
-  USING (bucket_id = 'media');
-
-CREATE POLICY "Media bucket admin insert"
-  ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'media' AND public.is_content_admin());
-
-CREATE POLICY "Media bucket admin update"
-  ON storage.objects FOR UPDATE
-  USING (bucket_id = 'media' AND public.is_content_admin())
-  WITH CHECK (bucket_id = 'media' AND public.is_content_admin());
-
-CREATE POLICY "Media bucket admin delete"
-  ON storage.objects FOR DELETE
-  USING (bucket_id = 'media' AND public.is_content_admin());
+-- Media files are stored outside Supabase, typically in Google Drive.
+-- public.media_assets stores only public URLs and descriptive metadata.

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { imageUrls } from '@/lib/imageUrls'
 import { supabase } from '@/lib/supabase'
 import {
   parsePublishedPage,
@@ -15,6 +16,12 @@ const content = ref<PublishedPageContent | null>(null)
 const loaded = ref(false)
 const loadError = ref('')
 const fallbackComponent = shallowRef<Component | null>(null)
+const defaultHeroImageUrl = imageUrls.programs.hero1
+const managedHeroBackground = computed(
+  () => `url(${content.value?.heroImageUrl || defaultHeroImageUrl})`,
+)
+
+type FallbackComponentLoader = () => Promise<{ default: Component }>
 
 const slug = computed(() => {
   return typeof route.meta.contentSlug === 'string' ? route.meta.contentSlug : ''
@@ -23,6 +30,11 @@ const slug = computed(() => {
 watch(
   () => route.meta.fallbackComponent,
   (component) => {
+    if (typeof component === 'function') {
+      fallbackComponent.value = defineAsyncComponent(component as FallbackComponentLoader)
+      return
+    }
+
     fallbackComponent.value = (component as Component | undefined) ?? null
   },
   { immediate: true },
@@ -74,7 +86,7 @@ function actionRoute(index: number) {
 
 <template>
   <main v-if="content" class="managed-page">
-    <section class="managed-hero">
+    <section class="managed-hero" :style="{ '--managed-hero-background': managedHeroBackground }">
       <div class="managed-hero-inner">
         <p class="managed-eyebrow">{{ content.eyebrow || content.group }}</p>
         <h1>{{ content.headline || content.title }}</h1>
@@ -100,14 +112,23 @@ function actionRoute(index: number) {
 
     <section class="managed-sections" aria-label="Page content">
       <article v-for="section in content.sections" :key="section.id" class="managed-section">
-        <p class="managed-section-label">{{ section.label }}</p>
-        <h2>{{ section.heading }}</h2>
-        <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
+        <img
+          v-if="section.imageUrl"
+          class="managed-section-image"
+          :src="section.imageUrl"
+          :alt="section.heading || section.label"
+          loading="lazy"
+        />
+        <div>
+          <p class="managed-section-label">{{ section.label }}</p>
+          <h2>{{ section.heading }}</h2>
+          <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
 
-        <div v-if="sectionItems(section).length" class="managed-item-grid">
-          <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
-            <strong>{{ item.title }}</strong>
-            <p v-if="item.detail">{{ item.detail }}</p>
+          <div v-if="sectionItems(section).length" class="managed-item-grid">
+            <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
+              <strong>{{ item.title }}</strong>
+              <p v-if="item.detail">{{ item.detail }}</p>
+            </div>
           </div>
         </div>
       </article>
@@ -135,7 +156,7 @@ function actionRoute(index: number) {
   overflow: hidden;
   background:
     linear-gradient(135deg, rgba(22, 48, 42, 0.88), rgba(58, 125, 68, 0.82)),
-    url('/images/programs/hero-1.jpg') center / cover;
+    var(--managed-hero-background) center / cover;
 }
 
 .managed-hero::after {
@@ -218,11 +239,25 @@ function actionRoute(index: number) {
 }
 
 .managed-section {
+  display: grid;
+  gap: 1.25rem;
   border: 1px solid rgba(22, 48, 42, 0.12);
   border-radius: 8px;
   background: #ffffff;
   padding: 1.5rem;
   box-shadow: 0 16px 34px rgba(22, 48, 42, 0.08);
+}
+
+.managed-section:has(.managed-section-image) {
+  grid-template-columns: minmax(220px, 0.35fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.managed-section-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .managed-section h2 {
@@ -279,6 +314,10 @@ function actionRoute(index: number) {
 @media (max-width: 720px) {
   .managed-hero {
     min-height: 460px;
+  }
+
+  .managed-section:has(.managed-section-image) {
+    grid-template-columns: 1fr;
   }
 
   .managed-section {

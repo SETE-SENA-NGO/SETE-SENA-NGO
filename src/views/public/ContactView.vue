@@ -2,11 +2,15 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useScrollReveal } from '@/composables/useScrollReveal'
-import cambodiaMap from '@/assets/maps/Cambodia Map.png'
-import locationIcon from '@/assets/maps/location_icon.png'
-import preyVengMap from '@/assets/maps/Prey_Veng.png'
-import svayRiengMap from '@/assets/maps/Svay_Rieng.png'
-import logoUrl from '@/assets/santi_sena_icon.ico'
+import { imageUrls } from '@/lib/imageUrls'
+
+const cambodiaMap = imageUrls.maps.cambodiaOffices
+const locationIcon = imageUrls.maps.locationIcon
+const preyVengMap = imageUrls.maps.preyVeng
+const svayRiengMap = imageUrls.maps.svayRieng
+const logoUrl = imageUrls.logo
+const headquartersPhoto = imageUrls.programs.hero1
+const visitBackground = `url(${imageUrls.programs.hero4})`
 
 const headquarters = {
   name: 'Our headquarters in Svay Rieng',
@@ -125,7 +129,7 @@ onMounted(() => {
 
       <div class="headquarters-layout">
         <figure class="headquarters-photo reveal" style="animation-delay: 0.1s">
-          <img src="/images/programs/hero-1.jpg" alt="Santi Sena team meeting in Cambodia" />
+          <img :src="headquartersPhoto" alt="Santi Sena team meeting in Cambodia" />
         </figure>
 
         <article class="headquarters-details reveal" style="animation-delay: 0.22s">
@@ -578,7 +582,11 @@ onMounted(() => {
       </form>
     </section>
 
-    <section class="visit-section reveal" aria-labelledby="write-heading">
+    <section
+      class="visit-section reveal"
+      :style="{ '--visit-background': visitBackground }"
+      aria-labelledby="write-heading"
+    >
       <div class="reveal" style="animation-delay: 0.06s">
         <p class="section-kicker section-kicker--light">Write to us</p>
         <h2 id="write-heading">A little coordination helps us welcome you well.</h2>
@@ -1629,7 +1637,7 @@ onMounted(() => {
       rgba(4, 48, 29, 0.9) 52%,
       rgba(4, 48, 29, 0.76) 100%
     ),
-    url('/images/programs/hero-4.jpg') center / cover no-repeat;
+    var(--visit-background) center / cover no-repeat;
   color: #fffaf2;
   padding: clamp(3rem, 6vw, 4.5rem)
     max(

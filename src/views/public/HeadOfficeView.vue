@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import { imageUrls } from '@/lib/imageUrls'
+
+const officeHeroBackground = `url(${imageUrls.programs.hero1})`
 
 const contactBlocks = [
   {
@@ -44,7 +47,11 @@ onMounted(() => {
 
 <template>
   <main class="head-office-page">
-    <section class="office-hero" aria-labelledby="office-heading">
+    <section
+      class="office-hero"
+      :style="{ '--office-hero-background': officeHeroBackground }"
+      aria-labelledby="office-heading"
+    >
       <div class="office-hero__content">
         <p class="office-eyebrow">Contact - Head Office</p>
         <h1 id="office-heading">Visit us in Svay Rieng.</h1>
@@ -114,8 +121,7 @@ onMounted(() => {
       rgba(4, 62, 50, 0.42) 100%
     ),
     linear-gradient(180deg, rgba(1, 29, 25, 0.08), rgba(1, 29, 25, 0.28)),
-    url('https://images.unsplash.com/photo-1534330207526-8e81f10ec6fc?auto=format&fit=crop&w=1920&q=82')
-      center 48% / cover;
+    var(--office-hero-background) center 48% / cover;
 }
 
 .office-hero__content,

@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const { observe } = useScrollReveal({ threshold: 0.1 })
-
-const slideItems = [
-  { image: heroImpactVillage, caption: '' },
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-]
 
 interface TeamMember { role: string; desc: string }
 

@@ -139,10 +139,12 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import santiSenaLogo from '@/assets/santi_sena_icon.ico'
-import leftBgLogo from '@/assets/santi_sena_logo.png'
+import { imageUrls } from '@/lib/imageUrls'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
+
+const santiSenaLogo = imageUrls.logo
+const leftBgLogo = imageUrls.logo
 
 const bgStyle = {
   backgroundImage: `url(${leftBgLogo})`,
@@ -185,7 +187,7 @@ const handleLogin = async () => {
     await router.push(redirectPath.value)
   } catch (err) {
     const message = (err as Error)?.message ?? 'Login failed'
-    errorMessage.value = `${message} Use admin@gmail.com / password123 for local admin access.`
+    errorMessage.value = message
   } finally {
     loading.value = false
   }

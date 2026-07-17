@@ -174,8 +174,8 @@
   </div>
 </template>
 
-<script setup>
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+<script setup lang="ts">
+import { ref, reactive, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
 
 /* ─── Data ─────────────────────────────────────── */
 const visionCards = [
@@ -210,7 +210,18 @@ const statsRaw = [
   { label: 'Staff', end: 30, suffix: '+' },
 ]
 
-const stats = reactive(
+type CardGroup = 'vision' | 'values'
+
+interface CounterStat {
+  label: string
+  end: number
+  suffix: string
+  displayed: string
+}
+
+type TemplateRef = Element | ComponentPublicInstance | null
+
+const stats = reactive<CounterStat[]>(
   statsRaw.map(s => ({ ...s, displayed: s.end + s.suffix }))
 )
 
@@ -222,7 +233,7 @@ const values = [
 ]
 
 /* ─── Visibility state ─────────────────────────── */
-const visibleCards = reactive({
+const visibleCards = reactive<Record<CardGroup, boolean[]>>({
   vision: Array(visionCards.length).fill(false),
   values: Array(values.length).fill(false),
 })
@@ -232,19 +243,23 @@ const quoteVisible = ref(false)
 const ctaVisible = ref(false)
 
 /* ─── Refs ─────────────────────────────────────── */
-const cardRefs = reactive({ vision: [], values: [] })
-const missionVisualRef = ref(null)
-const quoteRef = ref(null)
-const ctaRef = ref(null)
+const cardRefs = reactive<Record<CardGroup, Element[]>>({ vision: [], values: [] })
+const missionVisualRef = ref<HTMLElement | null>(null)
+const quoteRef = ref<HTMLElement | null>(null)
+const ctaRef = ref<HTMLElement | null>(null)
 
-function setRef(el, group, idx) {
-  if (el) cardRefs[group][idx] = el
+function isElementRef(el: TemplateRef): el is Element {
+  return el instanceof Element
+}
+
+function setRef(el: TemplateRef, group: CardGroup, idx: number) {
+  if (isElementRef(el)) cardRefs[group][idx] = el
 }
 
 /* ─── Intersection Observer ────────────────────── */
-const observers = []
+const observers: IntersectionObserver[] = []
 
-function observe(el, callback, options = {}) {
+function observe(el: Element | null, callback: () => void, options: IntersectionObserverInit = {}) {
   if (!el) return
   const io = new IntersectionObserver(
     entries => {
@@ -262,7 +277,7 @@ function observe(el, callback, options = {}) {
 }
 
 /* ─── Counter animation ────────────────────────── */
-function animateCounter(statObj) {
+function animateCounter(statObj: CounterStat) {
   const duration = 1400
   const start = statObj.end < 100 ? 0 : Math.round(statObj.end * 0.6)
   const step = (statObj.end - start) / (duration / 16)
@@ -290,8 +305,9 @@ onMounted(() => {
   // Stats
   observe(missionVisualRef.value, () => {
     statsVisible.value = true
-    statsRaw.forEach((raw, i) => {
-      setTimeout(() => animateCounter(stats[i]), i * 120)
+    statsRaw.forEach((_raw, i) => {
+      const stat = stats[i]
+      if (stat) setTimeout(() => animateCounter(stat), i * 120)
     })
   })
 
