@@ -14,7 +14,7 @@ function createMockClient(): SupabaseClient {
     get: (_, prop) =>
       prop === 'then'
         ? (resolve: (v: { data: null; error: null }) => void) =>
-            resolve({ data: null, error: null })
+          resolve({ data: null, error: null })
         : chain,
     apply: () => chain,
   })
@@ -22,7 +22,7 @@ function createMockClient(): SupabaseClient {
   return {
     auth: {
       getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
       signInWithPassword: () =>
         Promise.resolve({
           data: { user: null, session: null },
@@ -75,7 +75,7 @@ function createMockClient(): SupabaseClient {
       }),
     },
     rpc: noop,
-    channel: () => ({ subscribe: () => ({}), unsubscribe: () => {} }),
+    channel: () => ({ subscribe: () => ({}), unsubscribe: () => { } }),
     functions: {} as any,
     realtime: {} as any,
     schema: () => chain,

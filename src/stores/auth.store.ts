@@ -2,8 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import type { UserProfile } from '@/types/user'
 
-const adminRoles = new Set(['super_admin', 'admin', 'editor'])
+const adminRoles = new Set<UserProfile['role']>(['super_admin', 'admin', 'editor'])
+
 const fallbackAdminEmails = new Set(
   [
     'admin@gmail.com',
@@ -32,7 +34,9 @@ export const useAuthStore = defineStore('auth', () => {
   const initialized = ref(false)
 
   const isAuthenticated = computed(() => !!user.value)
-  const isAdmin = computed(() => !!profile.value && adminRoles.has(profile.value.role))
+  const isAdmin = computed(() =>
+    profile.value?.role ? adminRoles.has(profile.value.role as UserProfile['role']) : false,
+  )
 
   function createLocalAdminUser(email: string): User {
     const now = new Date().toISOString()
