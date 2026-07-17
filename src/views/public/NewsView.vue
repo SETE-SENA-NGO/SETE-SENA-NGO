@@ -2,6 +2,12 @@
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
+import certiImage from '@/assets/maps/certi.png'
+import preSchoolImage from '@/assets/maps/pre-school.png'
+import studentImage from '@/assets/maps/student.png'
+import washImage from '@/assets/maps/wash.png'
+import waterImage from '@/assets/maps/water.png'
+
 // ─── Dummy news data ────────────────────────────────────────────────
 const newsItems = ref([
   {
@@ -9,7 +15,7 @@ const newsItems = ref([
     title: 'New community pre‑school opens in Svay Rieng',
     summary:
       'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
-    image: 'src/assets/maps/student.png',
+    image: studentImage,
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
@@ -26,7 +32,7 @@ const newsItems = ref([
     title: 'Forest Guardians celebrate 500 hectares of protected land',
     summary:
       'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
-    image: 'src/assets/maps/wash.png',
+    image: washImage,
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
@@ -43,7 +49,7 @@ const newsItems = ref([
     title: 'Youth leaders trained in child protection advocacy',
     summary:
       'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
-    image: 'src/assets/maps/certi.png',
+    image: certiImage,
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
@@ -60,7 +66,7 @@ const newsItems = ref([
     title: 'Saving‑for‑Change groups reach 10,000 members',
     summary:
       'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
-    image: 'src/assets/maps/pre-school.png',
+    image: preSchoolImage,
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
@@ -77,7 +83,7 @@ const newsItems = ref([
     title: 'New partnership to expand clean water access',
     summary:
       'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
-    image: 'src/assets/maps/water.png',
+    image: waterImage,
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
@@ -608,6 +614,7 @@ const scrollToTop = () => {
   max-width: 820px;
   margin: 0 auto;
   padding: 0 1.5rem;
+  text-align: center;
 }
 
 .hero-static .hero-badge {
@@ -624,7 +631,7 @@ const scrollToTop = () => {
   border-radius: 999px;
   border: 1px solid rgba(45, 122, 90, 0.1);
   margin-bottom: 1rem;
-   margin-left:290px ;
+  margin-left: 0;
 }
 
 .pulse-dot {
@@ -647,8 +654,7 @@ const scrollToTop = () => {
   color: var(--primary-dark);
   letter-spacing: -0.03em;
   line-height: 0.95;
-  /* margin: 0 0 0.5rem; */
-   margin-left:200px ;
+  margin: 0 0 0.75rem;
 }
 
 .hero-static h1 .highlight {
@@ -663,20 +669,21 @@ const scrollToTop = () => {
   line-height: 1.7;
   color: var(--color-ink-soft);
   max-width: 680px;
-  margin: 0 0 2rem;
-   margin-left:80px ;
+  margin: 0 auto 2rem;
 }
 
 .hero-static .hero-stats {
   display: flex;
   gap: 2.5rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .hero-static .hero-stat {
   display: flex;
   flex-direction: column;
-   margin-left:81px ;
+  align-items: center;
+  margin-left: 0;
 }
 
 .hero-static .stat-number {
@@ -684,7 +691,7 @@ const scrollToTop = () => {
   font-weight: 700;
   color: var(--primary-color);
   letter-spacing: -0.02em;
-   margin-left:35px ;
+  margin-left: 0;
 }
 
 .hero-static .stat-label {
@@ -1477,14 +1484,35 @@ const scrollToTop = () => {
   .hero-static {
     padding: 3rem 1.5rem 2rem;
   }
+  .hero-static-inner {
+    padding: 0;
+  }
+  .hero-static .hero-badge {
+    max-width: 100%;
+    letter-spacing: 0.18em;
+    padding: 0.4rem 1rem;
+  }
   .hero-static h1 {
-    font-size: 2rem;
+    font-size: clamp(2rem, 12vw, 3rem);
+    line-height: 1.05;
+    margin-right: 10px;
+  }
+  .hero-static .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.6;
+    
   }
   .hero-static .hero-stats {
-    gap: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
   }
   .hero-static .stat-number {
-    font-size: 1.2rem;
+    font-size: 1.55rem;
+  }
+  .hero-static .stat-label {
+    font-size: 0.68rem;
+    line-height: 1.35;
   }
   .featured-actions {
     flex-direction: column;
@@ -1515,6 +1543,19 @@ const scrollToTop = () => {
 }
 
 @media (max-width: 600px) {
+  .hero-static {
+    padding: 2.5rem 1rem 1.75rem;
+  }
+  .hero-static .hero-stats {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+  .hero-static .hero-stat {
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(45, 122, 90, 0.1);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.5);
+  }
   .news-grid {
     grid-template-columns: 1fr;
     gap: 1.25rem;
