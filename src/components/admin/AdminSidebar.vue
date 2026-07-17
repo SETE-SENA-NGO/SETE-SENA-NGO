@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { useRouter, RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
@@ -24,6 +24,7 @@ type PageGroup = {
 }
 
 const route = useRoute()
+const router = useRouter()
 const ui = useUiStore()
 const auth = useAuthStore()
 const loggingOut = ref(false)
@@ -111,6 +112,7 @@ async function logout() {
   try {
     await auth.logout()
     ui.closeSidebar()
+    router.push('/admin/login')
   } finally {
     loggingOut.value = false
   }
