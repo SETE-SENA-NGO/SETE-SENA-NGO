@@ -1,0 +1,33 @@
+*   [33me9c67d0[m[33m ([m[1;35mrefs/stash[m[33m)[m On develop: WIP before updating develop
+[31m|[m[32m\[m  
+[31m|[m * [33mb84fe98[m index on develop: bbb8134 feat: update logo and icon website
+[31m|[m[31m/[m  
+[31m|[m *   [33m6435d74[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/admin-new-manage[m[33m, [m[1;31morigin/feature/admin-new-manage[m[33m, [m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m Merge pull request #70 from SETE-SENA-NGO/feat/migration-data
+[31m|[m [33m|[m[34m\[m  
+[31m|[m [33m|[m *   [33mab5d8ce[m resolve conflict code in develop
+[31m|[m [33m|[m [35m|[m[33m\[m  
+[31m|[m [33m|[m [35m|[m[33m/[m  
+[31m|[m [33m|[m[33m/[m[35m|[m   
+[31m|[m * [35m|[m   [33mebd9f83[m Merge branch 'feature/programs-page' into develop
+[31m|[m [1;31m|[m[1;32m\[m [35m\[m  
+[31m|[m [1;31m|[m * [35m|[m [33mcb7a494[m fix(nav): change "Support Us" label to "Donate" in HeaderView.
+[31m|[m [1;31m|[m * [35m|[m [33mb4a33f1[m fix(stats-band): replace FontAwesome icons with inline SVGs in stat boxes
+[31m|[m * [1;32m|[m [35m|[m   [33me9c6d49[m Merge pull request #67 from SETE-SENA-NGO/feat/get-involved-volunteer
+[31m|[m [1;32m|[m[1;34m\[m [1;32m\[m [35m\[m  
+[31m|[m [1;32m|[m [1;34m|[m[1;32m/[m [35m/[m  
+[31m|[m [1;32m|[m[1;32m/[m[1;34m|[m [35m|[m   
+[31m|[m [1;32m|[m * [35m|[m [33mbf1101c[m feat: improve ui get involved volunteer
+[31m|[m [1;32m|[m * [35m|[m   [33md96b061[m Merge branch 'develop' of https://github.com/SETE-SENA-NGO/SETE-SENA-NGO into feat/get-involved-volunteer
+[31m|[m [1;32m|[m [1;35m|[m[1;36m\[m [35m\[m  
+[31m|[m [1;32m|[m * [1;36m\[m [35m\[m   [33ma0fd4b9[m Merge branch 'develop' of https://github.com/SETE-SENA-NGO/SETE-SENA-NGO into feat/get-involved-volunteer
+[31m|[m [1;32m|[m [31m|[m[32m\[m [1;36m\[m [35m\[m  
+[31m|[m * [31m|[m [32m\[m [1;36m\[m [35m\[m   [33mf67ec63[m Merge branch 'feature/programs-page' into develop
+[31m|[m [1;36m|[m[34m\[m [31m\[m [32m\[m [1;36m\[m [35m\[m  
+[31m|[m [1;36m|[m [34m|[m[1;36m_[m[31m|[m[1;36m_[m[32m|[m[1;36m/[m [35m/[m  
+[31m|[m [1;36m|[m[1;36m/[m[34m|[m [31m|[m [32m|[m [35m|[m   
+[31m|[m [1;36m|[m * [31m|[m [32m|[m [35m|[m [33m46cd15c[m fix: fix icon in page Programs Overview.
+[31m|[m [1;36m|[m * [31m|[m [32m|[m [35m|[m   [33mf28cf12[m feat: merge code from develop.
+[31m|[m [1;36m|[m [35m|[m[31m\[m [31m\[m [32m\[m [35m\[m  
+[31m|[m [1;36m|[m[31m_[m[35m|[m[31m/[m [31m/[m [32m/[m [35m/[m  
+[31m|[m[31m/[m[1;36m|[m [35m|[m [31m|[m [32m|[m [35m|[m   
+[31m|[m [1;36m|[m * [31m|[m [32m|[m [35m|[m [33m0e58592[m fix: add image and update UI in programs page, livelihood page, and child protection.

@@ -10,8 +10,10 @@
         <div class="left-content">
           <!-- Brand header -->
           <div class="brand-header">
-            <div class="logo-icon">
-              <img class="logo-image" :src="santiSenaLogo" alt="Santi Sena" loading="eager" />
+<div class="logo-icon">
+              <div class="logo-disc" aria-hidden="true">
+                <img class="logo-image" :src="santiSenaLogo" alt="Santi Sena" loading="eager" />
+              </div>
             </div>
             <p class="sub-brand">Peace · Community · Environment</p>
           </div>
@@ -139,10 +141,15 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import santiSenaLogo from '@/assets/santi_sena_icon.ico'
 import leftBgLogo from '@/assets/santi_sena_logo.png'
+
+// Use the same “white seal” logo style as the public navbar.
+// The navbar uses the seal image with a white disc background.
+import publicLogo from '@/assets/santi_sena_icon.ico'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
+
+const santiSenaLogo = publicLogo
 
 const bgStyle = {
   backgroundImage: `url(${leftBgLogo})`,
@@ -229,13 +236,10 @@ const handlePasswordReset = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-height: 100vh;
-  min-height: 0;
+  min-height: 100vh;
   background: #0f1415;
-
   padding: 20px;
-  overflow: hidden; /* keep layout inside viewport (no scroll) */
-  max-height: 100vh;
+  overflow-x: hidden;
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -246,7 +250,7 @@ height: 100vh;
   max-width: 1360px;
   width: 100%;
   min-height: 780px;
-  height: 92vh;
+  height: min(92vh, 860px);
   max-height: 860px;
   border-radius: 36px;
   overflow: hidden;
@@ -307,12 +311,23 @@ height: 100vh;
   margin-bottom: 4px;
 }
 
-.logo-image {
-  width: 80px;
-  height: 84px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.25));
+.logo-disc {
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
 }
+
+.logo-image {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  display: block;
+}
+
 
 
 .sub-brand {
@@ -521,7 +536,7 @@ height: 100vh;
   background: #0f1415;
   border: 1px solid rgba(63, 73, 74, 0.4);
   border-radius: 16px;
-  padding: 14px 14px 14px 48px;
+  padding: 14px 48px 14px 48px;
   font-family: 'Manrope', sans-serif;
   font-size: 15px;
   color: #fff;
@@ -748,8 +763,14 @@ height: 100vh;
 }
 
 @media (max-width: 1024px) {
+  .login-page {
+    align-items: flex-start;
+    padding: 18px;
+    overflow-y: auto;
+  }
+
   .login-wrapper {
-    flex-wrap: wrap;
+    flex-direction: column;
     height: auto;
     max-height: none;
     min-height: 0;
@@ -759,7 +780,7 @@ height: 100vh;
 
   .left-panel {
     flex: 0 0 100%;
-    min-height: 380px;
+    min-height: 0;
     padding: 28px 24px 20px;
   }
 
@@ -777,6 +798,10 @@ height: 100vh;
     font-size: 34px;
   }
 
+  .welcome-section .description br {
+    display: none;
+  }
+
   .feature-cards {
     flex-wrap: wrap;
   }
@@ -787,14 +812,73 @@ height: 100vh;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 720px) {
+  .login-page {
+    padding: 12px;
+  }
+
   .login-wrapper {
-    border-radius: 20px;
+    border-radius: 22px;
+  }
+
+  .left-panel {
+    padding: 22px 18px 18px;
+  }
+
+  .brand-header {
+    margin-bottom: 20px;
+  }
+
+  .logo-icon {
+    margin-top: 0;
+  }
+
+  .logo-image {
+    width: 64px;
+    height: 68px;
+  }
+
+  .sub-brand {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .welcome-section {
+    margin-bottom: 20px;
+  }
+
+  .feature-cards {
+    gap: 10px;
+  }
+
+  .feature-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .right-panel {
+    padding: 22px 16px;
+  }
+
+  .form-options {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 0;
+  }
+
+  .login-wrapper {
+    min-height: 100vh;
+    border-radius: 0;
   }
 
   .left-panel {
     padding: 20px 16px 16px;
-    min-height: 320px;
   }
 
   .welcome-section h1 {
@@ -811,11 +895,17 @@ height: 100vh;
   }
 
   .right-panel {
-    padding: 20px 14px;
+    align-items: flex-start;
+    padding: 18px 12px 24px;
   }
 
   .login-card {
     padding: 20px 16px;
+    border-radius: 22px;
+  }
+
+  .dual-glow-card::before {
+    border-radius: 24px;
   }
 
   .social-buttons {
@@ -824,6 +914,33 @@ height: 100vh;
 
   .card-header h2 {
     font-size: 26px;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 1025px) {
+  .login-wrapper {
+    min-height: 0;
+  }
+
+  .left-panel {
+    padding-top: 28px;
+  }
+
+  .logo-icon {
+    margin-top: 0;
+  }
+
+  .brand-header,
+  .welcome-section {
+    margin-bottom: 18px;
+  }
+
+  .feature-card {
+    padding: 14px 16px;
+  }
+
+  .login-card {
+    padding: 28px 28px 26px;
   }
 }
 

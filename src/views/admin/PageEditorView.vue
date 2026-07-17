@@ -17,7 +17,6 @@ type EditableSection = {
 type PageDraft = {
   slug: string
   route: string
-  previewRoute?: string
   group: string
   title: string
   eyebrow: string
