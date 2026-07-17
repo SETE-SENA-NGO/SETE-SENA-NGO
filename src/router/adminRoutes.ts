@@ -9,6 +9,7 @@ import EnvironmentDashboardView from '@/views/admin/EnvironmentDashboardView.vue
 import LivelihoodDashboardView from '@/views/admin/LivelihoodDashboardView.vue'
 import ChildProtectionDashboardView from '@/views/admin/ChildProtectionDashboardView.vue'
 import ProgramsOverviewView from '@/views/admin/ProgramsOverviewView.vue'
+import DonationLView from '@/views/admin/DonationLView.vue'
 
 export const adminRoutes = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
