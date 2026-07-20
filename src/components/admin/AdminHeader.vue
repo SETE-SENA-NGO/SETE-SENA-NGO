@@ -27,6 +27,11 @@ const pageTitle = computed(() => {
     const slug = path.replace('/admin/editor/', '')
     return titleFromSlug(slug)
   }
+  if (path === '/admin/programs') return 'Programs Overview'
+  if (path === '/admin/education') return 'Education Dashboard'
+  if (path === '/admin/environment') return 'Environment Dashboard'
+  if (path === '/admin/livelihood') return 'Livelihood Dashboard'
+  if (path === '/admin/child-protection') return 'Child Protection Dashboard'
   if (path === '/admin/media') return 'Media Library'
   if (path === '/admin/pages') return 'Pages Manager'
   if (path === '/admin/settings') return 'Settings'
@@ -41,6 +46,11 @@ const pageTitle = computed(() => {
 const pageContext = computed(() => {
   const path = route.path
   if (path.startsWith('/admin/editor/')) return 'Website page'
+  if (path === '/admin/programs') return 'Program overview'
+  if (path === '/admin/education') return 'Program management'
+  if (path === '/admin/environment') return 'Program management'
+  if (path === '/admin/livelihood') return 'Program management'
+  if (path === '/admin/child-protection') return 'Program management'
   if (path.startsWith('/admin/modules/')) return 'Content module'
   if (path === '/admin/media') return 'Asset library'
   if (path === '/admin/settings') return 'Preferences'
@@ -48,7 +58,7 @@ const pageContext = computed(() => {
 })
 
 const userInitials = computed(() => {
-  const email = auth.user?.email || 'admin@gmail.com'
+  const email = auth.user?.email || ''
   const namePart = email.split('@')[0] ?? ''
   const parts = namePart.split(/[._-]/)
   if (parts.length >= 2) {
@@ -60,7 +70,7 @@ const userInitials = computed(() => {
   return 'AD'
 })
 
-const userEmail = computed(() => auth.user?.email || 'admin@gmail.com')
+const userEmail = computed(() => auth.user?.email || 'Not signed in')
 
 function goToSite() {
   void router.push('/')

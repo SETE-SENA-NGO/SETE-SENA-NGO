@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import heroImpactVillage from '@/assets/hero-impact-village.jpg'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const { observe } = useScrollReveal({ threshold: 0.1 })
-
-const slideItems = [
-  { image: heroImpactVillage, caption: '' },
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-]
 
 interface TeamMember { role: string; desc: string }
 
@@ -62,8 +54,6 @@ const accountabilityRef = ref<HTMLElement | null>(null)
 
 function setTeamCardRef(el: HTMLElement | null, idx: number) { teamCardRefs.value[idx] = el }
 function setPriorityRef(el: HTMLElement | null, idx: number) { priorityRefs.value[idx] = el }
-
-
 
 onMounted(() => {
   document.title = 'Organization — Santi Sena'
@@ -144,7 +134,7 @@ onMounted(() => {
         <div class="team-header">
           <span class="section-badge">Structure</span>
           <h2 class="team-heading-title">How we are <span class="txt-gradient">organized</span></h2>
-          <p class="team-lead">Leadership, technical support and field teams — connected from strategy to village
+          <p class="team-lead">Leadership, technical support and field teams connected from strategy to village
             action.</p>
         </div>
 
@@ -303,189 +293,6 @@ onMounted(() => {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-/* ═══════════════════════════════════════════
-   Hero
-   ═══════════════════════════════════════════ */
-
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(to right, rgba(6, 18, 13, 0.92) 0%, rgba(6, 18, 13, 0.5) 40%, rgba(6, 18, 13, 0.12) 72%, transparent 100%),
-    linear-gradient(to top, rgba(0, 0, 0, 0.35) 0%, transparent 50%);
-}
-
-.hero-content {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  max-width: 680px;
-  left: var(--container-offset);
-  padding: 3rem 1.5rem;
-  animation: heroFade 0.9s ease-out;
-}
-
-@keyframes heroFade {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.hero-badge {
-  display: inline-block;
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #fff;
-  margin-bottom: 1.25rem;
-  padding: 0.35rem 1.1rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(6px);
-}
-
-.hero-title {
-  margin: 0 0 0.75rem;
-  font-size: clamp(2rem, 4vw, 2.8rem);
-}
-
-.hero-line {
-  display: block;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: #fff;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
-}
-
-.hero-accent-line {
-  background: linear-gradient(135deg, var(--green), #4ade80, #86efac);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  background-size: 200% 200%;
-  animation: gradShift 4s ease infinite;
-}
-
-@keyframes gradShift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.hero-subtitle {
-  max-width: 42rem;
-  font-size: 1.05rem;
-  line-height: 1.8;
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
-  margin: 0 0 1.5rem;
-}
-
-.hero-stats-bar {
-  display: inline-flex;
-  align-items: center;
-  gap: 1.25rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 1.75rem;
-}
-
-.hero-stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.05rem;
-}
-
-.hero-stat-num {
-  font-size: 1.4rem;
-  font-weight: 800;
-  line-height: 1;
-  background: linear-gradient(135deg, #4ade80, var(--green));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.hero-stat-lbl {
-  font-size: 0.7rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.hero-stat-sep {
-  width: 1px;
-  height: 2rem;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.25s ease;
-}
-
-.btn-primary {
-  background: var(--green);
-  color: #fff;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--green) 30%, transparent);
-}
-
-.btn-primary:hover {
-  background: var(--green-deep);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--green) 35%, transparent);
-}
-
-.btn-ghost {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: #fff;
-}
-
-.btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
 }
 
 /* ═══════════════════════════════════════════
@@ -681,19 +488,6 @@ onMounted(() => {
   .fact-desc {
     max-width: 420px;
   }
-}
-
-/* ── Section Divider ── */
-.section-divider {
-  line-height: 0;
-  overflow: hidden;
-  margin-top: -1px;
-}
-
-.divider-svg {
-  display: block;
-  width: 100%;
-  height: 50px;
 }
 
 /* ═══════════════════════════════════════════
@@ -1187,16 +981,11 @@ onMounted(() => {
 @media (prefers-reduced-motion: reduce) {
 
   .reveal-on-scroll,
-  .reveal-on-scroll.revealed,
-  .hero-content {
+  .reveal-on-scroll.revealed {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
     transition: none !important;
-  }
-
-  .hero-accent-line {
-    animation: none;
   }
 
   .acc-seal-pulse {
@@ -1240,15 +1029,6 @@ onMounted(() => {
 }
 
 @media (max-width: 767px) {
-  .hero-stats-bar {
-    gap: 0.85rem;
-    padding: 0.6rem 1rem;
-  }
-
-  .hero-stat-num {
-    font-size: 1.15rem;
-  }
-
   .facts-section {
     padding: 3rem 0;
   }
@@ -1295,10 +1075,6 @@ onMounted(() => {
     text-align: left;
   }
 
-  .divider-svg {
-    height: 30px;
-  }
-
   .prio-item {
     padding: 1rem 1.15rem;
   }
@@ -1319,11 +1095,6 @@ onMounted(() => {
 
   .tl-card {
     padding: 1rem 1.15rem;
-  }
-
-  .hero-stats-bar {
-    flex-wrap: wrap;
-    justify-content: center;
   }
 }
 </style>
