@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
-import { EXTERNAL_MEDIA_BUCKET, imageNameFromUrl, imageUrlHelpText, isSupportedImageUrl } from '@/lib/media'
+import {
+  EXTERNAL_MEDIA_BUCKET,
+  imageNameFromUrl,
+  imageUrlHelpText,
+  isSupportedImageUrl,
+  normalizeMediaUrl,
+} from '@/lib/media'
 
 export interface MediaItem {
   id: string
@@ -56,7 +62,7 @@ export const useMediaStore = defineStore('media', () => {
   }
 
   async function addUrl(url: string, name?: string) {
-    const trimmedUrl = url.trim()
+    const trimmedUrl = normalizeMediaUrl(url)
     const fileName = name?.trim() || imageNameFromUrl(trimmedUrl)
 
     if (!isSupportedImageUrl(trimmedUrl)) {
@@ -99,6 +105,54 @@ export const useMediaStore = defineStore('media', () => {
     }
   }
 
+  async function uploadToGoogleDrive(file: File, name?: string) {
+    const sessionResult = await supabase.auth.getSession()
+    const accessToken = sessionResult.data.session?.access_token
+
+    if (sessionResult.error || !accessToken) {
+      throw new Error('Please log in as an admin before uploading images.')
+    }
+
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Only image uploads are allowed.')
+    }
+
+    saving.value = true
+    progress.value = 10
+    error.value = null
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file, file.name)
+      if (name?.trim()) formData.append('name', name.trim())
+
+      const response = await fetch('/api/google-drive-upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      })
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string; media?: MediaAssetRow }
+        | null
+
+      if (!response.ok || !payload?.media) {
+        throw new Error(payload?.error || 'Could not upload image to Google Drive.')
+      }
+
+      const item = toMediaItem(payload.media)
+      items.value = [item, ...items.value.filter((existing) => existing.id !== item.id)]
+      progress.value = 100
+      return item
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Could not upload image'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
   async function remove(id: string) {
     const { error: assetError } = await supabase.from('media_assets').delete().eq('id', id)
 
@@ -114,6 +168,7 @@ export const useMediaStore = defineStore('media', () => {
     urlHelpText: imageUrlHelpText,
     list,
     addUrl,
+    uploadToGoogleDrive,
     remove,
   }
 })

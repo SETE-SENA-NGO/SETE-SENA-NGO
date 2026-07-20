@@ -302,6 +302,7 @@ let descriptionMeta: HTMLMetaElement | null = null
 let previousDescription: string | null = null
 let createdDescriptionMeta = false
 let revealObserver: IntersectionObserver | null = null
+let lastScrollY = 0
 const projectTrackRef = ref<HTMLElement | null>(null)
 const canScrollProjectsPrev = ref(false)
 const canScrollProjectsNext = ref(false)
@@ -430,7 +431,10 @@ function setDocumentMeta() {
 function revealStatic() {
   document
     .querySelectorAll<HTMLElement>('.pop-reveal')
-    .forEach((element) => element.classList.add('is-visible'))
+    .forEach((element) => {
+      element.classList.remove('pop-from-up', 'pop-from-down')
+      element.classList.add('is-visible')
+    })
 }
 
 function initScrollReveal() {
@@ -443,23 +447,49 @@ function initScrollReveal() {
   }
 
   const elements = Array.from(document.querySelectorAll<HTMLElement>('.pop-reveal'))
+  const staggerGroups = new Map<HTMLElement, { index: number; step: number; max: number }>()
+  const registerStaggerGroup = (selector: string, step: number, max: number) => {
+    document.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
+      staggerGroups.set(element, { index, step, max })
+    })
+  }
+
+  registerStaggerGroup('.portfolio-stat-strip .portfolio-stat-item', 85, 260)
+  registerStaggerGroup('.project-grid .project-card', 95, 300)
+  registerStaggerGroup('.operating-rail .operating-item', 130, 520)
+  registerStaggerGroup('.strategy-grid .strategy-card', 105, 420)
+  registerStaggerGroup('.network-grid .network-card', 95, 300)
+  registerStaggerGroup('.funding-list .funding-item', 95, 360)
+
+  lastScrollY = window.scrollY
 
   revealObserver = new IntersectionObserver(
     (entries) => {
+      const currentScrollY = window.scrollY
+      const direction = currentScrollY >= lastScrollY ? 'down' : 'up'
+      lastScrollY = currentScrollY
+
       entries.forEach((entry) => {
-        if (!entry.isIntersecting) return
-        entry.target.classList.add('is-visible')
-        revealObserver?.unobserve(entry.target)
+        const target = entry.target as HTMLElement
+
+        target.classList.toggle('pop-from-down', direction === 'down')
+        target.classList.toggle('pop-from-up', direction === 'up')
+        target.classList.toggle('is-visible', entry.isIntersecting)
       })
     },
     {
-      rootMargin: '0px 0px -8% 0px',
-      threshold: 0.16,
+      rootMargin: '-5% 0px -8% 0px',
+      threshold: 0.12,
     },
   )
 
   elements.forEach((element, index) => {
-    element.style.setProperty('--pop-delay', `${Math.min(index * 55, 420)}ms`)
+    const stagger = staggerGroups.get(element)
+    const delay = stagger
+      ? Math.min(stagger.index * stagger.step, stagger.max)
+      : Math.min(index * 45, 280)
+
+    element.style.setProperty('--pop-delay', `${delay}ms`)
     revealObserver?.observe(element)
   })
 }
@@ -958,10 +988,10 @@ onUnmounted(() => {
   line-height: 1.1;
   text-decoration: none;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease;
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.32s ease,
+    background 0.32s ease,
+    border-color 0.32s ease;
 }
 
 .button:hover {
@@ -1149,6 +1179,16 @@ onUnmounted(() => {
   padding: 0.82rem 0.95rem;
   text-align: left;
   box-shadow: 0 10px 22px rgba(23, 118, 104, 0.07);
+  transition:
+    background 0.48s ease,
+    border-color 0.48s ease,
+    box-shadow 0.48s ease;
+}
+
+.portfolio-stat-item:hover {
+  border-color: color-mix(in srgb, var(--primary-color) 30%, transparent);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 30px rgba(23, 118, 104, 0.11);
 }
 
 .portfolio-stat-item + .portfolio-stat-item {
@@ -1406,9 +1446,9 @@ onUnmounted(() => {
   cursor: pointer;
   transform: translateY(-50%);
   transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    background 0.32s ease,
+    color 0.32s ease,
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 16px 28px rgba(17, 68, 77, 0.22);
 }
 
@@ -1447,7 +1487,7 @@ onUnmounted(() => {
     rgba(9, 35, 38, 0.88) 100%
   );
   content: '';
-  transition: background 0.25s ease;
+  transition: background 0.52s ease;
 }
 
 .project-card img {
@@ -1460,8 +1500,8 @@ onUnmounted(() => {
   filter: saturate(0.96) contrast(1.02) brightness(0.92);
   transform: scale(1.02);
   transition:
-    filter 0.25s ease,
-    transform 0.25s ease;
+    filter 0.52s ease,
+    transform 0.58s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .project-card:hover::before {
@@ -1505,9 +1545,10 @@ onUnmounted(() => {
   line-height: 1;
   text-transform: uppercase;
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    background 0.42s ease,
+    border-color 0.42s ease,
+    box-shadow 0.42s ease,
+    color 0.42s ease;
 }
 
 .project-card:hover .project-card__period {
@@ -1530,10 +1571,10 @@ onUnmounted(() => {
   background: rgba(9, 35, 38, 0.32);
   color: var(--color-white);
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
+    background 0.42s ease,
+    border-color 0.42s ease,
+    color 0.42s ease,
+    box-shadow 0.42s ease;
 }
 
 .project-card:hover .project-card__icon {
@@ -1562,8 +1603,8 @@ onUnmounted(() => {
   line-height: 1.16;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   transition:
-    color 0.2s ease,
-    text-shadow 0.2s ease;
+    color 0.42s ease,
+    text-shadow 0.42s ease;
 }
 
 .project-card:hover h3 {
@@ -1663,6 +1704,9 @@ onUnmounted(() => {
 
 .operating-item {
   position: relative;
+  --hover-pop-y: -6px;
+  --hover-pop-scale: 1.008;
+
   display: grid;
   grid-template-columns: 4.6rem minmax(0, 1fr);
   gap: 1.15rem;
@@ -1676,30 +1720,61 @@ onUnmounted(() => {
   padding: 1.2rem clamp(1.2rem, 2.4vw, 1.55rem);
   box-shadow: 0 18px 42px color-mix(in srgb, var(--primary-dark) 8%, transparent);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    background 0.48s ease,
+    border-color 0.48s ease,
+    box-shadow 0.48s ease;
 }
 
 .operating-item::before {
   position: absolute;
+  z-index: 0;
   inset: 0 auto 0 0;
   width: 5px;
   background: var(--primary-color);
   content: '';
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.42s ease;
+}
+
+.operating-item::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--primary-light) 34%, transparent),
+      transparent 54%
+    );
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-1rem);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .operating-item:hover {
   border-color: color-mix(in srgb, var(--primary-color) 42%, var(--color-border));
-  box-shadow: 0 24px 54px color-mix(in srgb, var(--primary-dark) 13%, transparent);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 253, 249, 0.96)),
+    var(--color-white);
+  box-shadow: 0 24px 54px color-mix(in srgb, var(--primary-dark) 12%, transparent);
 }
 
-.operating-item:hover::before {
+.operating-item:hover::before,
+.operating-item:hover::after {
   opacity: 1;
 }
 
+.operating-item:hover::after {
+  transform: translateX(0);
+}
+
 .operating-item > div {
+  position: relative;
+  z-index: 1;
   min-width: 0;
   padding-top: 0.12rem;
 }
@@ -1720,6 +1795,14 @@ onUnmounted(() => {
   font-size: 0.98rem;
   font-weight: 900;
   letter-spacing: 0;
+  transition:
+    box-shadow 0.46s ease,
+    transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.operating-item:hover .operating-step {
+  box-shadow: 0 20px 36px color-mix(in srgb, var(--primary-color) 28%, transparent);
+  transform: translateY(-2px) scale(1.025);
 }
 
 .operating-item strong {
@@ -1736,6 +1819,15 @@ onUnmounted(() => {
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
+  transition:
+    background 0.42s ease,
+    border-color 0.42s ease,
+    color 0.42s ease;
+}
+
+.operating-item:hover strong {
+  border-color: color-mix(in srgb, var(--primary-color) 42%, transparent);
+  background: color-mix(in srgb, var(--primary-color) 14%, #ffffff);
 }
 
 .operating-item h3 {
@@ -1744,6 +1836,11 @@ onUnmounted(() => {
   font-size: clamp(1.08rem, 1.7vw, 1.28rem);
   font-weight: 850;
   line-height: 1.18;
+  transition: color 0.42s ease;
+}
+
+.operating-item:hover h3 {
+  color: var(--primary-dark);
 }
 
 .operating-item p {
@@ -1802,6 +1899,9 @@ onUnmounted(() => {
 
 .strategy-card {
   position: relative;
+  --hover-pop-y: -6px;
+  --hover-pop-scale: 1.008;
+
   min-height: 270px;
   padding: 0 0 0.5rem;
   background: transparent;
@@ -1817,10 +1917,11 @@ onUnmounted(() => {
   border-radius: 999px;
   color: #4fa994;
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
+    background 0.44s ease,
+    border-color 0.44s ease,
+    color 0.44s ease,
+    box-shadow 0.44s ease,
+    transform 0.44s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .strategy-icon svg {
@@ -1844,7 +1945,7 @@ onUnmounted(() => {
   letter-spacing: -0.04em;
   line-height: 0.8;
   pointer-events: none;
-  transition: color 0.2s ease;
+  transition: color 0.44s ease;
 }
 
 .strategy-card h3,
@@ -1860,7 +1961,7 @@ onUnmounted(() => {
   font-size: 1.18rem;
   font-weight: 800;
   line-height: 1.28;
-  transition: color 0.2s ease;
+  transition: color 0.44s ease;
 }
 
 .strategy-card:hover .strategy-icon {
@@ -1868,6 +1969,7 @@ onUnmounted(() => {
   background: var(--primary-color);
   color: var(--color-white);
   box-shadow: 0 12px 24px color-mix(in srgb, var(--primary-color) 22%, transparent);
+  transform: translateY(-2px) scale(1.025);
 }
 
 .strategy-card:hover .strategy-number {
@@ -1930,11 +2032,24 @@ onUnmounted(() => {
 }
 
 .network-card {
+  --hover-pop-y: -7px;
+  --hover-pop-scale: 1.01;
+
   min-height: 178px;
   border: 1px solid rgba(255, 250, 240, 0.16);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
   padding: 1.35rem;
+  transition:
+    background 0.48s ease,
+    border-color 0.48s ease,
+    box-shadow 0.48s ease;
+}
+
+.network-card:hover {
+  border-color: color-mix(in srgb, var(--primary-light) 38%, rgba(255, 250, 240, 0.16));
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 38px rgba(0, 0, 0, 0.16);
 }
 
 .network-card span {
@@ -1948,6 +2063,16 @@ onUnmounted(() => {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  transition:
+    background 0.42s ease,
+    border-color 0.42s ease,
+    color 0.42s ease;
+}
+
+.network-card:hover span {
+  border-color: color-mix(in srgb, var(--primary-light) 46%, rgba(255, 250, 240, 0.14));
+  background: rgba(255, 255, 255, 0.14);
+  color: #fffaf0;
 }
 
 .network-card h3 {
@@ -2016,6 +2141,9 @@ onUnmounted(() => {
 
 .funding-item {
   position: relative;
+  --hover-pop-y: -6px;
+  --hover-pop-scale: 1.008;
+
   height: 100%;
   min-height: 178px;
   display: block;
@@ -2028,9 +2156,9 @@ onUnmounted(() => {
   text-align: left;
   box-shadow: 0 18px 34px color-mix(in srgb, var(--primary-dark) 8%, transparent);
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    background 0.46s ease,
+    border-color 0.46s ease,
+    box-shadow 0.46s ease;
 }
 
 .funding-item::after {
@@ -2043,12 +2171,13 @@ onUnmounted(() => {
   opacity: 0;
   transform: translateY(3px);
   transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+    opacity 0.46s ease,
+    transform 0.46s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .funding-item:hover {
   border-color: color-mix(in srgb, var(--primary-color) 32%, #dce8e0);
+  background: color-mix(in srgb, var(--primary-light) 10%, #ffffff);
   box-shadow: 0 22px 46px color-mix(in srgb, var(--primary-dark) 14%, transparent);
 }
 
@@ -2142,19 +2271,37 @@ onUnmounted(() => {
 }
 
 .pop-reveal {
+  --pop-offset: 44px;
+  --pop-scale: 0.97;
+  --reveal-duration: 0.96s;
+
   opacity: 0;
   filter: none;
-  transform: translateY(58px) scale(0.92);
+  transform: translate3d(0, var(--pop-offset), 0) scale(var(--pop-scale));
   transition:
-    opacity 0.72s cubic-bezier(0.2, 0.8, 0.2, 1),
-    transform 0.72s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transition-delay: var(--pop-delay, 0ms);
+    opacity var(--reveal-duration) cubic-bezier(0.16, 1, 0.3, 1),
+    transform var(--reveal-duration) cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0ms;
+  will-change: opacity, transform;
+}
+
+.pop-reveal.pop-from-up {
+  --pop-offset: -38px;
+}
+
+.pop-reveal.pop-from-down {
+  --pop-offset: 44px;
 }
 
 .pop-reveal.is-visible {
   opacity: 1;
   filter: none;
-  transform: translateY(0) scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-delay: var(--pop-delay, 0ms);
+}
+
+.pop-reveal.is-visible:hover {
+  transition-delay: 0ms;
 }
 
 .portfolio-stat-item,
@@ -2163,8 +2310,9 @@ onUnmounted(() => {
 .strategy-card,
 .network-card,
 .funding-item {
-  --hover-pop-y: -10px;
-  --hover-pop-scale: 1.018;
+  --hover-pop-y: -7px;
+  --hover-pop-scale: 1.01;
+  --reveal-duration: 1s;
 
   transform-origin: center;
   will-change: transform;
@@ -2179,6 +2327,33 @@ onUnmounted(() => {
     .funding-item
   ):hover {
   transform: translateY(var(--hover-pop-y)) scale(var(--hover-pop-scale));
+}
+
+.operating-copy.pop-reveal,
+.operating-item.pop-reveal {
+  --reveal-duration: 1.05s;
+
+  transition:
+    opacity var(--reveal-duration) cubic-bezier(0.16, 1, 0.3, 1),
+    transform var(--reveal-duration) cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.48s ease,
+    border-color 0.48s ease,
+    box-shadow 0.48s ease;
+}
+
+.operating-copy.pop-reveal.is-visible,
+.operating-item.pop-reveal.is-visible {
+  transition-delay: var(--pop-delay, 0ms);
+}
+
+.operating-copy.pop-reveal.is-visible:hover,
+.operating-item.pop-reveal.is-visible:hover {
+  transition-delay: 0ms;
+}
+
+.operating-copy.pop-reveal:not(.is-visible),
+.operating-item.pop-reveal:not(.is-visible) {
+  transform: translateY(36px) scale(0.975);
 }
 
 @media (max-width: 1080px) {
@@ -2431,7 +2606,13 @@ onUnmounted(() => {
 @media (prefers-reduced-motion: reduce) {
   .project-card img,
   .button,
-  .pop-reveal {
+  .pop-reveal,
+  .operating-item,
+  .operating-item::before,
+  .operating-item::after,
+  .operating-step,
+  .operating-item strong,
+  .operating-item h3 {
     transition: none;
   }
 
@@ -2453,6 +2634,11 @@ onUnmounted(() => {
   .pop-reveal {
     opacity: 1;
     filter: none;
+    transform: none;
+  }
+
+  .operating-item:hover::after,
+  .operating-item:hover .operating-step {
     transform: none;
   }
 }

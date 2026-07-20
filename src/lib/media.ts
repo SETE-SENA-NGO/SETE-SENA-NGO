@@ -1,3 +1,5 @@
+import { normalizeImageUrl } from '@/lib/imageUrls'
+
 export const EXTERNAL_MEDIA_BUCKET = 'google-drive'
 
 export function isSupportedImageUrl(value: string) {
@@ -10,7 +12,11 @@ export function isSupportedImageUrl(value: string) {
 }
 
 export function imageUrlHelpText() {
-  return 'Paste a public Google Drive image URL.'
+  return 'Paste a public image URL. Google Drive files must be shared as "Anyone with the link".'
+}
+
+export function normalizeMediaUrl(value: string) {
+  return normalizeImageUrl(value)
 }
 
 export function imageNameFromUrl(value: string) {

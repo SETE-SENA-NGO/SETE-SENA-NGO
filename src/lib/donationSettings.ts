@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { normalizeImageUrl } from '@/lib/imageUrls'
 
 export type DonationMethod = {
   id: string
@@ -127,7 +128,9 @@ function rowToMethod(row: DonationMethodRow): DonationMethod {
     subtitle: stringFrom(metadata.subtitle) || stringFrom(metadata.bank) || row.instructions || '',
     headerColor:
       stringFrom(metadata.headerColor) || stringFrom(metadata.header_color) || defaultColors[id] || '#1d3d5c',
-    qrUrl: mediaUrl(row.qr_media) || stringFrom(metadata.qrUrl) || stringFrom(metadata.qr_url),
+    qrUrl: normalizeImageUrl(
+      mediaUrl(row.qr_media) || stringFrom(metadata.qrUrl) || stringFrom(metadata.qr_url),
+    ),
     accountName: row.account_name ?? 'SANTI SENA',
     accountNo: row.account_number ?? '',
     currency: row.currency ?? 'KHR / USD',
@@ -140,7 +143,7 @@ function legacyRowToMethod(row: LegacyDonationMethodRow): DonationMethod {
     bank: row.bank,
     subtitle: row.subtitle,
     headerColor: row.header_color || defaultColors[row.id] || '#1d3d5c',
-    qrUrl: row.qr_url,
+    qrUrl: normalizeImageUrl(row.qr_url),
     accountName: row.account_name,
     accountNo: row.account_no,
     currency: row.currency,
@@ -161,7 +164,7 @@ function slugFrom(method: DonationMethod, sortOrder: number) {
 function methodToRow(method: DonationMethod, sortOrder: number): DonationMethodUpsertRow {
   const subtitle = method.subtitle.trim()
   const headerColor = method.headerColor || '#1d3d5c'
-  const qrUrl = method.qrUrl.trim()
+  const qrUrl = normalizeImageUrl(method.qrUrl)
 
   return {
     slug: slugFrom(method, sortOrder),
@@ -191,7 +194,7 @@ function methodToLegacyRow(method: DonationMethod, sortOrder: number): LegacyDon
     bank: method.bank.trim(),
     subtitle: method.subtitle.trim(),
     header_color: method.headerColor || '#1d3d5c',
-    qr_url: method.qrUrl.trim(),
+    qr_url: normalizeImageUrl(method.qrUrl),
     account_name: method.accountName.trim(),
     account_no: method.accountNo.trim(),
     currency: method.currency.trim(),

@@ -36,10 +36,17 @@ the full migrations and seed data.
 
 ## Image URLs
 
-Seeded images, frontend fallback images, and admin media records use Google Drive URLs. The app does
-not need a Supabase Storage bucket for website images. The current Drive folder is test storage only;
-upload the final images to the customer's Drive, make each file publicly viewable, then replace the
-IDs in `src/lib/imageUrls.ts` and any seeded image URLs before production.
+Frontend fallback images use built-in placeholders until Google Drive is ready. To turn on the
+default Google Drive images, make every file publicly viewable and set this Netlify environment
+variable:
+
+```env
+VITE_USE_GOOGLE_DRIVE_IMAGES=true
+```
+
+The current admin media library stores image URLs in Supabase. It does not upload files into Google
+Drive by itself. A real "upload to someone's Google Drive" workflow needs a backend such as Netlify
+Functions with Google Drive API credentials or OAuth consent from the Drive owner.
 
 To test from the admin panel, upload an image to Drive, share it publicly by link, paste the URL in
 Media URLs, a page editor hero/section image field, or Donation QR, then save and refresh the public

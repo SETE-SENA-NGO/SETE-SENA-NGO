@@ -2,6 +2,7 @@
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { imageUrls } from '@/lib/imageUrls'
+import { fetchPublishedNews, type NewsArticle } from '@/lib/newsContent'
 
 const newsCertificateImage = imageUrls.news.certificate
 const newsPreschoolImage = imageUrls.news.preschool
@@ -11,12 +12,14 @@ const newsWaterImage = imageUrls.news.water
 const authorAvatarImage = imageUrls.logo
 
 // ─── Dummy news data ────────────────────────────────────────────────
-const newsItems = ref([
+const newsItems = ref<NewsArticle[]>([
   {
-    id: 1,
+    id: '1',
+    slug: 'new-community-pre-school-opens-in-svay-rieng',
     title: 'New community pre‑school opens in Svay Rieng',
     summary:
       'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+    content: '',
     image: newsStudentImage,
     date: '2025-03-15',
     category: 'Education',
@@ -29,10 +32,12 @@ const newsItems = ref([
     trending: true,
   },
   {
-    id: 2,
+    id: '2',
+    slug: 'forest-guardians-celebrate-500-hectares',
     title: 'Forest Guardians celebrate 500 hectares of protected land',
     summary:
       'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
+    content: '',
     image: newsWashImage,
     date: '2025-02-28',
     category: 'Environment',
@@ -45,10 +50,12 @@ const newsItems = ref([
     trending: false,
   },
   {
-    id: 3,
+    id: '3',
+    slug: 'youth-leaders-trained-in-child-protection-advocacy',
     title: 'Youth leaders trained in child protection advocacy',
     summary:
       'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
+    content: '',
     image: newsCertificateImage,
     date: '2025-02-10',
     category: 'Child Protection',
@@ -61,10 +68,12 @@ const newsItems = ref([
     trending: false,
   },
   {
-    id: 4,
+    id: '4',
+    slug: 'saving-for-change-groups-reach-10000-members',
     title: 'Saving‑for‑Change groups reach 10,000 members',
     summary:
       'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
+    content: '',
     image: newsPreschoolImage,
     date: '2025-01-20',
     category: 'Livelihood',
@@ -77,10 +86,12 @@ const newsItems = ref([
     trending: true,
   },
   {
-    id: 5,
+    id: '5',
+    slug: 'new-partnership-to-expand-clean-water-access',
     title: 'New partnership to expand clean water access',
     summary:
       'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
+    content: '',
     image: newsWaterImage,
     date: '2025-01-05',
     category: 'WASH',
@@ -95,8 +106,8 @@ const newsItems = ref([
 ])
 
 // ─── State ──────────────────────────────────────────────────────────
-const savedArticles = ref<number[]>([])
-const likedArticles = ref<number[]>([])
+const savedArticles = ref<string[]>([])
+const likedArticles = ref<string[]>([])
 const newsletterEmail = ref('')
 
 // Featured + regular articles
@@ -158,12 +169,20 @@ const setupIntersectionObservers = () => {
   }
 }
 
-onMounted(() => {
-  nextTick(() => {
-    const els = document.querySelectorAll('.news-card')
-    articleRefs.value = Array.from(els) as HTMLElement[]
-    setupIntersectionObservers()
-  })
+onMounted(async () => {
+  try {
+    const publishedNews = await fetchPublishedNews()
+    if (publishedNews.length) {
+      newsItems.value = publishedNews
+    }
+  } catch {
+    // Keep the local fallback stories when Supabase is unavailable.
+  }
+
+  await nextTick()
+  const els = document.querySelectorAll('.news-card')
+  articleRefs.value = Array.from(els) as HTMLElement[]
+  setupIntersectionObservers()
 })
 
 onBeforeUnmount(() => {
@@ -176,7 +195,7 @@ onBeforeUnmount(() => {
 })
 
 // ─── Actions ───────────────────────────────────────────────────────
-const toggleSave = (id: number) => {
+const toggleSave = (id: string) => {
   const index = savedArticles.value.indexOf(id)
   if (index > -1) {
     savedArticles.value.splice(index, 1)
@@ -185,7 +204,7 @@ const toggleSave = (id: number) => {
   }
 }
 
-const toggleLike = (id: number) => {
+const toggleLike = (id: string) => {
   const index = likedArticles.value.indexOf(id)
   if (index > -1) {
     likedArticles.value.splice(index, 1)
@@ -194,8 +213,8 @@ const toggleLike = (id: number) => {
   }
 }
 
-const isSaved = (id: number) => savedArticles.value.includes(id)
-const isLiked = (id: number) => likedArticles.value.includes(id)
+const isSaved = (id: string) => savedArticles.value.includes(id)
+const isLiked = (id: string) => likedArticles.value.includes(id)
 
 const toastMessage = ref('')
 const showToast = ref(false)
@@ -271,7 +290,7 @@ const scrollToTop = () => {
       </div>
     </transition>
 
-    <!-- ─── NEW STATIC HERO (no slideshow) ──────────────────────── -->
+    <!-- ─── BALANCED HERO (shifted right) ────────────────────── -->
     <header class="hero-static">
       <div class="hero-static-inner">
         <div class="hero-badge">
@@ -333,9 +352,7 @@ const scrollToTop = () => {
                   class="author-avatar"
                   :style="{ backgroundImage: `url(${featuredArticle.authorAvatar})` }"
                 >
-                  <span v-if="!featuredArticle.authorAvatar">{{
-                    getInitials(featuredArticle.author)
-                  }}</span>
+                  <span v-if="!featuredArticle.authorAvatar">{{ getInitials(featuredArticle.author) }}</span>
                 </div>
                 <span class="news-author">{{ featuredArticle.author }}</span>
               </div>
@@ -419,7 +436,7 @@ const scrollToTop = () => {
         </div>
       </div>
 
-      <!-- News Grid – each card gets a scroll‑triggered pop‑up (re‑appears on each scroll) -->
+      <!-- News Grid -->
       <div v-if="regularArticles.length > 0" class="news-grid">
         <article
           v-for="item in regularArticles"
@@ -524,7 +541,7 @@ const scrollToTop = () => {
         <p>No articles found.</p>
       </div>
 
-      <!-- ─── NEWSLETTER – scale from small → big on scroll (stays big) ── -->
+      <!-- ─── NEWSLETTER ───────────────────────────────────────── -->
       <div class="newsletter-section" ref="newsletterRef">
         <div class="newsletter-card" :class="{ 'newsletter-visible': newsletterVisible }">
           <div class="newsletter-icon">✉</div>
@@ -565,7 +582,6 @@ const scrollToTop = () => {
 </template>
 
 <style scoped>
-/* ── CSS Variables ── */
 :root {
   --color-cream: #faf8f5;
   --color-border: #e8e3dc;
@@ -581,14 +597,10 @@ const scrollToTop = () => {
   --shadow-md: 0 8px 32px rgba(30, 26, 22, 0.06);
   --shadow-lg: 0 16px 56px rgba(30, 26, 22, 0.1);
   --shadow-xl: 0 24px 80px rgba(30, 26, 22, 0.14);
-  --radius-sm: 8px;
   --radius-md: 20px;
-  --radius-lg: 28px;
-  --radius-xl: 32px;
   --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* ── Base ── */
 .news-view {
   min-height: 90vh;
   background: var(--color-cream);
@@ -600,7 +612,7 @@ const scrollToTop = () => {
   padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 
-/* ── STATIC HERO (new) ── */
+/* ─── BALANCED HERO (shifted right) ────────────────────────── */
 .hero-static {
   background: linear-gradient(135deg, #f0f7f4, #ffffff);
   padding: 4rem 1.5rem 3rem;
@@ -611,7 +623,10 @@ const scrollToTop = () => {
 .hero-static-inner {
   max-width: 820px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 1.5rem 0 clamp(2rem, 10vw, 8rem); /* 👈 shifts content right */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .hero-static .hero-badge {
@@ -628,7 +643,6 @@ const scrollToTop = () => {
   border-radius: 999px;
   border: 1px solid rgba(45, 122, 90, 0.1);
   margin-bottom: 1rem;
-   margin-left:290px ;
 }
 
 .pulse-dot {
@@ -637,7 +651,6 @@ const scrollToTop = () => {
   border-radius: 50%;
   background: #4ade80;
   animation: pulse-dot 2s ease-in-out infinite;
-
 }
 
 @keyframes pulse-dot {
@@ -650,9 +663,8 @@ const scrollToTop = () => {
   font-weight: 700;
   color: var(--primary-dark);
   letter-spacing: -0.03em;
-  line-height: 0.95;
-  /* margin: 0 0 0.5rem; */
-   margin-left:200px ;
+  line-height: 1.05;
+  margin: 0 0 0.5rem;
 }
 
 .hero-static h1 .highlight {
@@ -668,7 +680,6 @@ const scrollToTop = () => {
   color: var(--color-ink-soft);
   max-width: 680px;
   margin: 0 0 2rem;
-   margin-left:80px ;
 }
 
 .hero-static .hero-stats {
@@ -680,7 +691,6 @@ const scrollToTop = () => {
 .hero-static .hero-stat {
   display: flex;
   flex-direction: column;
-   margin-left:81px ;
 }
 
 .hero-static .stat-number {
@@ -688,7 +698,6 @@ const scrollToTop = () => {
   font-weight: 700;
   color: var(--primary-color);
   letter-spacing: -0.02em;
-   margin-left:35px ;
 }
 
 .hero-static .stat-label {
@@ -1481,6 +1490,9 @@ const scrollToTop = () => {
   .hero-static {
     padding: 3rem 1.5rem 2rem;
   }
+  .hero-static-inner {
+    padding-left: clamp(1rem, 4vw, 2rem); /* reduce indent on tablet */
+  }
   .hero-static h1 {
     font-size: 2rem;
   }
@@ -1554,6 +1566,36 @@ const scrollToTop = () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+  .hero-static-inner {
+    padding-left: 0.5rem; /* minimal indent on mobile */
+  }
+  .hero-static h1 {
+    font-size: 1.8rem;
+  }
+  .hero-static .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  .hero-static .stat-number {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .hero-static .hero-stats {
+    gap: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hero-static .hero-stat {
+    width: 100%;
+  }
+  .hero-static h1 {
+    font-size: 1.5rem;
+  }
+  .hero-static .hero-badge {
+    font-size: 0.5rem;
+    padding: 0.3rem 1rem;
   }
 }
 </style>

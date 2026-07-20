@@ -11,7 +11,10 @@ const ui = useUiStore()
 const deleting = ref<string | null>(null)
 const imageUrl = ref('')
 const imageName = ref('')
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
 const savingUrl = ref(false)
+const uploadingFile = ref(false)
 
 onMounted(() => {
   void loadFiles()
@@ -71,6 +74,28 @@ async function addImageUrl() {
   }
 }
 
+function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  selectedFile.value = input.files?.[0] ?? null
+}
+
+async function uploadSelectedFile() {
+  if (uploadingFile.value || !selectedFile.value) return
+
+  uploadingFile.value = true
+  try {
+    await media.uploadToGoogleDrive(selectedFile.value, imageName.value)
+    ui.addToast('Image uploaded to Google Drive.', 'success')
+    selectedFile.value = null
+    imageName.value = ''
+    if (fileInputRef.value) fileInputRef.value.value = ''
+  } catch (error) {
+    ui.addToast(error instanceof Error ? error.message : 'Could not upload image.', 'error')
+  } finally {
+    uploadingFile.value = false
+  }
+}
+
 async function confirmDelete(item: { id: string; name: string }) {
   deleting.value = item.id
 
@@ -102,9 +127,41 @@ async function confirmDelete(item: { id: string; name: string }) {
           <div>
             <p class="eyebrow">Assets</p>
             <h1>Media Library</h1>
-            <p class="page-desc">Save Google Drive image URLs for website content.</p>
+            <p class="page-desc">Upload images to Google Drive or save public image URLs.</p>
           </div>
         </header>
+
+        <form
+          class="url-form upload-form"
+          aria-label="Upload image to Google Drive"
+          @submit.prevent="uploadSelectedFile"
+        >
+          <label class="url-field upload-file-field">
+            <span>Upload image</span>
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="image/*"
+              required
+              @change="onFileSelected"
+            />
+          </label>
+          <label class="url-field">
+            <span>Display name</span>
+            <input v-model="imageName" placeholder="Homepage hero" />
+          </label>
+          <button
+            class="button button-primary"
+            type="submit"
+            :disabled="uploadingFile || !selectedFile"
+          >
+            {{ uploadingFile ? 'Uploading...' : 'Upload to Drive' }}
+          </button>
+          <p>
+            Uses the Netlify Google Drive upload function. Configure the required Netlify secrets
+            before using this upload button.
+          </p>
+        </form>
 
         <form class="url-form" aria-label="Add Google Drive image URL" @submit.prevent="addImageUrl">
           <label class="url-field">
@@ -112,7 +169,7 @@ async function confirmDelete(item: { id: string; name: string }) {
             <input
               v-model="imageUrl"
               type="url"
-              placeholder="https://lh3.googleusercontent.com/d/..."
+              placeholder="https://drive.google.com/file/d/.../view"
               required
             />
           </label>

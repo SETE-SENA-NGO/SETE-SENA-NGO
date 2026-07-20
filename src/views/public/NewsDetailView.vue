@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { imageUrls } from '@/lib/imageUrls'
+import { fetchPublishedNews, fetchPublishedNewsArticle } from '@/lib/newsContent'
 
 const newsCertificateImage = imageUrls.news.certificate
 const newsPreschoolImage = imageUrls.news.preschool
@@ -12,14 +13,14 @@ const authorAvatarImage = imageUrls.logo
 
 const route = useRoute()
 const articleId = computed(() => {
-  const id = Number(route.params.id)
-  return Number.isFinite(id) ? id : 1
+  const id = route.params.id
+  return typeof id === 'string' ? id : '1'
 })
 
 // ── Extended dummy data ──
 const articles = [
   {
-    id: 1,
+    id: '1',
     title: 'New community pre‑school opens in Svay Rieng',
     summary:
       'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
@@ -42,7 +43,7 @@ const articles = [
     tags: ['Education', 'Community', 'Early Childhood'],
   },
   {
-    id: 2,
+    id: '2',
     title: 'Forest Guardians celebrate 500 hectares of protected land',
     summary:
       'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
@@ -60,7 +61,7 @@ const articles = [
     tags: ['Environment', 'Conservation', 'Biodiversity'],
   },
   {
-    id: 3,
+    id: '3',
     title: 'Youth leaders trained in child protection advocacy',
     summary:
       'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
@@ -78,7 +79,7 @@ const articles = [
     tags: ['Child Protection', 'Youth', 'Advocacy'],
   },
   {
-    id: 4,
+    id: '4',
     title: 'Saving‑for‑Change groups reach 10,000 members',
     summary:
       'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
@@ -96,7 +97,7 @@ const articles = [
     tags: ['Livelihood', 'Savings', 'Financial Inclusion'],
   },
   {
-    id: 5,
+    id: '5',
     title: 'New partnership to expand clean water access',
     summary:
       'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
@@ -116,7 +117,7 @@ const articles = [
 ]
 
 type Article = {
-  id: number
+  id: string
   title: string
   summary: string
   content: string
@@ -133,17 +134,32 @@ type Article = {
 }
 
 const article = ref<Article | null>(null)
+const allArticles = ref<Article[]>(articles as Article[])
 
-onMounted(() => {
-  const found = (articles as Article[]).find((a) => a.id === articleId.value)
-  article.value = found ?? null
+onMounted(async () => {
+  const fallback = (articles as Article[]).find((a) => a.id === articleId.value) ?? null
+
+  try {
+    const [loadedArticle, publishedNews] = await Promise.all([
+      fetchPublishedNewsArticle(articleId.value),
+      fetchPublishedNews(),
+    ])
+
+    if (publishedNews.length) allArticles.value = publishedNews
+    article.value = loadedArticle ?? fallback
+  } catch {
+    article.value = fallback
+  }
+
+  await nextTick()
+  setupObservers()
 })
 
 // Related articles
 const relatedArticles = computed(() => {
   const current = article.value
   if (!current) return []
-  return articles
+  return allArticles.value
     .filter((a) => a.id !== current.id && a.category === current.category)
     .slice(0, 3)
 })
@@ -179,12 +195,6 @@ const setupObservers = () => {
     observers.push(observer)
   })
 }
-
-onMounted(() => {
-  nextTick(() => {
-    setupObservers()
-  })
-})
 
 onBeforeUnmount(() => {
   observers.forEach((obs) => obs.disconnect())

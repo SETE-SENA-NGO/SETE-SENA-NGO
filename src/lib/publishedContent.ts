@@ -1,3 +1,5 @@
+import { resolveImageUrl } from '@/lib/imageUrls'
+
 export type EditableSection = {
   id: string
   label: string
@@ -57,7 +59,7 @@ export function parsePublishedPage(row: PublishedPageRow): PublishedPageContent 
     eyebrow: body.eyebrow,
     headline: body.headline,
     intro: body.intro,
-    heroImageUrl: body.heroImageUrl ?? '',
+    heroImageUrl: resolveImageUrl(body.heroImageUrl ?? '', ''),
     primaryAction: body.primaryAction,
     secondaryAction: body.secondaryAction,
     sections: body.sections,
@@ -110,7 +112,7 @@ function getSections(value: unknown): EditableSection[] {
     label: getString(section, 'label') || 'Section',
     heading: getString(section, 'heading'),
     body: getString(section, 'body'),
-    imageUrl: getString(section, 'imageUrl'),
+    imageUrl: resolveImageUrl(getString(section, 'imageUrl'), ''),
     items: getString(section, 'items'),
   }))
 }

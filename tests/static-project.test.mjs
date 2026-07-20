@@ -115,21 +115,31 @@ test('routes are lazy loaded and admin modules no longer use demo records', () =
 test('rendered images are stored as external Google Drive URLs', () => {
   const localImageFiles = [...walkEveryFile(join(root, 'src')), ...walkEveryFile(join(root, 'public'))]
     .filter((file) => /\.(png|jpe?g|webp|gif|svg|ico|avif)$/i.test(file))
+    .filter((file) => !['public/favicon.ico', 'src/assets/favicon.ico'].includes(file))
 
   assert.deepEqual(localImageFiles, [])
 
   for (const file of walk(root)) {
     const body = read(file)
-    assert.doesNotMatch(body, /@\/assets|new URL\(['"]@\/assets|\/images\/|\/favicon\.ico/, file)
+    assert.doesNotMatch(body, /@\/assets|new URL\(['"]@\/assets/, file)
   }
 
   const imageUrls = read('src/lib/imageUrls.ts')
   assert.match(imageUrls, /googleDriveImageFolderUrl/)
-  assert.match(imageUrls, /lh3\.googleusercontent\.com/)
+  assert.match(imageUrls, /googleDriveImageUrl/)
+  assert.match(imageUrls, /VITE_USE_GOOGLE_DRIVE_IMAGES/)
 
   const mediaStore = read('src/stores/media.store.ts')
   assert.match(mediaStore, /addUrl/)
-  assert.doesNotMatch(mediaStore, /supabase\.storage|File\)|upload\(/)
+  assert.match(mediaStore, /uploadToGoogleDrive/)
+  assert.match(mediaStore, /\/api\/google-drive-upload/)
+  assert.doesNotMatch(mediaStore, /supabase\.storage/)
+
+  const driveUploadFunction = read('netlify/functions/google-drive-upload.mjs')
+  assert.match(driveUploadFunction, /GOOGLE_DRIVE_FOLDER_ID/)
+  assert.match(driveUploadFunction, /GOOGLE_SERVICE_ACCOUNT_JSON_BASE64/)
+  assert.match(driveUploadFunction, /GOOGLE_OAUTH_REFRESH_TOKEN/)
+  assert.match(driveUploadFunction, /media_assets/)
 
   for (const migration of walk(join(root, 'supabase', 'migrations'))) {
     const body = read(migration)

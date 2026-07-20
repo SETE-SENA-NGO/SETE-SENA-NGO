@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import { imageUrlHelpText } from '@/lib/media'
+import { imageUrlHelpText, normalizeMediaUrl } from '@/lib/media'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
@@ -949,6 +949,8 @@ const loading = ref(false)
 const savingSlug = ref<string | null>(null)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 const savedSnapshot = ref<Record<string, string>>({})
+const previewVisible = ref(true)
+const activeSectionIndex = ref<number | null>(null)
 
 const requestedSlug = computed(() => {
   const slug = route.params.slug
@@ -965,6 +967,20 @@ const activePage = computed<PageDraft>(() => {
 
 const activePageDirty = computed(() => isDirty(activePage.value.slug))
 const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
+
+const previewItems = computed(() => {
+  return activePage.value.sections.map((section) => ({
+    ...section,
+    parsedItems: section.items
+      ? section.items.split('\n').filter((line) => line.trim())
+      : [],
+  }))
+})
+
+const sectionCountLabel = computed(() => {
+  const count = activePage.value.sections.length
+  return `${count} block${count !== 1 ? 's' : ''}`
+})
 
 onMounted(() => {
   void loadPages()
@@ -1016,10 +1032,13 @@ function pageBody(page: PageDraft): StoredPageBody {
     eyebrow: page.eyebrow,
     headline: page.headline,
     intro: page.intro,
-    heroImageUrl: page.heroImageUrl ?? '',
+    heroImageUrl: normalizeMediaUrl(page.heroImageUrl ?? ''),
     primaryAction: page.primaryAction,
     secondaryAction: page.secondaryAction,
-    sections: page.sections.map((section) => ({ ...section })),
+    sections: page.sections.map((section) => ({
+      ...section,
+      imageUrl: normalizeMediaUrl(section.imageUrl ?? ''),
+    })),
   }
 }
 
@@ -1032,6 +1051,25 @@ function snapshot(page: PageDraft) {
 
 function serializeBody(page: PageDraft) {
   return JSON.stringify(pageBody(page), null, 2)
+}
+
+function sortOrderForPage(page: PageDraft) {
+  const index = defaultPages.findIndex((item) => item.slug === page.slug)
+  return index === -1 ? 0 : index + 1
+}
+
+function ctaUrlForPage(page: PageDraft, actionIndex: 0 | 1) {
+  const label = actionIndex === 0 ? page.primaryAction : page.secondaryAction
+  if (!label.trim()) return null
+
+  if (actionIndex === 1) {
+    return page.group === 'Get Involved' ? '/get-involved' : '/'
+  }
+
+  if (page.group === 'Programs') return '/programs'
+  if (page.group === 'Get Involved') return '/get-involved'
+  if (page.slug === 'qr-donate') return '/qr-donate'
+  return '/contact'
 }
 
 function isDirty(slug: string) {
@@ -1158,6 +1196,22 @@ async function persistPage(page: PageDraft): Promise<PageDraft> {
     slug: page.slug,
     title: page.title.trim() || page.headline.trim() || page.slug,
     body: serializeBody(page),
+    route_path: page.route,
+    nav_group: page.group,
+    locale: 'en',
+    template: page.route === 'global' ? 'global' : 'standard',
+    status: 'published',
+    hero_eyebrow: page.eyebrow.trim() || null,
+    hero_headline: page.headline.trim() || null,
+    hero_intro: page.intro.trim() || null,
+    primary_cta_label: page.primaryAction.trim() || null,
+    primary_cta_url: ctaUrlForPage(page, 0),
+    secondary_cta_label: page.secondaryAction.trim() || null,
+    secondary_cta_url: ctaUrlForPage(page, 1),
+    seo_title: page.title.trim() || page.headline.trim() || page.slug,
+    seo_description: page.intro.trim() || null,
+    sort_order: sortOrderForPage(page),
+    published_at: savedAt,
     updated_at: savedAt,
   }
 
@@ -1205,6 +1259,7 @@ function addSection() {
       label: `Section ${activePage.value.sections.length + 1}`,
     }),
   )
+  activeSectionIndex.value = activePage.value.sections.length - 1
 }
 
 function removeSection(index: number) {
@@ -1216,6 +1271,7 @@ function removeSection(index: number) {
     `Remove "${section.label || section.heading || 'this section'}" from ${activePage.value.title}?`,
     () => {
       activePage.value.sections.splice(index, 1)
+      if (activeSectionIndex.value === index) activeSectionIndex.value = null
       ui.addToast('Content block removed.', 'warning')
     },
   )
@@ -1244,6 +1300,11 @@ function moveSection(index: number, direction: -1 | 1) {
   if (!current || !next) return
   sections[index] = next
   sections[target] = current
+}
+
+function setActiveSectionFromToggle(event: Event, index: number) {
+  const details = event.currentTarget instanceof HTMLDetailsElement ? event.currentTarget : null
+  activeSectionIndex.value = details?.open ? index : null
 }
 
 function resetCurrentToDefault() {
@@ -1284,74 +1345,394 @@ function formatDate(value: string) {
       <AdminSidebar />
 
       <main class="main">
-        <p v-if="notice" class="notice" :class="`notice-${notice.type}`" role="status">
-          <span class="notice-icon" aria-hidden="true">{{
-            notice.type === 'success' ? '✓' : '!'
-          }}</span>
-          {{ notice.message }}
-        </p>
+        <!-- Toast notice -->
+        <Transition name="notice-slide">
+          <div v-if="notice" class="notice" :class="`notice-${notice.type}`" role="status">
+            <div class="notice-inner">
+              <svg v-if="notice.type === 'success'" class="notice-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg v-else class="notice-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>{{ notice.message }}</span>
+            </div>
+            <button class="notice-dismiss" type="button" @click="notice = null" aria-label="Dismiss notice">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </Transition>
 
-        <section class="workspace">
-          <section class="editor" aria-label="Page editor">
+        <div class="editor-container">
+          <!-- Editor Column -->
+          <section class="editor-column" aria-label="Page editor">
+            <!-- Page Header -->
             <header class="editor-header">
-              <div>
-                <p class="eyebrow">{{ activePage.group }}</p>
-                <h2>{{ activePage.title }}</h2>
-                <p class="route-line">{{ activePage.route }}</p>
+              <div class="header-left">
+                <div class="breadcrumb">
+                  <RouterLink to="/admin" class="breadcrumb-link">Dashboard</RouterLink>
+                  <span class="breadcrumb-sep" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </span>
+                  <span class="breadcrumb-current">{{ activePage.group }}</span>
+                  <span class="breadcrumb-sep" aria-hidden="true">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </span>
+                  <span class="breadcrumb-current">{{ activePage.title }}</span>
+                </div>
+                <div class="page-meta">
+                  <span class="meta-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {{ formatDate(activePage.updatedAt) }}
+                  </span>
+                  <span v-if="activePage.route !== 'global'" class="meta-badge route-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    {{ activePage.route }}
+                  </span>
+                </div>
               </div>
+              <div class="header-right">
+                <div class="save-indicator" :class="{ dirty: activePageDirty }">
+                  <span class="save-dot"></span>
+                  <span class="save-label">{{ activePageDirty ? 'Unsaved changes' : 'Saved' }}</span>
+                </div>
+                <div class="header-actions">
+                  <button
+                    class="btn btn-ghost"
+                    type="button"
+                    :disabled="loading"
+                    @click="loadPages"
+                    title="Reload from database"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    Reload
+                  </button>
+                  <RouterLink
+                    v-if="activePage.route !== 'global'"
+                    class="btn btn-ghost"
+                    :to="activePage.route"
+                    title="View public page"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Preview
+                  </RouterLink>
+                  <button
+                    class="btn btn-ghost danger"
+                    type="button"
+                    @click="resetCurrentToDefault"
+                    title="Reset to default content"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                    Reset
+                  </button>
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    :disabled="savingSlug === activePage.slug || loading"
+                    @click="saveCurrentPage"
+                  >
+                    <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                    <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    {{ savingSlug === activePage.slug ? 'Saving...' : 'Save page' }}
+                  </button>
+                </div>
+              </div>
+            </header>
 
-              <div class="editor-actions">
+            <!-- Status bar -->
+            <div class="status-bar">
+              <div class="status-left">
+                <span class="status-bullet" :class="{ dirty: activePageDirty }"></span>
+                <span class="status-text">{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</span>
+              </div>
+              <span class="status-right">{{ sectionCountLabel }} · {{ activePage.slug }}</span>
+            </div>
+
+            <!-- Workflow Steps -->
+            <div class="workflow-steps">
+              <div class="step active completed">
+                <div class="step-indicator">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="step-content">
+                  <span class="step-label">Page</span>
+                  <span class="step-desc">Identity</span>
+                </div>
+              </div>
+              <div class="step active">
+                <div class="step-indicator">2</div>
+                <div class="step-content">
+                  <span class="step-label">Content</span>
+                  <span class="step-desc">Blocks</span>
+                </div>
+              </div>
+              <div class="step" :class="{ active: !activePageDirty }">
+                <div class="step-indicator" :class="{ success: !activePageDirty }">
+                  <svg v-if="!activePageDirty" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <template v-else>3</template>
+                </div>
+                <div class="step-content">
+                  <span class="step-label">{{ activePageDirty ? 'Unsaved' : 'Published' }}</span>
+                  <span class="step-desc">Status</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Panels -->
+            <div class="form-panels">
+              <!-- Page Setup -->
+              <section class="form-card">
+                <div class="card-header">
+                  <div class="card-header-left">
+                    <div class="card-icon card-icon-blue">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <div>
+                      <span class="card-eyebrow">Page setup</span>
+                      <h3 class="card-title">Identity</h3>
+                    </div>
+                  </div>
+                  <span class="status-pill" :class="{ dirty: activePageDirty }">
+                    {{ activePageDirty ? 'Unsaved' : 'Saved' }}
+                  </span>
+                </div>
+                <div class="card-body">
+                  <div class="form-grid">
+                    <label class="field">
+                      <span class="field-label">Admin title</span>
+                      <input v-model="activePage.title" name="page-title" placeholder="Page title" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Slug</span>
+                      <input :value="activePage.slug" name="page-slug" disabled />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Route</span>
+                      <input :value="activePage.route" name="page-route" disabled />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Eyebrow</span>
+                      <input v-model="activePage.eyebrow" name="page-eyebrow" placeholder="Section eyebrow text" />
+                    </label>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Hero Content -->
+              <section class="form-card">
+                <div class="card-header">
+                  <div class="card-header-left">
+                    <div class="card-icon card-icon-violet">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    </div>
+                    <div>
+                      <span class="card-eyebrow">Hero</span>
+                      <h3 class="card-title">Main page copy</h3>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <label class="field field-block">
+                    <span class="field-label">Hero headline</span>
+                    <textarea v-model="activePage.headline" name="page-headline" rows="2" placeholder="The main headline for this page"></textarea>
+                  </label>
+                  <label class="field field-block">
+                    <span class="field-label">Intro copy</span>
+                    <textarea v-model="activePage.intro" name="page-intro" rows="4" placeholder="Introduction paragraph for the page"></textarea>
+                  </label>
+                  <div class="form-grid">
+                    <label class="field">
+                      <span class="field-label">Primary action</span>
+                      <input v-model="activePage.primaryAction" name="page-primary-action" placeholder="e.g. Support Us" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Secondary action</span>
+                      <input v-model="activePage.secondaryAction" name="page-secondary-action" placeholder="e.g. Learn More" />
+                    </label>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Page Sections -->
+              <section class="form-card sections-card" aria-label="Page sections">
+                <div class="card-header">
+                  <div class="card-header-left">
+                    <div class="card-icon card-icon-amber">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </div>
+                    <div>
+                      <span class="card-eyebrow">Content blocks</span>
+                      <h3 class="card-title">{{ sectionCountLabel }}</h3>
+                    </div>
+                  </div>
+                  <button class="btn btn-secondary add-section-btn" type="button" @click="addSection">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add block
+                  </button>
+                </div>
+
+                <div class="card-body sections-body">
+                  <TransitionGroup name="section-list" tag="div" class="sections-list">
+                    <article
+                      v-for="(section, index) in activePage.sections"
+                      :id="`edit-${section.id}`"
+                      :key="section.id"
+                      class="section-block"
+                      :class="{ 'section-active': activeSectionIndex === index }"
+                    >
+                      <details open @toggle="setActiveSectionFromToggle($event, index)">
+                        <summary class="section-summary">
+                          <div class="summary-drag">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                          </div>
+                          <div class="summary-content">
+                            <span class="summary-index">{{ index + 1 }}</span>
+                            <div class="summary-text">
+                              <strong>{{ section.label || 'Untitled block' }}</strong>
+                              <small v-if="section.heading">{{ section.heading }}</small>
+                              <small v-else class="empty-hint">No heading</small>
+                            </div>
+                          </div>
+                          <div class="summary-badge">
+                            {{ section.items ? `${section.items.split('\n').length} items` : 'Text' }}
+                          </div>
+                        </summary>
+
+                        <div class="section-body">
+                          <div class="section-toolbar">
+                            <div class="section-tabs">
+                              <span class="section-tab active">Content</span>
+                            </div>
+                            <div class="section-actions">
+                              <button
+                                type="button"
+                                class="btn-icon"
+                                :disabled="index === 0"
+                                aria-label="Move section up"
+                                title="Move up"
+                                @click.stop="moveSection(index, -1)"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                              </button>
+                              <button
+                                type="button"
+                                class="btn-icon"
+                                :disabled="index === activePage.sections.length - 1"
+                                aria-label="Move section down"
+                                title="Move down"
+                                @click.stop="moveSection(index, 1)"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                              </button>
+                              <div class="btn-sep"></div>
+                              <button
+                                type="button"
+                                class="btn-icon"
+                                aria-label="Duplicate section"
+                                title="Duplicate"
+                                @click.stop="duplicateSection(index)"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                              </button>
+                              <button
+                                type="button"
+                                class="btn-icon danger"
+                                aria-label="Remove section"
+                                title="Remove"
+                                @click.stop="removeSection(index)"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div class="section-fields">
+                            <div class="form-grid">
+                              <label class="field">
+                                <span class="field-label">Block label</span>
+                                <input v-model="section.label" :name="`section-${section.id}-label`" placeholder="e.g. Mission, Stats" />
+                              </label>
+                              <label class="field">
+                                <span class="field-label">Heading</span>
+                                <input v-model="section.heading" :name="`section-${section.id}-heading`" placeholder="Section heading" />
+                              </label>
+                            </div>
+
+                            <label class="field field-block">
+                              <span class="field-label">Body</span>
+                              <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="3" placeholder="Descriptive body text"></textarea>
+                            </label>
+
+                            <label class="field field-block">
+                              <span class="field-label">
+                                Items
+                                <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
+                              </span>
+                              <textarea
+                                v-model="section.items"
+                                :name="`section-${section.id}-items`"
+                                rows="4"
+                                placeholder="Item 1&#10;Item 2&#10;Title | Description"
+                              ></textarea>
+                            </label>
+                          </div>
+                        </div>
+                      </details>
+                    </article>
+                  </TransitionGroup>
+
+                  <div v-if="!activePage.sections.length" class="empty-sections">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    <p>No content blocks yet</p>
+                    <button class="btn btn-secondary" type="button" @click="addSection">Add your first block</button>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- Bottom Save Bar -->
+            <div class="save-bar">
+              <div class="save-bar-left">
+                <span class="save-dot-large" :class="{ dirty: activePageDirty }"></span>
+                <div>
+                  <strong>{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</strong>
+                  <small>{{ formatDate(activePage.updatedAt) }}</small>
+                </div>
+              </div>
+              <div class="save-bar-right">
+                <button class="btn btn-ghost" type="button" @click="resetCurrentToDefault">Reset</button>
                 <button
-                  class="button button-secondary"
-                  type="button"
-                  :disabled="loading"
-                  @click="loadPages"
-                >
-                  <span class="btn-icon" aria-hidden="true">⟳</span>
-                  Reload
-                </button>
-                <RouterLink
-                  v-if="activePage.route !== 'global'"
-                  class="button button-secondary"
-                  :to="activePreviewRoute"
-                >
-                  <span class="btn-icon" aria-hidden="true">👁</span>
-                  View
-                </RouterLink>
-                <button
-                  class="button button-secondary"
-                  type="button"
-                  @click="resetCurrentToDefault"
-                >
-                  <span class="btn-icon" aria-hidden="true">↺</span>
-                  Reset
-                </button>
-                <button
-                  class="button button-primary"
+                  class="btn btn-primary"
                   type="button"
                   :disabled="savingSlug === activePage.slug || loading"
                   @click="saveCurrentPage"
                 >
-                  <span class="btn-icon" aria-hidden="true">✓</span>
+                  <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                  <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                   {{ savingSlug === activePage.slug ? 'Saving...' : 'Save page' }}
                 </button>
               </div>
-            </header>
+            </div>
+          </section>
 
-            <div class="editor-workflow">
-              <div class="editor-form-column">
-                <div class="workflow-bar" aria-label="Content editing workflow">
-                  <div class="workflow-step active">
-                    <strong>1</strong>
-                    <span>Page</span>
-                  </div>
-                  <div class="workflow-step active">
-                    <strong>2</strong>
-                    <span>Content</span>
-                  </div>
-                  <div class="workflow-step" :class="{ active: !activePageDirty }">
-                    <strong>3</strong>
-                    <span>{{ activePageDirty ? 'Unsaved' : 'Saved' }}</span>
+          <!-- Preview Column -->
+          <Transition name="preview-slide">
+            <aside v-if="previewVisible" class="preview-column" aria-label="Content preview">
+              <div class="preview-header">
+                <div class="preview-header-left">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <span>Live preview</span>
+                </div>
+                <button class="btn-icon-sm" type="button" @click="previewVisible = false" aria-label="Close preview">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+
+              <div class="preview-content">
+                <!-- Hero Preview -->
+                <div class="preview-hero">
+                  <span class="preview-eyebrow">{{ activePage.eyebrow || 'Eyebrow text' }}</span>
+                  <h2 class="preview-headline">{{ activePage.headline || 'Headline' }}</h2>
+                  <p class="preview-intro">{{ activePage.intro || 'Intro text...' }}</p>
+                  <div v-if="activePage.primaryAction || activePage.secondaryAction" class="preview-actions">
+                    <span v-if="activePage.primaryAction" class="preview-btn preview-btn-primary">{{ activePage.primaryAction }}</span>
+                    <span v-if="activePage.secondaryAction" class="preview-btn preview-btn-secondary">{{ activePage.secondaryAction }}</span>
                   </div>
                 </div>
 
@@ -1414,7 +1795,7 @@ function formatDate(value: string) {
                       v-model="activePage.heroImageUrl"
                       name="page-hero-image-url"
                       type="url"
-                      placeholder="https://lh3.googleusercontent.com/d/..."
+                      placeholder="https://drive.google.com/file/d/.../view"
                     />
                     <small class="field-hint">{{ imageUrlHint }}</small>
                   </label>
@@ -1447,97 +1828,65 @@ function formatDate(value: string) {
                     v-for="(section, index) in activePage.sections"
                     :id="`edit-${section.id}`"
                     :key="section.id"
-                    class="content-section"
+                    class="preview-section"
+                    :class="{ 'preview-section-active': activeSectionIndex === index }"
+                    @focusin="activeSectionIndex = index"
+                    @click="activeSectionIndex = index"
                   >
-                    <details open>
-                      <summary class="section-summary">
-                        <span class="section-summary-index">{{ index + 1 }}</span>
-                        <span class="section-summary-label">{{ section.label || 'Section' }}</span>
-                        <small>{{ section.heading || 'No heading' }}</small>
-                      </summary>
-
-                      <div class="content-section-header">
-                        <strong>{{ section.heading || section.label || 'Section block' }}</strong>
-                        <div class="section-actions">
-                          <button
-                            type="button"
-                            class="icon-button"
-                            :disabled="index === 0"
-                            aria-label="Move section up"
-                            @click="moveSection(index, -1)"
-                          >
-                            Up
-                          </button>
-                          <button
-                            type="button"
-                            class="icon-button"
-                            :disabled="index === activePage.sections.length - 1"
-                            aria-label="Move section down"
-                            @click="moveSection(index, 1)"
-                          >
-                            Down
-                          </button>
-                          <button
-                            type="button"
-                            class="icon-button"
-                            @click="duplicateSection(index)"
-                          >
-                            Copy
-                          </button>
-                          <button
-                            type="button"
-                            class="icon-button danger"
-                            @click="removeSection(index)"
-                          >
-                            Remove
-                          </button>
-                        </div>
+                    <header class="section-edit-head">
+                      <div>
+                        <p class="eyebrow">{{ section.label || `Section ${index + 1}` }}</p>
+                        <h3>{{ section.heading || 'Section heading' }}</h3>
                       </div>
+                      <button
+                        class="button button-secondary"
+                        type="button"
+                        @click="removeSection(index)"
+                      >
+                        Remove
+                      </button>
+                    </header>
 
-                      <div class="form-grid">
-                        <label>
-                          <span>Block label</span>
-                          <input v-model="section.label" :name="`section-${section.id}-label`" />
-                        </label>
-                        <label>
-                          <span>Heading</span>
-                          <input
-                            v-model="section.heading"
-                            :name="`section-${section.id}-heading`"
-                          />
-                        </label>
-                      </div>
-
-                      <label class="field-block">
-                        <span>Body</span>
-                        <textarea
-                          v-model="section.body"
-                          :name="`section-${section.id}-body`"
-                          rows="4"
-                        ></textarea>
+                    <div class="form-grid">
+                      <label>
+                        <span>Block label</span>
+                        <input v-model="section.label" :name="`section-${section.id}-label`" />
                       </label>
-
-                      <label class="field-block">
-                        <span>Section image URL</span>
-                        <input
-                          v-model="section.imageUrl"
-                          :name="`section-${section.id}-image-url`"
-                          type="url"
-                          placeholder="https://lh3.googleusercontent.com/d/..."
-                        />
-                        <small class="field-hint">{{ imageUrlHint }}</small>
+                      <label>
+                        <span>Heading</span>
+                        <input v-model="section.heading" :name="`section-${section.id}-heading`" />
                       </label>
+                    </div>
 
-                      <label class="field-block">
-                        <span>Items</span>
-                        <textarea
-                          v-model="section.items"
-                          :name="`section-${section.id}-items`"
-                          rows="5"
-                          placeholder="One item per line. Use Title | Detail for paired content."
-                        ></textarea>
-                      </label>
-                    </details>
+                    <label class="field-block">
+                      <span>Body</span>
+                      <textarea
+                        v-model="section.body"
+                        :name="`section-${section.id}-body`"
+                        rows="4"
+                      ></textarea>
+                    </label>
+
+                    <label class="field-block">
+                      <span>Section image URL</span>
+                      <input
+                        v-model="section.imageUrl"
+                        :name="`section-${section.id}-image-url`"
+                        type="url"
+                        placeholder="https://drive.google.com/file/d/.../view"
+                      />
+                      <small class="field-hint">{{ imageUrlHint }}</small>
+                    </label>
+
+                    <label class="field-block">
+                      <span>Items</span>
+                      <textarea
+                        v-model="section.items"
+                        :name="`section-${section.id}-items`"
+                        rows="5"
+                        placeholder="One item per line. Use Title | Detail for paired content."
+                      ></textarea>
+                    </label>
                   </article>
                 </section>
 
@@ -1549,57 +1898,63 @@ function formatDate(value: string) {
                       <small>{{ formatDate(activePage.updatedAt) }}</small>
                     </div>
                   </div>
-                  <div class="save-bar-actions">
-                    <button
-                      class="button button-secondary"
-                      type="button"
-                      @click="resetCurrentToDefault"
-                    >
-                      Reset
-                    </button>
-                    <button
-                      class="button button-primary"
-                      type="button"
-                      :disabled="savingSlug === activePage.slug || loading"
-                      @click="saveCurrentPage"
-                    >
-                      {{ savingSlug === activePage.slug ? 'Saving...' : 'Save page' }}
-                    </button>
-                  </div>
                 </div>
               </div>
-            </div>
-          </section>
-        </section>
+
+              <div class="preview-footer">
+                <span>Auto-refreshes on edit</span>
+              </div>
+            </aside>
+          </Transition>
+
+          <!-- Preview toggle button (when preview is hidden) -->
+          <button
+            v-if="!previewVisible"
+            class="preview-toggle-btn"
+            type="button"
+            @click="previewVisible = true"
+            title="Show preview"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* ==============================
+   DESIGN TOKENS
+   ============================== */
 .editor-page {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-bg-deep: var(--admin-theme-bg-deep);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-blue: var(--admin-theme-primary);
-  --admin-blue-deep: var(--admin-theme-primary-deep);
-  --admin-pink: var(--admin-theme-danger);
-  --admin-violet: var(--admin-theme-teal);
-  --admin-gold: var(--admin-theme-gold);
-  --admin-green: var(--admin-theme-primary);
-  --admin-gold-soft: color-mix(in srgb, var(--admin-gold) 14%, var(--admin-surface));
-  --admin-shadow: var(--admin-theme-shadow);
-  --panel: var(--admin-surface);
-  --border: var(--admin-border);
-  --text: var(--admin-text);
-  --muted: var(--admin-muted);
+  --admin-bg: #f1f5f9;
+  --admin-bg-deep: #e2e8f0;
+  --admin-surface: #ffffff;
+  --admin-surface-soft: #f8fafc;
+  --admin-contrast: #0f172a;
+  --admin-contrast-soft: #1e293b;
+  --admin-text: #334155;
+  --admin-muted: #64748b;
+  --admin-muted-light: #94a3b8;
+  --admin-border: #e2e8f0;
+  --admin-border-strong: #cbd5e1;
+  --admin-blue: #2563eb;
+  --admin-blue-soft: #eff6ff;
+  --admin-violet: #7c3aed;
+  --admin-violet-soft: #f5f3ff;
+  --admin-amber: #d97706;
+  --admin-amber-soft: #fffbeb;
+  --admin-green: #16a34a;
+  --admin-green-soft: #f0fdf4;
+  --admin-red: #dc2626;
+  --admin-red-soft: #fef2f2;
+  --admin-gold: #f59e0b;
+  --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --admin-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --admin-shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.08);
 
   min-height: 100vh;
   display: flex;
@@ -1616,349 +1971,595 @@ function formatDate(value: string) {
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark .editor-page) {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-bg-deep: var(--admin-theme-bg-deep);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-gold-soft: color-mix(in srgb, var(--admin-gold) 18%, var(--admin-surface));
-  --admin-shadow: var(--admin-theme-shadow);
+:global(.admin-dark) .editor-page {
+  --admin-bg: #0b1120;
+  --admin-bg-deep: #111827;
+  --admin-surface: #1a2332;
+  --admin-surface-soft: #0f172a;
+  --admin-contrast: #f1f5f9;
+  --admin-contrast-soft: #e2e8f0;
+  --admin-text: #cbd5e1;
+  --admin-muted: #94a3b8;
+  --admin-muted-light: #64748b;
+  --admin-border: #1e293b;
+  --admin-border-strong: #334155;
+  --admin-blue-soft: rgba(37, 99, 235, 0.12);
+  --admin-violet-soft: rgba(124, 58, 237, 0.12);
+  --admin-amber-soft: rgba(217, 119, 6, 0.12);
+  --admin-green-soft: rgba(22, 163, 74, 0.12);
+  --admin-red-soft: rgba(220, 38, 38, 0.12);
+  --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --admin-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --admin-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+  --admin-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .admin-layout {
   display: flex;
   flex: 1;
-  background: var(--admin-bg);
 }
 
 .main {
   flex: 1;
   width: 100%;
-  padding: 1.5rem 2.25rem 2.5rem;
-  background: var(--admin-bg);
+  padding: 1.25rem 1.5rem 2rem;
 }
 
-.workspace {
-  border: 1px solid var(--admin-border);
-  border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  overflow: hidden;
-}
-
-.eyebrow {
-  margin: 0 0 0.5rem;
-  color: var(--admin-blue-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-h1,
-h2,
-h3,
-p {
-  margin-top: 0;
-}
-
-h2 {
-  margin-bottom: 0.35rem;
-  color: var(--admin-contrast);
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-h3 {
-  margin-bottom: 0;
-  color: var(--admin-contrast);
-  font-size: 1.08rem;
+/* ==============================
+   NOTICE
+   ============================== */
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
   font-weight: 700;
+  font-size: 0.88rem;
+  border: 1px solid transparent;
 }
 
-.editor {
+.notice-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.notice-icon {
+  flex-shrink: 0;
+}
+
+.notice-success {
+  border-color: rgba(22, 163, 74, 0.25);
+  background: var(--admin-green-soft);
+  color: #166534;
+}
+
+.notice-error {
+  border-color: rgba(220, 38, 38, 0.25);
+  background: var(--admin-red-soft);
+  color: #991b1b;
+}
+
+.notice-dismiss {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.notice-dismiss:hover {
+  opacity: 1;
+}
+
+.notice-slide-enter-active,
+.notice-slide-leave-active {
+  transition: all 0.25s ease;
+}
+.notice-slide-enter-from,
+.notice-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* ==============================
+   EDITOR LAYOUT
+   ============================== */
+.editor-container {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  position: relative;
+}
+
+.editor-column {
+  flex: 1;
   min-width: 0;
-  padding: 1.75rem;
-  background: var(--admin-surface);
+  max-width: 860px;
 }
 
+/* ==============================
+   EDITOR HEADER
+   ============================== */
 .editor-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1.25rem;
-  margin: -1.75rem -1.75rem 1.5rem;
-  padding: 1.75rem;
-  border-bottom: 1px solid var(--admin-border);
-  background: linear-gradient(180deg, var(--admin-surface-soft), var(--admin-surface));
+  gap: 1rem;
+  margin-bottom: 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
 }
 
-.route-line {
+.header-left {
+  min-width: 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.breadcrumb-link {
+  color: var(--admin-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.breadcrumb-link:hover {
+  color: var(--admin-blue);
+}
+
+.breadcrumb-sep {
+  color: var(--admin-muted-light);
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb-current {
+  color: var(--admin-muted-light);
+}
+
+.page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.15rem;
+}
+
+.meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 6px;
+  background: var(--admin-bg);
+  color: var(--admin-muted);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.route-badge {
+  color: var(--admin-blue);
+  background: var(--admin-blue-soft);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.save-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  background: var(--admin-green-soft);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #166534;
+}
+
+.save-indicator.dirty {
+  background: var(--admin-amber-soft);
+  color: #92400e;
+}
+
+.save-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #16a34a;
+}
+
+.save-indicator.dirty .save-dot {
+  background: var(--admin-amber);
+}
+
+.save-label {
+  white-space: nowrap;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 36px;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-weight: 750;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: all 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn-primary {
+  background: var(--admin-blue);
+  color: #ffffff;
+  border-color: var(--admin-blue);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--admin-surface);
+  color: var(--admin-contrast);
+  border-color: var(--admin-border-strong);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--admin-muted);
+  background: var(--admin-surface-soft);
+  box-shadow: var(--admin-shadow);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--admin-muted);
+  border-color: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--admin-bg);
+  color: var(--admin-contrast);
+  border-color: var(--admin-border);
+}
+
+.btn-ghost.danger:hover:not(:disabled) {
+  color: #dc2626;
+  background: var(--admin-red-soft);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.btn-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-icon:hover:not(:disabled) {
+  background: var(--admin-bg);
+  color: var(--admin-contrast);
+}
+
+.btn-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.btn-icon.danger:hover:not(:disabled) {
+  color: #dc2626;
+  background: var(--admin-red-soft);
+}
+
+.btn-icon-sm {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-icon-sm:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==============================
+   STATUS BAR
+   ============================== */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.25rem;
   margin-bottom: 0;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--admin-muted);
   font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
 }
 
-.editor-actions,
-.section-actions {
+.status-left {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-}
-
-.button,
-.icon-button {
-  min-height: 44px;
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 0.4rem;
-  border-radius: 10px;
-  padding: 0.65rem 1.1rem;
-  font-weight: 700;
-  font-size: 0.92rem;
-  cursor: pointer;
-  text-decoration: none;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.12s ease;
 }
 
-.btn-icon {
-  font-size: 0.95em;
-  line-height: 1;
+.status-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #16a34a;
 }
 
-.button:hover,
-.icon-button:hover {
-  transform: translateY(-1px);
+.status-bullet.dirty {
+  background: var(--admin-amber);
 }
 
-.button:active,
-.icon-button:active {
-  transform: translateY(0);
+.status-text {
+  color: var(--admin-muted);
 }
 
-.button:disabled,
-.icon-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-  transform: none;
+.status-right {
+  color: var(--admin-muted-light);
 }
 
-.button-primary {
-  border: 1px solid var(--admin-blue);
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-  color: #ffffff;
-  box-shadow: 0 12px 24px rgba(15, 125, 56, 0.28);
+/* ==============================
+   WORKFLOW STEPS
+   ============================== */
+.workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.button-primary:hover {
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-  border-color: var(--admin-blue-deep);
-}
-
-.button-secondary,
-.icon-button {
-  border: 1px solid var(--admin-border-strong);
-  background: var(--admin-surface);
-  color: var(--admin-contrast-soft);
-}
-
-.button-secondary:hover,
-.icon-button:hover {
-  border-color: var(--admin-blue);
-  background: var(--admin-surface-soft);
-  color: var(--admin-blue-deep);
-  box-shadow: 0 8px 18px rgba(16, 88, 51, 0.1);
-}
-
-.icon-button {
-  min-height: 36px;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.8rem;
-}
-
-.icon-button.danger {
-  border-color: rgba(220, 38, 38, 0.28);
-  color: #b91c1c;
-}
-
-.icon-button.danger:hover {
-  background: #fff5f5;
-  border-color: #dc2626;
-  color: #dc2626;
-}
-
-.notice {
+.step {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin: 0 0 1.1rem;
+  gap: 0.65rem;
+  padding: 0.7rem 0.85rem;
   border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  padding: 0.9rem 1.1rem;
-  font-weight: 700;
+  border-radius: 10px;
+  background: var(--admin-surface);
+  transition: all 0.2s ease;
 }
 
-.notice-icon {
-  display: inline-grid;
+.step.active {
+  border-color: var(--admin-blue);
+  background: var(--admin-blue-soft);
+}
+
+.step.completed {
+  border-color: var(--admin-green);
+  background: var(--admin-green-soft);
+}
+
+.step-indicator {
+  width: 28px;
+  height: 28px;
+  display: grid;
   place-items: center;
-  width: 1.4rem;
-  height: 1.4rem;
   border-radius: 999px;
-  font-size: 0.85rem;
-  flex: 0 0 auto;
+  background: var(--admin-bg-deep);
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
-.notice-success {
-  border-color: rgba(21, 128, 61, 0.3);
-  background: var(--admin-surface-soft);
-  color: var(--admin-blue-deep);
-}
-
-.notice-success .notice-icon {
+.step.active .step-indicator {
   background: var(--admin-blue);
+  border-color: var(--admin-blue);
   color: #ffffff;
 }
 
-.notice-error {
-  border-color: rgba(185, 28, 28, 0.28);
-  background: #fef2f2;
-  color: #991b1b;
-}
-
-.notice-error .notice-icon {
-  background: #dc2626;
+.step.completed .step-indicator {
+  background: var(--admin-green);
   color: #ffffff;
 }
 
-.editor-workflow,
-.editor-form-column {
+.step-indicator.success {
+  background: var(--admin-green);
+  color: #ffffff;
+}
+
+.step-content {
+  display: grid;
+  gap: 0.08rem;
   min-width: 0;
 }
 
-.workflow-bar {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin-bottom: 1.25rem;
-}
-
-.workflow-step {
-  min-height: 66px;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface-soft);
-  color: var(--admin-muted);
-  padding: 0.75rem 0.9rem;
-  font-weight: 700;
-}
-
-.workflow-step strong {
-  width: 2.1rem;
-  height: 2.1rem;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid var(--admin-border-strong);
-  color: var(--admin-muted);
+.step-label {
+  font-size: 0.8rem;
   font-weight: 800;
-}
-
-.workflow-step.active {
-  border-color: rgba(22, 163, 74, 0.35);
-  background: var(--admin-surface-soft);
   color: var(--admin-contrast);
 }
 
-.workflow-step.active strong {
-  background: var(--admin-blue);
-  border-color: var(--admin-blue);
-  color: #ffffff;
+.step-desc {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--admin-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.form-panel,
-.editor-save-bar {
+/* ==============================
+   FORM CARDS
+   ============================== */
+.form-panels {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-card {
   border: 1px solid var(--admin-border);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
 }
 
-.form-panel {
-  margin-top: 1.25rem;
-  padding: 1.35rem;
+.form-card:hover {
+  box-shadow: var(--admin-shadow-md);
 }
 
-.workflow-bar + .form-panel {
-  margin-top: 0;
-}
-
-.panel-heading {
+.card-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed var(--admin-border);
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-surface-soft);
 }
 
-.panel-heading h3,
-.panel-heading p {
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.card-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+
+.card-icon-blue {
+  background: var(--admin-blue-soft);
+  color: var(--admin-blue);
+}
+
+.card-icon-violet {
+  background: var(--admin-violet-soft);
+  color: var(--admin-violet);
+}
+
+.card-icon-amber {
+  background: var(--admin-amber-soft);
+  color: var(--admin-amber);
+}
+
+.card-eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--admin-muted);
+  margin-bottom: 0.05rem;
+}
+
+.card-title {
   margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--admin-contrast);
+}
+
+.card-body {
+  padding: 1rem 1.1rem 1.15rem;
 }
 
 .status-pill {
   border-radius: 999px;
-  background: var(--admin-surface-soft);
+  background: var(--admin-green-soft);
   color: #166534;
-  padding: 0.32rem 0.75rem;
-  font-size: 0.76rem;
-  font-weight: 800;
-  border: 1px solid rgba(22, 163, 74, 0.25);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 900;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-pill.dirty {
-  background: var(--admin-gold-soft);
-  color: #92660a;
-  border-color: rgba(202, 138, 4, 0.3);
+  background: var(--admin-amber-soft);
+  color: #92400e;
 }
 
+/* ==============================
+   FORM FIELDS
+   ============================== */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.1rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
 }
 
-label,
-.field-block {
+.field {
   display: grid;
-  gap: 0.5rem;
-}
-
-label {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--admin-contrast-soft);
+  gap: 0.35rem;
 }
 
 .field-hint {
@@ -1969,32 +2570,54 @@ label {
 }
 
 .field-block {
-  margin-top: 1.1rem;
+  margin-top: 0.85rem;
 }
 
-input,
-textarea {
+.field-block:first-child {
+  margin-top: 0;
+}
+
+.field-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--admin-contrast-soft);
+  letter-spacing: 0.01em;
+}
+
+.field-hint {
+  font-weight: 600;
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+}
+
+.field-hint code {
+  background: var(--admin-bg);
+  padding: 0.08rem 0.25rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+}
+
+input, textarea {
   width: 100%;
   border: 1.5px solid var(--admin-border-strong);
   border-radius: 10px;
   background: var(--admin-surface);
   color: var(--admin-text);
-  padding: 0.78rem 0.9rem;
+  padding: 0.62rem 0.78rem;
+  font-size: 0.88rem;
   line-height: 1.5;
-  font-size: 0.95rem;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 textarea {
   resize: vertical;
+  min-height: 48px;
 }
 
-input:focus,
-textarea:focus {
+input:focus, textarea:focus {
   border-color: var(--admin-blue);
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   outline: none;
 }
 
@@ -2004,64 +2627,52 @@ input:disabled {
   cursor: not-allowed;
 }
 
-.section-toolbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px dashed var(--admin-border);
-  margin-bottom: 0;
+input::placeholder, textarea::placeholder {
+  color: var(--admin-muted-light);
 }
 
-.content-section {
-  margin-top: 1.1rem;
+/* ==============================
+   SECTIONS
+   ============================== */
+.sections-card .card-body {
   padding: 0;
-  background: var(--admin-surface-soft);
-  box-shadow: none;
-  overflow: hidden;
+}
+
+.sections-body {
+  padding: 0;
+}
+
+.sections-list {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.75rem;
+}
+
+.section-block {
   border: 1px solid var(--admin-border);
-  border-radius: 12px;
+  border-radius: 10px;
+  background: var(--admin-surface);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.section-block:hover {
+  border-color: var(--admin-border-strong);
+}
+
+.section-active {
+  border-color: var(--admin-blue) !important;
+  box-shadow: 0 0 0 1px var(--admin-blue), var(--admin-shadow-md);
 }
 
 .section-summary {
-  min-height: 62px;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 0.85rem;
-  border-bottom: 1px solid var(--admin-border);
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
-  padding: 0.9rem 1.1rem;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
   cursor: pointer;
   list-style: none;
-  font-weight: 700;
-}
-
-.section-summary-index {
-  display: inline-grid;
-  place-items: center;
-  width: 1.7rem;
-  height: 1.7rem;
-  border-radius: 999px;
-  background: var(--admin-surface-soft);
-  color: var(--admin-blue-deep);
-  font-size: 0.82rem;
-  font-weight: 800;
-  border: 1px solid rgba(22, 163, 74, 0.25);
-}
-
-.section-summary-label {
-  font-weight: 700;
-}
-
-.section-summary small {
-  color: var(--admin-muted);
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  transition: background 0.15s;
 }
 
 .section-summary::-webkit-details-marker {
@@ -2069,132 +2680,583 @@ input:disabled {
 }
 
 .section-summary::after {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-right: 2px solid var(--admin-blue);
-  border-bottom: 2px solid var(--admin-blue);
-  transform: rotate(45deg);
-  transition: transform 0.18s ease;
   content: '';
-  justify-self: end;
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  border-right: 2px solid var(--admin-muted);
+  border-bottom: 2px solid var(--admin-muted);
+  transform: rotate(-135deg);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
-.content-section details[open] .section-summary::after {
-  transform: rotate(225deg);
+.section-block details[open] > .section-summary::after {
+  transform: rotate(45deg);
 }
 
-.content-section-header {
+.section-summary:hover {
+  background: var(--admin-surface-soft);
+}
+
+.summary-drag {
+  display: grid;
+  place-items: center;
+  color: var(--admin-muted-light);
+  cursor: grab;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.summary-content {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.summary-index {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--admin-bg);
+  color: var(--admin-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.summary-text {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.summary-text strong {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--admin-contrast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-text small {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--admin-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.summary-text .empty-hint {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.summary-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--admin-muted);
+  background: var(--admin-bg);
+  padding: 0.18rem 0.45rem;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.section-body {
+  border-top: 1px solid var(--admin-border);
+  padding: 0;
+}
+
+.section-toolbar {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-inline: 1.1rem;
-  margin-top: 1.1rem;
-  margin-bottom: 1.1rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-surface-soft);
 }
 
-.content-section details > .form-grid,
-.content-section details > .field-block {
-  margin-inline: 1.1rem;
+.section-tabs {
+  display: flex;
+  gap: 0.25rem;
 }
 
-.content-section details > .form-grid {
-  margin-bottom: 1.1rem;
+.section-tab {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--admin-muted);
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  cursor: default;
 }
 
-.content-section details > .field-block:last-child {
-  margin-bottom: 1.1rem;
+.section-tab.active {
+  background: var(--admin-surface);
+  color: var(--admin-blue);
+  box-shadow: var(--admin-shadow-sm);
 }
 
-.editor-save-bar {
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.btn-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--admin-border);
+  margin: 0 0.15rem;
+}
+
+.section-fields {
+  padding: 0.75rem;
+}
+
+/* Section List Transitions */
+.section-list-enter-active,
+.section-list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.section-list-enter-from {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.section-list-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.section-list-move {
+  transition: transform 0.3s ease;
+}
+
+/* Empty state */
+.empty-sections {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  color: var(--admin-muted);
+  text-align: center;
+}
+
+.empty-sections svg {
+  opacity: 0.4;
+}
+
+.empty-sections p {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.add-section-btn {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.7rem;
+  min-height: 32px;
+}
+
+/* ==============================
+   SAVE BAR
+   ============================== */
+.save-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 1.25rem;
-  padding: 0.95rem 1.1rem;
-  box-shadow: 0 16px 36px rgba(16, 88, 51, 0.14);
+  margin-top: 1rem;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow-lg);
   position: sticky;
   bottom: 1rem;
-  z-index: 4;
-  border-color: var(--admin-border-strong);
+  z-index: 10;
 }
 
-.save-state,
-.save-bar-actions {
+.save-bar-left {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.7rem;
 }
 
-.save-dot {
-  width: 0.85rem;
-  height: 0.85rem;
-  flex: 0 0 auto;
+.save-bar-left strong {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--admin-contrast);
+}
+
+.save-bar-left small {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--admin-muted);
+}
+
+.save-dot-large {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
   border-radius: 999px;
   background: var(--admin-blue);
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--admin-blue) 18%, transparent);
 }
 
-.save-dot.dirty {
-  background: var(--admin-gold);
-  box-shadow: 0 0 0 5px rgba(202, 138, 4, 0.16);
+.save-dot-large.dirty {
+  background: var(--admin-amber);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
 }
 
-.save-state strong {
-  display: block;
+.save-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ==============================
+   PREVIEW COLUMN
+   ============================== */
+.preview-column {
+  width: 340px;
+  flex-shrink: 0;
+  position: sticky;
+  top: calc(60px + 1.25rem);
+  align-self: flex-start;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 60px - 2.5rem);
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-bg-deep);
+  flex-shrink: 0;
+}
+
+.preview-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 800;
   color: var(--admin-contrast);
+}
+
+.preview-header-left svg {
+  color: var(--admin-blue);
+}
+
+.preview-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.preview-hero {
+  display: grid;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.preview-eyebrow {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-blue);
+}
+
+.preview-headline {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--admin-contrast);
+  line-height: 1.25;
+}
+
+.preview-intro {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--admin-muted);
+  line-height: 1.55;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.preview-btn {
+  display: inline-block;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
   font-weight: 800;
 }
 
-.save-state small {
-  display: block;
-  color: var(--admin-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
+.preview-btn-primary {
+  background: var(--admin-blue);
+  color: #ffffff;
 }
 
+.preview-btn-secondary {
+  border: 1px solid var(--admin-border-strong);
+  color: var(--admin-contrast);
+}
+
+.preview-sections {
+  display: grid;
+  gap: 1rem;
+}
+
+.preview-section {
+  position: relative;
+  cursor: pointer;
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.preview-section:hover {
+  background: var(--admin-surface-soft);
+}
+
+.preview-section-active {
+  border-color: var(--admin-blue) !important;
+  background: var(--admin-blue-soft) !important;
+}
+
+.preview-section-indicator {
+  position: absolute;
+  left: -1px;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--admin-blue);
+}
+
+.preview-section-heading {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--admin-contrast);
+}
+
+.preview-section-body {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  color: var(--admin-muted);
+  line-height: 1.5;
+}
+
+.preview-items {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.preview-item-card {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  background: var(--admin-surface-soft);
+}
+
+.preview-item-card strong {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--admin-contrast);
+  margin-bottom: 0.08rem;
+}
+
+.preview-item-card span {
+  font-size: 0.68rem;
+  color: var(--admin-muted);
+}
+
+.preview-item-simple {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--admin-text);
+}
+
+.preview-bullet {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--admin-muted-light);
+  flex-shrink: 0;
+  margin-top: 0.3em;
+}
+
+.preview-footer {
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--admin-border);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--admin-muted-light);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Preview Slider Transitions */
+.preview-slide-enter-active,
+.preview-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.preview-slide-enter-from,
+.preview-slide-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+/* Preview toggle button */
+.preview-toggle-btn {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 5rem;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  color: var(--admin-muted);
+  cursor: pointer;
+  box-shadow: var(--admin-shadow-lg);
+  z-index: 20;
+  transition: all 0.2s ease;
+}
+
+.preview-toggle-btn:hover {
+  color: var(--admin-blue);
+  border-color: var(--admin-blue);
+  box-shadow: var(--admin-shadow-xl);
+  transform: translateY(-2px);
+}
+
+/* ==============================
+   RESPONSIVE
+   ============================== */
 @media (min-width: 900px) {
   .editor-page.sidebar-open {
     padding-left: 260px;
   }
 }
 
+@media (max-width: 1100px) {
+  .preview-column {
+    display: none;
+  }
+
+  .preview-toggle-btn {
+    display: grid;
+  }
+}
+
+@media (max-width: 900px) {
+  .editor-column {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 760px) {
   .main {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .editor-header {
     flex-direction: column;
+    padding: 0.85rem;
   }
 
-  .editor,
-  .editor-header {
-    padding: 1.1rem;
+  .header-right {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
-  .editor-header {
-    margin: -1.1rem -1.1rem 1.1rem;
+  .header-actions {
+    flex-wrap: wrap;
   }
 
-  .editor-actions,
-  .section-actions {
-    flex-direction: column;
+  .btn {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.6rem;
+    min-height: 32px;
   }
 
-  .button {
+  .save-indicator {
+    order: -1;
     width: 100%;
   }
 
-  .workflow-bar,
   .form-grid {
     grid-template-columns: 1fr;
   }
 
-  .editor-save-bar {
+  .workflow-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .save-bar {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .save-bar-right {
+    justify-content: flex-end;
+  }
+
+  .preview-toggle-btn {
+    right: 0.75rem;
+    bottom: 3rem;
+  }
+
+  .section-actions .btn-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (min-width: 1101px) {
+  .preview-toggle-btn {
+    display: none;
   }
 }
 </style>

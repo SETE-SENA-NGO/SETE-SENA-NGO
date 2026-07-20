@@ -148,7 +148,8 @@ const filteredRows = computed(() => {
   })
 })
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / pageSize)))
+const totalCount = computed(() => filteredRows.value.length)
+const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageSize)))
 
 const pagedRows = computed(() => {
   const start = (page.value - 1) * pageSize
@@ -163,22 +164,47 @@ const allVisibleSelected = computed(() => {
   )
 })
 
+const pageNumbers = computed(() => {
+  const total = totalPages.value
+  const current = page.value
+  const delta = 2
+  const range: (number | '...')[] = []
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) range.push(i)
+    return range
+  }
+
+  range.push(1)
+  if (current - delta > 2) range.push('...')
+  for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+    range.push(i)
+  }
+  if (current + delta < total - 1) range.push('...')
+  range.push(total)
+
+  return range
+})
+
 const stats = computed(() => [
-  { label: 'Total records', value: records.value.length, tone: 'blue' },
+  { label: 'Total records', value: records.value.length, tone: 'blue', icon: 'grid' },
   {
     label: 'Published',
     value: records.value.filter((row) => row.status === 'Published').length,
     tone: 'green',
+    icon: 'check',
   },
   {
     label: 'Draft',
     value: records.value.filter((row) => row.status === 'Draft').length,
     tone: 'orange',
+    icon: 'edit',
   },
   {
     label: 'Archived',
     value: records.value.filter((row) => row.status === 'Archived').length,
     tone: 'slate',
+    icon: 'archive',
   },
 ])
 
@@ -493,6 +519,20 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(value))
 }
 
+function relativeTime(value: string) {
+  const timestamp = Date.parse(value)
+  if (!Number.isFinite(timestamp)) return 'Unknown'
+
+  const diffMs = Date.now() - timestamp
+  const diffDays = Math.floor(diffMs / 86_400_000)
+
+  if (diffDays <= 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 30) return `${diffDays} days ago`
+
+  return formatDate(value)
+}
+
 async function loadRecords(key = moduleKey.value) {
   const source = moduleSources[key]
   records.value = []
@@ -590,6 +630,11 @@ function editRecord(record: AdminRecord) {
     summary: record.summary,
   }
   formOpen.value = true
+}
+
+function closeForm() {
+  formOpen.value = false
+  editingId.value = null
 }
 
 async function saveRecord() {
@@ -695,12 +740,12 @@ function confirmDelete(record: AdminRecord) {
   })
 }
 
-function bulkPublish() {
-  bulkStatus('Published')
+async function bulkPublish() {
+  await bulkStatus('Published')
 }
 
-function bulkArchive() {
-  bulkStatus('Archived')
+async function bulkArchive() {
+  await bulkStatus('Archived')
 }
 
 async function bulkStatus(status: RecordStatus) {
@@ -819,9 +864,14 @@ function exportCsv() {
       <AdminSidebar />
 
       <main class="module-main">
+        <!-- Hero -->
         <header class="module-hero">
-          <div>
-            <p class="eyebrow">{{ config.eyebrow }}</p>
+          <div class="hero-pattern" aria-hidden="true"></div>
+          <div class="hero-content">
+            <div class="hero-eyebrow-row">
+              <span class="hero-eyebrow">{{ config.eyebrow }}</span>
+              <span v-if="records.length" class="hero-count-badge">{{ records.length }} total</span>
+            </div>
             <h1>{{ config.title }}</h1>
             <p>{{ config.description }}</p>
           </div>
@@ -840,6 +890,7 @@ function exportCsv() {
           </div>
         </header>
 
+        <!-- Stats -->
         <section class="stat-grid" aria-label="Module statistics">
           <article
             v-for="stat in stats"
@@ -847,64 +898,108 @@ function exportCsv() {
             class="stat-card"
             :class="`tone-${stat.tone}`"
           >
-            <span>{{ stat.label }}</span>
-            <strong>{{ stat.value }}</strong>
+            <div class="stat-icon-wrap">
+              <!-- Grid icon -->
+              <svg v-if="stat.icon === 'grid'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <!-- Check icon -->
+              <svg v-else-if="stat.icon === 'check'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <!-- Edit icon -->
+              <svg v-else-if="stat.icon === 'edit'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <!-- Archive icon -->
+              <svg v-else-if="stat.icon === 'archive'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+            </div>
+            <div class="stat-body">
+              <span class="stat-label">{{ stat.label }}</span>
+              <strong class="stat-value">{{ stat.value }}</strong>
+            </div>
           </article>
         </section>
 
-        <section v-if="formOpen" class="form-card" aria-label="Content form">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">{{ editingId ? 'Edit' : 'Create' }}</p>
-              <h2>{{ editingId ? 'Update content' : config.newLabel }}</h2>
-            </div>
-            <button class="icon-button" type="button" @click="formOpen = false">Close</button>
-          </div>
-
-          <form class="module-form" @submit.prevent="saveRecord">
-            <label>
-              <span>Title</span>
-              <input v-model="form.title" name="module-title" required />
-            </label>
-            <label>
-              <span>Category</span>
-              <select v-model="form.category" name="module-category">
-                <option v-for="category in config.categories" :key="category" :value="category">
-                  {{ category }}
-                </option>
-              </select>
-            </label>
-            <label>
-              <span>Status</span>
-              <select v-model="form.status" name="module-status">
-                <option value="Draft">Draft</option>
-                <option value="Published">Published</option>
-                <option value="Archived">Archived</option>
-              </select>
-            </label>
-            <label>
-              <span>Author</span>
-              <input v-model="form.author" name="module-author" />
-            </label>
-            <label class="full">
-              <span>Summary</span>
-              <textarea v-model="form.summary" name="module-summary" rows="3"></textarea>
-            </label>
-            <div class="form-actions full">
-              <button class="button button-secondary" type="button" @click="formOpen = false">
-                Cancel
+        <!-- Form -->
+        <Transition name="form-slide">
+          <section v-if="formOpen" class="form-card" aria-label="Content form">
+            <div class="form-header">
+              <div>
+                <span class="form-eyebrow">{{ editingId ? 'Edit' : 'Create' }}</span>
+                <h2>{{ editingId ? 'Update content' : config.newLabel }}</h2>
+              </div>
+              <button class="btn-icon" type="button" @click="closeForm" aria-label="Close form">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
               <button class="button button-primary" type="submit" :disabled="saving">
                 {{ saving ? 'Saving...' : 'Save' }}
               </button>
             </div>
-          </form>
-        </section>
 
+            <form class="module-form" @submit.prevent="saveRecord">
+              <div class="form-field">
+                <label for="module-title">Title</label>
+                <div class="input-wrap">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  <input id="module-title" v-model="form.title" name="module-title" required placeholder="Enter title..." />
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="module-category">Category</label>
+                <div class="input-wrap">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4z"/><path d="M4 12h16v8H4z"/></svg>
+                  <select id="module-category" v-model="form.category" name="module-category">
+                    <option v-for="category in config.categories" :key="category" :value="category">
+                      {{ category }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="module-status">Status</label>
+                <div class="input-wrap">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <select id="module-status" v-model="form.status" name="module-status">
+                    <option value="Draft">Draft</option>
+                    <option value="Published">Published</option>
+                    <option value="Archived">Archived</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-field">
+                <label for="module-author">Author</label>
+                <div class="input-wrap">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <input id="module-author" v-model="form.author" name="module-author" placeholder="Author name..." />
+                </div>
+              </div>
+              <div class="form-field full-width">
+                <label for="module-summary">Summary</label>
+                <div class="input-wrap textarea-wrap">
+                  <svg class="input-icon textarea-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <textarea id="module-summary" v-model="form.summary" name="module-summary" rows="3" placeholder="Brief summary..."></textarea>
+                </div>
+              </div>
+              <div class="form-actions full-width">
+                <button class="btn btn-ghost" type="button" @click="closeForm">
+                  Cancel
+                </button>
+                <button class="btn btn-primary" type="submit" :disabled="saving">
+                  <template v-if="saving">
+                    <span class="spinner"></span>
+                    Saving...
+                  </template>
+                  <template v-else>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save
+                  </template>
+                </button>
+              </div>
+            </form>
+          </section>
+        </Transition>
+
+        <!-- Table card -->
         <section class="table-card">
+          <!-- Toolbar -->
           <div class="table-toolbar">
             <label class="search-field">
-              <span class="sr-only">Search records</span>
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input
                 v-model="search"
                 name="module-search"
@@ -912,21 +1007,19 @@ function exportCsv() {
                 placeholder="Search title, category, author..."
               />
             </label>
-            <select
-              v-model="statusFilter"
-              name="module-status-filter"
-              aria-label="Filter by status"
-            >
-              <option value="all">All status</option>
-              <option value="Published">Published</option>
-              <option value="Draft">Draft</option>
-              <option value="Archived">Archived</option>
-            </select>
-            <select v-model="sortKey" name="module-sort-key" aria-label="Sort records">
-              <option value="updatedAt">Newest</option>
-              <option value="title">Title</option>
-              <option value="status">Status</option>
-            </select>
+            <div class="toolbar-selects">
+              <select v-model="statusFilter" name="module-status-filter" aria-label="Filter by status">
+                <option value="all">All status</option>
+                <option value="Published">Published</option>
+                <option value="Draft">Draft</option>
+                <option value="Archived">Archived</option>
+              </select>
+              <select v-model="sortKey" name="module-sort-key" aria-label="Sort records">
+                <option value="updatedAt">Newest</option>
+                <option value="title">Title</option>
+                <option value="status">Status</option>
+              </select>
+            </div>
           </div>
 
           <div v-if="selectedCount" class="bulk-bar">
@@ -944,50 +1037,61 @@ function exportCsv() {
             <table>
               <thead>
                 <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      name="module-select-all"
-                      :checked="allVisibleSelected"
-                      aria-label="Select visible rows"
-                      @change="toggleVisibleSelection"
-                    />
+                  <th class="col-check">
+                    <label class="custom-checkbox">
+                      <input
+                        type="checkbox"
+                        name="module-select-all"
+                        :checked="allVisibleSelected"
+                        aria-label="Select visible rows"
+                        @change="toggleVisibleSelection"
+                      />
+                      <span class="check-visual"></span>
+                    </label>
                   </th>
-                  <th>Thumbnail</th>
-                  <th>Title</th>
-                  <th>Status</th>
-                  <th>Author</th>
-                  <th>Category</th>
-                  <th>Updated</th>
-                  <th>Actions</th>
+                  <th class="col-thumb">Thumbnail</th>
+                  <th class="col-title">Title</th>
+                  <th class="col-status">Status</th>
+                  <th class="col-author">Author</th>
+                  <th class="col-category">Category</th>
+                  <th class="col-date">Updated</th>
+                  <th class="col-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="record in pagedRows" :key="record.id">
+                <tr v-for="record in pagedRows" :key="record.id" class="data-row">
                   <td>
-                    <input
-                      type="checkbox"
-                      :name="`module-select-${record.id}`"
-                      :checked="isSelected(record.id)"
-                      :aria-label="`Select ${record.title}`"
-                      @change="toggleSelected(record.id)"
-                    />
+                    <label class="custom-checkbox">
+                      <input
+                        type="checkbox"
+                        :name="`module-select-${record.id}`"
+                        :checked="isSelected(record.id)"
+                        :aria-label="`Select ${record.title}`"
+                        @change="toggleSelected(record.id)"
+                      />
+                      <span class="check-visual"></span>
+                    </label>
                   </td>
                   <td>
-                    <span class="thumb">{{ record.thumbnail }}</span>
+                    <span class="thumb" :class="`thumb-${record.status.toLowerCase()}`">{{ record.thumbnail }}</span>
                   </td>
-                  <td>
+                  <td class="title-cell">
                     <strong>{{ record.title }}</strong>
-                    <small>{{ record.summary }}</small>
+                    <span class="title-summary">{{ record.summary || 'No summary' }}</span>
                   </td>
                   <td>
-                    <span class="status" :class="record.status.toLowerCase()">{{
-                      record.status
-                    }}</span>
+                    <span class="status-badge" :class="record.status.toLowerCase()">
+                      <span class="status-dot"></span>
+                      {{ record.status }}
+                    </span>
                   </td>
-                  <td>{{ record.author }}</td>
-                  <td>{{ record.category }}</td>
-                  <td>{{ formatDate(record.updatedAt) }}</td>
+                  <td class="author-cell">{{ record.author }}</td>
+                  <td>
+                    <span class="category-tag">{{ record.category }}</span>
+                  </td>
+                  <td class="date-cell" :title="formatDate(record.updatedAt)">
+                    {{ relativeTime(record.updatedAt) }}
+                  </td>
                   <td>
                     <div class="row-actions">
                       <button type="button" @click="editRecord(record)">Edit</button>
@@ -1022,8 +1126,15 @@ function exportCsv() {
                 <tr v-if="!loading && !pagedRows.length">
                   <td colspan="8">
                     <div class="empty-state">
-                      <strong>No records found</strong>
-                      <span>Try another search or create a new record.</span>
+                      <div class="empty-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      </div>
+                      <strong>{{ search || statusFilter !== 'all' ? 'No matching records' : 'No records yet' }}</strong>
+                      <span>{{ search || statusFilter !== 'all' ? 'Try adjusting your search or filters.' : 'Create your first record to get started.' }}</span>
+                      <button v-if="!search && statusFilter === 'all'" class="btn btn-primary btn-sm" type="button" @click="openCreate">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        {{ config.newLabel }}
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -1031,11 +1142,37 @@ function exportCsv() {
             </table>
           </div>
 
-          <footer class="pagination">
-            <span>Page {{ page }} of {{ totalPages }}</span>
-            <div>
-              <button type="button" :disabled="page === 1" @click="page -= 1">Previous</button>
-              <button type="button" :disabled="page === totalPages" @click="page += 1">Next</button>
+          <!-- Pagination -->
+          <footer v-if="totalCount > pageSize" class="pagination">
+            <span class="pagination-info">{{ (page - 1) * pageSize + 1 }}-{{ Math.min(page * pageSize, totalCount) }} of {{ totalCount }}</span>
+            <div class="pagination-controls">
+              <button class="page-btn" type="button" :disabled="page === 1" @click="page = 1" title="First page">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+              </button>
+              <button class="page-btn" type="button" :disabled="page === 1" @click="page -= 1" title="Previous">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <template v-for="num in pageNumbers" :key="num">
+                <button
+                  v-if="num === '...'"
+                  class="page-btn page-ellipsis"
+                  type="button"
+                  disabled
+                >…</button>
+                <button
+                  v-else
+                  class="page-btn"
+                  :class="{ active: page === num }"
+                  type="button"
+                  @click="page = num"
+                >{{ num }}</button>
+              </template>
+              <button class="page-btn" type="button" :disabled="page === totalPages" @click="page += 1" title="Next">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <button class="page-btn" type="button" :disabled="page === totalPages" @click="page = totalPages" title="Last page">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              </button>
             </div>
           </footer>
         </section>
@@ -1045,41 +1182,64 @@ function exportCsv() {
 </template>
 
 <style scoped>
+/* ============================================
+   DESIGN SYSTEM VARIABLES
+   ============================================ */
 .admin-module-page {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-text: var(--admin-theme-text);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-blue: var(--admin-theme-teal);
-  --admin-success: var(--admin-theme-primary);
-  --admin-warning: var(--admin-theme-gold);
-  --admin-error: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-  --panel: var(--admin-surface);
-  --border: var(--admin-border);
-  --text: var(--admin-text);
-  --muted: var(--admin-muted);
+  --bg: #f0f4fb;
+  --surface: #ffffff;
+  --surface-soft: #f6f9fe;
+  --border: #e2e9f5;
+  --border-strong: #cbd9ec;
+  --text: #2c3d5f;
+  --contrast: #0f1a33;
+  --muted: #6a7d9e;
+  --blue: #2962ff;
+  --blue-soft: #e8efff;
+  --green: #0f973d;
+  --green-soft: #e6f9ed;
+  --orange: #e67e22;
+  --orange-soft: #fef4e6;
+  --red: #dc2626;
+  --red-soft: #fef2f2;
+  --slate: #6b7280;
+  --slate-soft: #f1f5f9;
+  --shadow-sm: 0 1px 3px rgba(15, 26, 51, 0.06);
+  --shadow-md: 0 4px 14px rgba(15, 26, 51, 0.07);
+  --shadow-lg: 0 12px 40px rgba(15, 26, 51, 0.09);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 
   min-height: 100vh;
-  background: var(--admin-bg);
-  color: var(--admin-text);
+  background: var(--bg);
+  color: var(--text);
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark .admin-module-page) {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-text: var(--admin-theme-text);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-shadow: var(--admin-theme-shadow);
+:global(.admin-dark) .admin-module-page {
+  --bg: #0a0f1f;
+  --surface: #111827;
+  --surface-soft: #0f172a;
+  --border: #1e2a45;
+  --border-strong: #2d3b5a;
+  --text: #c8d2e6;
+  --contrast: #eef2f8;
+  --muted: #8896b5;
+  --blue: #3b82f6;
+  --blue-soft: #1a2a45;
+  --green: #22c55e;
+  --green-soft: #142c1e;
+  --orange: #f59e0b;
+  --orange-soft: #2a2015;
+  --red: #ef4444;
+  --red-soft: #2a1515;
+  --slate: #8b96b0;
+  --slate-soft: #111b2e;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .admin-layout {
@@ -1089,84 +1249,156 @@ function exportCsv() {
 .module-main {
   flex: 1;
   width: 100%;
-  padding: 1.25rem 2rem 2rem;
+  padding: 1.5rem 2rem 2.5rem;
 }
 
-.module-hero,
-.stat-card,
-.form-card,
-.table-card {
-  border: 1px solid var(--admin-border);
-  border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+/* ============================================
+   BUTTON SYSTEM
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
 
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  box-shadow: 0 4px 14px rgba(41, 98, 255, 0.25);
+}
+
+.btn-primary:hover {
+  background: #1a50e0;
+  border-color: #1a50e0;
+  box-shadow: 0 6px 20px rgba(41, 98, 255, 0.32);
+}
+
+.btn-ghost {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.btn-ghost:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-sm {
+  min-height: 34px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  border-color: var(--border-strong);
+  color: var(--contrast);
+  background: var(--surface-soft);
+}
+
+/* ============================================
+   HERO
+   ============================================ */
 .module-hero {
+  position: relative;
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.4rem;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.8rem 2rem;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
 
-.eyebrow {
-  margin: 0 0 0.45rem;
-  color: var(--admin-blue);
-  font-size: 0.72rem;
-  font-weight: 900;
+.hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.hero-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--blue);
+  background: var(--blue-soft);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
 }
 
-h1,
-h2,
-p {
-  margin-top: 0;
+.hero-count-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface-soft);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
 }
 
 h1 {
-  margin-bottom: 0.35rem;
-  color: var(--admin-contrast);
-  font-size: clamp(1.7rem, 3vw, 2.4rem);
-}
-
-h2 {
-  margin-bottom: 0;
-  color: var(--admin-contrast);
-  font-size: 1.05rem;
-}
-
-.module-hero p:not(.eyebrow) {
-  max-width: 660px;
-  margin-bottom: 0;
-  color: var(--admin-muted);
-  line-height: 1.65;
-}
-
-.hero-actions,
-.form-actions,
-.row-actions,
-.pagination div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.button,
-.icon-button,
-.bulk-bar button,
-.row-actions button,
-.pagination button {
-  min-height: 40px;
-  border-radius: 10px;
-  padding: 0.55rem 0.85rem;
+  margin: 0 0 0.3rem;
+  color: var(--contrast);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
   font-weight: 850;
-  cursor: pointer;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
-.button-primary {
-  border: 1px solid var(--admin-blue);
-  background: var(--admin-blue);
-  color: #ffffff;
+.module-hero p:not(.hero-eyebrow) {
+  max-width: 580px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 .button:disabled,
@@ -1184,151 +1416,442 @@ h2 {
   color: var(--admin-contrast);
 }
 
+/* ============================================
+   STAT CARDS
+   ============================================ */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
 }
 
 .stat-card {
-  display: grid;
-  gap: 0.35rem;
-  min-height: 110px;
-  padding: 1rem;
-  border-top: 4px solid var(--tone);
-}
-
-.stat-card span {
-  color: var(--admin-muted);
-  font-weight: 850;
-}
-
-.stat-card strong {
-  color: var(--admin-contrast);
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.tone-blue {
-  --tone: var(--admin-blue);
-}
-
-.tone-green {
-  --tone: var(--admin-success);
-}
-
-.tone-orange {
-  --tone: var(--admin-warning);
-}
-
-.tone-slate {
-  --tone: #64748b;
-}
-
-.form-card,
-.table-card {
-  margin-top: 1rem;
-  padding: 1rem;
-}
-
-.panel-heading,
-.table-toolbar,
-.pagination {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1.15rem 1.2rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: color-mix(in srgb, var(--tone) 25%, var(--border));
+}
+
+.stat-icon-wrap {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--tone) 12%, var(--surface));
+  color: var(--tone);
+  transition: transform 0.25s ease;
+}
+
+.stat-card:hover .stat-icon-wrap {
+  transform: scale(1.08);
+}
+
+.stat-body {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stat-value {
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: var(--contrast);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.tone-blue { --tone: var(--blue); }
+.tone-green { --tone: var(--green); }
+.tone-orange { --tone: var(--orange); }
+.tone-slate { --tone: var(--slate); }
+
+/* ============================================
+   FORM
+   ============================================ */
+.form-slide-enter-active,
+.form-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.form-slide-enter-from,
+.form-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.98);
+}
+
+.form-card {
+  margin-top: 1.25rem;
+  padding: 1.35rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.form-header {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.form-eyebrow {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--blue);
+  background: var(--blue-soft);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  margin-bottom: 0.4rem;
+}
+
+.form-header h2 {
+  margin: 0;
+  color: var(--contrast);
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 
 .module-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
-  margin-top: 1rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
-label {
+.form-field {
   display: grid;
   gap: 0.4rem;
-  color: var(--admin-muted);
-  font-weight: 800;
 }
 
-.full {
+.form-field.full-width {
   grid-column: 1 / -1;
 }
 
-input,
-select,
-textarea {
+.form-field label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.textarea-icon {
+  align-self: flex-start;
+  margin-top: 14px;
+}
+
+.input-wrap input,
+.input-wrap select,
+.input-wrap textarea {
   width: 100%;
-  border: 1px solid var(--admin-border-strong);
-  border-radius: 12px;
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
-  padding: 0.72rem 0.82rem;
+  padding: 0.7rem 0.85rem 0.7rem 2.2rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--contrast);
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--admin-blue);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+.input-wrap textarea {
+  padding-left: 2.2rem;
+}
+
+.input-wrap input:focus,
+.input-wrap select:focus,
+.input-wrap textarea:focus {
   outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.1);
 }
 
+.input-wrap select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236a7d9e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 2.2rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.form-actions.full-width {
+  grid-column: 1 / -1;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   TABLE CARD
+   ============================================ */
+.table-card {
+  margin-top: 1.25rem;
+  padding: 1.35rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Toolbar */
 .table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
 .search-field {
-  flex: 1 1 280px;
+  flex: 1 1 260px;
+  position: relative;
 }
 
-.sr-only {
-  width: 1px;
-  height: 1px;
+.search-icon {
   position: absolute;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-field input {
+  width: 100%;
+  padding: 0.62rem 0.85rem 0.62rem 2.2rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--contrast);
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+}
+
+.search-field input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.1);
+}
+
+.search-field input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.toolbar-selects {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.toolbar-selects select {
+  padding: 0.62rem 2rem 0.62rem 0.85rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--contrast);
+  font-size: 0.84rem;
+  font-weight: 600;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236a7d9e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toolbar-selects select:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.1);
+}
+
+/* Bulk bar */
+.bulk-slide-enter-active,
+.bulk-slide-leave-active {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bulk-slide-enter-from,
+.bulk-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-16px);
 }
 
 .bulk-bar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.6rem;
-  margin-top: 0.9rem;
-  border: 1px solid rgba(37, 99, 235, 0.18);
-  border-radius: 12px;
-  background: rgba(37, 99, 235, 0.08);
-  padding: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--blue-soft);
+  border: 1px solid color-mix(in srgb, var(--blue) 20%, var(--border));
 }
 
-.bulk-bar strong {
-  color: var(--admin-contrast);
+.bulk-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.bulk-bar button,
-.row-actions button {
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
+.bulk-check-icon {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
 }
 
-.bulk-bar .danger,
-.row-actions .danger {
-  border-color: rgba(220, 38, 38, 0.35);
-  color: var(--admin-error);
+.bulk-info strong {
+  color: var(--contrast);
+  font-size: 0.85rem;
+  font-weight: 800;
 }
 
+.bulk-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.bulk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bulk-btn:hover { transform: translateY(-1px); }
+.bulk-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.bulk-publish:hover { border-color: var(--green); color: var(--green); }
+.bulk-archive:hover { border-color: var(--orange); color: var(--orange); }
+.bulk-delete { border-color: color-mix(in srgb, var(--red) 30%, var(--border)); color: var(--red); }
+.bulk-delete:hover { border-color: var(--red); background: var(--red-soft); }
+
+/* ============================================
+   LOADING SKELETON
+   ============================================ */
+.loading-skeleton {
+  margin-top: 1rem;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.skeleton-row:last-child { border-bottom: none; }
+
+.skeleton-cell { flex-shrink: 0; }
+
+.skeleton-cell.skeleton-check { width: 20px; }
+.skeleton-cell.skeleton-thumb { width: 42px; }
+.skeleton-cell.skeleton-title { flex: 1; }
+.skeleton-cell.skeleton-badge { width: 90px; }
+.skeleton-cell.skeleton-author { width: 100px; }
+.skeleton-cell.skeleton-cat { width: 110px; }
+.skeleton-cell.skeleton-date { width: 100px; }
+.skeleton-cell.skeleton-actions { width: 140px; }
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface-soft) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  margin-bottom: 6px;
+}
+
+.skeleton-line:last-child { margin-bottom: 0; }
+
+.skeleton-line.w-60 { width: 60%; }
+.skeleton-line.w-40 { width: 40%; }
+.skeleton-line.w-20 { width: 40%; }
+.skeleton-line.w-24 { width: 70px; }
+.skeleton-line.w-28 { width: 85px; }
+.skeleton-line.w-32 { width: 100px; }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================
+   TABLE
+   ============================================ */
 .table-wrap {
   overflow-x: auto;
   margin-top: 1rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
 .loading-state {
@@ -1343,97 +1866,366 @@ textarea:focus {
 
 table {
   width: 100%;
-  min-width: 980px;
+  min-width: 920px;
   border-collapse: collapse;
 }
 
-th,
-td {
-  border-bottom: 1px solid var(--admin-border);
+th, td {
   padding: 0.85rem;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 th {
-  background: var(--admin-surface-soft);
-  color: var(--admin-muted);
-  font-size: 0.78rem;
-  font-weight: 900;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border);
 }
 
 td {
-  color: var(--admin-text);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.88rem;
 }
 
-td strong,
-.pagination span {
+/* Column widths */
+.col-check { width: 40px; }
+.col-thumb { width: 70px; }
+.col-status { width: 110px; }
+.col-author { width: 120px; }
+.col-category { width: 130px; }
+.col-date { width: 120px; }
+.col-actions { width: 170px; }
+
+/* Data rows */
+.data-row {
+  transition: all 0.2s ease;
+}
+
+.data-row:hover {
+  background: var(--surface-soft);
+}
+
+.data-row:last-child td {
+  border-bottom: none;
+}
+
+/* Custom checkbox */
+.custom-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.check-visual {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-strong);
+  border-radius: 5px;
   display: block;
-  color: var(--admin-contrast);
-  font-weight: 900;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-td small {
-  display: block;
-  max-width: 320px;
-  margin-top: 0.2rem;
-  color: var(--admin-muted);
-  line-height: 1.45;
+.custom-checkbox input:checked + .check-visual {
+  background: var(--blue);
+  border-color: var(--blue);
 }
 
+.custom-checkbox input:checked + .check-visual::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.custom-checkbox input:focus-visible + .check-visual {
+  box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.15);
+}
+
+/* Thumbnail */
 .thumb {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
-  background: rgba(37, 99, 235, 0.1);
-  color: var(--admin-blue);
-  font-weight: 900;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s ease;
 }
 
-.status {
+.data-row:hover .thumb {
+  transform: scale(1.05);
+}
+
+.thumb-published { background: var(--green-soft); color: var(--green); }
+.thumb-draft { background: var(--orange-soft); color: var(--orange); }
+.thumb-archived { background: var(--slate-soft); color: var(--slate); }
+
+/* Title cell */
+.title-cell strong {
+  display: block;
+  color: var(--contrast);
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
+
+.title-summary {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Status badge */
+.status-badge {
   display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem 0.25rem 0.5rem;
   border-radius: 999px;
-  padding: 0.28rem 0.55rem;
-  font-size: 0.76rem;
-  font-weight: 900;
+  font-size: 0.75rem;
+  font-weight: 800;
 }
 
-.status.published {
-  background: rgba(22, 163, 74, 0.12);
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.status-badge.published {
+  background: var(--green-soft);
   color: #15803d;
 }
 
-.status.draft {
-  background: rgba(249, 115, 22, 0.12);
-  color: #c2410c;
+.status-badge.published .status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
-.status.archived {
-  background: rgba(100, 116, 139, 0.14);
-  color: #475569;
+.status-badge.draft {
+  background: var(--orange-soft);
+  color: #b45309;
 }
 
-.empty-state {
+.status-badge.draft .status-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.status-badge.archived {
+  background: var(--slate-soft);
+  color: #4b5563;
+}
+
+.status-badge.archived .status-dot {
+  background: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.15);
+}
+
+/* Author */
+.author-cell {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Category tag */
+.category-tag {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Date cell */
+.date-cell {
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Row actions */
+.row-actions {
+  display: flex;
+  gap: 0.3rem;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.data-row:hover .row-actions {
+  opacity: 1;
+}
+
+.row-action {
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  gap: 0.25rem;
-  min-height: 160px;
-  color: var(--admin-muted);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.row-action:hover {
+  background: var(--surface-soft);
+  border-color: var(--border);
+  color: var(--contrast);
+}
+
+.row-action:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.action-publish:hover {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 30%, var(--border));
+  background: var(--green-soft);
+}
+
+.action-delete:hover {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 30%, var(--border));
+  background: var(--red-soft);
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
   text-align: center;
 }
 
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.empty-state strong {
+  color: var(--contrast);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.empty-state span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
 .pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   margin-top: 1rem;
 }
 
-.pagination button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
+.pagination-info {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.page-btn {
+  min-width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0 0.4rem;
+}
+
+.page-btn:hover:not(:disabled):not(.active) {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
+  transform: translateY(-1px);
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-btn.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(41, 98, 255, 0.2);
+}
+
+.page-ellipsis {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: default;
+  min-width: 24px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 @media (min-width: 900px) {
   .admin-module-page.sidebar-open {
     padding-left: 260px;
@@ -1442,22 +2234,57 @@ td small {
 
 @media (max-width: 1100px) {
   .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 820px) {
   .module-main {
+    padding: 1rem 1rem 1.5rem;
+  }
+
+  .module-hero {
+    flex-direction: column;
+    padding: 1.25rem 1.25rem;
+  }
+
+  .hero-actions {
+    width: 100%;
+  }
+
+  .hero-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .module-form {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-selects {
+    width: 100%;
+  }
+
+  .toolbar-selects select {
+    flex: 1;
+  }
+
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pagination-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .table-card {
     padding: 1rem;
   }
+}
 
-  .module-hero,
-  .panel-heading,
-  .pagination {
-    display: grid;
-  }
-
-  .module-form,
+@media (max-width: 520px) {
   .stat-grid {
     grid-template-columns: 1fr;
   }

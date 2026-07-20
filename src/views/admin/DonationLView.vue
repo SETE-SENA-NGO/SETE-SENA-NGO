@@ -140,7 +140,7 @@ async function save() {
                   <input
                     :id="`${method.id}-qr-url`"
                     v-model="method.qrUrl"
-                    placeholder="https://lh3.googleusercontent.com/d/..."
+                    placeholder="https://drive.google.com/file/d/.../view"
                   />
                 </div>
 
