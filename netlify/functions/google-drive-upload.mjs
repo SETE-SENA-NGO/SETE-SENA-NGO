@@ -346,10 +346,19 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
 }
 
 function serviceHeaders(config) {
-  return {
+  const headers = {
     apikey: config.serviceRoleKey,
-    authorization: `Bearer ${config.serviceRoleKey}`,
   }
+
+  if (isJwtKey(config.serviceRoleKey)) {
+    headers.authorization = `Bearer ${config.serviceRoleKey}`
+  }
+
+  return headers
+}
+
+function isJwtKey(value) {
+  return typeof value === 'string' && value.split('.').length === 3
 }
 
 function googleThumbnailUrl(fileId) {
