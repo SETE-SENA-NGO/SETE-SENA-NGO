@@ -12,7 +12,6 @@ import {
 } from '@/lib/donationSettings'
 
 const ui = useUiStore()
-const media = useMediaStore()
 
 const methods = ref<DonationMethod[]>(defaultDonationMethods())
 

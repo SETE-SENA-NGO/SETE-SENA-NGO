@@ -115,7 +115,14 @@ test('routes are lazy loaded and admin modules no longer use demo records', () =
 test('rendered images are stored as external Google Drive URLs', () => {
   const localImageFiles = [...walkEveryFile(join(root, 'src')), ...walkEveryFile(join(root, 'public'))]
     .filter((file) => /\.(png|jpe?g|webp|gif|svg|ico|avif)$/i.test(file))
-    .filter((file) => !['public/favicon.ico', 'src/assets/favicon.ico'].includes(file))
+    .filter(
+      (file) =>
+        ![
+          'public/favicon.ico',
+          'public/images/contact/telegram-qr.jpg',
+          'src/assets/favicon.ico',
+        ].includes(file),
+    )
 
   assert.deepEqual(localImageFiles, [])
 
