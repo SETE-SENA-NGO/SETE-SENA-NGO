@@ -3,6 +3,7 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { supabase } from '@/lib/supabase'
+import Slideshow from '@/components/shared/Slideshow.vue'
 import {
   parsePublishedPage,
   sectionItems,
@@ -18,6 +19,138 @@ const fallbackComponent = shallowRef<Component | null>(null)
 
 const slug = computed(() => {
   return typeof route.meta.contentSlug === 'string' ? route.meta.contentSlug : ''
+})
+
+const isHome = computed(() => slug.value === 'home')
+
+const statusMessage = computed(() => {
+  if (!loaded.value) return 'Loading page content...'
+  return loadError.value || 'Page content is not published yet.'
+})
+
+interface HomeSlide {
+  image: string
+  caption: string
+  alt: string
+  eyebrow: string
+  title: string
+  description: string
+  primaryLabel: string
+  primaryTo: string
+  secondaryLabel: string
+  secondaryTo: string
+  position?: string
+}
+
+function safeJsonParse<T>(value: string): T | null {
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return null
+  }
+}
+
+function normalizeSlide(raw: unknown): HomeSlide | null {
+  const r = raw as Record<string, unknown> | null
+  if (!r || typeof raw !== 'object') return null
+  const image = typeof r.image === 'string' ? r.image : ''
+  if (!image) return null
+  return {
+    image,
+    caption: typeof r.caption === 'string' ? r.caption : '',
+    alt: typeof r.alt === 'string' ? r.alt : image,
+    eyebrow: typeof r.eyebrow === 'string' ? r.eyebrow : '',
+    title: typeof r.title === 'string' ? r.title : '',
+    description: typeof r.description === 'string' ? r.description : '',
+    primaryLabel: typeof r.primaryLabel === 'string' ? r.primaryLabel : '',
+    primaryTo: typeof r.primaryTo === 'string' ? r.primaryTo : '',
+    secondaryLabel: typeof r.secondaryLabel === 'string' ? r.secondaryLabel : '',
+    secondaryTo: typeof r.secondaryTo === 'string' ? r.secondaryTo : '',
+    position: typeof r.position === 'string' ? r.position : undefined,
+  }
+}
+
+function getDefaultHomeSlides(): HomeSlide[] {
+  return [
+    {
+      image: '/images/programs/education-hero.jpg',
+      caption: '',
+      alt: 'Children learning with Santi Sena education support',
+      eyebrow: 'Education and Buddhist learning',
+      title: 'Helping children learn with confidence.',
+      description:
+        'Santi Sena supports schools, mobile libraries, scholarships and Buddhist education so children can keep learning close to home.',
+      primaryLabel: 'Support education',
+      primaryTo: '/qr-donate',
+      secondaryLabel: 'Explore programs',
+      secondaryTo: '/programs',
+      position: 'center',
+    },
+    {
+      image: '/images/programs/environment.jpg',
+      caption: '',
+      alt: 'Community environmental activity in rural Cambodia',
+      eyebrow: 'Environment and climate action',
+      title: 'Protecting the land that sustains villages.',
+      description:
+        'Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.',
+      primaryLabel: 'Support the work',
+      primaryTo: '/qr-donate',
+      secondaryLabel: 'Environment program',
+      secondaryTo: '/programs/environment',
+      position: 'center',
+    },
+    {
+      image: '/images/programs/livelihood-hero2.jpg',
+      caption: '',
+      alt: 'Rural livelihood activity with community members',
+      eyebrow: 'Livelihoods and family resilience',
+      title: 'Growing practical income and food security.',
+      description:
+        'Savings groups, home gardens, cooperatives and farmer support help rural families build steadier livelihoods.',
+      primaryLabel: 'Get involved',
+      primaryTo: '/get-involved',
+      secondaryLabel: 'Livelihood program',
+      secondaryTo: '/programs/livelihood',
+      position: 'center',
+    },
+    {
+      image: '/images/programs/child-protection1.jpg',
+      caption: '',
+      alt: 'Children and community members participating in a protection activity',
+      eyebrow: 'Child protection and dignity',
+      title: 'Safeguarding children through local action.',
+      description:
+        'Child rights campaigns, youth peer groups and community networks help children grow in safer, more caring communities.',
+      primaryLabel: 'Stand with us',
+      primaryTo: '/get-involved',
+      secondaryLabel: 'Protection program',
+      secondaryTo: '/programs/child-protection',
+      position: 'center',
+    },
+  ]
+}
+
+const homeSlides = computed<HomeSlide[]>(() => {
+  // If no CMS content exists, return empty array so we fall back to HomeView
+  if (!content.value) return []
+  if (!isHome.value) return []
+  const slideshowSection = content.value.sections.find(
+    (s) => s.id === 'home-slideshow',
+  )
+  if (!slideshowSection || !slideshowSection.items) return getDefaultHomeSlides()
+  const parsed = safeJsonParse<unknown>(slideshowSection.items)
+  if (!Array.isArray(parsed)) return getDefaultHomeSlides()
+  const normalized = parsed
+    .map(normalizeSlide)
+    .filter((s): s is HomeSlide => Boolean(s))
+  return normalized.length ? normalized : getDefaultHomeSlides()
+})
+
+// Non-slideshow sections for the home page (rendered below the slideshow)
+const homeContentSections = computed(() => {
+  if (!content.value || !isHome.value) return []
+  return content.value.sections.filter((s) => s.id !== 'home-slideshow')
 })
 
 watch(
@@ -73,7 +206,59 @@ function actionRoute(index: number) {
 </script>
 
 <template>
-  <main v-if="content" class="managed-page">
+  <!-- ===== HOME PAGE WITH SLIDESHOW ===== -->
+  <main v-if="content && isHome && homeSlides.length" class="managed-page managed-page-home">
+    <Slideshow :slides="homeSlides" :interval-ms="4000" v-slot="{ activeSlide }">
+      <div class="hero-overlay" />
+      <div class="hero-inner">
+        <div :key="activeSlide?.image" class="hero-message">
+          <p class="eyebrow eyebrow--light">
+            {{ activeSlide?.eyebrow ?? content?.eyebrow ?? 'Buddhist NGO - Cambodia - Since 1994' }}
+          </p>
+          <h1 class="hero-title">
+            {{
+              activeSlide?.title ??
+              content?.headline ??
+              'Walking with villages toward peace, sustainability and dignity.'
+            }}
+          </h1>
+          <p class="hero-subtitle">
+            {{
+              activeSlide?.description ??
+              content?.intro ??
+              'Santi Sena works alongside rural Cambodian communities in education, livelihoods, environment and child protection.'
+            }}
+          </p>
+          <div class="hero-actions">
+            <RouterLink :to="activeSlide?.primaryTo ?? '/qr-donate'" class="btn btn--primary">
+              {{ activeSlide?.primaryLabel ?? 'Support Us' }}
+            </RouterLink>
+            <RouterLink :to="activeSlide?.secondaryTo ?? '/about'" class="btn btn--outline">
+              {{ activeSlide?.secondaryLabel ?? 'Stand with us' }}
+            </RouterLink>
+          </div>
+        </div>
+      </div>
+    </Slideshow>
+
+    <!-- Home content sections below slideshow -->
+    <section class="managed-sections home-sections-below" aria-label="Page content">
+      <article v-for="section in homeContentSections" :key="section.id" class="managed-section">
+        <p class="managed-section-label">{{ section.label }}</p>
+        <h2>{{ section.heading }}</h2>
+        <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
+        <div v-if="sectionItems(section).length" class="managed-item-grid">
+          <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
+            <strong>{{ item.title }}</strong>
+            <p v-if="item.detail">{{ item.detail }}</p>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- ===== STANDARD PAGE (non-home) ===== -->
+  <main v-else-if="content" class="managed-page">
     <section class="managed-hero">
       <div class="managed-hero-inner">
         <p class="managed-eyebrow">{{ content.eyebrow || content.group }}</p>
@@ -103,7 +288,6 @@ function actionRoute(index: number) {
         <p class="managed-section-label">{{ section.label }}</p>
         <h2>{{ section.heading }}</h2>
         <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
-
         <div v-if="sectionItems(section).length" class="managed-item-grid">
           <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
             <strong>{{ item.title }}</strong>
@@ -117,7 +301,7 @@ function actionRoute(index: number) {
   <component v-else-if="loaded && fallbackComponent" :is="fallbackComponent" />
 
   <main v-else class="managed-loading" aria-live="polite">
-    <p>{{ loadError || 'Loading page content...' }}</p>
+    <p>{{ statusMessage }}</p>
   </main>
 </template>
 
@@ -284,5 +468,142 @@ function actionRoute(index: number) {
   .managed-section {
     padding: 1rem;
   }
+}
+
+/* ==============================
+   HOME PAGE SLIDESHOW HERO STYLES
+   (matching HomeView.vue)
+   ============================== */
+.managed-page-home {
+  font-family: inherit;
+  color: var(--color-ink);
+  background: var(--color-cream);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(6, 18, 13, 0.92) 0%,
+      rgba(6, 18, 13, 0.68) 38%,
+      rgba(6, 18, 13, 0.3) 65%,
+      rgba(6, 18, 13, 0.05) 100%
+    ),
+    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.4) 0%, transparent 55%);
+}
+
+.hero-inner {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  max-width: 760px;
+  left: var(--container-offset);
+  padding: 3rem 1.5rem;
+  width: 100%;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-message {
+  animation: heroMessageIn 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroMessageIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-title {
+  margin: 0.75rem 0 1.25rem;
+  color: #fdf8ef;
+}
+
+.hero-subtitle {
+  max-width: 620px;
+  margin: 0 0 2rem;
+  color: rgba(253, 248, 239, 0.85);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.85rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.btn--primary {
+  background: var(--primary-color);
+  color: var(--color-white);
+}
+
+.btn--primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn--outline {
+  border-color: rgba(253, 248, 239, 0.6);
+  color: #fdf8ef;
+}
+
+.btn--outline:hover {
+  background: rgba(253, 248, 239, 0.1);
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--primary-color);
+}
+
+.eyebrow--light {
+  color: var(--primary-light);
+}
+
+/* Home sections below the slideshow */
+.home-sections-below {
+  padding-top: 3rem;
 }
 </style>

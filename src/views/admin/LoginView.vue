@@ -191,8 +191,10 @@ const handleLogin = async () => {
     // If your app later adds a route guard, it can pass through redirect automatically.
     await router.push(redirectPath.value)
   } catch (err) {
-    const message = (err as Error)?.message ?? 'Login failed'
-    errorMessage.value = `${message} Use admin@gmail.com / password123 for local admin access.`
+    const message = (err as Error)?.message ?? ''
+    errorMessage.value = message.includes('admin access')
+      ? 'This account does not have permission to access the admin panel.'
+      : 'Email or password is incorrect.'
   } finally {
     loading.value = false
   }
@@ -215,8 +217,8 @@ const handlePasswordReset = async () => {
     })
     if (error) throw error
     successMessage.value = 'Password reset email sent. Check your inbox.'
-  } catch (err) {
-    errorMessage.value = (err as Error)?.message ?? 'Could not send password reset email.'
+  } catch {
+    errorMessage.value = 'Could not send password reset email. Please try again later.'
   } finally {
     loading.value = false
   }

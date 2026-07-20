@@ -103,37 +103,8 @@ onMounted(() => {
   geoRefs.value.forEach((el) => observe(el))
   observe(ctaRef.value)
 
-  // Add interactive tilt to the photo frame (subtle mousemove parallax)
-  const frame = photoFrameRef.value
-  const inner = photoInnerRef.value
-  let onMove: (e: PointerEvent) => void
-  let onLeave: (e: PointerEvent) => void
-  if (frame && inner) {
-    onMove = (e: PointerEvent) => {
-      const rect = frame.getBoundingClientRect()
-      const x = (e.clientX - rect.left) / rect.width - 0.5
-      const y = (e.clientY - rect.top) / rect.height - 0.5
-      const rotateX = (-y) * 6
-      const rotateY = x * 6
-      const scale = 1.03
-      inner.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`
-      inner.style.transition = 'transform 120ms linear'
-    }
-
-    onLeave = () => {
-      inner.style.transform = ''
-      inner.style.transition = ''
-    }
-
-    frame.addEventListener('pointermove', onMove)
-    frame.addEventListener('pointerleave', onLeave)
-  }
-
   onUnmounted(() => {
-    if (frame && onMove && onLeave) {
-      frame.removeEventListener('pointermove', onMove)
-      frame.removeEventListener('pointerleave', onLeave)
-    }
+    // no hover animation cleanup needed because photo hover interactivity has been removed
   })
 })
 
@@ -776,16 +747,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border-radius: 0.9rem;
   overflow: hidden;
   transition:
-    transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.4s ease;
   will-change: transform;
-}
-
-.photo-frame:hover .photo-inner {
-  transform: scale(1.04) translateY(-8px);
-  box-shadow:
-    0 20px 60px rgba(15, 143, 105, 0.15),
-    0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 /* ── Image — Ken Burns continuous slow zoom ── */
@@ -796,7 +759,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   /* show the full image (no cropping); if you prefer fill, change to 'cover' */
   object-fit: contain;
   transform-origin: center 45%;
-  animation: kenBurns 22s ease-in-out infinite alternate;
+  animation: none !important;
 }
 
 @keyframes kenBurns {
@@ -821,7 +784,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
       rgba(255, 255, 255, 0.15) 50%,
       transparent 65%);
   transform: translateX(-100%);
-  animation: sweepReveal 1.2s cubic-bezier(0.65, 0, 0.35, 1) 0.4s forwards;
+  display: none;
+  animation: none !important;
 }
 
 @keyframes sweepReveal {
@@ -851,11 +815,6 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   transition:
     background 0.3s ease,
     border-color 0.3s ease;
-}
-
-.photo-frame:hover .photo-caption {
-  background: color-mix(in srgb, var(--about-highlight) 6%, var(--about-cream));
-  border-color: color-mix(in srgb, var(--about-highlight) 20%, transparent);
 }
 
 @keyframes captionFadeIn {
@@ -1041,7 +1000,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border-radius: 50%;
   filter: blur(80px);
   opacity: 0.12;
-  animation: vmgFloat 12s ease-in-out infinite alternate;
+  animation: none !important;
 }
 
 .vmg-bg-c1 {
@@ -1721,7 +1680,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   transition: opacity 0.5s ease;
   z-index: 0;
   pointer-events: none;
-  animation: geoSpin 3s linear infinite;
+  animation: none !important;
 }
 
 @keyframes geoSpin {
@@ -1790,7 +1749,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border-radius: 50%;
   border: 2px solid var(--province-accent);
   opacity: 0;
-  animation: geoPulse 2.5s ease-out infinite;
+  animation: none !important;
   animation-delay: calc(var(--pulse-delay, 0) * 0.4s);
 }
 

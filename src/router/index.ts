@@ -19,17 +19,29 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (to.meta.requiresAuth) {
+  const isAuthRoute = to.name === 'admin-login'
+
+  if (to.meta.requiresAuth || isAuthRoute) {
     const auth = useAuthStore()
     if (!auth.initialized) {
       await auth.init()
     }
-    if (!auth.isAuthenticated) {
-      return { name: 'admin-login', query: { redirect: to.fullPath } }
-    }
-    // Signed in but not an admin: no access to the admin area.
-    if (!auth.isAdmin) {
-      return { path: '/' }
+
+    if (isAuthRoute) {
+      if (auth.isAuthenticated) {
+        if (auth.isAdmin) {
+          return { path: '/admin' }
+        }
+        return { path: '/' }
+      }
+    } else if (to.meta.requiresAuth) {
+      if (!auth.isAuthenticated) {
+        return { name: 'admin-login', query: { redirect: to.fullPath } }
+      }
+      // Signed in but not an admin: no access to the admin area.
+      if (!auth.isAdmin) {
+        return { path: '/' }
+      }
     }
   }
 })
