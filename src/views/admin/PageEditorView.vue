@@ -1043,6 +1043,25 @@ function serializeBody(page: PageDraft) {
   return JSON.stringify(pageBody(page), null, 2)
 }
 
+function sortOrderForPage(page: PageDraft) {
+  const index = defaultPages.findIndex((item) => item.slug === page.slug)
+  return index === -1 ? 0 : index + 1
+}
+
+function ctaUrlForPage(page: PageDraft, actionIndex: 0 | 1) {
+  const label = actionIndex === 0 ? page.primaryAction : page.secondaryAction
+  if (!label.trim()) return null
+
+  if (actionIndex === 1) {
+    return page.group === 'Get Involved' ? '/get-involved' : '/'
+  }
+
+  if (page.group === 'Programs') return '/programs'
+  if (page.group === 'Get Involved') return '/get-involved'
+  if (page.slug === 'qr-donate') return '/qr-donate'
+  return '/contact'
+}
+
 function isDirty(slug: string) {
   const page = drafts.value.find((item) => item.slug === slug)
   if (!page) return false
@@ -1163,6 +1182,22 @@ async function persistPage(page: PageDraft): Promise<PageDraft> {
     slug: page.slug,
     title: page.title.trim() || page.headline.trim() || page.slug,
     body: serializeBody(page),
+    route_path: page.route,
+    nav_group: page.group,
+    locale: 'en',
+    template: page.route === 'global' ? 'global' : 'standard',
+    status: 'published',
+    hero_eyebrow: page.eyebrow.trim() || null,
+    hero_headline: page.headline.trim() || null,
+    hero_intro: page.intro.trim() || null,
+    primary_cta_label: page.primaryAction.trim() || null,
+    primary_cta_url: ctaUrlForPage(page, 0),
+    secondary_cta_label: page.secondaryAction.trim() || null,
+    secondary_cta_url: ctaUrlForPage(page, 1),
+    seo_title: page.title.trim() || page.headline.trim() || page.slug,
+    seo_description: page.intro.trim() || null,
+    sort_order: sortOrderForPage(page),
+    published_at: savedAt,
     updated_at: savedAt,
   }
 
@@ -1251,6 +1286,11 @@ function moveSection(index: number, direction: -1 | 1) {
   if (!current || !next) return
   sections[index] = next
   sections[target] = current
+}
+
+function setActiveSectionFromToggle(event: Event, index: number) {
+  const details = event.currentTarget instanceof HTMLDetailsElement ? event.currentTarget : null
+  activeSectionIndex.value = details?.open ? index : null
 }
 
 function resetCurrentToDefault() {
@@ -1522,7 +1562,7 @@ function formatDate(value: string) {
                       class="section-block"
                       :class="{ 'section-active': activeSectionIndex === index }"
                     >
-                      <details open @toggle="activeSectionIndex = $event.target.open ? index : null">
+                      <details open @toggle="setActiveSectionFromToggle($event, index)">
                         <summary class="section-summary">
                           <div class="summary-drag">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
