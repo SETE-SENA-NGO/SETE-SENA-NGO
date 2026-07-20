@@ -86,7 +86,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     await supabase.auth.signOut()
-    localStorage.removeItem(localSessionKey)
     user.value = null
     profile.value = null
   }

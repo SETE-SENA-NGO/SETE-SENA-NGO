@@ -96,7 +96,14 @@ export const useMediaStore = defineStore('media', () => {
       const item = toMediaItem(data as MediaAssetRow)
       items.value = [item, ...items.value.filter((existing) => existing.id !== item.id)]
 
+      if (!response.ok || !payload?.media) {
+        throw new Error(payload?.error || 'Could not upload image to Google Drive.')
+      }
+
+      const item = toMediaItem(payload.media)
+      items.value = [item, ...items.value.filter((existing) => existing.id !== item.id)]
       progress.value = 100
+      return item
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Could not save image URL'
       throw e

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import { imageUrls } from '@/lib/imageUrls'
@@ -78,17 +78,62 @@ const visitNotes = [
   'Village visits should be arranged through the head office two weeks in advance.',
 ]
 
+const contactMethods = [
+  {
+    id: 'email',
+    tab: 'Email',
+    type: 'Contact form',
+    heading: 'Email to Us',
+    fieldLabel: 'Email',
+    inputType: 'email',
+    autocomplete: 'email',
+    placeholder: 'name@example.com',
+    buttonLabel: 'Send message',
+    sentLabel: 'Message ready',
+    status: 'Thank you. Your message is ready for our team.',
+  },
+  {
+    id: 'telegram',
+    tab: 'Telegram',
+    type: 'Quick chat',
+    heading: 'Telegram to Us',
+    fieldLabel: 'Telegram',
+    inputType: 'text',
+    autocomplete: 'off',
+    placeholder: '@yourtelegram',
+    buttonLabel: 'Send via Telegram',
+    sentLabel: 'Telegram ready',
+    status: 'Thank you. Your Telegram contact is ready for our team.',
+  },
+] as const
+
+const telegramContact = {
+  qrImage: '/images/contact/telegram-qr.jpg',
+  url: 'https://t.me/sannta_close',
+}
+
 const name = ref('')
-const email = ref('')
+const contactDetail = ref('')
 const subject = ref('')
 const message = ref('')
 const formSent = ref(false)
+const contactFormBarsVisible = ref(false)
+const contactFormMotionActive = ref(false)
 const messageMaxLength = 600
+let contactFormMotionFrame: number | undefined
+let contactFormMotionTimer: number | undefined
 
 const activeOfficeId = ref<(typeof offices)[number]['id']>('all')
+const activeContactMethodId = ref<(typeof contactMethods)[number]['id']>('email')
 const activeOffice = computed(
   () => offices.find((office) => office.id === activeOfficeId.value) ?? offices[0],
 )
+const activeContactMethod = computed(
+  () =>
+    contactMethods.find((contactMethod) => contactMethod.id === activeContactMethodId.value) ??
+    contactMethods[0],
+)
+const isTelegramMethod = computed(() => activeContactMethodId.value === 'telegram')
 const mapOfficeHotspots = computed(() =>
   offices.filter(
     (office): office is Extract<(typeof offices)[number], { countryPinLeft: string }> =>
@@ -96,13 +141,47 @@ const mapOfficeHotspots = computed(() =>
   ),
 )
 const canSubmit = computed(() =>
-  Boolean(name.value.trim() && email.value.trim() && message.value.trim()),
+  !isTelegramMethod.value &&
+  Boolean(name.value.trim() && contactDetail.value.trim() && message.value.trim()),
 )
 
 useScrollReveal()
 
 function selectOffice(officeId: (typeof offices)[number]['id']) {
   activeOfficeId.value = officeId
+}
+
+function selectContactMethod(contactMethodId: (typeof contactMethods)[number]['id']) {
+  if (activeContactMethodId.value === contactMethodId) return
+
+  activeContactMethodId.value = contactMethodId
+  contactDetail.value = ''
+  formSent.value = false
+  triggerContactFormMotion()
+}
+
+function triggerContactFormMotion() {
+  contactFormBarsVisible.value = true
+
+  if (contactFormMotionFrame !== undefined) {
+    window.cancelAnimationFrame(contactFormMotionFrame)
+  }
+  if (contactFormMotionTimer !== undefined) {
+    window.clearTimeout(contactFormMotionTimer)
+  }
+
+  contactFormMotionActive.value = false
+
+  contactFormMotionFrame = window.requestAnimationFrame(() => {
+    contactFormMotionFrame = window.requestAnimationFrame(() => {
+      contactFormMotionActive.value = true
+      contactFormMotionFrame = undefined
+      contactFormMotionTimer = window.setTimeout(() => {
+        contactFormMotionActive.value = false
+        contactFormMotionTimer = undefined
+      }, 720)
+    })
+  })
 }
 
 function submitContact() {
@@ -112,6 +191,15 @@ function submitContact() {
 
 onMounted(() => {
   document.title = 'Contact Santi Sena'
+})
+
+onUnmounted(() => {
+  if (contactFormMotionFrame !== undefined) {
+    window.cancelAnimationFrame(contactFormMotionFrame)
+  }
+  if (contactFormMotionTimer !== undefined) {
+    window.clearTimeout(contactFormMotionTimer)
+  }
 })
 </script>
 
@@ -485,8 +573,30 @@ onMounted(() => {
       </article>
     </section>
 
-    <section id="write" class="contact-form-section" aria-labelledby="form-heading">
-      <div class="contact-form-intro reveal">
+    <section id="write" class="contact-form-section reveal" aria-labelledby="form-heading">
+      <div
+        class="contact-method-section reveal"
+        style="animation-delay: 0.04s"
+        aria-label="Choose how to contact us"
+      >
+        <div class="contact-method-tabs" role="radiogroup" aria-label="Contact method">
+          <button
+            v-for="contactMethod in contactMethods"
+            :key="contactMethod.id"
+            type="button"
+            role="radio"
+            :aria-checked="activeContactMethodId === contactMethod.id"
+            class="contact-method-tab"
+            :class="{ 'contact-method-tab--active': activeContactMethodId === contactMethod.id }"
+            @click="selectContactMethod(contactMethod.id)"
+          >
+            <span class="contact-method-tab__label">{{ contactMethod.tab }}</span>
+            <span class="contact-method-tab__meta">{{ contactMethod.type }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="contact-form-intro reveal" style="animation-delay: 0.12s">
         <p class="section-kicker">Write to us</p>
         <h2 id="form-heading">Send a message to our team</h2>
         <p>
@@ -499,86 +609,112 @@ onMounted(() => {
       </div>
 
       <form
-        class="contact-form reveal"
-        style="animation-delay: 0.14s"
+        class="contact-form"
+        :class="{
+          'contact-form--bars-visible': contactFormBarsVisible,
+          'contact-form--method-motion': contactFormMotionActive,
+        }"
+        style="animation-delay: 0.2s"
         @submit.prevent="submitContact"
       >
         <p class="form-kicker">Contact form</p>
-        <p class="form-heading">Email to Us</p>
+        <p class="form-heading">{{ activeContactMethod.heading }}</p>
 
-        <div class="form-row">
-          <label class="form-field">
-            <span class="field-topline">
-              <span class="field-label">Name</span>
-              <span class="field-required">Required</span>
-            </span>
-            <span class="field-control">
-              <input
-                v-model="name"
-                required
-                autocomplete="name"
-                type="text"
-                placeholder="Your full name"
-              />
-            </span>
-          </label>
-
-          <label class="form-field">
-            <span class="field-topline">
-              <span class="field-label">Email</span>
-              <span class="field-required">Required</span>
-            </span>
-            <span class="field-control">
-              <input
-                v-model="email"
-                required
-                autocomplete="email"
-                type="email"
-                placeholder="name@example.com"
-              />
-            </span>
-          </label>
-        </div>
-
-        <label class="form-field">
-          <span class="field-topline">
-            <span class="field-label">Subject</span>
-            <span class="field-optional">Optional</span>
-          </span>
-          <span class="field-control">
-            <input
-              v-model="subject"
-              autocomplete="off"
-              type="text"
-              placeholder="What would you like to discuss?"
+        <div v-if="isTelegramMethod" class="telegram-contact-panel">
+          <figure class="telegram-qr-figure">
+            <img
+              class="telegram-qr-image"
+              :src="telegramContact.qrImage"
+              alt="Telegram QR code for Santi Sena"
+              loading="lazy"
             />
-          </span>
-        </label>
-
-        <label class="form-field form-field--message">
-          <span class="field-topline">
-            <span class="field-label">Message</span>
-            <span class="field-count">{{ message.length }}/{{ messageMaxLength }}</span>
-          </span>
-          <span class="field-control">
-            <textarea
-              v-model="message"
-              required
-              rows="5"
-              :maxlength="messageMaxLength"
-              placeholder="Share a few details so the right team can reply."
-            ></textarea>
-          </span>
-        </label>
-
-        <div class="form-actions">
-          <button type="submit" class="form-submit" :disabled="!canSubmit">
-            {{ formSent ? 'Message ready' : 'Send message' }}
-          </button>
-          <p v-if="formSent" class="form-status" role="status">
-            Thank you. Your message is ready for our team.
-          </p>
+          </figure>
+          <a
+            class="form-submit telegram-open-button"
+            :href="telegramContact.url"
+            target="_blank"
+            rel="noopener"
+          >
+            Open Telegram
+          </a>
         </div>
+
+        <template v-else>
+          <div class="form-row">
+            <label class="form-field">
+              <span class="field-topline">
+                <span class="field-label">Name</span>
+                <span class="field-required">Required</span>
+              </span>
+              <span class="field-control">
+                <input
+                  v-model="name"
+                  required
+                  autocomplete="name"
+                  type="text"
+                  placeholder="Your full name"
+                />
+              </span>
+            </label>
+
+            <label class="form-field">
+              <span class="field-topline">
+                <span class="field-label">{{ activeContactMethod.fieldLabel }}</span>
+                <span class="field-required">Required</span>
+              </span>
+              <span class="field-control">
+                <input
+                  :key="activeContactMethod.id"
+                  v-model="contactDetail"
+                  required
+                  :autocomplete="activeContactMethod.autocomplete"
+                  :type="activeContactMethod.inputType"
+                  :placeholder="activeContactMethod.placeholder"
+                />
+              </span>
+            </label>
+          </div>
+
+          <label class="form-field">
+            <span class="field-topline">
+              <span class="field-label">Subject</span>
+              <span class="field-optional">Optional</span>
+            </span>
+            <span class="field-control">
+              <input
+                v-model="subject"
+                autocomplete="off"
+                type="text"
+                placeholder="What would you like to discuss?"
+              />
+            </span>
+          </label>
+
+          <label class="form-field form-field--message">
+            <span class="field-topline">
+              <span class="field-label">Message</span>
+              <span class="field-count">{{ message.length }}/{{ messageMaxLength }}</span>
+            </span>
+            <span class="field-control">
+              <textarea
+                v-model="message"
+                required
+                rows="5"
+                :maxlength="messageMaxLength"
+                placeholder="Share a few details so the right team can reply."
+              ></textarea>
+            </span>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" class="form-submit" :disabled="!canSubmit">
+              {{ formSent ? activeContactMethod.sentLabel : activeContactMethod.buttonLabel }}
+            </button>
+            <p v-if="formSent" class="form-status" role="status">
+              {{ activeContactMethod.status }}
+            </p>
+          </div>
+        </template>
       </form>
     </section>
 
@@ -1340,6 +1476,12 @@ onMounted(() => {
   padding: clamp(3rem, 6vw, 4.5rem) var(--container-padding);
 }
 
+.contact-method-section {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding-bottom: clamp(0.5rem, 1.8vw, 1rem);
+}
+
 .contact-form-intro {
   max-width: 420px;
 }
@@ -1390,44 +1532,120 @@ onMounted(() => {
 .contact-form::before,
 .contact-form::after {
   position: absolute;
+  top: 0;
   left: 0;
+  width: 0;
   height: 5px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
   content: '';
+  opacity: 0;
   pointer-events: none;
-  transition:
-    /* top 0.32s ease, */
-    left 0.5s ease,
-    /* width 0.32s ease, */ /* height 0.32s ease, */ background 0.2s ease;
 }
 
-/* .contact-form::before {
-  top: 0;
-  width: 100%;
-} */
-/*
-.contact-form::after {
-  top: calc(100% - 5px);
-  width: 100%;
-} */
 
-.contact-form:hover::before,
-.contact-form:focus-within::before {
+.contact-form--bars-visible::before,
+.contact-form--method-motion::before {
   top: 0;
   left: calc(100% - 6px);
   width: 6px;
   height: 100%;
   background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  opacity: 1;
 }
 
-.contact-form:hover::after,
-.contact-form:focus-within::after {
+.contact-form--bars-visible::after,
+.contact-form--method-motion::after {
   top: 0;
   left: 0;
   width: 5px;
   height: 100%;
   background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  opacity: 1;
+}
+
+.contact-form--method-motion::before {
+  animation: contactFormRightBar 0.72s ease both;
+}
+
+.contact-form--method-motion::after {
+  animation: contactFormLeftBar 0.72s ease both;
+}
+
+@keyframes contactFormRightBar {
+  0% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  45% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  65% {
+    top: calc(100% - 5px);
+    left: calc(100% - 6px);
+    width: 6px;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  100% {
+    top: 0;
+    left: calc(100% - 6px);
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+}
+
+@keyframes contactFormLeftBar {
+  0% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  45% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  65% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 5px;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  100% {
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
 }
 
 .form-kicker {
@@ -1446,6 +1664,124 @@ onMounted(() => {
   font-size: clamp(1.25rem, 2.2vw, 1.65rem);
   font-weight: 800;
   line-height: 1.15;
+}
+
+.contact-method-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(232, 228, 223, 0.96);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.contact-method-tab {
+  position: relative;
+  display: grid;
+  min-height: 68px;
+  align-content: center;
+  gap: 0.08rem;
+  padding: 0.5rem 0.65rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.contact-method-tab::after {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.38rem;
+  left: 0.7rem;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--primary-color);
+  opacity: 0;
+  content: '';
+}
+
+.contact-method-tab__label,
+.contact-method-tab__meta {
+  position: relative;
+  z-index: 1;
+}
+
+.contact-method-tab__label {
+  overflow-wrap: anywhere;
+}
+
+.contact-method-tab__meta {
+  color: var(--color-ink-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.contact-method-tab:hover,
+.contact-method-tab--active {
+  color: var(--primary-dark);
+}
+
+.contact-method-tab:hover {
+  background: rgba(230, 246, 236, 0.74);
+}
+
+.contact-method-tab--active {
+  border-color: rgba(20, 129, 62, 0.28);
+  background: linear-gradient(180deg, rgba(230, 246, 236, 0.98), rgba(255, 250, 242, 0.94));
+  box-shadow:
+    0 10px 22px rgba(20, 129, 62, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.contact-method-tab--active .contact-method-tab__label,
+.contact-method-tab--active .contact-method-tab__meta {
+  color: var(--primary-dark);
+}
+
+.contact-method-tab--active::after {
+  opacity: 1;
+}
+
+.telegram-contact-panel {
+  display: grid;
+  justify-items: center;
+  gap: 2.5rem;
+  padding: clamp(2.5rem, 2vw, 2rem) 0 0.25rem;
+}
+
+.telegram-qr-figure {
+  width: min(100%, 280px);
+  margin: 0;
+}
+
+.telegram-qr-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border: 1px solid rgba(20, 129, 62, 0.18);
+  border-radius: 8px;
+  background: var(--color-white);
+  padding: 0.7rem;
+  box-shadow: 0 16px 34px rgba(43, 43, 40, 0.08);
+}
+
+.telegram-open-button {
+  min-width: 190px;
+  text-decoration: none;
 }
 
 .form-row {
@@ -1844,6 +2180,14 @@ onMounted(() => {
   .office-panel__header {
     flex-direction: column;
     gap: 0.55rem;
+  }
+
+  .contact-method-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-method-tab {
+    min-height: 50px;
   }
 
   .form-submit,

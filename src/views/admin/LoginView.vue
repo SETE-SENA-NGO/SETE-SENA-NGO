@@ -212,8 +212,8 @@ const handlePasswordReset = async () => {
     })
     if (error) throw error
     successMessage.value = 'Password reset email sent. Check your inbox.'
-  } catch (err) {
-    errorMessage.value = (err as Error)?.message ?? 'Could not send password reset email.'
+  } catch {
+    errorMessage.value = 'Could not send password reset email. Please try again later.'
   } finally {
     loading.value = false
   }

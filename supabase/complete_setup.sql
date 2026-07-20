@@ -5,8 +5,10 @@
 
 -- Step 1: Create the admin user in Supabase Auth FIRST
 -- Go to: Authentication > Users > Add User
---   Email: admin@gmail.com
---   Password: password123
+--   Email: your real admin email
+--   Password: a strong unique password
+--
+-- Replace replace-with-your-admin-email@example.org below with that admin email.
 --
 -- After creating that user, run everything below:
 
@@ -57,7 +59,7 @@ CREATE POLICY "Admins can upsert profiles"
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('super_admin', 'admin'))
   );
 
--- Step 3: Grant admin@gmail.com the super_admin role
+-- Step 3: Grant your admin user the super_admin role
 INSERT INTO public.profiles (id, email, role, full_name)
 SELECT
   id,
@@ -65,7 +67,7 @@ SELECT
   'super_admin',
   'Admin'
 FROM auth.users
-WHERE LOWER(email) = LOWER('admin@gmail.com')
+WHERE LOWER(email) = LOWER('replace-with-your-admin-email@example.org')
 ON CONFLICT (id) DO UPDATE
 SET
   email = EXCLUDED.email,
@@ -76,4 +78,4 @@ SET
 -- Step 4: Verify the result
 SELECT id, email, role, full_name, created_at
 FROM public.profiles
-WHERE LOWER(email) = LOWER('admin@gmail.com');
+WHERE LOWER(email) = LOWER('replace-with-your-admin-email@example.org');
