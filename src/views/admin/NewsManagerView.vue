@@ -3,6 +3,7 @@ import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { supabase } from '@/lib/supabase'
+import { newsPostSelect, slugify, type NewsPostRow } from '@/lib/newsContent'
 import { onMounted, ref, computed } from 'vue'
 
 type RecordStatus = 'Published' | 'Draft' | 'Archived'
@@ -35,7 +36,7 @@ const config: NewsManagerConfig = {
   eyebrow: 'Publishing',
   description: 'Create, publish and manage public news stories.',
   newLabel: 'New news',
-  categories: ['Announcement', 'Field Update', 'Press', 'Story'],
+  categories: ['Education', 'Environment', 'Child Protection', 'Livelihood', 'WASH'],
 }
 
 const ui = useUiStore()
@@ -68,6 +69,71 @@ function initials(value: string) {
     .join('')
     .slice(0, 2)
     .toUpperCase()
+}
+
+function toDbStatus(status: RecordStatus) {
+  return status.toLowerCase() as 'published' | 'draft' | 'archived'
+}
+
+function toRecordStatus(status: string | null | undefined): RecordStatus {
+  if (status === 'published') return 'Published'
+  if (status === 'archived') return 'Archived'
+  return 'Draft'
+}
+
+function categoryName(value: NewsPostRow['news_categories']) {
+  if (Array.isArray(value)) return value[0]?.name ?? config.categories[0] ?? 'News'
+  return value?.name ?? config.categories[0] ?? 'News'
+}
+
+function imageUrlFromMetadata(metadata: NewsPostRow['metadata']) {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return ''
+  const imageUrl = metadata.image_url
+  const imagePath = metadata.image_path
+  return typeof imageUrl === 'string'
+    ? imageUrl
+    : typeof imagePath === 'string'
+      ? imagePath
+      : ''
+}
+
+function rowToRecord(row: NewsPostRow): NewsRecord {
+  const title = String(row.title ?? '')
+  return {
+    id: String(row.id),
+    title,
+    status: toRecordStatus(row.status),
+    author: String(row.author_name ?? 'Santi Sena Communications Team'),
+    category: categoryName(row.news_categories),
+    updatedAt: String(row.updated_at ?? row.published_at ?? new Date().toISOString()),
+    thumbnail: initials(title),
+    summary: String(row.excerpt ?? ''),
+    content: String(row.body ?? ''),
+    image_url: imageUrlFromMetadata(row.metadata),
+  }
+}
+
+async function ensureCategoryId(name: string) {
+  const cleanName = name.trim() || config.categories[0] || 'News'
+  const slug = slugify(cleanName)
+
+  const { data: existing, error: existingError } = await supabase
+    .from('news_categories')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (existingError) throw existingError
+  if (existing?.id) return String(existing.id)
+
+  const { data, error } = await supabase
+    .from('news_categories')
+    .insert({ slug, name: cleanName, is_visible: true })
+    .select('id')
+    .single()
+
+  if (error) throw error
+  return String(data.id)
 }
 
 function formatDate(value: string) {
@@ -190,76 +256,45 @@ async function saveRecord() {
   }
 
   try {
-    // If you already have a real `news` table, update this mapping accordingly.
-    // Current implementation expects columns:
-    // id (uuid/text), title, status, author, category, summary, updated_at,
-    // and optional content/image_url.
+    const savedAt = payload.updatedAt ?? new Date().toISOString()
+    const categoryId = await ensureCategoryId(form.value.category)
+    const dbStatus = toDbStatus(form.value.status)
+    const rowPayload = {
+      title: payload.title,
+      slug: slugify(title),
+      category_id: categoryId,
+      excerpt: payload.summary,
+      body: form.value.content,
+      status: dbStatus,
+      author_name: payload.author,
+      read_time: '3 min read',
+      published_at: dbStatus === 'published' ? savedAt : null,
+      metadata: { image_url: form.value.image_url },
+      updated_at: savedAt,
+    }
+
     if (editingId.value) {
       const { data, error } = await supabase
-        .from('news')
-        .update({
-          title: payload.title,
-          category: payload.category,
-          status: payload.status,
-          author: payload.author,
-          summary: payload.summary,
-          content: form.value.content,
-          image_url: form.value.image_url,
-          updated_at: payload.updatedAt,
-        })
+        .from('news_posts')
+        .update(rowPayload)
         .eq('id', editingId.value)
-        .select('*')
+        .select(newsPostSelect)
         .single()
 
       if (error) throw error
-      const row = data as any
-      const saved: NewsRecord = {
-        id: String(row.id),
-        title: String(row.title ?? ''),
-        category: String(row.category ?? ''),
-        status: (row.status ?? 'Draft') as RecordStatus,
-        author: String(row.author ?? 'Admin'),
-        summary: String(row.summary ?? ''),
-        updatedAt: String(row.updated_at ?? payload.updatedAt),
-        thumbnail: initials(String(row.title ?? title)),
-        content: typeof row.content === 'string' ? row.content : undefined,
-        image_url: typeof row.image_url === 'string' ? row.image_url : undefined,
-      }
+      const saved = rowToRecord(data as NewsPostRow)
 
       records.value = records.value.map((r) => (r.id === editingId.value ? saved : r))
       ui.addToast(`${saved.title} saved.`, 'success')
     } else {
-      const newId = `news-${Date.now()}`
       const { data, error } = await supabase
-        .from('news')
-        .insert({
-          id: newId,
-          title: payload.title,
-          category: payload.category,
-          status: payload.status,
-          author: payload.author,
-          summary: payload.summary,
-          content: form.value.content,
-          image_url: form.value.image_url,
-          updated_at: payload.updatedAt,
-        })
-        .select('*')
+        .from('news_posts')
+        .insert(rowPayload)
+        .select(newsPostSelect)
         .single()
 
       if (error) throw error
-      const row = data as any
-      const saved: NewsRecord = {
-        id: String(row.id ?? newId),
-        title: String(row.title ?? ''),
-        category: String(row.category ?? ''),
-        status: (row.status ?? 'Draft') as RecordStatus,
-        author: String(row.author ?? 'Admin'),
-        summary: String(row.summary ?? ''),
-        updatedAt: String(row.updated_at ?? payload.updatedAt),
-        thumbnail: initials(String(row.title ?? title)),
-        content: typeof row.content === 'string' ? row.content : undefined,
-        image_url: typeof row.image_url === 'string' ? row.image_url : undefined,
-      }
+      const saved = rowToRecord(data as NewsPostRow)
 
       records.value = [saved, ...records.value]
       ui.addToast(`${saved.title} saved.`, 'success')
@@ -272,40 +307,54 @@ async function saveRecord() {
   }
 }
 
-function duplicateRecord(record: NewsRecord) {
-  const copy: NewsRecord = {
-    ...record,
-    id: `${record.id}-copy-${Date.now()}`,
-    title: `${record.title} copy`,
-    status: 'Draft',
-    updatedAt: new Date().toISOString(),
-    thumbnail: initials(`${record.title} copy`),
-    // content/image_url left as-is
-  }
+async function duplicateRecord(record: NewsRecord) {
+  try {
+    const title = `${record.title} copy`
+    const categoryId = await ensureCategoryId(record.category)
+    const { data, error } = await supabase
+      .from('news_posts')
+      .insert({
+        title,
+        slug: `${slugify(title)}-${Date.now()}`,
+        category_id: categoryId,
+        excerpt: record.summary,
+        body: record.content ?? '',
+        status: 'draft',
+        author_name: record.author,
+        read_time: '3 min read',
+        metadata: { image_url: record.image_url ?? '' },
+      })
+      .select(newsPostSelect)
+      .single()
 
-  records.value = [copy, ...records.value]
-  ui.addToast('Record duplicated as draft.', 'info')
+    if (error) throw error
+
+    records.value = [rowToRecord(data as NewsPostRow), ...records.value]
+    ui.addToast('Record duplicated as draft.', 'info')
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Could not duplicate news.'
+    ui.addToast(msg, 'error')
+  }
 }
 
 async function togglePublish(record: NewsRecord) {
   const nextStatus: RecordStatus = record.status === 'Published' ? 'Draft' : 'Published'
   try {
+    const savedAt = new Date().toISOString()
     const { data, error } = await supabase
-      .from('news')
-      .update({ status: nextStatus, updated_at: new Date().toISOString() })
+      .from('news_posts')
+      .update({
+        status: toDbStatus(nextStatus),
+        published_at: nextStatus === 'Published' ? savedAt : null,
+        updated_at: savedAt,
+      })
       .eq('id', record.id)
-      .select('*')
+      .select(newsPostSelect)
       .single()
 
     if (error) throw error
 
-    const row = data as any
-    const updated: NewsRecord = {
-      ...record,
-      status: nextStatus,
-      updatedAt: String(row.updated_at ?? new Date().toISOString()),
-      thumbnail: initials(String(row.title ?? record.title)),
-    }
+    const updated = rowToRecord(data as NewsPostRow)
 
     records.value = records.value.map((r) => (r.id === record.id ? updated : r))
     ui.addToast(`${record.title} marked ${nextStatus.toLowerCase()}.`, 'success')
@@ -318,7 +367,7 @@ async function togglePublish(record: NewsRecord) {
 function confirmDelete(record: NewsRecord) {
   ui.openModal('Delete content?', `Delete "${record.title}" from News?`, async () => {
     try {
-      const { error } = await supabase.from('news').delete().eq('id', record.id)
+      const { error } = await supabase.from('news_posts').delete().eq('id', record.id)
       if (error) throw error
 
       records.value = records.value.filter((item) => item.id !== record.id)
@@ -335,13 +384,18 @@ async function bulkStatus(status: RecordStatus) {
   if (!selectedIds.value.length) return
 
   try {
-    // Bulk update strategy: iterate (safe, simple)
+    // Bulk update strategy: iterate so every row gets a clean publish timestamp.
     const ids = [...selectedIds.value]
+    const savedAt = new Date().toISOString()
     await Promise.all(
       ids.map(async (id) => {
         const { error } = await supabase
-          .from('news')
-          .update({ status, updated_at: new Date().toISOString() })
+          .from('news_posts')
+          .update({
+            status: toDbStatus(status),
+            published_at: status === 'Published' ? savedAt : null,
+            updated_at: savedAt,
+          })
           .eq('id', id)
         if (error) throw error
       }),
@@ -378,7 +432,7 @@ function bulkDelete() {
     async () => {
       try {
         const ids = [...selectedIds.value]
-        const { error } = await supabase.from('news').delete().in('id', ids)
+        const { error } = await supabase.from('news_posts').delete().in('id', ids)
         if (error) throw error
 
         const set = new Set(ids)
@@ -396,34 +450,16 @@ function bulkDelete() {
 async function loadNews() {
   try {
     const { data, error } = await supabase
-      .from('news')
-      .select('id,title,status,author,category,updated_at,summary,content,image_url')
+      .from('news_posts')
+      .select(newsPostSelect)
       .order('updated_at', { ascending: false })
 
     if (error) throw error
 
-    const rows = (data ?? []) as any[]
-    records.value = rows.map((row) => {
-      const title = String(row.title ?? '')
-      return {
-        id: String(row.id),
-        title,
-        status: (row.status ?? 'Draft') as RecordStatus,
-        author: String(row.author ?? 'Admin'),
-        category: String(row.category ?? ''),
-        updatedAt: String(row.updated_at ?? new Date().toISOString()),
-        thumbnail: initials(title),
-        summary: String(row.summary ?? ''),
-        content: typeof row.content === 'string' ? row.content : undefined,
-        image_url: typeof row.image_url === 'string' ? row.image_url : undefined,
-      } as NewsRecord
-    })
+    records.value = ((data ?? []) as NewsPostRow[]).map(rowToRecord)
   } catch (e) {
-    // keep UI usable even if table doesn't exist yet
     const msg = e instanceof Error ? e.message : 'Could not load news.'
     ui.addToast(msg, 'error')
-
-    // fallback empty
     records.value = []
   }
 }
@@ -991,5 +1027,3 @@ td small {
   }
 }
 </style>
-
-
