@@ -1,6 +1,5 @@
 <template>
   <div class="partners-page">
-
     <!-- Partners Carousel Section -->
     <section class="section partners-section">
       <div class="container">
@@ -196,6 +195,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import Slideshow from '@/components/shared/Slideshow.vue'
 
 // Partner data
 const partners = [
@@ -397,12 +397,12 @@ onUnmounted(() => {
 }
 
 .section {
-  padding: 5rem 0;
+  padding: 4rem 0;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 3.5rem;
+  margin-bottom: 2.5rem;
 }
 
 .section-label {
@@ -770,7 +770,7 @@ onUnmounted(() => {
    CTA Section
    ===================== */
 .cta-section {
-  padding: 5rem 0;
+  padding: 4rem 0;
   background: var(--color-cream-soft);
 }
 

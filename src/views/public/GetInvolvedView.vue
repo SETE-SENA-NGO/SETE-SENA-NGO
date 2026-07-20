@@ -111,8 +111,7 @@ const fallbackContent: GetInvolvedPageContent = {
       'Santi Sena means people working together for peace, livelihoods, justice and environmental preservation.',
     credit: 'From the Santi Sena profile and strategic plan',
     title: 'Support here is not only a gift. It is cooperation with village systems.',
-    body:
-      'Santi Sena works with monks, villagers, local government, schools and partners in Svay Rieng, Prey Veng and Kratie. Choose the help you can offer and connect it to work communities can carry forward.',
+    body: 'Santi Sena works with monks, villagers, local government, schools and partners in Svay Rieng, Prey Veng and Kratie. Choose the help you can offer and connect it to work communities can carry forward.',
   },
   journey: [
     {
@@ -374,9 +373,7 @@ function setupPopReveal() {
       <div class="journey-intro pop-reveal pop-content">
         <p class="eyebrow">Your path</p>
         <h2 id="journey-heading">Choose your path.</h2>
-        <p class="journey-summary">
-          Choose one route and connect it to real field needs.
-        </p>
+        <p class="journey-summary">Choose one route and connect it to real field needs.</p>
       </div>
 
       <ol class="journey-list">
@@ -404,7 +401,9 @@ function setupPopReveal() {
         <div class="closing-body">
           <p class="closing-copy pop-reveal pop-content">{{ pageContent.closing.body }}</p>
           <div class="closing-action-column">
-            <p class="pop-reveal pop-content">Start with a conversation or a local donation path.</p>
+            <p class="pop-reveal pop-content">
+              Start with a conversation or a local donation path.
+            </p>
             <div class="closing-actions">
               <RouterLink
                 :to="pageContent.closing.primaryCta.to"
@@ -1343,7 +1342,6 @@ function setupPopReveal() {
   .journey-list li {
     gap: 0.95rem;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

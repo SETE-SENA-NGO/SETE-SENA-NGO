@@ -1,0 +1,3 @@
+- [x] Fix LoginView.vue to remove page/viewport scrolling ("I don't want to scroll make it maximum side").
+- [ ] Verify `npm run build` succeeds without CSS/SFC parse errors.
+- [ ] If build proceeds with other errors, address them separately.
