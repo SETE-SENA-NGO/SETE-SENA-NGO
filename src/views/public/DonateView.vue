@@ -7,9 +7,7 @@ import {
   type DonationMethod,
 } from '@/lib/donationSettings'
 
-const acledaLogo = imageUrls.donation.acledaLogo
-
-type Tab = 'qr' | 'card'
+type Tab = 'qr'
 const activeTab = ref<Tab>('qr')
 
 interface PayMethod {
@@ -122,11 +120,8 @@ const methods = computed<PayMethod[]>(() => {
       </p>
 
       <div class="tabs">
-        <button :class="['tab', { active: activeTab === 'qr' }]" @click="activeTab = 'qr'">
+        <button :class="['tab', { active: true }]" type="button">
           Pay with QR
-        </button>
-        <button :class="['tab', { active: activeTab === 'card' }]" @click="activeTab = 'card'">
-          Pay with credit card
         </button>
       </div>
     </header>
@@ -196,10 +191,6 @@ const methods = computed<PayMethod[]>(() => {
           </div>
         </div>
       </article>
-    </section>
-
-    <section v-else class="card-payment">
-      <p>Credit card donations are coming soon. Please use the QR payment methods above for now.</p>
     </section>
 
     <div class="notice">

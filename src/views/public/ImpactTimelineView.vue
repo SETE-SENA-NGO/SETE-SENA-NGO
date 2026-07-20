@@ -343,7 +343,7 @@ onBeforeUnmount(() => {
           <div class="intro-image-wrapper">
             <img
               class="intro-image"
-              :src="introImpactImage"
+              src="https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/518369856_1064716752452895_8342529662744533325_n.jpg?stp=dst-jpg_tt6&cstp=mx1280x960&ctp=s1280x960&_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_ohc=qyirV5WPo14Q7kNvwFLDk7z&_nc_oc=Adq2ZOKi6URgK9Zmzn4mRejk5lGoTt_PdbfzuoR5zZ8hhipOHjNaWowvVak5yxtQZr4&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=8ResXVthMO7ESrszlzqP1Q&_nc_ss=7b289&oh=00_AQDFOfRP_EizcGUb5Fi_BaCZCecWRUmmAZLHhpdKey1cZg&oe=6A63350B"
               alt="Santi Sena Cambodia"
             />
           </div>

@@ -27,6 +27,11 @@ const slug = computed(() => {
   return typeof route.meta.contentSlug === 'string' ? route.meta.contentSlug : ''
 })
 
+const statusMessage = computed(() => {
+  if (!loaded.value) return 'Loading page content...'
+  return loadError.value || 'Page content is not published yet.'
+})
+
 watch(
   () => route.meta.fallbackComponent,
   (component) => {
@@ -138,7 +143,7 @@ function actionRoute(index: number) {
   <component v-else-if="loaded && fallbackComponent" :is="fallbackComponent" />
 
   <main v-else class="managed-loading" aria-live="polite">
-    <p>{{ loadError || 'Loading page content...' }}</p>
+    <p>{{ statusMessage }}</p>
   </main>
 </template>
 
