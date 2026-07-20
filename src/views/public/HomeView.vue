@@ -2,12 +2,14 @@
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import { ref } from 'vue'
 import environmentImg from '@/assets/home-image/environtment.jpg'
 import educationImg from '@/assets/home-image/education.jpg'
 import livelihoodImg from '@/assets/home-image/livelihood.jpg'
 import childImg from '@/assets/home-image/child.jpg'
 
 const stats = [
+
   { value: '293', label: 'Villages Reached' },
   { value: '43', label: 'Communes Served' },
   { value: '30+', label: 'Years of Service' },
@@ -28,66 +30,160 @@ interface NgoSlide {
   position?: string
 }
 
-const slideItems: NgoSlide[] = [
-  {
-    image: '/images/programs/education-hero.jpg',
-    caption: '',
-    alt: 'Children learning with Santi Sena education support',
-    eyebrow: 'Education and Buddhist learning',
-    title: 'Helping children learn with confidence.',
-    description:
-      'Santi Sena supports schools, mobile libraries, scholarships and Buddhist education so children can keep learning close to home.',
-    primaryLabel: 'Support education',
-    primaryTo: '/qr-donate',
-    secondaryLabel: 'Explore programs',
-    secondaryTo: '/programs',
-    position: 'center',
-  },
-  {
-    image: '/images/programs/environment.jpg',
-    caption: '',
-    alt: 'Community environmental activity in rural Cambodia',
-    eyebrow: 'Environment and climate action',
-    title: 'Protecting the land that sustains villages.',
-    description:
-      'Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.',
-    primaryLabel: 'Support the work',
-    primaryTo: '/qr-donate',
-    secondaryLabel: 'Environment program',
-    secondaryTo: '/programs/environment',
-    position: 'center',
-  },
-  {
-    image: '/images/programs/livelihood-hero2.jpg',
-    caption: '',
-    alt: 'Rural livelihood activity with community members',
-    eyebrow: 'Livelihoods and family resilience',
-    title: 'Growing practical income and food security.',
-    description:
-      'Savings groups, home gardens, cooperatives and farmer support help rural families build steadier livelihoods.',
-    primaryLabel: 'Get involved',
-    primaryTo: '/get-involved',
-    secondaryLabel: 'Livelihood program',
-    secondaryTo: '/programs/livelihood',
-    position: 'center',
-  },
-  {
-    image: '/images/programs/child-protection1.jpg',
-    caption: '',
-    alt: 'Children and community members participating in a protection activity',
-    eyebrow: 'Child protection and dignity',
-    title: 'Safeguarding children through local action.',
-    description:
-      'Child rights campaigns, youth peer groups and community networks help children grow in safer, more caring communities.',
-    primaryLabel: 'Stand with us',
-    primaryTo: '/get-involved',
-    secondaryLabel: 'Protection program',
-    secondaryTo: '/programs/child-protection',
-    position: 'center',
-  },
-]
+const slideItems = ref<NgoSlide[]>([])
+
+
+function safeJsonParse<T>(value: string): T | null {
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return null
+  }
+}
+
+function normalizeSlide(raw: unknown): NgoSlide | null {
+  const r = raw as Record<string, unknown> | null
+  if (!r || typeof raw !== 'object') return null
+
+  const image = typeof r.image === 'string' ? r.image : ''
+
+  if (!image) return null
+
+  return {
+    image,
+    caption: typeof r.caption === 'string' ? r.caption : '',
+    alt: typeof r.alt === 'string' ? r.alt : image,
+    eyebrow: typeof r.eyebrow === 'string' ? r.eyebrow : '',
+    title: typeof r.title === 'string' ? r.title : '',
+    description: typeof r.description === 'string' ? r.description : '',
+    primaryLabel: typeof r.primaryLabel === 'string' ? r.primaryLabel : '',
+    primaryTo: typeof r.primaryTo === 'string' ? r.primaryTo : '',
+    secondaryLabel: typeof r.secondaryLabel === 'string' ? r.secondaryLabel : '',
+    secondaryTo: typeof r.secondaryTo === 'string' ? r.secondaryTo : '',
+    position: typeof r.position === 'string' ? r.position : undefined,
+  }
+
+}
+
+async function loadAdminSlides() {
+  // We re-use the same CMS storage model as the admin PageEditor:
+  // section.items contains JSON text.
+  const { supabase } = await import('@/lib/supabase')
+  const defaultSlides: NgoSlide[] = [
+    {
+      image: '/images/programs/education-hero.jpg',
+      caption: '',
+      alt: 'Children learning with Santi Sena education support',
+      eyebrow: 'Education and Buddhist learning',
+      title: 'Helping children learn with confidence.',
+      description:
+        'Santi Sena supports schools, mobile libraries, scholarships and Buddhist education so children can keep learning close to home.',
+      primaryLabel: 'Support education',
+      primaryTo: '/qr-donate',
+      secondaryLabel: 'Explore programs',
+      secondaryTo: '/programs',
+      position: 'center',
+    },
+    {
+      image: '/images/programs/environment.jpg',
+      caption: '',
+      alt: 'Community environmental activity in rural Cambodia',
+      eyebrow: 'Environment and climate action',
+      title: 'Protecting the land that sustains villages.',
+      description:
+        'Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.',
+      primaryLabel: 'Support the work',
+      primaryTo: '/qr-donate',
+      secondaryLabel: 'Environment program',
+      secondaryTo: '/programs/environment',
+      position: 'center',
+    },
+    {
+      image: '/images/programs/livelihood-hero2.jpg',
+      caption: '',
+      alt: 'Rural livelihood activity with community members',
+      eyebrow: 'Livelihoods and family resilience',
+      title: 'Growing practical income and food security.',
+      description:
+        'Savings groups, home gardens, cooperatives and farmer support help rural families build steadier livelihoods.',
+      primaryLabel: 'Get involved',
+      primaryTo: '/get-involved',
+      secondaryLabel: 'Livelihood program',
+      secondaryTo: '/programs/livelihood',
+      position: 'center',
+    },
+    {
+      image: '/images/programs/child-protection1.jpg',
+      caption: '',
+      alt: 'Children and community members participating in a protection activity',
+      eyebrow: 'Child protection and dignity',
+      title: 'Safeguarding children through local action.',
+      description:
+        'Child rights campaigns, youth peer groups and community networks help children grow in safer, more caring communities.',
+      primaryLabel: 'Stand with us',
+      primaryTo: '/get-involved',
+      secondaryLabel: 'Protection program',
+      secondaryTo: '/programs/child-protection',
+      position: 'center',
+    },
+  ]
+
+  const { data, error } = await supabase
+    .from('pages')
+    .select('body')
+    .eq('slug', 'home')
+    .maybeSingle()
+
+  if (error) {
+    slideItems.value = defaultSlides
+    return
+  }
+
+  const body = data?.body
+  if (!body) {
+    slideItems.value = defaultSlides
+    return
+  }
+
+  const parsed = safeJsonParse<{ sections?: Array<unknown> }>(body)
+  const sections: unknown[] = Array.isArray(parsed?.sections) ? parsed.sections : []
+  const slideshowSection = sections.find(
+    (s) => typeof s === 'object' && s !== null && typeof (s as Record<string, unknown>).id === 'string' && (s as Record<string, unknown>).id === 'home-slideshow',
+  )
+
+
+
+  // Admin format:
+  // slides stored as JSON in the section.items field.
+  // Example:
+  // [{"image":"/images/...","eyebrow":"...","title":"...","description":"...","primaryLabel":"...","primaryTo":"/...","secondaryLabel":"...","secondaryTo":"/..."}]
+  const rawSlidesText =
+    slideshowSection && typeof (slideshowSection as { items?: unknown }).items === 'string'
+      ? (slideshowSection as { items: string }).items
+      : ''
+
+  if (!rawSlidesText) {
+    slideItems.value = defaultSlides
+    return
+  }
+
+  const rawSlides = safeJsonParse<unknown>(rawSlidesText)
+  if (!Array.isArray(rawSlides)) {
+
+    slideItems.value = defaultSlides
+    return
+  }
+
+  const normalized = rawSlides
+    .map(normalizeSlide)
+    .filter((s): s is NgoSlide => Boolean(s))
+
+  slideItems.value = normalized.length ? normalized : defaultSlides
+}
 
 useScrollReveal()
+
+void loadAdminSlides()
 </script>
 
 <template>

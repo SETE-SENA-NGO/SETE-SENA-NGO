@@ -9,15 +9,30 @@ const supabaseAnonKey =
 function createMockClient(): SupabaseClient {
   const noop = () => Promise.resolve({ data: null, error: null })
 
-  // Proxy-based query builder: supports infinite chaining and is awaitable
-  const chain = new Proxy({}, {
-    get: (_, prop) =>
-      prop === 'then'
-        ? (resolve: (v: { data: null; error: null }) => void) =>
-            resolve({ data: null, error: null })
-        : chain,
+  // Proxy-based query builder: supports infinite chaining and is awaitable.
+  // Define a self-referential proxy safely to satisfy TS7022.
+  // Proxy-based query builder: supports infinite chaining and is awaitable.
+  // Use an untyped proxy to avoid TS7022 and relax typing (mock mode only).
+  // Using `unknown` instead of `any` to satisfy eslint while keeping mock behavior.
+  const chain = {} as unknown
+
+
+  const chainProxy = new Proxy(chain as Record<string, unknown>, {
+    get: () => chain,
     apply: () => chain,
-  })
+  }) as unknown as Record<string, unknown>
+
+
+
+  chainProxy.then = (resolve: (v: { data: null; error: null }) => void) =>
+    resolve({ data: null, error: null })
+
+  // (no-op) - chainProxy is intentionally untyped to act like supabase query builders.
+
+
+
+
+
 
   return {
     auth: {

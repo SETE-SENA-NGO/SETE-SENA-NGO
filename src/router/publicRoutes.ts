@@ -1,4 +1,5 @@
 import HomeView from '@/views/public/HomeView.vue'
+import HomeSlideshowView from '@/views/public/HomeSlideshowView.vue'
 import AboutView from '@/views/public/AboutView.vue'
 import AboutVisionView from '@/views/public/AboutVisionView.vue'
 import ProgramEnviromentView from '@/views/public/ProgramEnviromentView.vue'
@@ -27,6 +28,9 @@ import NewsDetailView from '@/views/public/NewsDetailView.vue'
 export const publicRoutes = [
   // Home
   { path: '/', component: HomeView },
+
+  // Home slideshow page
+  { path: '/home-slideshow', component: HomeSlideshowView },
 
   // About
   { path: '/about', component: AboutView },
