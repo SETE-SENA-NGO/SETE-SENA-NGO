@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import acledaLogo from '@/assets/acleda-logo.png'
-import { useContentStore } from '@/stores/content.store'
 import {
   defaultDonationMethods,
-  donationSettingsSlug,
-  parseDonationSettings,
+  fetchDonationMethods,
   type DonationMethod,
-  type DonationSettings,
 } from '@/lib/donationSettings'
 
-type Tab = 'qr' | 'card'
+type Tab = 'qr'
 const activeTab = ref<Tab>('qr')
 
 interface PayMethod {
@@ -84,20 +81,18 @@ function toPayMethod(method: DonationMethod): PayMethod {
   }
 }
 
-const content = useContentStore()
-const settings = ref<DonationSettings | null>(null)
+const savedMethods = ref<DonationMethod[]>([])
 
 onMounted(async () => {
   try {
-    const page = await content.fetchBySlug(donationSettingsSlug)
-    settings.value = page ? parseDonationSettings(page.body) : null
+    savedMethods.value = await fetchDonationMethods()
   } catch {
     // No admin settings saved yet — fall back to the defaults.
   }
 })
 
 const methods = computed<PayMethod[]>(() => {
-  const source = settings.value?.methods.length ? settings.value.methods : defaultDonationMethods()
+  const source = savedMethods.value.length ? savedMethods.value : defaultDonationMethods()
   return source.map(toPayMethod)
 })
 </script>
@@ -112,11 +107,8 @@ const methods = computed<PayMethod[]>(() => {
       </p>
 
       <div class="tabs">
-        <button :class="['tab', { active: activeTab === 'qr' }]" @click="activeTab = 'qr'">
+        <button :class="['tab', { active: true }]" type="button">
           Pay with QR
-        </button>
-        <button :class="['tab', { active: activeTab === 'card' }]" @click="activeTab = 'card'">
-          Pay with credit card
         </button>
       </div>
     </header>
@@ -186,10 +178,6 @@ const methods = computed<PayMethod[]>(() => {
           </div>
         </div>
       </article>
-    </section>
-
-    <section v-else class="card-payment">
-      <p>Credit card donations are coming soon. Please use the QR payment methods above for now.</p>
     </section>
 
     <div class="notice">

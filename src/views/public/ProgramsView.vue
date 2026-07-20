@@ -31,7 +31,7 @@ const goals: ProgramGoal[] = [
     tag: 'GOAL 02',
     title: 'Education',
     intro:
-      'Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six..',
+      "Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six.",
     whatWeDo:
       'Set up village pre-schools, train local teachers, stock small libraries, and support scholarships for at-risk children — especially girls.',
     whyItMatters:
@@ -92,20 +92,17 @@ const priorities = [
   },
 ]
 
-// Minimal line icons for the priority cards (stroke = currentColor, tinted via CSS)
-const priorityIcons: Record<string, string> = {
-  shield:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>',
-  users:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20a4 4 0 0 0-8 0"/><circle cx="13" cy="10" r="3.5"/><path d="M3 20a3.5 3.5 0 0 1 5.2-3.05"/><circle cx="6.5" cy="9" r="2.5"/></svg>',
-  sprout:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c0-3 2-5 6-5-1 3-3 5-6 5z"/><path d="M12 13c0-3-2-5-6-5 1 3 3 5 6 5z"/></svg>',
-  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M20 18H6.5a2.5 2.5 0 0 0-2.5 2.5"/></svg>',
-  megaphone:
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l2 5h2l-1-5h2l8 4V6l-8 4H6a2 2 0 0 0-2 2z"/><path d="M13 10V6"/></svg>',
+// Inline SVG icons — no external icon package required.
+// Line-style icons using currentColor so they inherit the .priority-icon color.
+const priorityIconSvg: Record<string, string> = {
+  shield: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>`,
+  users: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5"/><path d="M10 20c0-3 3-5 6-5s6 2 6 5"/></svg>`,
+  sprout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10c0-3 2-5 5-5 0 3-2 5-5 5z"/><path d="M12 13c0-3-2-5-5-5 0 3 2 5 5 5z"/></svg>`,
+  book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"/></svg>`,
+  megaphone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l3 5V6l-3 5H5a2 2 0 0 0-2 2z"/><path d="M13 8a4 4 0 0 1 0 8"/><path d="M17 6a8 8 0 0 1 0 12"/></svg>`,
 }
 
-// Scroll-triggered reveal: each goal card (and the priorities wave) animates in once visible
+// Scroll-triggered reveal: each goal card (and the priorities grid) animates in once visible
 const cardRefs = ref<HTMLElement[]>([])
 const priorityWaveRef = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
@@ -136,16 +133,11 @@ onMounted(() => {
 onBeforeUnmount(() => {
   observer?.disconnect()
 })
-
-// x-position (%) for each node along the wave, evenly spaced with margin from the edges
-function getNodeLeft(idx: number) {
-  const count = priorities.length
-  return 8 + idx * (84 / (count - 1))
-}
 </script>
 
 <template>
   <div class="programs-page">
+
     <!-- GOALS -->
     <section class="goals-wrap">
       <article
@@ -185,23 +177,22 @@ function getNodeLeft(idx: number) {
       </p>
       <h2 class="center">How we keep the tree alive</h2>
 
-      <div ref="priorityWaveRef" class="priorities-wave">
-        <svg class="wave-line" viewBox="0 0 1000 200" preserveAspectRatio="none">
-          <path
-            d="M50,120 C150,120 150,40 300,40 C450,40 450,140 500,140 C550,140 550,40 700,40 C850,40 850,120 950,120"
-          />
-        </svg>
-
+      <div ref="priorityWaveRef" class="priorities-grid">
         <div
           v-for="(item, idx) in priorities"
           :key="item.title"
-          class="wave-node"
-          :class="idx % 2 === 0 ? 'node-low' : 'node-high'"
-          :style="{ left: getNodeLeft(idx) + '%', transitionDelay: idx * 90 + 'ms' }"
+          class="priority-card"
+          :style="{ transitionDelay: idx * 90 + 'ms' }"
         >
-          <span class="node-number">{{ String(idx + 1).padStart(2, '0') }}</span>
-          <div class="node-icon" v-html="priorityIcons[item.icon]" />
-          <p class="node-label">{{ item.title }}</p>
+          <div class="priority-step">
+            <span class="step-number">{{ String(idx + 1).padStart(2, '0') }}</span>
+            <span class="step-connector" />
+          </div>
+
+          <div class="priority-body">
+            <div class="priority-icon" v-html="priorityIconSvg[item.icon]" />
+            <p class="priority-label">{{ item.title }}</p>
+          </div>
         </div>
       </div>
     </section>
@@ -317,10 +308,10 @@ function getNodeLeft(idx: number) {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(6, 18, 13, 0.9) 0%,
-    rgba(6, 18, 13, 0.72) 38%,
-    rgba(6, 18, 13, 0.25) 68%,
-    rgba(6, 18, 13, 0) 100%
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
   );
 }
 
@@ -330,10 +321,10 @@ function getNodeLeft(idx: number) {
 .goal-card.reverse .goal-overlay {
   background: linear-gradient(
     270deg,
-    rgba(6, 18, 13, 0.9) 0%,
-    rgba(6, 18, 13, 0.72) 38%,
-    rgba(6, 18, 13, 0.25) 68%,
-    rgba(6, 18, 13, 0) 100%
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
   );
 }
 
@@ -395,14 +386,31 @@ function getNodeLeft(idx: number) {
   color: #fff;
 }
 
-/* PRIORITIES */
+/* ===== PRIORITIES — clean, professional stepper with cards ===== */
 .priorities {
+  position: relative;
   max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 5rem 3rem 6rem;
   text-align: center;
+  overflow: hidden;
+}
+/* Soft ambient glow behind the whole section for depth */
+.priorities::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 500px;
+  background: radial-gradient(ellipse at center, rgba(20, 129, 62, 0.07) 0%, rgba(20, 129, 62, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 .eyebrow.center {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -416,90 +424,142 @@ function getNodeLeft(idx: number) {
   display: inline-block;
 }
 .priorities h2 {
-  font-weight: 600;
-  margin: 0.5rem 0 2.5rem;
-}
-.priorities-wave {
   position: relative;
-  max-width: var(--container-max-width);
-  margin: 0 auto;
-  height: 380px;
+  z-index: 1;
+  font-weight: 600;
+  margin: 0.5rem 0 3.5rem;
 }
 
-.wave-line {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-.wave-line path {
-  fill: none;
-  stroke: var(--primary-color);
-  stroke-width: 2;
-  stroke-opacity: 0.3;
+/* Straight, evenly-spaced stepper row instead of the zigzag wave */
+.priorities-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.75rem;
+  align-items: start;
 }
 
-.wave-node {
-  position: absolute;
-  transform: translateX(-50%) translateY(28px);
-  width: 170px;
+.priority-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
   opacity: 0;
+  transform: translateY(24px);
   transition:
     opacity 0.6s ease,
     transform 0.6s ease;
 }
-.priorities-wave.is-visible .wave-node {
+.priorities-grid.is-visible .priority-card {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-.wave-node.node-low {
-  top: 58%;
-}
-.wave-node.node-high {
-  top: 14%;
+  transform: translateY(0);
 }
 
-.node-number {
-  font-size: 2.4rem;
-  font-weight: 800;
-  color: rgba(20, 129, 62, 0.16);
-  line-height: 1;
-  margin-bottom: -0.6rem;
+/* Numbered node + connecting line */
+.priority-step {
+  position: relative;
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
-.node-icon {
+.step-number {
   position: relative;
   z-index: 2;
-  width: 56px;
-  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 14px -4px rgba(20, 129, 62, 0.5);
+}
+.step-connector {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100% + 1.75rem);
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+  opacity: 0.35;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+.priority-card:last-child .step-connector {
+  display: none;
+}
+
+/* Card body */
+.priority-body {
+  width: 100%;
   background: var(--color-white);
-  box-shadow: 0 8px 20px rgba(20, 129, 62, 0.18);
+  border-radius: 18px;
+  border: 1px solid rgba(20, 129, 62, 0.1);
+  padding: 1.85rem 1.1rem 1.5rem;
+  box-shadow:
+    0 4px 10px rgba(20, 129, 62, 0.06),
+    0 16px 32px -14px rgba(20, 129, 62, 0.18);
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+.priority-card:hover .priority-body {
+  transform: translateY(-6px);
+  border-color: rgba(20, 129, 62, 0.28);
+  box-shadow:
+    0 6px 14px rgba(20, 129, 62, 0.1),
+    0 24px 44px -16px rgba(20, 129, 62, 0.3);
+}
+
+.priority-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(160deg, var(--color-white) 0%, rgba(20, 129, 62, 0.08) 100%);
+  border: 1.5px solid rgba(20, 129, 62, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 8px 18px -8px rgba(20, 129, 62, 0.35);
   color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
   transition:
     transform 0.3s ease,
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
-.wave-node:hover .node-icon {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 26px rgba(20, 129, 62, 0.28);
+.priority-card:hover .priority-icon {
+  transform: scale(1.08);
+  border-color: var(--primary-color);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 10px 22px -8px rgba(20, 129, 62, 0.5);
 }
-.node-icon :deep(svg) {
-  width: 26px;
-  height: 26px;
+.priority-icon :deep(svg) {
+  width: 24px;
+  height: 24px;
 }
-.node-label {
-  margin: 1rem 0 0;
-  font-weight: 600;
-  color: var(--primary-dark);
-  line-height: 1.5;
-  font-size: 0.95rem;
+.priority-label {
+  margin: 0;
+  font-weight: 400;
+  color: #6b7280;
+  line-height: 1.45;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+.priority-card:hover .priority-label {
+  color: #6b7280;
 }
 
 @media (max-width: 860px) {
@@ -517,39 +577,42 @@ function getNodeLeft(idx: number) {
   .priorities {
     padding: 3.5rem 1.25rem 4rem;
   }
-  .priorities-wave {
-    height: auto;
+
+  .priorities-grid {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
   }
-  .wave-line {
-    display: none;
-  }
-  .wave-node {
-    position: static;
+  .priority-card {
     flex-direction: row;
     align-items: center;
-    width: 100%;
-    text-align: left;
     gap: 1rem;
-    margin-bottom: 1.25rem;
-    transform: none !important;
   }
-  .wave-node:last-child {
+  .priority-step {
+    width: auto;
+    height: auto;
     margin-bottom: 0;
   }
-  .node-number {
-    font-size: 1rem;
-    margin: 0;
-    width: 24px;
-    flex-shrink: 0;
-    color: var(--primary-light);
+  .step-connector {
+    display: none;
   }
-  .node-icon {
+  .priority-body {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 1.1rem;
+  }
+  .priority-icon {
     margin: 0;
     flex-shrink: 0;
   }
-  .node-label {
-    margin: 0;
+  .priority-label {
     text-align: left;
+  }
+  .hero-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
   }
 }
 
@@ -557,7 +620,7 @@ function getNodeLeft(idx: number) {
   .goal-card,
   .goal-media,
   .goal-content,
-  .wave-node {
+  .priority-card {
     transition: none !important;
     opacity: 1 !important;
     transform: none !important;

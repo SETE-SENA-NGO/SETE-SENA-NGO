@@ -3,7 +3,6 @@ import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
-import { useContentStore } from '@/stores/content.store'
 import { supabase } from '@/lib/supabase'
 import {
   MEDIA_BUCKET,
@@ -14,21 +13,17 @@ import {
 import {
   createDonationMethod,
   defaultDonationMethods,
-  donationSettingsSlug,
-  parseDonationSettings,
-  serializeDonationSettings,
+  fetchDonationMethods,
+  saveDonationMethods,
   type DonationMethod,
 } from '@/lib/donationSettings'
-import type { PageContent } from '@/types/content'
 
 const ui = useUiStore()
-const content = useContentStore()
 
 const methods = ref<DonationMethod[]>(defaultDonationMethods())
 const pendingFiles = reactive<Record<string, File>>({})
 const previews = reactive<Record<string, string>>({})
 
-const pageId = ref('')
 const loading = ref(true)
 const saving = ref(false)
 const message = ref('')
@@ -36,12 +31,8 @@ const messageType = ref<'success' | 'error'>('success')
 
 onMounted(async () => {
   try {
-    const page = await content.fetchBySlug(donationSettingsSlug)
-    if (page) {
-      pageId.value = page.id
-      const parsed = parseDonationSettings(page.body)
-      if (parsed && parsed.methods.length) methods.value = parsed.methods
-    }
+    const saved = await fetchDonationMethods()
+    if (saved.length) methods.value = saved
   } catch {
     // No settings saved yet — start from defaults.
   } finally {
@@ -157,15 +148,8 @@ async function save() {
       }
     }
 
-    const saved = await content.upsert({
-      id: pageId.value,
-      slug: donationSettingsSlug,
-      title: 'Donation QR',
-      body: serializeDonationSettings({ methods: methods.value }),
-      updated_at: '',
-    } as PageContent)
+    await saveDonationMethods(methods.value)
 
-    pageId.value = saved.id
     showMessage('Donation settings saved. The Support Us page is now updated.', 'success')
   } catch (e) {
     showMessage(e instanceof Error ? e.message : 'Failed to save donation settings.', 'error')

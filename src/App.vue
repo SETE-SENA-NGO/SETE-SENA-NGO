@@ -26,6 +26,7 @@ function goToAdmin() {
 }
 </script>
 
+
 <template>
   <Transition name="bar-slide">
     <div v-if="showAdminBar" class="admin-top-bar">

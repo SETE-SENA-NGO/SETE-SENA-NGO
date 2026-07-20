@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase'
+
 export type DonationMethod = {
   id: string
   bank: string
@@ -9,12 +11,18 @@ export type DonationMethod = {
   currency: string
 }
 
-export type DonationSettings = {
-  methods: DonationMethod[]
+// Row shape of the donation_methods table (snake_case columns).
+type DonationMethodRow = {
+  id: string
+  bank: string
+  subtitle: string
+  header_color: string
+  qr_url: string
+  account_name: string
+  account_no: string
+  currency: string
+  sort_order: number
 }
-
-export const donationSettingsSlug = 'donation-qr'
-export const donationSettingsKind = 'santi-sena-donation-settings'
 
 export function createDonationMethod(overrides: Partial<DonationMethod> = {}): DonationMethod {
   return {
@@ -49,64 +57,70 @@ export function defaultDonationMethods(): DonationMethod[] {
   ]
 }
 
-export function serializeDonationSettings(settings: DonationSettings): string {
-  return JSON.stringify({
-    kind: donationSettingsKind,
-    version: 2,
-    methods: settings.methods,
-  })
-}
-
-export function parseDonationSettings(body: string): DonationSettings | null {
-  try {
-    const parsed = JSON.parse(body) as unknown
-    if (!isRecord(parsed) || parsed.kind !== donationSettingsKind) return null
-
-    // Current format (version 2): methods is an array of banks.
-    if (Array.isArray(parsed.methods)) {
-      return {
-        methods: parsed.methods.filter(isRecord).map((method) => ({
-          id: getString(method, 'id') || crypto.randomUUID(),
-          bank: getString(method, 'bank'),
-          subtitle: getString(method, 'subtitle'),
-          headerColor: getString(method, 'headerColor') || '#1d3d5c',
-          qrUrl: getString(method, 'qrUrl'),
-          accountName: getString(method, 'accountName'),
-          accountNo: getString(method, 'accountNo'),
-          currency: getString(method, 'currency'),
-        })),
-      }
-    }
-
-    // Legacy format (version 1): fixed { aba, acleda } record.
-    if (isRecord(parsed.methods)) {
-      const legacyMethods = parsed.methods
-      return {
-        methods: defaultDonationMethods().map((base) => {
-          const legacy = legacyMethods[base.id]
-          if (!isRecord(legacy)) return base
-          return {
-            ...base,
-            qrUrl: getString(legacy, 'qrUrl'),
-            accountName: getString(legacy, 'accountName') || base.accountName,
-            accountNo: getString(legacy, 'accountNo') || base.accountNo,
-            currency: getString(legacy, 'currency') || base.currency,
-          }
-        }),
-      }
-    }
-
-    return null
-  } catch {
-    return null
+function rowToMethod(row: DonationMethodRow): DonationMethod {
+  return {
+    id: row.id,
+    bank: row.bank,
+    subtitle: row.subtitle,
+    headerColor: row.header_color || '#1d3d5c',
+    qrUrl: row.qr_url,
+    accountName: row.account_name,
+    accountNo: row.account_no,
+    currency: row.currency,
   }
 }
 
-function getString(record: Record<string, unknown>, key: string) {
-  const value = record[key]
-  return typeof value === 'string' ? value : ''
+function methodToRow(method: DonationMethod, sortOrder: number): DonationMethodRow {
+  return {
+    id: method.id,
+    bank: method.bank.trim(),
+    subtitle: method.subtitle.trim(),
+    header_color: method.headerColor,
+    qr_url: method.qrUrl,
+    account_name: method.accountName.trim(),
+    account_no: method.accountNo.trim(),
+    currency: method.currency.trim(),
+    sort_order: sortOrder,
+  }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value))
+export async function fetchDonationMethods(): Promise<DonationMethod[]> {
+  const { data, error } = await supabase
+    .from('donation_methods')
+    .select('*')
+    .order('sort_order', { ascending: true })
+  if (error) throw error
+  return ((data ?? []) as DonationMethodRow[]).map(rowToMethod)
+}
+
+export async function saveDonationMethods(methods: DonationMethod[]): Promise<void> {
+  const rows = methods.map(methodToRow)
+
+  const { data: existing, error: fetchError } = await supabase
+    .from('donation_methods')
+    .select('id')
+  if (fetchError) throw fetchError
+
+  const keep = new Set(rows.map((row) => row.id))
+  const removed = ((existing ?? []) as { id: string }[])
+    .map((row) => row.id)
+    .filter((id) => !keep.has(id))
+
+  if (removed.length) {
+    const { error: deleteError } = await supabase
+      .from('donation_methods')
+      .delete()
+      .in('id', removed)
+    if (deleteError) throw deleteError
+  }
+
+  if (rows.length) {
+    const { error: upsertError } = await supabase
+      .from('donation_methods')
+      .upsert(
+        rows.map((row) => ({ ...row, updated_at: new Date().toISOString() })),
+        { onConflict: 'id' },
+      )
+    if (upsertError) throw upsertError
+  }
 }

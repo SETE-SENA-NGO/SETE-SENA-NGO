@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import FlagUK from '@/components/icons/FlagUK.vue'
 import FlagKH from '@/components/icons/FlagKH.vue'
-import logoUrl from '@/assets/santi_sena_icon.ico'
+import logoUrl from '@/assets/santi_sena_logo.png'
 
 type MenuItem = { title: string; desc: string; to: string }
 type Menu = { label: string; to?: string; items: MenuItem[] }
@@ -72,7 +72,7 @@ const menus: Menu[] = [
         to: '/get-involved',
       },
       {
-        title: 'Support Us',
+        title: 'Donate',
         desc: 'Support community programs in Svay Rieng and Prey Veng.',
         to: '/get-involved/donate',
       },
@@ -278,7 +278,7 @@ onUnmounted(() => {
         </div>
 
         <RouterLink to="/qr-donate" class="btn-support btn-support--desktop" @click="closeAll">
-          Support Us
+          Donate
         </RouterLink>
 
         <button
@@ -322,7 +322,7 @@ onUnmounted(() => {
         class="btn-support btn-support--mobile"
         @click="closeAll"
       >
-        Support Us →
+        Donate →
       </RouterLink>
     </div>
   </header>

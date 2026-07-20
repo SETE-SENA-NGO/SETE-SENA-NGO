@@ -30,6 +30,28 @@ INSERT INTO seed_pages (
   sort_order
 )
 VALUES
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+  ('home', 'Home', 'Welcome to Santi Sena NGO.', NOW()),
+  ('about', 'About', 'About us content here.', NOW()),
+  ('services', 'Services', 'Our services list.', NOW()),
+  ('contact', 'Contact', 'Contact form info.', NOW())
+ON CONFLICT (slug) DO NOTHING;
+
+-- Default donation banks for the public QR Donate page. The admin Donation
+-- screen edits these rows (and can add more); qr_url stays empty until an
+-- admin uploads a QR image.
+INSERT INTO donation_methods (id, bank, subtitle, header_color, qr_url, account_name, account_no, currency, sort_order)
+VALUES
+  ('aba', 'ABA Pay', 'ABA BANK - CAMBODIA', '#0d2c63', '', 'SANTI SENA', '000 000 000', 'KHR / USD', 0),
+  ('acleda', 'ACLEDA Bank', 'ACLEDA - CAMBODIA', '#1d3d5c', '', 'SANTI SENA', '0000 0000 000', 'KHR / USD', 1)
+ON CONFLICT (id) DO NOTHING;
+=======
+>>>>>>> 9a3ba2e9a46d623f8c3660999f13d97908317243
+=======
+>>>>>>> 8b2fc18b0cb3bf99d13511699e118a263cc6c991
   (E'home', E'/', E'Home', E'Home', E'Buddhist NGO . Cambodia . Since 1994', E'Walking with villages toward peace, sustainability and dignity.', E'Santi Sena, the Peace Army, works alongside rural Cambodian communities in Svay Rieng, Prey Veng and Kratie, protecting forests, teaching children, growing livelihoods and safeguarding families.', E'Support Us', E'Stand with us', 1),
   (E'about', E'/about', E'About', E'About Santi Sena', E'About Santi Sena', E'A peace army born from the Dharma, raised by villages.', E'Founded in 1994 by Cambodian Buddhist monks, Santi Sena emerged from the ashes of conflict with a quiet conviction: lasting peace is grown in soil, schools and dignified work.', null, null, 2),
   (E'about-vision', E'/about/vision', E'About', E'Vision & Mission', E'Vision & Mission', E'Shaping a Future of Equity & Opportunity', E'A focused page for Santi Sena vision, mission, values and the practical commitments that guide long-term village work.', E'Join Us', null, 3),
@@ -720,3 +742,10 @@ FROM child_seed c
 JOIN inserted_parents p ON p.menu_key = c.menu_key AND p.label = c.parent_label;
 
 COMMIT;
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> develop
+>>>>>>> 9a3ba2e9a46d623f8c3660999f13d97908317243
+=======
+>>>>>>> 8b2fc18b0cb3bf99d13511699e118a263cc6c991
