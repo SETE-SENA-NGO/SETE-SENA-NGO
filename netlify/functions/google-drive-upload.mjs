@@ -278,7 +278,7 @@ async function uploadDriveFile({ accessToken, file, fileName, folderId, mimeType
 
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.id) {
-    throw httpError(data?.error?.message || 'Could not upload image to Google Drive.', 502)
+    throw httpError(driveErrorMessage(data, 'Could not upload image to Google Drive.'), 502)
   }
 
   return data
@@ -302,11 +302,27 @@ async function makeDriveFilePublic(accessToken, fileId) {
   if (!response.ok) {
     const data = await response.json().catch(() => null)
     throw httpError(
-      data?.error?.message ||
+      driveErrorMessage(
+        data,
         'Image uploaded, but Google Drive did not allow public sharing for this file.',
+      ),
       502,
     )
   }
+}
+
+function driveErrorMessage(data, fallback) {
+  const message = data?.error?.message
+  if (typeof message !== 'string') return fallback
+
+  if (/service accounts do not have storage quota/i.test(message)) {
+    return [
+      'Google Drive rejected the upload because the service account cannot own files in a normal My Drive folder.',
+      'Use a Google Workspace Shared Drive folder, or configure Google OAuth with GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN.',
+    ].join(' ')
+  }
+
+  return message
 }
 
 async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, size, driveFile }) {
