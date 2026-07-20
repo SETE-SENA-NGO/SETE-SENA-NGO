@@ -8,16 +8,6 @@ interface ActionLink {
   to: string
 }
 
-type HeroIcon = 'support' | 'partnership' | 'volunteer' | 'reach'
-
-interface HeroCard {
-  label: string
-  title: string
-  body: string
-  stat: string
-  icon?: HeroIcon
-}
-
 interface SupportCard {
   label: string
   title: string
@@ -49,7 +39,6 @@ interface GetInvolvedHero {
   alt: string
   primaryCta: ActionLink
   secondaryCta: ActionLink
-  cards: HeroCard[]
 }
 
 interface GetInvolvedPageContent {
@@ -78,36 +67,6 @@ const fallbackContent: GetInvolvedPageContent = {
     alt: 'Santi Sena staff and community members meeting in a village shelter',
     primaryCta: { label: 'Donate', to: '/get-involved/donate' },
     secondaryCta: { label: 'Partner with us', to: '/get-involved/partner' },
-    cards: [
-      {
-        label: 'Resource support',
-        title: 'Mobilize practical help',
-        body: 'Back work communities already lead.',
-        stat: 'Local action',
-        icon: 'support',
-      },
-      {
-        label: 'Partnership',
-        title: 'Build beyond projects',
-        body: 'Help programs last beyond project cycles.',
-        stat: 'Long term',
-        icon: 'partnership',
-      },
-      {
-        label: 'Volunteer skill',
-        title: 'Bring useful expertise',
-        body: 'Share research, mentoring or technical skill.',
-        stat: 'Skills shared',
-        icon: 'volunteer',
-      },
-      {
-        label: 'Community reach',
-        title: 'Serve real villages',
-        body: 'Support work across 293 villages.',
-        stat: '293 villages',
-        icon: 'reach',
-      },
-    ],
   },
   supportCards: [
     {
@@ -267,7 +226,6 @@ function mergeGetInvolvedContent(
       ...hero,
       primaryCta: mergeObject(base.hero.primaryCta, hero.primaryCta),
       secondaryCta: mergeObject(base.hero.secondaryCta, hero.secondaryCta),
-      cards: mergeArray<HeroCard>(hero.cards, base.hero.cards),
     },
     supportCards: mergeArray<SupportCard>(override.supportCards, base.supportCards),
     quotePanel: mergeObject(base.quotePanel, override.quotePanel),
@@ -337,24 +295,11 @@ function setupPopReveal() {
   })
 }
 
-function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
-  if (icon === 'support' || icon === 'partnership' || icon === 'volunteer' || icon === 'reach') {
-    return icon
-  }
-
-  const fallbackIcons: readonly HeroIcon[] = ['support', 'partnership', 'volunteer', 'reach']
-
-  return fallbackIcons[index % fallbackIcons.length] ?? 'support'
-}
 </script>
 
 <template>
   <main class="get-involved-page">
     <section class="hero-section" aria-labelledby="get-involved-title">
-      <div class="hero-photo">
-        <img :src="pageContent.hero.image" :alt="pageContent.hero.alt" />
-      </div>
-
       <div class="hero-shell">
         <div class="hero-copy pop-reveal pop-content">
           <p class="eyebrow">{{ pageContent.hero.eyebrow }}</p>
@@ -370,61 +315,10 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
           </div>
         </div>
 
-        <div class="hero-card-grid" aria-label="Ways to support">
-          <svg
-            class="hero-tree-lines"
-            viewBox="0 0 640 660"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path class="hero-tree-trunk" d="M310 650 C306 545 322 462 350 405 C367 369 390 340 418 316" />
-            <path class="hero-tree-trunk" d="M380 650 C372 548 374 468 392 408 C410 356 452 316 500 288" />
-            <path d="M338 430 C318 492 300 566 290 626" />
-            <path d="M352 405 C324 356 290 326 252 314" />
-            <path d="M418 316 C380 288 338 274 294 275" />
-            <path d="M392 408 C432 460 430 505 382 535" />
-          </svg>
-          <article
-            v-for="(card, index) in pageContent.hero.cards"
-            :key="card.title"
-            class="hero-card pop-reveal pop-card"
-          >
-            <div class="hero-card-content">
-              <span class="hero-card-icon" aria-hidden="true">
-                <svg viewBox="0 0 48 48" focusable="false">
-                  <g v-if="resolveHeroIcon(card.icon, index) === 'support'">
-                    <path d="M10 27h8l5 5h9" />
-                    <path d="M30 31l7-7a4 4 0 0 0-6-5l-7 7" />
-                    <path d="M17 26l5-5a5 5 0 0 1 7 0l2 2" />
-                    <path d="M10 22v13" />
-                  </g>
-                  <g v-else-if="resolveHeroIcon(card.icon, index) === 'partnership'">
-                    <path d="M14 28l5 5a5 5 0 0 0 7 0l8-8" />
-                    <path d="M18 24l6-6a5 5 0 0 1 7 0l3 3" />
-                    <path d="M10 18l7 7" />
-                    <path d="M38 18l-7 7" />
-                    <path d="M17 12h14" />
-                  </g>
-                  <g v-else-if="resolveHeroIcon(card.icon, index) === 'volunteer'">
-                    <circle cx="24" cy="16" r="6" />
-                    <path d="M13 37a11 11 0 0 1 22 0" />
-                    <path d="M32 15c4 0 7-3 7-7" />
-                    <path d="M32 15c0-4 3-7 7-7" />
-                  </g>
-                  <g v-else>
-                    <path d="M14 34V14l8-4 10 4 8-4v20l-8 4-10-4-8 4z" />
-                    <path d="M22 10v20" />
-                    <path d="M32 14v20" />
-                    <circle cx="25" cy="22" r="3" />
-                  </g>
-                </svg>
-              </span>
-              <p class="hero-card-label">{{ card.label }}</p>
-              <h2>{{ card.title }}</h2>
-              <p class="hero-card-body">{{ card.body }}</p>
-              <strong class="hero-card-stat">{{ card.stat }}</strong>
-            </div>
-          </article>
+        <div class="hero-visual">
+          <figure class="hero-photo">
+            <img :src="pageContent.hero.image" :alt="pageContent.hero.alt" />
+          </figure>
         </div>
       </div>
     </section>
@@ -556,27 +450,35 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 
 .hero-section {
   position: relative;
-  min-height: 880px;
-  background: var(--surface);
-  padding: 0 0 5rem;
+  background:
+    linear-gradient(180deg, var(--surface), var(--surface-soft) 58%, var(--surface));
+  padding: clamp(4rem, 7vw, 6rem) 0 4.5rem;
 }
 
 .hero-photo {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 430px;
+  position: relative;
+  height: clamp(320px, 38vw, 520px);
+  margin: 0;
   overflow: hidden;
-  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent-dark) 14%, transparent);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  box-shadow: 0 24px 46px rgba(31, 61, 46, 0.13);
+  transform: translateY(0) scale(1);
+  transition:
+    border-color 0.24s ease,
+    box-shadow 0.24s ease,
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 .hero-photo::before {
   position: absolute;
   z-index: 1;
   inset: 0;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.2) 48%, rgba(255, 255, 255, 0.05)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0), var(--surface) 98%);
+  background: linear-gradient(180deg, transparent 54%, rgba(7, 45, 35, 0.26));
   content: '';
+  pointer-events: none;
 }
 
 .hero-photo::after {
@@ -587,9 +489,11 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   width: 100%;
   height: 100%;
   display: block;
-  filter: saturate(1.02) contrast(1.02) brightness(1.08);
+  filter: none;
   object-fit: cover;
-  object-position: center 42%;
+  object-position: center 45%;
+  transform: scale(1);
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hero-shell,
@@ -604,16 +508,51 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(300px, 0.68fr) minmax(560px, 1fr);
-  gap: clamp(2.5rem, 5vw, 4rem);
-  align-items: start;
-  padding-top: 175px;
+  grid-template-columns: minmax(300px, 0.82fr) minmax(420px, 1fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: center;
 }
 
 .hero-copy {
-  align-self: start;
-  max-width: 480px;
-  padding-top: 440px;
+  max-width: 540px;
+  padding-top: 0;
+}
+
+.hero-visual {
+  position: relative;
+  min-width: 0;
+  isolation: isolate;
+}
+
+.hero-visual::before {
+  position: absolute;
+  z-index: -1;
+  inset: 1.1rem -0.9rem -0.9rem 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--accent-soft));
+  content: '';
+  transform: translate(0, 0);
+  transition:
+    border-color 0.24s ease,
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-visual:hover .hero-photo {
+    border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+    box-shadow: 0 32px 58px rgba(31, 61, 46, 0.2);
+    transform: translateY(-10px) scale(1.025);
+  }
+
+  .hero-visual:hover .hero-photo img {
+    transform: scale(1.045);
+  }
+
+  .hero-visual:hover::before {
+    border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+    transform: translate(0.45rem, 0.45rem);
+  }
 }
 
 .eyebrow {
@@ -642,9 +581,9 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 .hero-copy h1 {
   max-width: 13ch;
   color: var(--ink);
-  font-size: clamp(2.1rem, 4vw, 3.25rem);
+  font-size: clamp(2.25rem, 3.8vw, 3.55rem);
   font-weight: 700;
-  line-height: 1.14;
+  line-height: 1.1;
   text-shadow: none;
 }
 
@@ -654,42 +593,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   color: var(--muted);
   font-size: 1rem;
   line-height: 1.72;
-}
-
-.hero-metric-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.35rem;
-}
-
-.hero-metric-list span {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.45rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
-  padding: 0.7rem 0.95rem;
-  color: var(--muted);
-  font-size: 0.88rem;
-  line-height: 1.1;
-  box-shadow: 0 10px 22px rgba(43, 43, 40, 0.08);
-}
-
-.hero-metric-list strong {
-  color: var(--accent-dark);
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.image-credit {
-  margin: 1.25rem 0 0;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  line-height: 1.5;
-  text-transform: uppercase;
 }
 
 .hero-actions,
@@ -759,252 +662,6 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 .hero-copy .button-secondary:hover {
   border-color: var(--accent);
   background: var(--accent-soft);
-}
-
-.hero-card-grid {
-  position: relative;
-  isolation: isolate;
-  min-height: 650px;
-  padding-top: 1.25rem;
-}
-
-.hero-tree-lines {
-  position: absolute;
-  z-index: 0;
-  inset: -0.75rem -0.5rem 0;
-  width: calc(100% + 1rem);
-  height: calc(100% + 0.75rem);
-  overflow: visible;
-  pointer-events: none;
-}
-
-.hero-tree-lines path {
-  fill: none;
-  stroke: color-mix(in srgb, var(--accent-dark) 64%, var(--accent-soft));
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3.5;
-}
-
-.hero-tree-lines .hero-tree-trunk {
-  stroke-width: 5.5;
-}
-
-.hero-card {
-  --leaf-content-x: 0;
-  --leaf-content-y: 0;
-  --leaf-vein-angle: -35deg;
-
-  position: absolute;
-  z-index: 1;
-  width: clamp(215px, 32%, 245px);
-  height: 255px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border: 0;
-  border-radius: 0 82% 0 82% / 0 100% 0 100%;
-  background: linear-gradient(
-    135deg,
-    var(--surface) 0%,
-    color-mix(in srgb, var(--accent-soft) 34%, var(--surface)) 100%
-  );
-  padding: 0;
-  box-shadow:
-    inset 0 0 0 2px color-mix(in srgb, var(--accent-dark) 14%, transparent),
-    0 18px 34px rgba(43, 43, 40, 0.18);
-  text-align: center;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.hero-card::before {
-  position: absolute;
-  z-index: 0;
-  width: 46%;
-  height: 3px;
-  right: 14%;
-  bottom: 16%;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-dark) 42%, transparent);
-  content: '';
-  opacity: 0.35;
-  transform: rotate(var(--leaf-vein-angle));
-  transform-origin: right center;
-}
-
-.hero-card-content {
-  position: relative;
-  z-index: 1;
-  width: min(56%, 138px);
-  max-height: 70%;
-  min-width: 0;
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  gap: 0.32rem;
-  overflow: hidden;
-  transform: translate(var(--leaf-content-x), calc(var(--leaf-content-y) + 0.35rem));
-}
-
-.hero-card:nth-of-type(1) {
-  --leaf-content-x: -0.12rem;
-  --leaf-content-y: -0.12rem;
-
-  top: 57%;
-  left: 7%;
-  border-radius: 0 82% 0 82% / 0 100% 0 100%;
-}
-
-.hero-card:nth-of-type(2) {
-  --leaf-content-x: -0.12rem;
-  --leaf-content-y: 0;
-
-  top: 9%;
-  left: 0;
-  border-radius: 0 82% 0 82% / 0 100% 0 100%;
-}
-
-.hero-card:nth-of-type(3) {
-  --leaf-content-x: 0.12rem;
-  --leaf-content-y: 0;
-  --leaf-vein-angle: 35deg;
-
-  top: 5%;
-  left: 46%;
-  border-radius: 82% 0 82% 0 / 100% 0 100% 0;
-}
-
-.hero-card:nth-of-type(4) {
-  --leaf-content-x: 0.12rem;
-  --leaf-content-y: -0.05rem;
-  --leaf-vein-angle: 35deg;
-
-  top: 43%;
-  right: 2%;
-  border-radius: 82% 0 82% 0 / 100% 0 100% 0;
-}
-
-.hero-card:nth-of-type(3)::before,
-.hero-card:nth-of-type(4)::before {
-  right: auto;
-  left: 14%;
-  transform-origin: left center;
-}
-
-.hero-card:hover {
-  box-shadow:
-    inset 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent),
-    0 20px 38px rgba(43, 43, 40, 0.14);
-  transform: translateY(-3px);
-}
-
-.hero-card-icon {
-  width: 54px;
-  height: 54px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.78), transparent 34%),
-    color-mix(in srgb, var(--accent-soft) 82%, var(--surface));
-  color: var(--accent);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent),
-    0 8px 18px color-mix(in srgb, var(--accent) 10%, transparent);
-  transition:
-    background 0.2s ease,
-    box-shadow 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.hero-card-icon svg {
-  width: 27px;
-  height: 27px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2.45;
-}
-
-.hero-card:hover .hero-card-icon {
-  background:
-    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.22), transparent 34%),
-    linear-gradient(135deg, var(--accent), var(--accent-dark));
-  color: var(--surface);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
-    0 12px 24px color-mix(in srgb, var(--accent) 28%, transparent);
-  transform: scale(1.04);
-}
-
-.hero-card-label {
-  max-width: 100%;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  margin: 0;
-  color: var(--accent);
-  font-size: 0.56rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.25;
-  overflow-wrap: normal;
-  text-align: center;
-  text-wrap: balance;
-  text-transform: uppercase;
-}
-
-.hero-card h2 {
-  min-height: 0;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  margin: 0;
-  color: var(--ink);
-  font-size: 0.86rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  line-height: 1.18;
-  overflow-wrap: normal;
-  text-align: center;
-  text-wrap: balance;
-}
-
-.hero-card-body {
-  display: none;
-}
-
-.hero-card-stat {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--surface-soft);
-  max-width: 94%;
-  padding: 0.32rem 0.56rem;
-  color: var(--accent-dark);
-  font-size: 0.56rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
-}
-
-.hero-card:hover .hero-card-stat {
-  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
-  color: var(--accent);
 }
 
 .about-section {
@@ -1079,16 +736,19 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   box-shadow: var(--shadow);
   transition:
     transform 0.2s ease,
+    border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .about-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--line));
   box-shadow: 0 20px 38px rgba(43, 43, 40, 0.14);
   transform: translateY(-8px);
 }
 
 .about-card figure {
   position: relative;
+  isolation: isolate;
   width: 100%;
   height: 168px;
   margin: 0;
@@ -1096,19 +756,42 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   background: var(--accent-soft);
 }
 
+.about-card figure::before {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 38%, rgba(7, 45, 35, 0.28)),
+    color-mix(in srgb, var(--accent) 10%, transparent);
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
 .about-card img {
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transform: scale(1);
+  transition:
+    filter 0.32s ease,
+    transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .about-card:hover img {
-  transform: scale(1.08);
+  filter: saturate(1.08) contrast(1.04);
+  transform: scale(1.12);
+}
+
+.about-card:hover figure::before {
+  opacity: 1;
 }
 
 .about-card figcaption {
   position: absolute;
+  z-index: 2;
   left: 1rem;
   bottom: 1rem;
   border-radius: 999px;
@@ -1120,6 +803,16 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
   letter-spacing: 0.1em;
   line-height: 1.1;
   text-transform: uppercase;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.about-card:hover figcaption {
+  background: var(--accent);
+  color: var(--surface);
+  transform: translateY(-2px);
 }
 
 .about-card-body {
@@ -1470,17 +1163,15 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 }
 
 .pop-reveal {
-  --pop-blur: 10px;
   --pop-offset: 28px;
   --pop-scale: 0.985;
 
   opacity: 0;
-  filter: blur(var(--pop-blur)) saturate(0.92);
+  filter: none;
   transform: translate3d(var(--pop-x, 0), var(--pop-offset), 0) scale(var(--pop-scale));
   transition:
     opacity 0.76s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.76s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.76s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.2s ease,
     background 0.2s ease,
     border-color 0.2s ease,
@@ -1490,23 +1181,18 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 }
 
 .pop-content {
-  --pop-blur: 8px;
   --pop-offset: 22px;
   --pop-scale: 0.99;
 }
 
 .pop-card {
-  --pop-blur: 12px;
   --pop-offset: 34px;
   --pop-scale: 0.96;
 }
 
 .pop-image {
-  --pop-blur: 8px;
   --pop-offset: 24px;
   --pop-scale: 1.015;
-
-  filter: saturate(0.9);
 }
 
 .pop-reveal.pop-from-up {
@@ -1514,14 +1200,12 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 }
 
 .pop-left {
-  --pop-blur: 8px;
   --pop-offset: 0px;
   --pop-scale: 0.985;
   --pop-x: -42px;
 }
 
 .pop-right {
-  --pop-blur: 8px;
   --pop-offset: 0px;
   --pop-scale: 0.985;
   --pop-x: 42px;
@@ -1534,16 +1218,12 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 
 .pop-reveal.is-visible {
   opacity: 1;
-  filter: blur(0) saturate(1);
+  filter: none;
   transform: translate3d(0, 0, 0) scale(1);
 }
 
 .button.pop-reveal.is-visible:hover {
   transform: translateY(-2px);
-}
-
-.hero-card.pop-reveal.is-visible:hover {
-  transform: translateY(-3px) scale(1.006);
 }
 
 .about-card.pop-reveal.is-visible:hover {
@@ -1565,20 +1245,22 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
     max-width: 660px;
   }
 
-  .hero-card-grid {
-    max-width: 700px;
-    margin: 0 auto;
+  .hero-visual {
+    max-width: 780px;
   }
 }
 
 @media (max-width: 760px) {
   .hero-section {
-    min-height: auto;
-    padding-bottom: 3rem;
+    padding: 3.25rem 0 3.5rem;
   }
 
   .hero-photo {
-    height: 260px;
+    height: 250px;
+  }
+
+  .hero-visual::before {
+    inset: 0.75rem -0.35rem -0.35rem 0.75rem;
   }
 
   .hero-shell,
@@ -1588,63 +1270,17 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
     width: min(100% - 2rem, var(--container-max-width));
   }
 
-  .hero-copy {
-    padding-top: 0;
-  }
-
   .hero-shell {
-    padding-top: 300px;
+    gap: 2rem;
   }
 
   .hero-copy h1 {
-    max-width: 11ch;
-    font-size: 2.15rem;
+    max-width: 13ch;
+    font-size: clamp(2rem, 10vw, 2.75rem);
   }
 
   .about-card-grid {
     grid-template-columns: 1fr;
-  }
-
-  .hero-card-grid {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    margin-top: 1.4rem;
-  }
-
-  .hero-tree-lines {
-    display: none;
-  }
-
-  .hero-card,
-  .hero-card:nth-of-type(1),
-  .hero-card:nth-of-type(2),
-  .hero-card:nth-of-type(3),
-  .hero-card:nth-of-type(4) {
-    --leaf-content-x: 0;
-    --leaf-content-y: 0;
-    --leaf-vein-angle: -35deg;
-
-    position: relative;
-    inset: auto;
-    width: 100%;
-    height: auto;
-    min-height: 255px;
-    border-radius: 0 72% 0 72% / 0 92% 0 92%;
-  }
-
-  .hero-card::before,
-  .hero-card:nth-of-type(3)::before,
-  .hero-card:nth-of-type(4)::before {
-    right: 14%;
-    left: auto;
-    transform-origin: right center;
-  }
-
-  .hero-card-content {
-    width: min(68%, 220px);
-    max-height: 74%;
   }
 
   .about-card-grid {
@@ -1713,7 +1349,9 @@ function resolveHeroIcon(icon: HeroCard['icon'], index: number): HeroIcon {
 @media (prefers-reduced-motion: reduce) {
   .pop-reveal,
   .pop-reveal.is-visible,
-  .hero-card.pop-reveal.is-visible:hover,
+  .hero-visual:hover .hero-photo,
+  .hero-visual:hover .hero-photo img,
+  .hero-visual:hover::before,
   .about-card.pop-reveal.is-visible:hover,
   .journey-list li.pop-reveal.is-visible:hover {
     opacity: 1;
