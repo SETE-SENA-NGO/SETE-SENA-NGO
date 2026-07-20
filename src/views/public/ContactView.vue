@@ -101,19 +101,6 @@ const contactMethods = [
     sentLabel: 'Telegram ready',
     status: 'Thank you. Your Telegram contact is ready for our team.',
   },
-  {
-    id: 'facebook',
-    tab: 'Facebook Page',
-    type: 'Social inbox',
-    heading: 'Facebook Page',
-    fieldLabel: 'Facebook Page',
-    inputType: 'text',
-    autocomplete: 'off',
-    placeholder: 'Your profile or page link',
-    buttonLabel: 'Send via Facebook',
-    sentLabel: 'Facebook ready',
-    status: 'Thank you. Your Facebook contact is ready for our team.',
-  },
 ] as const
 
 const telegramContact = {
@@ -126,8 +113,10 @@ const contactDetail = ref('')
 const subject = ref('')
 const message = ref('')
 const formSent = ref(false)
+const contactFormBarsVisible = ref(false)
 const contactFormMotionActive = ref(false)
 const messageMaxLength = 600
+let contactFormMotionFrame: number | undefined
 let contactFormMotionTimer: number | undefined
 
 const activeOfficeId = ref<(typeof offices)[number]['id']>('all')
@@ -159,28 +148,35 @@ function selectOffice(officeId: (typeof offices)[number]['id']) {
 }
 
 function selectContactMethod(contactMethodId: (typeof contactMethods)[number]['id']) {
-  triggerContactFormMotion()
-
   if (activeContactMethodId.value === contactMethodId) return
 
   activeContactMethodId.value = contactMethodId
   contactDetail.value = ''
   formSent.value = false
+  triggerContactFormMotion()
 }
 
 function triggerContactFormMotion() {
+  contactFormBarsVisible.value = true
+
+  if (contactFormMotionFrame !== undefined) {
+    window.cancelAnimationFrame(contactFormMotionFrame)
+  }
   if (contactFormMotionTimer !== undefined) {
     window.clearTimeout(contactFormMotionTimer)
   }
 
   contactFormMotionActive.value = false
 
-  window.requestAnimationFrame(() => {
-    contactFormMotionActive.value = true
-    contactFormMotionTimer = window.setTimeout(() => {
-      contactFormMotionActive.value = false
-      contactFormMotionTimer = undefined
-    }, 700)
+  contactFormMotionFrame = window.requestAnimationFrame(() => {
+    contactFormMotionFrame = window.requestAnimationFrame(() => {
+      contactFormMotionActive.value = true
+      contactFormMotionFrame = undefined
+      contactFormMotionTimer = window.setTimeout(() => {
+        contactFormMotionActive.value = false
+        contactFormMotionTimer = undefined
+      }, 720)
+    })
   })
 }
 
@@ -194,6 +190,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  if (contactFormMotionFrame !== undefined) {
+    window.cancelAnimationFrame(contactFormMotionFrame)
+  }
   if (contactFormMotionTimer !== undefined) {
     window.clearTimeout(contactFormMotionTimer)
   }
@@ -570,8 +569,12 @@ onUnmounted(() => {
       </article>
     </section>
 
-    <section id="write" class="contact-form-section" aria-labelledby="form-heading">
-      <div class="contact-method-section" aria-label="Choose how to contact us">
+    <section id="write" class="contact-form-section reveal" aria-labelledby="form-heading">
+      <div
+        class="contact-method-section reveal"
+        style="animation-delay: 0.04s"
+        aria-label="Choose how to contact us"
+      >
         <div class="contact-method-tabs" role="radiogroup" aria-label="Contact method">
           <button
             v-for="contactMethod in contactMethods"
@@ -589,7 +592,7 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <div class="contact-form-intro">
+      <div class="contact-form-intro reveal" style="animation-delay: 0.12s">
         <p class="section-kicker">Write to us</p>
         <h2 id="form-heading">Send a message to our team</h2>
         <p>
@@ -603,8 +606,11 @@ onUnmounted(() => {
 
       <form
         class="contact-form"
-        :class="{ 'contact-form--method-motion': contactFormMotionActive }"
-        style="animation-delay: 0.14s"
+        :class="{
+          'contact-form--bars-visible': contactFormBarsVisible,
+          'contact-form--method-motion': contactFormMotionActive,
+        }"
+        style="animation-delay: 0.2s"
         @submit.prevent="submitContact"
       >
         <p class="form-kicker">Contact form</p>
@@ -1518,37 +1524,120 @@ onUnmounted(() => {
 .contact-form::before,
 .contact-form::after {
   position: absolute;
+  top: 0;
   left: 0;
+  width: 0;
   height: 5px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
   content: '';
+  opacity: 0;
   pointer-events: none;
-  transition:
-    /* top 0.32s ease, */
-    left 0.5s ease,
-    /* width 0.32s ease, */ /* height 0.32s ease, */ background 0.2s ease;
 }
 
 
-.contact-form:hover::before,
-.contact-form:focus-within::before,
+.contact-form--bars-visible::before,
 .contact-form--method-motion::before {
   top: 0;
   left: calc(100% - 6px);
   width: 6px;
   height: 100%;
   background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  opacity: 1;
 }
 
-.contact-form:hover::after,
-.contact-form:focus-within::after,
+.contact-form--bars-visible::after,
 .contact-form--method-motion::after {
   top: 0;
   left: 0;
   width: 5px;
   height: 100%;
   background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  opacity: 1;
+}
+
+.contact-form--method-motion::before {
+  animation: contactFormRightBar 0.72s ease both;
+}
+
+.contact-form--method-motion::after {
+  animation: contactFormLeftBar 0.72s ease both;
+}
+
+@keyframes contactFormRightBar {
+  0% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  45% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  65% {
+    top: calc(100% - 5px);
+    left: calc(100% - 6px);
+    width: 6px;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  100% {
+    top: 0;
+    left: calc(100% - 6px);
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+}
+
+@keyframes contactFormLeftBar {
+  0% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  45% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  65% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 5px;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  100% {
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
 }
 
 .form-kicker {
@@ -1571,7 +1660,7 @@ onUnmounted(() => {
 
 .contact-method-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.45rem;
   padding: 0.45rem;
   border: 1px solid rgba(232, 228, 223, 0.96);
