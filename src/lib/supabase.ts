@@ -6,18 +6,26 @@ const supabaseAnonKey =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   import.meta.env.SUPABASE_PUBLISHABLE_KEY
 
-function createMockClient(): SupabaseClient {
-  const noop = () => Promise.resolve({ data: null, error: null })
+type MockQueryResult = { data: null; error: null }
+type MockQueryBuilder = ((...args: unknown[]) => MockQueryBuilder) &
+  PromiseLike<MockQueryResult> &
+  Record<PropertyKey, unknown>
 
-  // Proxy-based query builder: supports infinite chaining and is awaitable
-  const chain = new Proxy({}, {
+function createMockQueryBuilder(): MockQueryBuilder {
+  const chain = new Proxy(() => chain, {
     get: (_, prop) =>
       prop === 'then'
-        ? (resolve: (v: { data: null; error: null }) => void) =>
-          resolve({ data: null, error: null })
+        ? (resolve: (v: MockQueryResult) => void) => resolve({ data: null, error: null })
         : chain,
     apply: () => chain,
-  })
+  }) as MockQueryBuilder
+
+  return chain
+}
+
+function createMockClient(): SupabaseClient {
+  const noop = () => Promise.resolve({ data: null, error: null })
+  const chain = createMockQueryBuilder()
 
   return {
     auth: {

@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { fetchPublishedNews, type NewsArticle } from '@/lib/newsContent'
 
 // ─── Dummy news data ────────────────────────────────────────────────
-const newsItems = ref([
+const newsItems = ref<NewsArticle[]>([
   {
-    id: 1,
+    id: '1',
+    slug: 'new-community-pre-school-opens-in-svay-rieng',
     title: 'New community pre‑school opens in Svay Rieng',
     summary:
       'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+    content: '',
     image: 'src/assets/maps/student.png',
     date: '2025-03-15',
     category: 'Education',
@@ -22,10 +25,12 @@ const newsItems = ref([
     trending: true,
   },
   {
-    id: 2,
+    id: '2',
+    slug: 'forest-guardians-celebrate-500-hectares',
     title: 'Forest Guardians celebrate 500 hectares of protected land',
     summary:
       'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
+    content: '',
     image: 'src/assets/maps/wash.png',
     date: '2025-02-28',
     category: 'Environment',
@@ -39,10 +44,12 @@ const newsItems = ref([
     trending: false,
   },
   {
-    id: 3,
+    id: '3',
+    slug: 'youth-leaders-trained-in-child-protection-advocacy',
     title: 'Youth leaders trained in child protection advocacy',
     summary:
       'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
+    content: '',
     image: 'src/assets/maps/certi.png',
     date: '2025-02-10',
     category: 'Child Protection',
@@ -56,10 +63,12 @@ const newsItems = ref([
     trending: false,
   },
   {
-    id: 4,
+    id: '4',
+    slug: 'saving-for-change-groups-reach-10000-members',
     title: 'Saving‑for‑Change groups reach 10,000 members',
     summary:
       'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
+    content: '',
     image: 'src/assets/maps/pre-school.png',
     date: '2025-01-20',
     category: 'Livelihood',
@@ -73,10 +82,12 @@ const newsItems = ref([
     trending: true,
   },
   {
-    id: 5,
+    id: '5',
+    slug: 'new-partnership-to-expand-clean-water-access',
     title: 'New partnership to expand clean water access',
     summary:
       'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
+    content: '',
     image: 'src/assets/maps/water.png',
     date: '2025-01-05',
     category: 'WASH',
@@ -92,8 +103,8 @@ const newsItems = ref([
 ])
 
 // ─── State ──────────────────────────────────────────────────────────
-const savedArticles = ref<number[]>([])
-const likedArticles = ref<number[]>([])
+const savedArticles = ref<string[]>([])
+const likedArticles = ref<string[]>([])
 const newsletterEmail = ref('')
 
 // Featured + regular articles
@@ -155,12 +166,20 @@ const setupIntersectionObservers = () => {
   }
 }
 
-onMounted(() => {
-  nextTick(() => {
-    const els = document.querySelectorAll('.news-card')
-    articleRefs.value = Array.from(els) as HTMLElement[]
-    setupIntersectionObservers()
-  })
+onMounted(async () => {
+  try {
+    const publishedNews = await fetchPublishedNews()
+    if (publishedNews.length) {
+      newsItems.value = publishedNews
+    }
+  } catch {
+    // Keep the local fallback stories when Supabase is unavailable.
+  }
+
+  await nextTick()
+  const els = document.querySelectorAll('.news-card')
+  articleRefs.value = Array.from(els) as HTMLElement[]
+  setupIntersectionObservers()
 })
 
 onBeforeUnmount(() => {
@@ -173,7 +192,7 @@ onBeforeUnmount(() => {
 })
 
 // ─── Actions ───────────────────────────────────────────────────────
-const toggleSave = (id: number) => {
+const toggleSave = (id: string) => {
   const index = savedArticles.value.indexOf(id)
   if (index > -1) {
     savedArticles.value.splice(index, 1)
@@ -182,7 +201,7 @@ const toggleSave = (id: number) => {
   }
 }
 
-const toggleLike = (id: number) => {
+const toggleLike = (id: string) => {
   const index = likedArticles.value.indexOf(id)
   if (index > -1) {
     likedArticles.value.splice(index, 1)
@@ -191,8 +210,8 @@ const toggleLike = (id: number) => {
   }
 }
 
-const isSaved = (id: number) => savedArticles.value.includes(id)
-const isLiked = (id: number) => likedArticles.value.includes(id)
+const isSaved = (id: string) => savedArticles.value.includes(id)
+const isLiked = (id: string) => likedArticles.value.includes(id)
 
 const toastMessage = ref('')
 const showToast = ref(false)
