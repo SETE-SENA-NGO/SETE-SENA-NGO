@@ -152,10 +152,15 @@ async function logout() {
       <details v-for="group in pageGroups.filter((g) => g.items.length)" :key="group.slug" class="nav-group"
         :open="isGroupOpen(group)">
         <summary>
-          <span :class="['link summary-link', { active: isGroupActive(group) }]">
+          <RouterLink
+            :to="editorPath(group.slug)"
+            class="link summary-link"
+            :class="{ active: isActive(editorPath(group.slug)) }"
+            @click.stop="ui.closeSidebarForNavigation"
+          >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
             <span>{{ group.label }}</span>
-          </span>
+          </RouterLink>
         </summary>
         <div class="submenu">
           <RouterLink v-for="item in group.items" :key="item.slug" :to="item.path ?? editorPath(item.slug)"
