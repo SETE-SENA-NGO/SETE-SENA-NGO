@@ -3,13 +3,8 @@ import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
-import { supabase } from '@/lib/supabase'
-import {
-  MEDIA_BUCKET,
-  imageUploadHelpText,
-  isAllowedImageFile,
-  safeStorageFileName,
-} from '@/lib/media'
+import { useMediaStore } from '@/stores/media.store'
+import { imageUploadHelpText, isAllowedImageFile } from '@/lib/media'
 import {
   createDonationMethod,
   defaultDonationMethods,
@@ -19,6 +14,7 @@ import {
 } from '@/lib/donationSettings'
 
 const ui = useUiStore()
+const media = useMediaStore()
 
 const methods = ref<DonationMethod[]>(defaultDonationMethods())
 const pendingFiles = reactive<Record<string, File>>({})
@@ -96,31 +92,9 @@ function showMessage(text: string, type: 'success' | 'error') {
 }
 
 async function uploadQr(method: DonationMethod, file: File) {
-  const safeId = method.id.replace(/[^a-zA-Z0-9_-]/g, '')
-  const path = `donation-qr/${safeId}-${Date.now()}-${safeStorageFileName(file.name)}`
-
-  const { error: uploadError } = await supabase.storage
-    .from(MEDIA_BUCKET)
-    .upload(path, file, { upsert: true })
-  if (uploadError) throw uploadError
-
-  const publicUrl = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl
-  const { error: assetError } = await supabase.from('media_assets').upsert(
-    {
-      bucket: MEDIA_BUCKET,
-      path,
-      public_url: publicUrl,
-      file_name: file.name,
-      mime_type: file.type,
-      file_size: file.size,
-      folder: 'donation-qr',
-    },
-    { onConflict: 'bucket,path' },
-  )
-
-  if (assetError) throw assetError
-
-  return publicUrl
+  const item = await media.upload(file)
+  if (!item?.url) throw new Error(`Could not upload QR for ${method.bank || 'donation method'}.`)
+  return item.url
 }
 
 async function save() {
