@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { imageUrls } from '@/lib/imageUrls'
 
 interface ProgramGoal {
   number: string
@@ -24,7 +25,7 @@ const goals: ProgramGoal[] = [
     whyItMatters:
       'Southeastern Cambodia is one of the most climate-vulnerable regions in the country. Healthy forests and clean water are peacekeeping infrastructure.',
     quote: 'The forest belongs to the pagoda and the pagoda belongs to the village.',
-    image: '/images/programs/environment.jpg',
+    image: imageUrls.programs.environment,
   },
   {
     number: '02',
@@ -38,7 +39,7 @@ const goals: ProgramGoal[] = [
       'In the districts we work in, many hamlets are more than an hour is walk from the nearest school. Early learning centres change that.',
     quote:
       'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
-    image: '/images/programs/education.jpg',
+    image: imageUrls.programs.education,
   },
   {
     number: '03',
@@ -52,7 +53,7 @@ const goals: ProgramGoal[] = [
       'Cash predictability is what lets a family send their child to school this term instead of to a garment factory.',
     quote:
       'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
-    image: '/images/programs/livelihood.jpg',
+    image: imageUrls.programs.livelihood,
   },
   {
     number: '04',
@@ -65,7 +66,7 @@ const goals: ProgramGoal[] = [
     whyItMatters:
       'The border with Vietnam brings both opportunity and risk. Community-led safeguarding is the most durable defense.',
     quote: "The safest village is one where every adult knows every child's name.",
-    image: '/images/programs/child-protection.jpg',
+    image: imageUrls.programs.childProtection,
   },
 ]
 

@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import acledaLogo from '@/assets/acleda-logo.png'
+import { imageUrls } from '@/lib/imageUrls'
 import {
   defaultDonationMethods,
   fetchDonationMethods,
   type DonationMethod,
 } from '@/lib/donationSettings'
 
-type Tab = 'qr'
+const acledaLogo = imageUrls.donation.acledaLogo
+
+type Tab = 'qr' | 'card'
 const activeTab = ref<Tab>('qr')
 
 interface PayMethod {

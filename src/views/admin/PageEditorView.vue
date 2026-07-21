@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import { imageUrlHelpText, normalizeMediaUrl } from '@/lib/media'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
@@ -12,6 +13,7 @@ type EditableSection = {
   label: string
   heading: string
   body: string
+  imageUrl?: string
   items: string
 }
 
@@ -24,6 +26,7 @@ type PageDraft = {
   eyebrow: string
   headline: string
   intro: string
+  heroImageUrl?: string
   primaryAction: string
   secondaryAction: string
   sections: EditableSection[]
@@ -45,12 +48,14 @@ type StoredPageBody = {
   eyebrow: string
   headline: string
   intro: string
+  heroImageUrl: string
   primaryAction: string
   secondaryAction: string
   sections: EditableSection[]
 }
 
 const contentKind = 'santi-sena-page-content'
+const imageUrlHint = imageUrlHelpText()
 
 // ---------- Your original defaultPages array (unchanged) ----------
 const defaultPages: PageDraft[] = [
@@ -809,7 +814,7 @@ const defaultPages: PageDraft[] = [
   },
   {
     slug: 'contact-head-office',
-    route: '/contact/headoffice',
+    route: '/contact/head-office',
     group: 'Contact',
     title: 'Head Office',
     eyebrow: 'Contact - Head Office',
@@ -847,7 +852,7 @@ const defaultPages: PageDraft[] = [
   },
   {
     slug: 'contact-field-offices',
-    route: '/contact/fieldoffice',
+    route: '/contact/field-offices',
     group: 'Contact',
     title: 'Field Offices',
     eyebrow: 'Contact - Field Offices',
@@ -1274,6 +1279,7 @@ function cloneSection(section?: Partial<EditableSection>): EditableSection {
     label: section?.label || 'New section',
     heading: section?.heading || '',
     body: section?.body || '',
+    imageUrl: section?.imageUrl || '',
     items: section?.items || '',
   }
 }
@@ -1291,9 +1297,13 @@ function pageBody(page: PageDraft): StoredPageBody {
     eyebrow: page.eyebrow,
     headline: page.headline,
     intro: page.intro,
+    heroImageUrl: normalizeMediaUrl(page.heroImageUrl ?? ''),
     primaryAction: page.primaryAction,
     secondaryAction: page.secondaryAction,
-    sections: page.sections.map((section) => ({ ...section })),
+    sections: page.sections.map((section) => ({
+      ...section,
+      imageUrl: normalizeMediaUrl(section.imageUrl ?? ''),
+    })),
   }
 }
 
@@ -1344,6 +1354,7 @@ function parseStoredBody(body: string): Partial<StoredPageBody> | null {
       eyebrow: getString(parsed, 'eyebrow'),
       headline: getString(parsed, 'headline'),
       intro: getString(parsed, 'intro'),
+      heroImageUrl: getString(parsed, 'heroImageUrl'),
       primaryAction: getString(parsed, 'primaryAction'),
       secondaryAction: getString(parsed, 'secondaryAction'),
       sections: getSections(parsed.sections),
@@ -1361,6 +1372,7 @@ function getSections(value: unknown): EditableSection[] {
       label: getString(section, 'label') || 'Section',
       heading: getString(section, 'heading'),
       body: getString(section, 'body'),
+      imageUrl: getString(section, 'imageUrl'),
       items: getString(section, 'items'),
     }),
   )
@@ -1383,6 +1395,7 @@ function mergeRow(defaultPage: PageDraft, row: PageRow): PageDraft {
       ...clonePage(defaultPage),
       title: row.title || defaultPage.title,
       intro: row.body || defaultPage.intro,
+      heroImageUrl: defaultPage.heroImageUrl ?? '',
       updatedAt: row.updated_at ?? '',
     }
   }
@@ -1395,6 +1408,7 @@ function mergeRow(defaultPage: PageDraft, row: PageRow): PageDraft {
     eyebrow: parsed.eyebrow ?? defaultPage.eyebrow,
     headline: parsed.headline ?? defaultPage.headline,
     intro: parsed.intro ?? defaultPage.intro,
+    heroImageUrl: parsed.heroImageUrl ?? defaultPage.heroImageUrl ?? '',
     primaryAction: parsed.primaryAction ?? defaultPage.primaryAction,
     secondaryAction: parsed.secondaryAction ?? defaultPage.secondaryAction,
     sections: parsed.sections?.length
@@ -2097,31 +2111,166 @@ function formatDate(value: string) {
                   </div>
                 </div>
 
-                <!-- Sections Preview -->
-                <div class="preview-sections">
-                  <div
-                    v-for="(section, idx) in previewItems"
+                <section class="form-panel">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="eyebrow">Page setup</p>
+                      <h3>Identity</h3>
+                    </div>
+                    <span class="status-pill" :class="{ dirty: activePageDirty }">
+                      {{ activePageDirty ? 'Unsaved' : 'Saved' }}
+                    </span>
+                  </div>
+
+                  <div class="form-grid">
+                    <label>
+                      <span>Admin title</span>
+                      <input v-model="activePage.title" name="page-title" />
+                    </label>
+                    <label>
+                      <span>Slug</span>
+                      <input :value="activePage.slug" name="page-slug" disabled />
+                    </label>
+                    <label>
+                      <span>Route</span>
+                      <input :value="activePage.route" name="page-route" disabled />
+                    </label>
+                    <label>
+                      <span>Eyebrow</span>
+                      <input v-model="activePage.eyebrow" name="page-eyebrow" />
+                    </label>
+                  </div>
+                </section>
+
+                <section class="form-panel">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="eyebrow">Hero</p>
+                      <h3>Main page copy</h3>
+                    </div>
+                  </div>
+
+                  <label class="field-block">
+                    <span>Hero headline</span>
+                    <textarea
+                      v-model="activePage.headline"
+                      name="page-headline"
+                      rows="2"
+                    ></textarea>
+                  </label>
+
+                  <label class="field-block">
+                    <span>Intro copy</span>
+                    <textarea v-model="activePage.intro" name="page-intro" rows="4"></textarea>
+                  </label>
+
+                  <label class="field-block">
+                    <span>Hero image URL</span>
+                    <input
+                      v-model="activePage.heroImageUrl"
+                      name="page-hero-image-url"
+                      type="url"
+                      placeholder="https://drive.google.com/file/d/.../view"
+                    />
+                    <small class="field-hint">{{ imageUrlHint }}</small>
+                  </label>
+
+                  <div class="form-grid">
+                    <label>
+                      <span>Primary action</span>
+                      <input v-model="activePage.primaryAction" name="page-primary-action" />
+                    </label>
+                    <label>
+                      <span>Secondary action</span>
+                      <input v-model="activePage.secondaryAction" name="page-secondary-action" />
+                    </label>
+                  </div>
+                </section>
+
+                <section class="sections-editor form-panel" aria-label="Page sections">
+                  <div class="section-toolbar">
+                    <div>
+                      <p class="eyebrow">Page sections</p>
+                      <h3>{{ activePage.sections.length }} editable blocks</h3>
+                    </div>
+                    <button class="button button-secondary" type="button" @click="addSection">
+                      <span class="btn-icon" aria-hidden="true">+</span>
+                      Add section
+                    </button>
+                  </div>
+
+                  <article
+                    v-for="(section, index) in activePage.sections"
+                    :id="`edit-${section.id}`"
                     :key="section.id"
                     class="preview-section"
-                    :class="{ 'preview-section-active': activeSectionIndex === idx }"
-                    @click="activeSectionIndex = idx"
+                    :class="{ 'preview-section-active': activeSectionIndex === index }"
+                    @focusin="activeSectionIndex = index"
+                    @click="activeSectionIndex = index"
                   >
-                    <div class="preview-section-indicator" v-if="activeSectionIndex === idx"></div>
-                    <h3 class="preview-section-heading">{{ section.heading || 'Section heading' }}</h3>
-                    <p class="preview-section-body" v-if="section.body">{{ section.body }}</p>
+                    <header class="section-edit-head">
+                      <div>
+                        <p class="eyebrow">{{ section.label || `Section ${index + 1}` }}</p>
+                        <h3>{{ section.heading || 'Section heading' }}</h3>
+                      </div>
+                      <button
+                        class="button button-secondary"
+                        type="button"
+                        @click="removeSection(index)"
+                      >
+                        Remove
+                      </button>
+                    </header>
 
-                    <!-- Items as cards/list -->
-                    <div v-if="section.parsedItems.length" class="preview-items">
-                      <template v-for="item in section.parsedItems" :key="item">
-                        <div v-if="item.includes('|')" class="preview-item-card">
-                          <strong>{{ item.split('|')[0]?.trim() }}</strong>
-                          <span>{{ item.split('|').slice(1).join('|').trim() }}</span>
-                        </div>
-                        <div v-else class="preview-item-simple">
-                          <span class="preview-bullet"></span>
-                          <span>{{ item }}</span>
-                        </div>
-                      </template>
+                    <div class="form-grid">
+                      <label>
+                        <span>Block label</span>
+                        <input v-model="section.label" :name="`section-${section.id}-label`" />
+                      </label>
+                      <label>
+                        <span>Heading</span>
+                        <input v-model="section.heading" :name="`section-${section.id}-heading`" />
+                      </label>
+                    </div>
+
+                    <label class="field-block">
+                      <span>Body</span>
+                      <textarea
+                        v-model="section.body"
+                        :name="`section-${section.id}-body`"
+                        rows="4"
+                      ></textarea>
+                    </label>
+
+                    <label class="field-block">
+                      <span>Section image URL</span>
+                      <input
+                        v-model="section.imageUrl"
+                        :name="`section-${section.id}-image-url`"
+                        type="url"
+                        placeholder="https://drive.google.com/file/d/.../view"
+                      />
+                      <small class="field-hint">{{ imageUrlHint }}</small>
+                    </label>
+
+                    <label class="field-block">
+                      <span>Items</span>
+                      <textarea
+                        v-model="section.items"
+                        :name="`section-${section.id}-items`"
+                        rows="5"
+                        placeholder="One item per line. Use Title | Detail for paired content."
+                      ></textarea>
+                    </label>
+                  </article>
+                </section>
+
+                <div class="editor-save-bar">
+                  <div class="save-state">
+                    <span class="save-dot" :class="{ dirty: activePageDirty }"></span>
+                    <div>
+                      <strong>{{ activePageDirty ? 'Unsaved changes' : 'Saved' }}</strong>
+                      <small>{{ formatDate(activePage.updatedAt) }}</small>
                     </div>
                   </div>
                 </div>
@@ -2827,6 +2976,13 @@ function formatDate(value: string) {
 .field {
   display: grid;
   gap: 0.35rem;
+}
+
+.field-hint {
+  color: var(--admin-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
 .field-block {

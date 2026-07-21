@@ -1,17 +1,3 @@
-import LoginView from '@/views/admin/LoginView.vue'
-import DashboardView from '@/views/admin/DashboardView.vue'
-import PagesManagerView from '@/views/admin/PagesManagerView.vue'
-import PageEditorView from '@/views/admin/PageEditorView.vue'
-import AdminModuleView from '@/views/admin/AdminModuleView.vue'
-import MediaLibraryView from '@/views/admin/MediaLibraryView.vue'
-import SettingsView from '@/views/admin/SettingsView.vue'
-import EducationDashboardView from '@/views/admin/EducationDashboardView.vue'
-import EnvironmentDashboardView from '@/views/admin/EnvironmentDashboardView.vue'
-import LivelihoodDashboardView from '@/views/admin/LivelihoodDashboardView.vue'
-import ChildProtectionDashboardView from '@/views/admin/ChildProtectionDashboardView.vue'
-import ProgramsOverviewView from '@/views/admin/ProgramsOverviewView.vue'
-import DonationLView from '@/views/admin/DonationLView.vue'
-
 export const adminRoutes = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
   { path: '/admin', component: DashboardView, meta: { requiresAuth: true } },

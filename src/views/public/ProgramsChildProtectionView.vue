@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
+import { imageUrls } from '@/lib/imageUrls'
 
-const slideItems = [
-  { image: '/images/programs/child-protection.jpg', caption: '' },
-  { image: '/images/programs/child-protection1.jpg', caption: '' },
-  { image: '/images/programs/child-protection2.jpg', caption: '' },
-  { image: '/images/programs/child-protection3.jpg', caption: '' },
-]
+const familyNetworkImage = imageUrls.programs.childProtection3
+const childProtectionImage = imageUrls.programs.childProtection
+const childProtectionPeerImage = imageUrls.programs.childProtection1
 
 const stats = [
-  { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin', image: '/images/programs/child-protection.jpg' },
-  { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.', icon: 'users', image: '/images/programs/child-protection1.jpg' },
-  { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.', icon: 'phone', image: '/images/programs/child-protection2.jpg' },
+  { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin', image: imageUrls.programs.childProtection },
+  { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.', icon: 'users', image: imageUrls.programs.childProtection1 },
+  { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.', icon: 'phone', image: imageUrls.programs.childProtection2 },
 ]
 
 // "What we do" — six focus areas, each with a photo, title and description.
@@ -20,37 +17,37 @@ const whatWeDo = [
   {
     title: 'Anti-Trafficking Campaigns',
     text: 'Anti-child-trafficking campaigns at borders, markets and schools',
-    image: '/images/programs/child-protection.jpg',
+    image: imageUrls.programs.childProtection,
     color: '#0a7d5c',
   },
   {
     title: 'Child Protection Networks',
     text: 'Village Child Protection Networks (CPN) trained in identification and referral',
-    image: '/images/programs/child-protection1.jpg',
+    image: imageUrls.programs.childProtection1,
     color: '#2c7be5',
   },
   {
     title: 'Child Rights Advocacy',
     text: 'Child rights advocacy with commune councils and provincial authorities',
-    image: '/images/programs/child-protection2.jpg',
+    image: imageUrls.programs.childProtection2,
     color: '#e8871e',
   },
   {
     title: 'Peer Educators',
     text: 'Peer-educator youth groups on safe migration, health and rights',
-    image: '/images/programs/child-protection3.jpg',
+    image: imageUrls.programs.childProtection3,
     color: '#8b5cf6',
   },
   {
     title: 'Family Reintegration',
     text: 'Family reintegration support for children returning from unsafe labour',
-    image: '/images/programs/child-protection.jpg',
+    image: imageUrls.programs.childProtection,
     color: '#e0475a',
   },
   {
     title: 'Safeguarding Training',
     text: 'Safeguarding training for every teacher, monk and volunteer we work with',
-    image: '/images/programs/child-protection1.jpg',
+    image: imageUrls.programs.childProtection1,
     color: '#c9a227',
   },
 ]
@@ -265,7 +262,7 @@ onBeforeUnmount(() => {
           <div class="col-image">
             <div class="story-collage" ref="collageEl">
               <div class="story-collage-main">
-                <img src="/images/programs/child-protection3.jpg" alt="Child Protection Network volunteer speaking with a family" />
+                <img :src="familyNetworkImage" alt="Child Protection Network volunteer speaking with a family" />
                 <span class="story-collage-heart">
                   <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 20.5s-7.6-4.8-10.2-9.4C.4 8.2 1.7 4.8 5 3.9c2-.5 3.9.3 5 2 .1-.1.1-.2.2-.3 1.1-1.6 3-2.5 5-2 3.3.9 4.6 4.3 3.2 7.2C19.6 15.7 12 20.5 12 20.5z"/>
@@ -275,10 +272,10 @@ onBeforeUnmount(() => {
 
               <!-- Two square photos, crossing/staggered, overlapping the bottom of the circle -->
               <div class="story-collage-sub story-collage-sub--left">
-                <img src="/images/programs/child-protection.jpg" alt="" />
+                <img :src="childProtectionImage" alt="" />
               </div>
               <div class="story-collage-sub story-collage-sub--right">
-                <img src="/images/programs/child-protection1.jpg" alt="" />
+                <img :src="childProtectionPeerImage" alt="" />
               </div>
             </div>
           </div>

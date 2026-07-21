@@ -4,15 +4,17 @@ import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
-import { imageUploadHelpText } from '@/lib/media'
 
 const media = useMediaStore()
 const ui = useUiStore()
 
-let dragCounter = 0
-const fileInput = ref<HTMLInputElement | null>(null)
-const dragging = ref(false)
 const deleting = ref<string | null>(null)
+const imageUrl = ref('')
+const imageName = ref('')
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
+const savingUrl = ref(false)
+const uploadingFile = ref(false)
 
 onMounted(() => {
   void loadFiles()
@@ -22,42 +24,7 @@ async function loadFiles() {
   try {
     await media.list()
   } catch {
-    ui.addToast('Could not load media files.', 'error')
-  }
-}
-
-function openFilePicker() {
-  fileInput.value?.click()
-}
-
-function onFilesSelected(event: Event) {
-  const input = event.target as HTMLInputElement
-  const files = input.files
-  if (!files?.length) return
-
-  uploadFiles(Array.from(files))
-  input.value = ''
-}
-
-function onDragEnter() {
-  dragCounter++
-  dragging.value = true
-}
-
-function onDragLeave() {
-  dragCounter--
-  if (dragCounter <= 0) {
-    dragging.value = false
-    dragCounter = 0
-  }
-}
-
-function onDrop(event: DragEvent) {
-  dragging.value = false
-  dragCounter = 0
-  const files = event.dataTransfer?.files
-  if (files?.length) {
-    uploadFiles(Array.from(files))
+    ui.addToast('Could not load media URLs.', 'error')
   }
 }
 
@@ -91,14 +58,41 @@ const totalMediaSize = computed(() => {
   return media.items.reduce((total, item) => total + item.size, 0)
 })
 
-async function uploadFiles(files: File[]) {
-  for (const file of files) {
-    try {
-      await media.upload(file)
-      ui.addToast(`${file.name} uploaded.`, 'success')
-    } catch {
-      ui.addToast(`Failed to upload ${file.name}.`, 'error')
-    }
+async function addImageUrl() {
+  if (savingUrl.value) return
+
+  savingUrl.value = true
+  try {
+    await media.addUrl(imageUrl.value, imageName.value)
+    ui.addToast('Image URL saved.', 'success')
+    imageUrl.value = ''
+    imageName.value = ''
+  } catch (error) {
+    ui.addToast(error instanceof Error ? error.message : 'Could not save image URL.', 'error')
+  } finally {
+    savingUrl.value = false
+  }
+}
+
+function onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  selectedFile.value = input.files?.[0] ?? null
+}
+
+async function uploadSelectedFile() {
+  if (uploadingFile.value || !selectedFile.value) return
+
+  uploadingFile.value = true
+  try {
+    await media.uploadToGoogleDrive(selectedFile.value, imageName.value)
+    ui.addToast('Image uploaded to Google Drive.', 'success')
+    selectedFile.value = null
+    imageName.value = ''
+    if (fileInputRef.value) fileInputRef.value.value = ''
+  } catch (error) {
+    ui.addToast(error instanceof Error ? error.message : 'Could not upload image.', 'error')
+  } finally {
+    uploadingFile.value = false
   }
 }
 
@@ -106,14 +100,14 @@ async function confirmDelete(item: { id: string; name: string }) {
   deleting.value = item.id
 
   ui.openModal(
-    'Delete file?',
+    'Delete URL?',
     `Remove "${item.name}" from the media library? This cannot be undone.`,
     async () => {
       try {
         await media.remove(item.id)
-        ui.addToast('File deleted.', 'warning')
+        ui.addToast('URL deleted.', 'warning')
       } catch {
-        ui.addToast('Failed to delete file.', 'error')
+        ui.addToast('Failed to delete URL.', 'error')
       } finally {
         deleting.value = null
       }
@@ -133,55 +127,66 @@ async function confirmDelete(item: { id: string; name: string }) {
           <div>
             <p class="eyebrow">Assets</p>
             <h1>Media Library</h1>
-            <p class="page-desc">Upload, browse and manage website images.</p>
-          </div>
-          <div class="header-actions">
-            <button
-              class="button button-primary"
-              type="button"
-              :disabled="media.uploading"
-              @click="openFilePicker"
-            >
-              {{ media.uploading ? 'Uploading...' : 'Upload files' }}
-            </button>
+            <p class="page-desc">Upload images to Google Drive or save public image URLs.</p>
           </div>
         </header>
 
-        <input
-          ref="fileInput"
-          type="file"
-          multiple
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          class="file-input-hidden"
-          @change="onFilesSelected"
-        />
-
-        <!-- Upload progress -->
-        <section v-if="media.uploading" class="upload-progress" aria-label="Upload progress">
-          <div class="progress-bar">
-            <div class="progress-fill"></div>
-          </div>
-          <span>Uploading files...</span>
-        </section>
-
-        <!-- Drop zone -->
-        <section
-          :class="['drop-zone', { active: dragging }]"
-          @dragenter.prevent="onDragEnter"
-          @dragover.prevent="dragging = true"
-          @dragleave="onDragLeave"
-          @drop.prevent="onDrop"
-          @click="openFilePicker"
+        <form
+          class="url-form upload-form"
+          aria-label="Upload image to Google Drive"
+          @submit.prevent="uploadSelectedFile"
         >
-          <span class="drop-icon" aria-hidden="true"></span>
-          <strong>Drop files here or click to browse</strong>
-          <small>{{ imageUploadHelpText() }}</small>
-        </section>
+          <label class="url-field upload-file-field">
+            <span>Upload image</span>
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="image/*"
+              required
+              @change="onFileSelected"
+            />
+          </label>
+          <label class="url-field">
+            <span>Display name</span>
+            <input v-model="imageName" placeholder="Homepage hero" />
+          </label>
+          <button
+            class="button button-primary"
+            type="submit"
+            :disabled="uploadingFile || !selectedFile"
+          >
+            {{ uploadingFile ? 'Uploading...' : 'Upload to Drive' }}
+          </button>
+          <p>
+            Uses the Netlify Google Drive upload function. Configure the required Netlify secrets
+            before using this upload button.
+          </p>
+        </form>
+
+        <form class="url-form" aria-label="Add Google Drive image URL" @submit.prevent="addImageUrl">
+          <label class="url-field">
+            <span>Image URL</span>
+            <input
+              v-model="imageUrl"
+              type="url"
+              placeholder="https://drive.google.com/file/d/.../view"
+              required
+            />
+          </label>
+          <label class="url-field">
+            <span>Display name</span>
+            <input v-model="imageName" placeholder="Homepage hero" />
+          </label>
+          <button class="button button-primary" type="submit" :disabled="savingUrl">
+            {{ savingUrl ? 'Saving...' : 'Add URL' }}
+          </button>
+          <p>{{ media.urlHelpText() }}</p>
+        </form>
 
         <!-- Stats bar -->
         <section class="stats-bar" aria-label="Media library stats">
           <span
-            ><strong>{{ media.items.length }}</strong> files</span
+            ><strong>{{ media.items.length }}</strong> URLs</span
           >
           <span>
             <strong>{{ media.items.filter((f) => isImage(f.mime_type)).length }}</strong> images
@@ -191,8 +196,8 @@ async function confirmDelete(item: { id: string; name: string }) {
           >
         </section>
 
-        <!-- File grid -->
-        <section v-if="media.items.length" class="file-grid" aria-label="Media files">
+        <!-- URL grid -->
+        <section v-if="media.items.length" class="file-grid" aria-label="Media URLs">
           <article v-for="item in media.items" :key="item.id" class="file-card">
             <div class="file-thumb">
               <img v-if="isImage(item.mime_type)" :src="item.url" :alt="item.name" loading="lazy" />
@@ -213,7 +218,7 @@ async function confirmDelete(item: { id: string; name: string }) {
                 :href="item.url"
                 target="_blank"
                 class="icon-button"
-                aria-label="Open file"
+                aria-label="Open URL"
               >
                 Open
               </a>
@@ -230,10 +235,10 @@ async function confirmDelete(item: { id: string; name: string }) {
         </section>
 
         <!-- Empty state -->
-        <section v-else-if="!media.uploading" class="empty-state" aria-label="No media">
+        <section v-else-if="!media.saving" class="empty-state" aria-label="No media">
           <span class="empty-icon" aria-hidden="true"></span>
-          <strong>No media files yet</strong>
-          <p>Drop files above or click the Upload button to get started.</p>
+          <strong>No media URLs yet</strong>
+          <p>Paste a public Google Drive image URL above to get started.</p>
         </section>
       </main>
     </div>
@@ -319,8 +324,17 @@ h1 {
   box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
 }
 
-.file-input-hidden {
-  display: none;
+.url-form {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.5fr) minmax(180px, 0.8fr) auto;
+  gap: 0.8rem;
+  align-items: end;
+  margin-bottom: 1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  background: var(--admin-surface);
+  padding: 1rem;
+  box-shadow: var(--admin-shadow);
 }
 
 .upload-progress {
@@ -615,6 +629,10 @@ h1 {
 
   .page-header {
     flex-direction: column;
+  }
+
+  .url-form {
+    grid-template-columns: 1fr;
   }
 
   .file-grid {

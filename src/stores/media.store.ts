@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
-import { MAX_IMAGE_UPLOAD_SIZE, imageUploadHelpText, isAllowedImageFile } from '@/lib/media'
+import {
+  EXTERNAL_MEDIA_BUCKET,
+  imageNameFromUrl,
+  imageUrlHelpText,
+  isSupportedImageUrl,
+  normalizeMediaUrl,
+} from '@/lib/media'
 
 export interface MediaItem {
   id: string
@@ -27,7 +33,7 @@ type MediaAssetRow = {
 
 export const useMediaStore = defineStore('media', () => {
   const items = ref<MediaItem[]>([])
-  const uploading = ref(false)
+  const saving = ref(false)
   const progress = ref(0)
   const error = ref<string | null>(null)
 
@@ -55,11 +61,51 @@ export const useMediaStore = defineStore('media', () => {
     items.value = ((data ?? []) as MediaAssetRow[]).map(toMediaItem)
   }
 
-  async function upload(file: File) {
-    if (!isAllowedImageFile(file)) {
-      throw new Error(`Upload ${imageUploadHelpText()}`)
+  async function addUrl(url: string, name?: string) {
+    const trimmedUrl = normalizeMediaUrl(url)
+    const fileName = name?.trim() || imageNameFromUrl(trimmedUrl)
+
+    if (!isSupportedImageUrl(trimmedUrl)) {
+      throw new Error(imageUrlHelpText())
     }
 
+    saving.value = true
+    progress.value = 0
+    error.value = null
+
+    try {
+      const { data, error: assetError } = await supabase
+        .from('media_assets')
+        .upsert(
+          {
+            bucket: EXTERNAL_MEDIA_BUCKET,
+            path: trimmedUrl,
+            public_url: trimmedUrl,
+            file_name: fileName,
+            mime_type: 'image/external-url',
+            file_size: 0,
+            folder: 'google-drive',
+          },
+          { onConflict: 'bucket,path' },
+        )
+        .select('id, bucket, path, public_url, file_name, mime_type, file_size, created_at')
+        .single()
+
+      if (assetError) throw assetError
+
+      const item = toMediaItem(data as MediaAssetRow)
+      items.value = [item, ...items.value.filter((existing) => existing.id !== item.id)]
+      progress.value = 100
+      return item
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Could not save image URL'
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function uploadToGoogleDrive(file: File, name?: string) {
     const sessionResult = await supabase.auth.getSession()
     const accessToken = sessionResult.data.session?.access_token
 
@@ -67,13 +113,18 @@ export const useMediaStore = defineStore('media', () => {
       throw new Error('Please log in as an admin before uploading images.')
     }
 
-    uploading.value = true
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Only image uploads are allowed.')
+    }
+
+    saving.value = true
     progress.value = 10
     error.value = null
 
     try {
       const formData = new FormData()
       formData.append('file', file, file.name)
+      if (name?.trim()) formData.append('name', name.trim())
 
       const response = await fetch('/api/google-drive-upload', {
         method: 'POST',
@@ -95,10 +146,10 @@ export const useMediaStore = defineStore('media', () => {
       progress.value = 100
       return item
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'Upload failed'
+      error.value = e instanceof Error ? e.message : 'Could not upload image'
       throw e
     } finally {
-      uploading.value = false
+      saving.value = false
     }
   }
 
@@ -111,12 +162,13 @@ export const useMediaStore = defineStore('media', () => {
 
   return {
     items,
-    uploading,
+    saving,
     progress,
     error,
-    maxFileSize: MAX_IMAGE_UPLOAD_SIZE,
+    urlHelpText: imageUrlHelpText,
     list,
-    upload,
+    addUrl,
+    uploadToGoogleDrive,
     remove,
   }
 })

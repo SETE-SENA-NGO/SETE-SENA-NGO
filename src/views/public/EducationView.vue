@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { imageUrls } from '@/lib/imageUrls'
+
+const childIntroImage = imageUrls.education.intro
+const childReadingImage = imageUrls.education.reading
+const childStudyImage = imageUrls.education.study
+const childTeacherImage = imageUrls.education.teacher
 
 const stats = [
   {
@@ -188,7 +194,7 @@ onBeforeUnmount(() => {
           </div>
           <div :ref="(el) => setRevealRef(el, 1)" class="reveal intro-image-wrap">
             <div class="intro-image-frame">
-              <img src="/src/assets/child1.jpg" alt="Young children learning in a Cambodian pre-school classroom"
+              <img :src="childIntroImage" alt="Young children learning in a Cambodian pre-school classroom"
                 loading="lazy" decoding="async" />
             </div>
             <div class="intro-image-accent">
@@ -222,11 +228,11 @@ onBeforeUnmount(() => {
           <div :ref="(el) => setRevealRef(el, 3)" class="reveal col-image">
             <div class="photo-duo">
               <div class="col-image-frame photo-back">
-                <img src="/src/assets/child4.jpg" alt="Children reading books at a community school" loading="lazy"
+                <img :src="childReadingImage" alt="Children reading books at a community school" loading="lazy"
                   decoding="async" />
               </div>
               <div class="col-image-frame photo-front">
-                <img src="/src/assets/child6.jpg" alt="Teacher helping child with learning activity" loading="lazy"
+                <img :src="childTeacherImage" alt="Teacher helping child with learning activity" loading="lazy"
                   decoding="async" />
               </div>
             </div>
@@ -313,7 +319,7 @@ onBeforeUnmount(() => {
         <div class="impact-layout">
           <div :ref="(el) => setRevealRef(el, 11)" class="reveal impact-image-wrap">
             <div class="impact-image-frame">
-              <img src="/src/assets/child5.jpg" alt="Children studying together in a rural school" loading="lazy"
+              <img :src="childStudyImage" alt="Children studying together in a rural school" loading="lazy"
                 decoding="async" />
             </div>
             <div class="impact-image-badge">

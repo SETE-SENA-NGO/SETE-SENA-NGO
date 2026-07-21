@@ -21,6 +21,7 @@ $$;
 -- profiles: replace the old self-referencing policy (infinite recursion).
 DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
 DROP POLICY IF EXISTS "Admins can upsert profiles" ON profiles;
+DROP POLICY IF EXISTS "Admins manage profiles" ON profiles;
 CREATE POLICY "Users can read own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Admins manage profiles" ON profiles
@@ -28,28 +29,21 @@ CREATE POLICY "Admins manage profiles" ON profiles
 
 -- pages: public read stays; writes now require admin.
 DROP POLICY IF EXISTS "Allow authenticated write" ON pages;
+DROP POLICY IF EXISTS "Admins can write pages" ON pages;
 CREATE POLICY "Admins can write pages" ON pages
   FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 -- donation_methods: public read stays; writes now require admin.
 DROP POLICY IF EXISTS "Allow authenticated write" ON donation_methods;
+DROP POLICY IF EXISTS "Admins can write donation methods" ON donation_methods;
 CREATE POLICY "Admins can write donation methods" ON donation_methods
   FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
--- media storage: public read stays; upload/replace/delete now require admin.
-DROP POLICY IF EXISTS "Authenticated upload media" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated update media" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated delete media" ON storage.objects;
+-- Media images are stored as external URLs in public.media_assets.
+-- No Supabase Storage bucket or object policy is required.
 
-CREATE POLICY "Admins upload media" ON storage.objects
-  FOR INSERT WITH CHECK (bucket_id = 'media' AND is_admin());
-CREATE POLICY "Admins update media" ON storage.objects
-  FOR UPDATE USING (bucket_id = 'media' AND is_admin());
-CREATE POLICY "Admins delete media" ON storage.objects
-  FOR DELETE USING (bucket_id = 'media' AND is_admin());
-
--- Auto-create a profile whenever an auth user is created, so admin accounts
--- work no matter whether the user is created before or after this migration.
+-- Auto-create a viewer profile whenever an auth user is created. Promote users
+-- by editing public.profiles.role or by running create_admin_profile.sql.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql

@@ -31,6 +31,7 @@ const loggingOut = ref(false)
 
 const workspaceLinks: NavItem[] = [
   { to: '/admin', label: 'Dashboard', icon: 'icon-dashboard' },
+  { to: '/admin/media', label: 'Media URLs', icon: 'icon-media' },
   { to: '/admin/donate', label: 'Donation QR', icon: 'icon-media' },
 ]
 

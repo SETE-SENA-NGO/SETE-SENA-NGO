@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { normalizeImageUrl } from '@/lib/imageUrls'
 
 export type DonationMethod = {
   id: string
@@ -37,9 +38,30 @@ type DonationMethodWriteRow = {
   metadata: DonationMetadata
 }
 
+type DonationMethodUpsertRow = {
+  slug: string
+  name: string
+  method_type: string
+  instructions: string
+  account_name: string
+  account_number: string
+  currency: string
+  sort_order: number
+  is_active: boolean
+  metadata: DonationMetadata
+  updated_at: string
+}
+
+const defaultColors: Record<string, string> = {
+  aba: '#0d2c63',
+  'aba-pay': '#0d2c63',
+  acleda: '#1d3d5c',
+  'acleda-bank': '#1d3d5c',
+}
+
 export function createDonationMethod(overrides: Partial<DonationMethod> = {}): DonationMethod {
   return {
-    id: crypto.randomUUID(),
+    id: `bank-${crypto.randomUUID()}`,
     bank: '',
     subtitle: '',
     headerColor: '#1d3d5c',
@@ -54,14 +76,14 @@ export function createDonationMethod(overrides: Partial<DonationMethod> = {}): D
 export function defaultDonationMethods(): DonationMethod[] {
   return [
     createDonationMethod({
-      id: 'aba',
+      id: 'aba-pay',
       bank: 'ABA Pay',
       subtitle: 'ABA BANK - CAMBODIA',
       headerColor: '#0d2c63',
       accountNo: '000 000 000',
     }),
     createDonationMethod({
-      id: 'acleda',
+      id: 'acleda-bank',
       bank: 'ACLEDA Bank',
       subtitle: 'ACLEDA - CAMBODIA',
       headerColor: '#1d3d5c',
@@ -76,6 +98,25 @@ function metadataString(metadata: DonationMetadata | null, key: string) {
 }
 
 function rowToMethod(row: DonationMethodRow): DonationMethod {
+  const metadata = rowMetadata(row)
+  const id = row.slug || row.id
+
+  return {
+    id,
+    bank: row.name,
+    subtitle: stringFrom(metadata.subtitle) || stringFrom(metadata.bank) || row.instructions || '',
+    headerColor:
+      stringFrom(metadata.headerColor) || stringFrom(metadata.header_color) || defaultColors[id] || '#1d3d5c',
+    qrUrl: normalizeImageUrl(
+      mediaUrl(row.qr_media) || stringFrom(metadata.qrUrl) || stringFrom(metadata.qr_url),
+    ),
+    accountName: row.account_name ?? 'SANTI SENA',
+    accountNo: row.account_number ?? '',
+    currency: row.currency ?? 'KHR / USD',
+  }
+}
+
+function legacyRowToMethod(row: LegacyDonationMethodRow): DonationMethod {
   return {
     id: row.slug,
     bank: row.name,
@@ -111,14 +152,21 @@ function methodToRow(method: DonationMethod, sortOrder: number): DonationMethodW
   }
 }
 
-export async function fetchDonationMethods(): Promise<DonationMethod[]> {
+function shouldTryLegacySchema(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const message = 'message' in error ? String(error.message) : ''
+  return /column|schema|relation|does not exist/i.test(message)
+}
+
+async function fetchLegacyDonationMethods(): Promise<DonationMethod[]> {
   const { data, error } = await supabase
     .from('donation_methods')
     .select('slug, name, account_name, account_number, currency, sort_order, metadata')
     .eq('is_active', true)
     .order('sort_order', { ascending: true })
+
   if (error) throw error
-  return ((data ?? []) as DonationMethodRow[]).map(rowToMethod)
+  return ((data ?? []) as LegacyDonationMethodRow[]).map(legacyRowToMethod)
 }
 
 export async function saveDonationMethods(methods: DonationMethod[]): Promise<void> {
@@ -149,6 +197,53 @@ export async function saveDonationMethods(methods: DonationMethod[]): Promise<vo
         rows.map((row) => ({ ...row, updated_at: new Date().toISOString() })),
         { onConflict: 'slug' },
       )
+    if (upsertError) throw upsertError
+  }
+}
+
+export async function fetchDonationMethods(): Promise<DonationMethod[]> {
+  const { data, error } = await supabase
+    .from('donation_methods')
+    .select(
+      'id, slug, name, method_type, instructions, account_name, account_number, currency, sort_order, is_active, metadata, qr_media:media_assets(public_url)',
+    )
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+
+  if (error) {
+    if (shouldTryLegacySchema(error)) return fetchLegacyDonationMethods()
+    throw error
+  }
+
+  return ((data ?? []) as DonationMethodRow[]).map(rowToMethod)
+}
+
+export async function saveDonationMethods(methods: DonationMethod[]): Promise<void> {
+  const rows = methods.map(methodToRow)
+  const { data: existing, error: fetchError } = await supabase.from('donation_methods').select('slug')
+
+  if (fetchError) {
+    if (shouldTryLegacySchema(fetchError)) return saveLegacyDonationMethods(methods)
+    throw fetchError
+  }
+
+  const keep = new Set(rows.map((row) => row.slug))
+  const removed = ((existing ?? []) as { slug: string }[])
+    .map((row) => row.slug)
+    .filter((slug) => !keep.has(slug))
+
+  if (removed.length) {
+    const { error: deleteError } = await supabase
+      .from('donation_methods')
+      .delete()
+      .in('slug', removed)
+    if (deleteError) throw deleteError
+  }
+
+  if (rows.length) {
+    const { error: upsertError } = await supabase
+      .from('donation_methods')
+      .upsert(rows, { onConflict: 'slug' })
     if (upsertError) throw upsertError
   }
 }

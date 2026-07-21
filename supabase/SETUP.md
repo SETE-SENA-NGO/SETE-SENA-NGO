@@ -31,7 +31,7 @@ select pg_notify('pgrst', 'reload schema');
 
 ## Create Admin Login
 
-In Supabase Dashboard, go to Authentication > Users > Add user:
+In Supabase Dashboard, go to Authentication > Users > Add user. Use a real site-admin email and a strong generated password.
 
 ```text
 Email: customer-admin@example.org

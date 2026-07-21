@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { imageUrls } from '@/lib/imageUrls'
 import { fetchPublishedNews, type NewsArticle } from '@/lib/newsContent'
+
+const newsCertificateImage = imageUrls.news.certificate
+const newsPreschoolImage = imageUrls.news.preschool
+const newsStudentImage = imageUrls.news.student
+const newsWashImage = imageUrls.news.wash
+const newsWaterImage = imageUrls.news.water
+const authorAvatarImage = imageUrls.logo
 
 // ─── Dummy news data ────────────────────────────────────────────────
 const newsItems = ref<NewsArticle[]>([
@@ -12,12 +20,11 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
     content: '',
-    image: 'src/assets/maps/student.png',
+    image: newsStudentImage,
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
+    authorAvatar: authorAvatarImage,
     featured: true,
     readTime: '3 min read',
     views: 1247,
@@ -31,12 +38,11 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
     content: '',
-    image: 'src/assets/maps/wash.png',
+    image: newsWashImage,
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
+    authorAvatar: authorAvatarImage,
     featured: false,
     readTime: '4 min read',
     views: 856,
@@ -50,12 +56,11 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
     content: '',
-    image: 'src/assets/maps/certi.png',
+    image: newsCertificateImage,
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
+    authorAvatar: authorAvatarImage,
     featured: false,
     readTime: '2 min read',
     views: 523,
@@ -69,12 +74,11 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
     content: '',
-    image: 'src/assets/maps/pre-school.png',
+    image: newsPreschoolImage,
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
+    authorAvatar: authorAvatarImage,
     featured: false,
     readTime: '3 min read',
     views: 2134,
@@ -88,12 +92,11 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
     content: '',
-    image: 'src/assets/maps/water.png',
+    image: newsWaterImage,
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
+    authorAvatar: authorAvatarImage,
     featured: false,
     readTime: '5 min read',
     views: 678,
@@ -248,8 +251,9 @@ const shareArticle = (title: string) => {
 }
 
 const subscribeNewsletter = () => {
-  if (newsletterEmail.value) {
-    alert(`Subscribed with ${newsletterEmail.value}!`)
+  const email = newsletterEmail.value.trim()
+  if (email) {
+    showToastNow(`Subscribed with ${email}!`)
     newsletterEmail.value = ''
   }
 }

@@ -3,6 +3,7 @@ import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { supabase } from '@/lib/supabase'
+import { imageUrlHelpText, normalizeMediaUrl } from '@/lib/media'
 import { newsPostSelect, slugify, type NewsPostRow } from '@/lib/newsContent'
 import { onMounted, ref, computed } from 'vue'
 
@@ -40,6 +41,7 @@ const config: NewsManagerConfig = {
 }
 
 const ui = useUiStore()
+const imageUrlHint = imageUrlHelpText()
 
 const records = ref<NewsRecord[]>([])
 const search = ref('')
@@ -90,11 +92,12 @@ function imageUrlFromMetadata(metadata: NewsPostRow['metadata']) {
   if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return ''
   const imageUrl = metadata.image_url
   const imagePath = metadata.image_path
-  return typeof imageUrl === 'string'
+  const value = typeof imageUrl === 'string'
     ? imageUrl
     : typeof imagePath === 'string'
       ? imagePath
       : ''
+  return normalizeMediaUrl(value)
 }
 
 function rowToRecord(row: NewsPostRow): NewsRecord {
@@ -269,7 +272,7 @@ async function saveRecord() {
       author_name: payload.author,
       read_time: '3 min read',
       published_at: dbStatus === 'published' ? savedAt : null,
-      metadata: { image_url: form.value.image_url },
+      metadata: { image_url: normalizeMediaUrl(form.value.image_url) },
       updated_at: savedAt,
     }
 
@@ -322,7 +325,7 @@ async function duplicateRecord(record: NewsRecord) {
         status: 'draft',
         author_name: record.author,
         read_time: '3 min read',
-        metadata: { image_url: record.image_url ?? '' },
+        metadata: { image_url: normalizeMediaUrl(record.image_url ?? '') },
       })
       .select(newsPostSelect)
       .single()
@@ -545,7 +548,12 @@ onMounted(() => {
             </label>
             <label class="full">
               <span>Image URL</span>
-              <input v-model="form.image_url" name="news-image-url" />
+              <input
+                v-model="form.image_url"
+                name="news-image-url"
+                placeholder="https://drive.google.com/file/d/.../view"
+              />
+              <small>{{ imageUrlHint }}</small>
             </label>
 
             <div class="form-actions full">
