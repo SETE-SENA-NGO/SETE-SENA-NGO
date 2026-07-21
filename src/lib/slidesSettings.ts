@@ -143,6 +143,11 @@ export async function fetchHomeSlides(): Promise<HomeSlide[]> {
   return ((data ?? []) as HomeSlideRow[]).map(rowToSlide)
 }
 
+export async function deleteHomeSlide(id: string): Promise<void> {
+  const { error } = await supabase.from('home_slides').delete().eq('id', id)
+  if (error) throw error
+}
+
 export async function saveHomeSlides(slides: HomeSlide[]): Promise<void> {
   const rows = slides.map(slideToRow)
 

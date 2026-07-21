@@ -8,6 +8,7 @@ import { imageUploadHelpText, isAllowedImageFile } from '@/lib/media'
 import {
   createHomeSlide,
   defaultHomeSlides,
+  deleteHomeSlide,
   fetchHomeSlides,
   saveHomeSlides,
   type HomeSlide,
@@ -31,6 +32,7 @@ const messageType = ref<'success' | 'error'>('success')
 // Only one slide is edited at a time — pick which one via the selector strip.
 const activeIndex = ref(0)
 const activeSlide = computed(() => slides.value[activeIndex.value])
+const removingId = ref<string | null>(null)
 
 onMounted(async () => {
   try {
@@ -104,14 +106,25 @@ function removeSlide(slide: HomeSlide) {
   const index = slides.value.findIndex((s) => s.id === slide.id)
   const label = slide.title.trim() || `Slide ${index + 1}`
 
-  ui.openModal('Remove slide?', `Remove "${label}" from the homepage slideshow?`, () => {
-    revokePreview(slide.id)
-    delete pendingFiles[slide.id]
-    slides.value = slides.value.filter((s) => s.id !== slide.id)
-    if (index !== -1) {
-      activeIndex.value = Math.min(index, slides.value.length - 1)
+  ui.openModal('Remove slide?', `Remove "${label}" from the homepage slideshow?`, async () => {
+    removingId.value = slide.id
+    try {
+      // Deletes right away (a newly-added, never-saved slide simply has no
+      // matching row yet, so this is a harmless no-op for it).
+      await deleteHomeSlide(slide.id)
+
+      revokePreview(slide.id)
+      delete pendingFiles[slide.id]
+      slides.value = slides.value.filter((s) => s.id !== slide.id)
+      if (index !== -1) {
+        activeIndex.value = Math.min(index, slides.value.length - 1)
+      }
+      ui.addToast(`${label} removed from the slideshow.`, 'success')
+    } catch (e) {
+      ui.addToast(e instanceof Error ? e.message : 'Could not remove slide.', 'error')
+    } finally {
+      removingId.value = null
     }
-    message.value = ''
   })
 }
 
@@ -252,12 +265,12 @@ async function save() {
                   <button
                     type="button"
                     class="remove-slide-btn"
-                    :disabled="slides.length <= MIN_SLIDES"
+                    :disabled="slides.length <= MIN_SLIDES || removingId === activeSlide.id"
                     :title="slides.length <= MIN_SLIDES ? `You must keep at least ${MIN_SLIDES} slide.` : ''"
                     :aria-label="`Remove slide ${activeIndex + 1}`"
                     @click="removeSlide(activeSlide)"
                   >
-                    &times;
+                    {{ removingId === activeSlide.id ? '⋯' : '×' }}
                   </button>
                 </div>
               </header>
