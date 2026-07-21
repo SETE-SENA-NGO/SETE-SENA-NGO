@@ -601,6 +601,7 @@ nav {
 .summary-link {
   flex: 1;
   min-width: 0;
+  font-size: 0.9rem;
 }
 
 .submenu {
