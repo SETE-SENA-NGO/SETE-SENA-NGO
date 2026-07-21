@@ -31,7 +31,6 @@ const loggingOut = ref(false)
 
 const workspaceLinks: NavItem[] = [
   { to: '/admin', label: 'Dashboard', icon: 'icon-dashboard' },
-  { to: '/admin/media', label: 'Media URLs', icon: 'icon-media' },
   { to: '/admin/donate', label: 'Donation QR', icon: 'icon-media' },
 ]
 
@@ -48,6 +47,7 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'programs',
     label: 'Programs',
+    path: '/admin/programs',
     items: [
       { slug: 'programs-education', label: 'Education', path: '/admin/education' },
       { slug: 'programs-environment', label: 'Environment', path: '/admin/environment' },
@@ -76,6 +76,7 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'news',
     label: 'News',
+    path: '/admin/news',
     items: [{ slug: 'news-detail', label: 'News Detail' }],
   },
   {
@@ -98,20 +99,9 @@ function isNavActive(item: NavItem) {
 }
 
 function isGroupActive(group: PageGroup) {
-  if (isActive(editorPath(group.slug))) return true
-  return hasActiveChild(group)
-}
-
-function isItemActive(item: PageItem) {
-  // Check the primary path (dashboard route) AND the editor page route
-  const primaryPath = item.path ?? editorPath(item.slug)
-  if (isActive(primaryPath)) return true
-  if (item.path && isActive(editorPath(item.slug))) return true
-  return false
-}
-
-function hasActiveChild(group: PageGroup) {
-  return group.items.some((item) => isItemActive(item))
+  const groupPath = group.path ?? editorPath(group.slug)
+  if (isActive(groupPath)) return true
+  return group.items.some((item) => isActive(item.path ?? editorPath(item.slug)))
 }
 
 function isGroupOpen(group: PageGroup) {
@@ -155,7 +145,8 @@ async function logout() {
 
       <!-- Flat single pages -->
       <RouterLink v-for="group in pageGroups.filter((g) => !g.items.length)" :key="group.slug"
-        :to="editorPath(group.slug)" :class="['link', { active: isActive(editorPath(group.slug)) }]"
+        :to="group.path ?? editorPath(group.slug)"
+        :class="['link', { active: isActive(group.path ?? editorPath(group.slug)) }]"
         @click="ui.closeSidebarForNavigation">
         <span class="link-icon icon-pages" aria-hidden="true"></span>
         <span>{{ group.label }}</span>
@@ -166,12 +157,9 @@ async function logout() {
         :open="isGroupOpen(group)">
         <summary>
           <RouterLink
-            :to="editorPath(group.slug)"
+            :to="group.path ?? editorPath(group.slug)"
             class="link summary-link"
-            :class="{
-              active: isActive(editorPath(group.slug)),
-              'active-descendant': hasActiveChild(group) && !isActive(editorPath(group.slug))
-            }"
+            :class="{ active: isActive(group.path ?? editorPath(group.slug)) }"
             @click.stop="ui.closeSidebarForNavigation"
           >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
@@ -180,9 +168,8 @@ async function logout() {
         </summary>
         <div class="submenu">
           <RouterLink v-for="item in group.items" :key="item.slug" :to="item.path ?? editorPath(item.slug)"
-            :class="['sub-link', { active: isItemActive(item) }]"
+            :class="['sub-link', { active: isActive(item.path ?? editorPath(item.slug)) }]"
             @click="ui.closeSidebarForNavigation">
-            <span class="step-dot" :class="{ active: isItemActive(item) }"></span>
             {{ item.label }}
           </RouterLink>
         </div>
@@ -309,7 +296,7 @@ async function logout() {
   background: var(--sb-brand-mark-bg);
   color: var(--sb-brand-mark);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 900;
   flex-shrink: 0;
   box-shadow: 0 10px 20px rgba(15, 125, 56, 0.22);
 }
@@ -330,13 +317,13 @@ async function logout() {
 .brand-text strong {
   color: var(--sb-text-strong);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 900;
 }
 
 .brand-text small {
   color: var(--sb-muted);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 nav {
@@ -350,7 +337,7 @@ nav {
   margin: 0.85rem 0 0.45rem;
   color: var(--sb-muted);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -363,7 +350,7 @@ nav {
   border-radius: 6px;
   color: var(--sb-text);
   padding: 0.5rem 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   font-size: 0.9rem;
   opacity: 0.85;
@@ -601,13 +588,12 @@ nav {
 .summary-link {
   flex: 1;
   min-width: 0;
-  font-size: 0.9rem;
 }
 
 .submenu {
   display: grid;
   gap: 0.1rem;
-  padding: 0.25rem 0.5rem 0.5rem 0.5rem;
+  padding: 0.1rem 0 0.35rem 1.4rem;
   margin-left: 0.35rem;
   border-left: 1px solid var(--sb-divider);
 }
@@ -615,15 +601,13 @@ nav {
 .sub-link {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  min-height: 40px;
-  border-radius: 6px;
-  color: var(--sb-text);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  gap: 0.6rem;
+  border-radius: 5px;
+  color: var(--sb-muted);
+  padding: 0.38rem 0.6rem;
+  font-size: 0.84rem;
+  font-weight: 700;
   text-decoration: none;
-  opacity: 0.85;
   transition:
     color 0.15s ease,
     background 0.15s ease;
@@ -645,42 +629,7 @@ nav {
 .sub-link.active {
   background: var(--sb-accent-soft);
   color: var(--sb-active-text);
-  box-shadow: inset 3px 0 0 var(--sb-accent);
-}
-
-/* Active descendant: parent shows a lighter indicator when a child is active */
-.summary-link.active-descendant {
-  background: var(--sb-accent-soft);
-  color: var(--sb-active-text);
-  opacity: 1;
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--sb-accent) 50%, transparent);
-}
-
-/* Step dot: small bullet that marks the active path */
-.step-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--sb-muted);
-  opacity: 0.4;
-  transition: all 0.2s ease;
-}
-
-.step-dot.active {
-  width: 8px;
-  height: 8px;
-  background: var(--sb-accent);
-  opacity: 1;
-  box-shadow: 0 0 6px color-mix(in srgb, var(--sb-accent) 50%, transparent);
-}
-
-.sub-link:hover .step-dot {
-  opacity: 0.7;
-}
-
-.sub-link.active .step-dot {
-  opacity: 1;
+  box-shadow: inset 2px 0 0 var(--sb-accent);
 }
 
 .bottom {
@@ -747,13 +696,13 @@ nav {
 
 .logout-copy strong {
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .logout-copy small {
   color: var(--sb-danger-sub);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @media (min-width: 900px) {
