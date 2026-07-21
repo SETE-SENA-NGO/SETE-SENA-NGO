@@ -9,7 +9,7 @@ export const googleDriveImageFolderUrl = publicGoogleDriveFolderId
   : ''
 
 export function googleDriveImageUrl(fileId: string, size = 'w1600') {
-  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=${size}`
+  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=${size}`
 }
 
 const fallbackPhoto = (label: string, accent = '#0f8f69', secondary = '#d4a017') =>

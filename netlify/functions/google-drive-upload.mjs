@@ -378,7 +378,7 @@ function isJwtKey(value) {
 }
 
 function googleThumbnailUrl(fileId) {
-  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1600`
+  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=w1600`
 }
 
 function sanitizeFileName(value) {
