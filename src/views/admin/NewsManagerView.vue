@@ -686,23 +686,9 @@ onMounted(() => {
 
 <style scoped>
 .admin-module-page {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-text: var(--admin-theme-text);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-blue: var(--admin-theme-teal);
-  --admin-success: var(--admin-theme-primary);
-  --admin-warning: var(--admin-theme-gold);
-  --admin-error: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-
   min-height: 100vh;
-  background: var(--admin-bg);
-  color: var(--admin-text);
+  background: var(--admin-theme-bg);
+  color: var(--admin-theme-text);
 }
 
 .admin-layout {
@@ -719,10 +705,10 @@ onMounted(() => {
 .stat-card,
 .form-card,
 .table-card {
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
 .module-hero {
@@ -734,7 +720,7 @@ onMounted(() => {
 
 .eyebrow {
   margin: 0 0 0.45rem;
-  color: var(--admin-blue);
+  color: var(--admin-theme-teal);
   font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -748,20 +734,20 @@ p {
 
 h1 {
   margin-bottom: 0.35rem;
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: clamp(1.7rem, 3vw, 2.4rem);
 }
 
 h2 {
   margin-bottom: 0;
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 1.05rem;
 }
 
 .module-hero p:not(.eyebrow) {
   max-width: 660px;
   margin-bottom: 0;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   line-height: 1.65;
 }
 
@@ -787,17 +773,17 @@ h2 {
 }
 
 .button-primary {
-  border: 1px solid var(--admin-blue);
-  background: var(--admin-blue);
+  border: 1px solid var(--admin-theme-teal);
+  background: var(--admin-theme-teal);
   color: #ffffff;
 }
 
 .button-secondary,
 .icon-button,
 .pagination button {
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
+  border: 1px solid var(--admin-theme-border);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-contrast);
 }
 
 .stat-grid {
@@ -816,26 +802,26 @@ h2 {
 }
 
 .stat-card span {
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   font-weight: 850;
 }
 
 .stat-card strong {
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 2rem;
   line-height: 1;
 }
 
 .tone-blue {
-  --tone: var(--admin-blue);
+  --tone: var(--admin-theme-teal);
 }
 
 .tone-green {
-  --tone: var(--admin-success);
+  --tone: var(--admin-theme-primary);
 }
 
 .tone-orange {
-  --tone: var(--admin-warning);
+  --tone: var(--admin-theme-gold);
 }
 
 .tone-slate {
@@ -867,7 +853,7 @@ h2 {
 label {
   display: grid;
   gap: 0.4rem;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   font-weight: 800;
 }
 
@@ -879,10 +865,10 @@ input,
 select,
 textarea {
   width: 100%;
-  border: 1px solid var(--admin-border-strong);
+  border: 1px solid var(--admin-theme-border-strong);
   border-radius: 12px;
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-contrast);
   padding: 0.72rem 0.82rem;
 }
 
@@ -909,22 +895,22 @@ textarea {
   align-items: center;
   gap: 0.6rem;
   margin-top: 0.9rem;
-  border: 1px solid rgba(37, 99, 235, 0.18);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-teal) 20%, transparent);
   border-radius: 12px;
-  background: rgba(37, 99, 235, 0.08);
+  background: color-mix(in srgb, var(--admin-theme-teal) 8%, transparent);
   padding: 0.75rem;
 }
 
 .bulk-bar .danger,
 .row-actions .danger {
-  border-color: rgba(220, 38, 38, 0.35);
-  color: var(--admin-error);
+  border-color: color-mix(in srgb, var(--admin-theme-danger) 35%, transparent);
+  color: var(--admin-theme-danger);
 }
 
 .table-wrap {
   overflow-x: auto;
   margin-top: 1rem;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 14px;
 }
 
@@ -936,29 +922,29 @@ table {
 
 th,
 td {
-  border-bottom: 1px solid var(--admin-border);
+  border-bottom: 1px solid var(--admin-theme-border);
   padding: 0.85rem;
   text-align: left;
   vertical-align: top;
 }
 
 th {
-  background: var(--admin-surface-soft);
-  color: var(--admin-muted);
+  background: var(--admin-theme-surface-soft);
+  color: var(--admin-theme-muted);
   font-size: 0.78rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 td {
-  color: var(--admin-text);
+  color: var(--admin-theme-text);
 }
 
 td small {
   display: block;
   max-width: 320px;
   margin-top: 0.2rem;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   line-height: 1.45;
 }
 
@@ -968,8 +954,8 @@ td small {
   display: grid;
   place-items: center;
   border-radius: 12px;
-  background: rgba(37, 99, 235, 0.1);
-  color: var(--admin-blue);
+  background: color-mix(in srgb, var(--admin-theme-teal) 14%, transparent);
+  color: var(--admin-theme-teal);
   font-weight: 900;
 }
 
@@ -982,18 +968,18 @@ td small {
 }
 
 .status.published {
-  background: rgba(22, 163, 74, 0.12);
-  color: #15803d;
+  background: color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
+  color: var(--admin-theme-primary);
 }
 
 .status.draft {
-  background: rgba(249, 115, 22, 0.12);
-  color: #c2410c;
+  background: color-mix(in srgb, var(--admin-theme-gold) 14%, transparent);
+  color: var(--admin-theme-gold);
 }
 
 .status.archived {
-  background: rgba(100, 116, 139, 0.14);
-  color: #475569;
+  background: color-mix(in srgb, #64748b 14%, transparent);
+  color: #64748b;
 }
 
 .empty-state {
@@ -1001,7 +987,7 @@ td small {
   place-items: center;
   gap: 0.25rem;
   min-height: 160px;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   text-align: center;
 }
 

@@ -12,42 +12,30 @@ export type DonationMethod = {
   currency: string
 }
 
-type DonationMetadata = {
-  bank?: unknown
-  subtitle?: unknown
-  headerColor?: unknown
-  header_color?: unknown
-  qrUrl?: unknown
-  qr_url?: unknown
-}
+type DonationMetadata = Record<string, unknown>
 
-type MediaRelation = { public_url: string | null } | { public_url: string | null }[]
-
+// Row shape of the canonical donation_methods table.
 type DonationMethodRow = {
-  id: string
   slug: string
   name: string
-  method_type: string
-  instructions: string | null
   account_name: string | null
   account_number: string | null
   currency: string | null
-  sort_order: number
-  is_active: boolean
+  sort_order: number | null
   metadata: DonationMetadata | null
-  qr_media?: MediaRelation | null
 }
 
-type LegacyDonationMethodRow = {
-  id: string
-  bank: string
-  subtitle: string
-  header_color: string
-  qr_url: string
+type DonationMethodWriteRow = {
+  slug: string
+  name: string
+  method_type: string
+  instructions: string
   account_name: string
-  account_no: string
+  account_number: string
   currency: string
   sort_order: number
+  is_active: boolean
+  metadata: DonationMetadata
 }
 
 type DonationMethodUpsertRow = {
@@ -104,18 +92,9 @@ export function defaultDonationMethods(): DonationMethod[] {
   ]
 }
 
-function stringFrom(value: unknown) {
+function metadataString(metadata: DonationMetadata | null, key: string) {
+  const value = metadata?.[key]
   return typeof value === 'string' ? value : ''
-}
-
-function rowMetadata(row: DonationMethodRow) {
-  return row.metadata && typeof row.metadata === 'object' ? row.metadata : {}
-}
-
-function mediaUrl(relation?: MediaRelation | null) {
-  if (!relation) return ''
-  const media = Array.isArray(relation) ? relation[0] : relation
-  return media?.public_url ?? ''
 }
 
 function rowToMethod(row: DonationMethodRow): DonationMethod {
@@ -139,66 +118,37 @@ function rowToMethod(row: DonationMethodRow): DonationMethod {
 
 function legacyRowToMethod(row: LegacyDonationMethodRow): DonationMethod {
   return {
-    id: row.id,
-    bank: row.bank,
-    subtitle: row.subtitle,
-    headerColor: row.header_color || defaultColors[row.id] || '#1d3d5c',
-    qrUrl: normalizeImageUrl(row.qr_url),
-    accountName: row.account_name,
-    accountNo: row.account_no,
-    currency: row.currency,
+    id: row.slug,
+    bank: row.name,
+    subtitle: metadataString(row.metadata, 'subtitle') || metadataString(row.metadata, 'bank'),
+    headerColor: metadataString(row.metadata, 'header_color') || '#1d3d5c',
+    qrUrl: metadataString(row.metadata, 'qr_url'),
+    accountName: row.account_name || 'SANTI SENA',
+    accountNo: row.account_number || '',
+    currency: row.currency || 'KHR / USD',
   }
 }
 
-function slugFrom(method: DonationMethod, sortOrder: number) {
-  const source = method.id || method.bank || `bank-${sortOrder + 1}`
-  const slug = source
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-
-  return slug || `bank-${sortOrder + 1}`
-}
-
-function methodToRow(method: DonationMethod, sortOrder: number): DonationMethodUpsertRow {
-  const subtitle = method.subtitle.trim()
-  const headerColor = method.headerColor || '#1d3d5c'
-  const qrUrl = normalizeImageUrl(method.qrUrl)
+function methodToRow(method: DonationMethod, sortOrder: number): DonationMethodWriteRow {
+  const bank = method.bank.trim()
+  const accountName = method.accountName.trim() || 'SANTI SENA'
+  const accountNumber = method.accountNo.trim()
 
   return {
-    slug: slugFrom(method, sortOrder),
-    name: method.bank.trim(),
+    slug: method.id,
+    name: bank,
     method_type: 'bank_qr',
-    instructions: subtitle,
-    account_name: method.accountName.trim(),
-    account_number: method.accountNo.trim(),
-    currency: method.currency.trim(),
+    instructions: `Scan with ${bank || 'your banking app'} or send a transfer to the Santi Sena account.`,
+    account_name: accountName,
+    account_number: accountNumber,
+    currency: method.currency.trim() || 'KHR / USD',
     sort_order: sortOrder,
     is_active: true,
     metadata: {
-      bank: subtitle,
-      subtitle,
-      headerColor,
-      header_color: headerColor,
-      qrUrl,
-      qr_url: qrUrl,
+      subtitle: method.subtitle.trim(),
+      header_color: method.headerColor,
+      qr_url: method.qrUrl,
     },
-    updated_at: new Date().toISOString(),
-  }
-}
-
-function methodToLegacyRow(method: DonationMethod, sortOrder: number): LegacyDonationMethodRow {
-  return {
-    id: slugFrom(method, sortOrder),
-    bank: method.bank.trim(),
-    subtitle: method.subtitle.trim(),
-    header_color: method.headerColor || '#1d3d5c',
-    qr_url: normalizeImageUrl(method.qrUrl),
-    account_name: method.accountName.trim(),
-    account_no: method.accountNo.trim(),
-    currency: method.currency.trim(),
-    sort_order: sortOrder,
   }
 }
 
@@ -211,25 +161,32 @@ function shouldTryLegacySchema(error: unknown) {
 async function fetchLegacyDonationMethods(): Promise<DonationMethod[]> {
   const { data, error } = await supabase
     .from('donation_methods')
-    .select('*')
+    .select('slug, name, account_name, account_number, currency, sort_order, metadata')
+    .eq('is_active', true)
     .order('sort_order', { ascending: true })
 
   if (error) throw error
   return ((data ?? []) as LegacyDonationMethodRow[]).map(legacyRowToMethod)
 }
 
-async function saveLegacyDonationMethods(methods: DonationMethod[]): Promise<void> {
-  const rows = methods.map(methodToLegacyRow)
-  const { data: existing, error: fetchError } = await supabase.from('donation_methods').select('id')
+export async function saveDonationMethods(methods: DonationMethod[]): Promise<void> {
+  const rows = methods.map(methodToRow)
+
+  const { data: existing, error: fetchError } = await supabase
+    .from('donation_methods')
+    .select('slug')
   if (fetchError) throw fetchError
 
-  const keep = new Set(rows.map((row) => row.id))
-  const removed = ((existing ?? []) as { id: string }[])
-    .map((row) => row.id)
-    .filter((id) => !keep.has(id))
+  const keep = new Set(rows.map((row) => row.slug))
+  const removed = ((existing ?? []) as { slug: string }[])
+    .map((row) => row.slug)
+    .filter((slug) => !keep.has(slug))
 
   if (removed.length) {
-    const { error: deleteError } = await supabase.from('donation_methods').delete().in('id', removed)
+    const { error: deleteError } = await supabase
+      .from('donation_methods')
+      .delete()
+      .in('slug', removed)
     if (deleteError) throw deleteError
   }
 
@@ -238,7 +195,7 @@ async function saveLegacyDonationMethods(methods: DonationMethod[]): Promise<voi
       .from('donation_methods')
       .upsert(
         rows.map((row) => ({ ...row, updated_at: new Date().toISOString() })),
-        { onConflict: 'id' },
+        { onConflict: 'slug' },
       )
     if (upsertError) throw upsertError
   }

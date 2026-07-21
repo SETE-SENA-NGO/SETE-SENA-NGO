@@ -49,10 +49,10 @@ const pageGroups: PageGroup[] = [
     slug: 'programs',
     label: 'Programs',
     items: [
-      { slug: 'programs-education', label: 'Education', path: '/admin/editor/programs-education' },
-      { slug: 'programs-environment', label: 'Environment', path: '/admin/editor/programs-environment' },
-      { slug: 'programs-livelihood', label: 'Livelihood', path: '/admin/editor/programs-livelihood' },
-      { slug: 'programs-child-protection', label: 'Child Protection', path: '/admin/editor/programs-child-protection' },
+      { slug: 'programs-education', label: 'Education', path: '/admin/education' },
+      { slug: 'programs-environment', label: 'Environment', path: '/admin/environment' },
+      { slug: 'programs-livelihood', label: 'Livelihood', path: '/admin/livelihood' },
+      { slug: 'programs-child-protection', label: 'Child Protection', path: '/admin/child-protection' },
     ],
   },
   {
@@ -99,7 +99,19 @@ function isNavActive(item: NavItem) {
 
 function isGroupActive(group: PageGroup) {
   if (isActive(editorPath(group.slug))) return true
-  return group.items.some((item) => isActive(item.path ?? editorPath(item.slug)))
+  return hasActiveChild(group)
+}
+
+function isItemActive(item: PageItem) {
+  // Check the primary path (dashboard route) AND the editor page route
+  const primaryPath = item.path ?? editorPath(item.slug)
+  if (isActive(primaryPath)) return true
+  if (item.path && isActive(editorPath(item.slug))) return true
+  return false
+}
+
+function hasActiveChild(group: PageGroup) {
+  return group.items.some((item) => isItemActive(item))
 }
 
 function isGroupOpen(group: PageGroup) {
@@ -156,7 +168,10 @@ async function logout() {
           <RouterLink
             :to="editorPath(group.slug)"
             class="link summary-link"
-            :class="{ active: isActive(editorPath(group.slug)) }"
+            :class="{
+              active: isActive(editorPath(group.slug)),
+              'active-descendant': hasActiveChild(group) && !isActive(editorPath(group.slug))
+            }"
             @click.stop="ui.closeSidebarForNavigation"
           >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
@@ -165,8 +180,9 @@ async function logout() {
         </summary>
         <div class="submenu">
           <RouterLink v-for="item in group.items" :key="item.slug" :to="item.path ?? editorPath(item.slug)"
-            :class="['sub-link', { active: isActive(item.path ?? editorPath(item.slug)) }]"
+            :class="['sub-link', { active: isItemActive(item) }]"
             @click="ui.closeSidebarForNavigation">
+            <span class="step-dot" :class="{ active: isItemActive(item) }"></span>
             {{ item.label }}
           </RouterLink>
         </div>
@@ -627,6 +643,41 @@ nav {
   background: var(--sb-accent-soft);
   color: var(--sb-active-text);
   box-shadow: inset 2px 0 0 var(--sb-accent);
+}
+
+/* Active descendant: parent shows a lighter indicator when a child is active */
+.summary-link.active-descendant {
+  background: var(--sb-accent-soft);
+  color: var(--sb-active-text);
+  opacity: 1;
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--sb-accent) 50%, transparent);
+}
+
+/* Step dot: small bullet that marks the active path */
+.step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--sb-muted);
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.step-dot.active {
+  width: 8px;
+  height: 8px;
+  background: var(--sb-accent);
+  opacity: 1;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--sb-accent) 50%, transparent);
+}
+
+.sub-link:hover .step-dot {
+  opacity: 0.7;
+}
+
+.sub-link.active .step-dot {
+  opacity: 1;
 }
 
 .bottom {

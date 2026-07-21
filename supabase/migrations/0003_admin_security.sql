@@ -1,7 +1,6 @@
--- Compatibility hardening for projects that applied the early minimal schema.
--- The canonical CMS schema in 0002_admin_editable_content_schema.sql already
--- uses public.is_content_admin(); this migration keeps older policy names safe
--- while preserving the current role model.
+-- Enforce admin roles at the database level. Before this migration, any
+-- authenticated user could write some admin-managed tables.
+-- Now writes require profiles.role to be super_admin, admin, or editor.
 
 -- SECURITY DEFINER so policies can check the caller's role without
 -- re-triggering RLS on profiles (a plain subquery would recurse).
@@ -67,3 +66,6 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Promote the customer's first admin by running supabase/create_admin_profile.sql
+-- after creating the Auth user in Supabase Dashboard.

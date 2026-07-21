@@ -241,13 +241,13 @@ const methods = computed<PayMethod[]>(() => {
 }
 .tab {
   min-height: 3rem;
-  border: 1px solid #1d3d5c;
+  border: 1px solid var(--primary-dark);
   border-radius: 999px;
   background: transparent;
   padding: 0.75rem 1.45rem;
   font-weight: 600;
   line-height: 1.1;
-  color: #1d3d5c;
+  color: var(--primary-dark);
   cursor: pointer;
   transition:
     background 0.2s ease,
@@ -256,20 +256,20 @@ const methods = computed<PayMethod[]>(() => {
     transform 0.18s ease;
 }
 .tab:hover {
-  border-color: #d9ad2f;
-  color: #1d3d5c;
+  border-color: var(--primary-color);
+  color: var(--primary-dark);
   transform: translateY(-1px);
 }
 .tab.active {
-  background: #1d3d5c;
+  background: var(--primary-dark);
   color: var(--color-white);
-  border-color: #1d3d5c;
+  border-color: var(--primary-dark);
   box-shadow: 0 12px 24px rgba(29, 61, 92, 0.18);
 }
 .tab.active:hover {
-  background: #17314a;
+  background: var(--color-ink);
   color: var(--color-white);
-  border-color: #17314a;
+  border-color: var(--color-ink);
 }
 
 .cards {
@@ -471,8 +471,8 @@ const methods = computed<PayMethod[]>(() => {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: #fff4d4;
-  color: #1d3d5c;
+  background: var(--primary-light);
+  color: var(--primary-dark);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -481,7 +481,7 @@ const methods = computed<PayMethod[]>(() => {
   margin: 0;
 }
 .notice a {
-  color: #1d3d5c;
+  color: var(--primary-dark);
   font-weight: 600;
 }
 .notice-sub {

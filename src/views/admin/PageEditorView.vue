@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { imageUrlHelpText, normalizeMediaUrl } from '@/lib/media'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
+import { useMediaStore } from '@/stores/media.store'
 
 type EditableSection = {
   id: string
@@ -56,6 +57,7 @@ type StoredPageBody = {
 const contentKind = 'santi-sena-page-content'
 const imageUrlHint = imageUrlHelpText()
 
+// ---------- Your original defaultPages array (unchanged) ----------
 const defaultPages: PageDraft[] = [
   {
     slug: 'news',
@@ -150,6 +152,14 @@ const defaultPages: PageDraft[] = [
         heading: 'Peace is planted, not declared.',
         body: 'Santi Sena, the Peace Army, was founded by Cambodian Buddhist monks in 1994 to alleviate poverty and rebuild moral, environmental and economic life after decades of conflict.',
         items: '',
+      },
+      {
+        id: 'home-slideshow',
+        label: 'Home slideshow',
+        heading: 'Home slideshow',
+        body: 'Slideshow shown on the public homepage. Configure each slide using the items list format.',
+        items:
+          '[]',
       },
       {
         id: 'home-pillars',
@@ -940,11 +950,213 @@ const defaultPages: PageDraft[] = [
   },
 ]
 
+// ---------- End of defaultPages ----------
+
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
+const media = useMediaStore()
+
+type HomeSlideEditorItem = {
+  __key: string
+  image: string
+  eyebrow?: string
+  title: string
+  description?: string
+  alt?: string
+  primaryLabel?: string
+  primaryTo?: string
+  secondaryLabel?: string
+  secondaryTo?: string
+  position?: string
+}
+
+const MAX_HOME_SLIDES = 4
+
+function safeJsonParse<T>(value: string): T | null {
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return null
+  }
+}
+
+function ensureHomeSlides(parsedItems: unknown): HomeSlideEditorItem[] {
+  if (!Array.isArray(parsedItems)) return []
+
+  const slides = parsedItems
+    .map((raw) => {
+      const r = raw as Record<string, unknown> | null
+      if (!r || typeof raw !== 'object') return null
+
+      const image = typeof r.image === 'string' ? r.image : ''
+      if (!image) return null
+
+      return {
+        __key:
+          typeof r.__key === 'string'
+            ? r.__key
+            : `slide-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        image,
+        eyebrow: typeof r.eyebrow === 'string' ? r.eyebrow : '',
+        title: typeof r.title === 'string' ? r.title : '',
+        description: typeof r.description === 'string' ? r.description : '',
+        alt: typeof r.alt === 'string' ? r.alt : image,
+        primaryLabel: typeof r.primaryLabel === 'string' ? r.primaryLabel : '',
+        primaryTo: typeof r.primaryTo === 'string' ? r.primaryTo : '',
+        secondaryLabel: typeof r.secondaryLabel === 'string' ? r.secondaryLabel : '',
+        secondaryTo: typeof r.secondaryTo === 'string' ? r.secondaryTo : '',
+        position: typeof r.position === 'string' ? r.position : 'center',
+      } as HomeSlideEditorItem
+    })
+    .filter((s): s is HomeSlideEditorItem => Boolean(s))
+
+  return slides.slice(0, MAX_HOME_SLIDES)
+}
+
+function readHomeSlideshowFromSection(section: EditableSection | undefined): HomeSlideEditorItem[] {
+  if (!section) return []
+  const raw = section.items
+  const parsed = safeJsonParse<unknown>(raw)
+  if (!parsed) return []
+  return ensureHomeSlides(parsed)
+}
+
+function writeHomeSlideshowToSection(section: EditableSection | undefined, slides: HomeSlideEditorItem[]) {
+  if (!section) return
+
+  const payload = slides.map((s) => ({
+    image: s.image,
+    eyebrow: s.eyebrow ?? '',
+    title: s.title ?? '',
+    description: s.description ?? '',
+    alt: s.alt ?? s.image,
+    primaryLabel: s.primaryLabel ?? '',
+    primaryTo: s.primaryTo ?? '',
+    secondaryLabel: s.secondaryLabel ?? '',
+    secondaryTo: s.secondaryTo ?? '',
+    position: s.position ?? 'center',
+  }))
+
+  section.items = JSON.stringify(payload)
+}
 
 const drafts = ref<PageDraft[]>(defaultPages.map(clonePage))
+const homeSlides = ref<HomeSlideEditorItem[]>([])
+
+function currentHomeSlideSection() {
+  return activePage.value.sections.find((s) => s.id === 'home-slideshow')
+}
+
+function syncHomeSlidesFromSection() {
+  const section = currentHomeSlideSection()
+  homeSlides.value = readHomeSlideshowFromSection(section)
+}
+
+function syncSectionFromHomeSlides() {
+  const section = currentHomeSlideSection()
+  writeHomeSlideshowToSection(section, homeSlides.value)
+}
+
+function clampHomeSlidesToMax() {
+  if (homeSlides.value.length <= MAX_HOME_SLIDES) return
+  homeSlides.value.splice(MAX_HOME_SLIDES)
+}
+
+watch(homeSlides, () => clampHomeSlidesToMax(), { deep: true })
+watch(homeSlides, () => syncSectionFromHomeSlides(), { deep: true })
+
+// ===== NEW: Preview modal state =====
+const previewSlideshow = ref(false)
+const previewIndex = ref(0)
+const emptyHomeSlide: HomeSlideEditorItem = {
+  __key: 'empty-preview-slide',
+  image: '',
+  eyebrow: '',
+  title: '',
+  description: '',
+  alt: '',
+  primaryLabel: '',
+  primaryTo: '',
+  secondaryLabel: '',
+  secondaryTo: '',
+  position: 'center',
+}
+const previewSlide = computed(() => homeSlides.value[previewIndex.value] ?? emptyHomeSlide)
+const previewSlideOverlayStyle = computed(() => {
+  const position = previewSlide.value.position
+  const textAlign = position === 'left' || position === 'right' ? position : 'center'
+  return `text-align: ${textAlign}`
+})
+
+function openPreviewModal() {
+  syncHomeSlidesFromSection()
+  previewSlideshow.value = true
+}
+
+function closePreviewModal() {
+  previewSlideshow.value = false
+}
+// ====================================
+
+onMounted(() => {
+  syncHomeSlidesFromSection()
+  if (route.path === '/admin/editor/home' || route.path === '/admin/editor/home-slideshow') {
+    setTimeout(() => scrollToHomeSlideshowSection(), 0)
+  }
+})
+
+function addHomeSlide() {
+  if (homeSlides.value.length >= MAX_HOME_SLIDES) return
+  homeSlides.value.push({
+    __key: `slide-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    image: '',
+    eyebrow: '',
+    title: '',
+    description: '',
+    alt: '',
+    primaryLabel: '',
+    primaryTo: '',
+    secondaryLabel: '',
+    secondaryTo: '',
+    position: 'center',
+  })
+}
+
+function removeHomeSlide(index: number) {
+  if (index < 0 || index >= homeSlides.value.length) return
+  homeSlides.value.splice(index, 1)
+}
+
+function moveHomeSlide(index: number, direction: -1 | 1) {
+  const target = index + direction
+  if (target < 0 || target >= homeSlides.value.length) return
+  const arr = homeSlides.value
+  const current = arr[index]
+  const next = arr[target]
+  if (!current || !next) return
+  arr[index] = next
+  arr[target] = current
+}
+
+async function onHomeSlideImageUpload(e: Event, index: number) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  try {
+    await media.upload(file)
+    const newest = media.items[0]
+    if (!newest?.url) throw new Error('Upload succeeded but no URL found.')
+    if (!homeSlides.value[index]) return
+    homeSlides.value[index].image = newest.url
+  } catch (err) {
+    ui.addToast(err instanceof Error ? err.message : 'Upload failed', 'error')
+  } finally {
+    input.value = ''
+  }
+}
+
 const loading = ref(false)
 const savingSlug = ref<string | null>(null)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
@@ -954,7 +1166,9 @@ const activeSectionIndex = ref<number | null>(null)
 
 const requestedSlug = computed(() => {
   const slug = route.params.slug
-  return typeof slug === 'string' ? slug : 'home'
+  if (typeof slug === 'string' && slug.length > 0) return slug
+  if (route.path === '/admin/editor/home-slideshow') return 'home'
+  return 'home'
 })
 
 const activePage = computed<PageDraft>(() => {
@@ -965,25 +1179,81 @@ const activePage = computed<PageDraft>(() => {
   )
 })
 
-const activePageDirty = computed(() => isDirty(activePage.value.slug))
-const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
-
-const previewItems = computed(() => {
-  return activePage.value.sections.map((section) => ({
-    ...section,
-    parsedItems: section.items
-      ? section.items.split('\n').filter((line) => line.trim())
-      : [],
-  }))
-})
-
 const sectionCountLabel = computed(() => {
-  const count = activePage.value.sections.length
-  return `${count} block${count !== 1 ? 's' : ''}`
+  const len = activePage.value.sections.length
+  return `${len} content block${len === 1 ? '' : 's'}`
 })
 
-onMounted(() => {
-  void loadPages()
+const activePageDirty = computed(() => isDirty(activePage.value.slug))
+
+// Computed for the Live Preview column
+type PreviewSection = {
+  id: string
+  heading: string
+  body: string
+  parsedItems: string[]
+}
+
+const previewItems = computed<PreviewSection[]>(() => {
+  return activePage.value.sections.map((s) => {
+    let parsedItems: string[] = []
+
+    if (s.id === 'home-slideshow') {
+      // For slideshow, try to parse JSON items
+      try {
+        const slides = safeJsonParse<Array<Record<string, unknown>>>(s.items)
+        if (Array.isArray(slides)) {
+          parsedItems = slides.map((slide) => {
+            const title = typeof slide.title === 'string' ? slide.title : ''
+            const image = typeof slide.image === 'string' ? slide.image : ''
+            return title ? `${title} | ${image || 'No image'}` : image || 'Empty slide'
+          })
+        }
+      } catch {
+        parsedItems = []
+      }
+    } else {
+      // Standard: split by newline
+      parsedItems = s.items
+        ? s.items.split('\n').map((l) => l.trim()).filter(Boolean)
+        : []
+    }
+
+    return {
+      id: s.id,
+      heading: s.heading,
+      body: s.body,
+      parsedItems,
+    }
+  })
+})
+
+function scrollToHomeSlideshowSection() {
+  nextTick(() => {
+    const el = document.getElementById('edit-home-slideshow')
+    if (el) {
+      const details = el.closest('details')
+      if (details && !details.open) details.open = true
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      setTimeout(() => {
+        const retryEl = document.getElementById('edit-home-slideshow')
+        if (retryEl) {
+          const details = retryEl.closest('details')
+          if (details && !details.open) details.open = true
+          retryEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 300)
+    }
+  })
+}
+
+onMounted(async () => {
+  await loadPages()
+  syncHomeSlidesFromSection()
+  if (route.path === '/admin/editor/home-slideshow') {
+    scrollToHomeSlideshowSection()
+  }
 })
 
 watch(
@@ -1001,11 +1271,6 @@ function clonePage(page: PageDraft): PageDraft {
     ...page,
     sections: page.sections.map((section) => ({ ...section })),
   }
-}
-
-function getPreviewRoute(page: PageDraft) {
-  if (page.previewRoute) return page.previewRoute
-  return page.route.replace(/:id\b/g, '1')
 }
 
 function cloneSection(section?: Partial<EditableSection>): EditableSection {
@@ -1101,7 +1366,6 @@ function parseStoredBody(body: string): Partial<StoredPageBody> | null {
 
 function getSections(value: unknown): EditableSection[] {
   if (!Array.isArray(value)) return []
-
   return value.filter(isRecord).map((section) =>
     cloneSection({
       id: getString(section, 'id') || createSectionId(),
@@ -1327,10 +1591,8 @@ function applyDefaultReset() {
 
 function formatDate(value: string) {
   if (!value) return 'Not saved yet'
-
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Not saved yet'
-
   return new Intl.DateTimeFormat('en', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -1361,7 +1623,7 @@ function formatDate(value: string) {
 
         <div class="editor-container">
           <!-- Editor Column -->
-          <section class="editor-column" aria-label="Page editor">
+          <section class="editor-column" :class="{ full: !previewVisible }" aria-label="Page editor">
             <!-- Page Header -->
             <header class="editor-header">
               <div class="header-left">
@@ -1403,15 +1665,15 @@ function formatDate(value: string) {
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                     Reload
                   </button>
-                  <RouterLink
-                    v-if="activePage.route !== 'global'"
+                  <button
                     class="btn btn-ghost"
-                    :to="activePage.route"
-                    title="View public page"
+                    type="button"
+                    @click="previewVisible = !previewVisible"
+                    title="Toggle live preview"
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    Preview
-                  </RouterLink>
+                    {{ previewVisible ? 'Hide preview' : 'Preview' }}
+                  </button>
                   <button
                     class="btn btn-ghost danger"
                     type="button"
@@ -1659,6 +1921,118 @@ function formatDate(value: string) {
                               <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="3" placeholder="Descriptive body text"></textarea>
                             </label>
 
+                          <!-- ===== HOME SLIDESHOW EDITOR ===== -->
+                          <template v-if="section.id === 'home-slideshow'">
+                            <div class="slideshow-editor">
+                              <div class="slideshow-editor-head">
+                                <div>
+                                  <span class="slide-hint">Manage up to {{ MAX_HOME_SLIDES }} slides. Each slide supports an image, title, description and action buttons.</span>
+                                </div>
+                                <div class="slideshow-editor-actions">
+                                  <button type="button" class="btn btn-secondary" @click="openPreviewModal">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Preview
+                                  </button>
+                                  <button type="button" class="btn btn-primary" :disabled="homeSlides.length >= MAX_HOME_SLIDES" @click="addHomeSlide">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    Add slide {{ homeSlides.length >= MAX_HOME_SLIDES ? '(max)' : '' }}
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div v-if="homeSlides.length === 0" class="slideshow-empty">
+                                No slides yet. Click "Add slide" to create your first slideshow image.
+                              </div>
+
+                              <div v-for="(slide, sIdx) in homeSlides" :key="slide.__key" class="slide-card">
+                                <div class="slide-card-top">
+                                  <span class="slide-index">{{ sIdx + 1 }}</span>
+                                  <div class="slide-card-actions">
+                                    <button type="button" class="btn-icon" :disabled="sIdx === 0" title="Move up" @click="moveHomeSlide(sIdx, -1)">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                    </button>
+                                    <button type="button" class="btn-icon" :disabled="sIdx === homeSlides.length - 1" title="Move down" @click="moveHomeSlide(sIdx, 1)">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </button>
+                                    <div class="btn-sep"></div>
+                                    <button type="button" class="btn-icon danger" title="Remove" @click="removeHomeSlide(sIdx)">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div class="slide-grid">
+                                  <div class="slide-preview">
+                                    <img v-if="slide.image" :src="slide.image" :alt="slide.alt || slide.title" />
+                                    <span v-else class="slide-placeholder">No image</span>
+                                    <div class="upload-wrap">
+                                      <input type="file" accept="image/*" @change="onHomeSlideImageUpload($event, sIdx)" />
+                                      <span class="upload-copy">Upload image</span>
+                                    </div>
+                                  </div>
+
+                                  <div class="slide-fields">
+                                    <div class="slide-field-row">
+                                      <label>
+                                        Title
+                                        <input v-model="slide.title" placeholder="Slide title" />
+                                      </label>
+                                      <label>
+                                        Eyebrow
+                                        <input v-model="slide.eyebrow" placeholder="e.g. Education program" />
+                                      </label>
+                                    </div>
+                                    <div class="slide-field-row">
+                                      <label>
+                                        Description
+                                        <input v-model="slide.description" placeholder="Short description" />
+                                      </label>
+                                      <label>
+                                        Alt text
+                                        <input v-model="slide.alt" placeholder="Image alt text" />
+                                      </label>
+                                    </div>
+                                    <div class="slide-field-row">
+                                      <label>
+                                        Primary label
+                                        <input v-model="slide.primaryLabel" placeholder="e.g. Support Us" />
+                                      </label>
+                                      <label>
+                                        Primary URL
+                                        <input v-model="slide.primaryTo" placeholder="e.g. /qr-donate" />
+                                      </label>
+                                    </div>
+                                    <div class="slide-field-row">
+                                      <label>
+                                        Secondary label
+                                        <input v-model="slide.secondaryLabel" placeholder="e.g. Learn More" />
+                                      </label>
+                                      <label>
+                                        Secondary URL
+                                        <input v-model="slide.secondaryTo" placeholder="e.g. /about" />
+                                      </label>
+                                    </div>
+                                    <div class="slide-field-row">
+                                      <label>
+                                        Image position
+                                        <select v-model="slide.position">
+                                          <option value="center">Center</option>
+                                          <option value="top">Top</option>
+                                          <option value="bottom">Bottom</option>
+                                          <option value="left">Left</option>
+                                          <option value="right">Right</option>
+                                        </select>
+                                      </label>
+                                      <label></label>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </template>
+
+                          <!-- ===== STANDARD ITEMS EDITOR ===== -->
+                          <template v-else>
                             <label class="field field-block">
                               <span class="field-label">
                                 Items
@@ -1671,6 +2045,7 @@ function formatDate(value: string) {
                                 placeholder="Item 1&#10;Item 2&#10;Title | Description"
                               ></textarea>
                             </label>
+                          </template>
                           </div>
                         </div>
                       </details>
@@ -1920,6 +2295,43 @@ function formatDate(value: string) {
         </div>
       </main>
     </div>
+
+    <!-- ========== PREVIEW MODAL ========== -->
+    <div v-if="previewSlideshow" class="preview-modal" @click.self="closePreviewModal">
+      <div class="preview-modal-content">
+        <button class="preview-close" @click="closePreviewModal">×</button>
+        <div class="preview-slideshow">
+          <div v-if="homeSlides.length === 0" class="preview-empty">
+            No slides to preview.
+          </div>
+          <div v-else class="preview-slides-container">
+            <button class="preview-arrow prev" @click="previewIndex = (previewIndex - 1 + homeSlides.length) % homeSlides.length">‹</button>
+            <div class="preview-slide">
+              <img :src="previewSlide.image" :alt="previewSlide.alt || previewSlide.title" />
+              <div class="preview-slide-overlay" :style="previewSlideOverlayStyle">
+                <div v-if="previewSlide.eyebrow" class="preview-eyebrow">{{ previewSlide.eyebrow }}</div>
+                <h2 v-if="previewSlide.title">{{ previewSlide.title }}</h2>
+                <p v-if="previewSlide.description">{{ previewSlide.description }}</p>
+                <div class="preview-buttons">
+                  <a v-if="previewSlide.primaryLabel" :href="previewSlide.primaryTo || '#'" class="preview-btn primary">{{ previewSlide.primaryLabel }}</a>
+                  <a v-if="previewSlide.secondaryLabel" :href="previewSlide.secondaryTo || '#'" class="preview-btn secondary">{{ previewSlide.secondaryLabel }}</a>
+                </div>
+              </div>
+            </div>
+            <button class="preview-arrow next" @click="previewIndex = (previewIndex + 1) % homeSlides.length">›</button>
+          </div>
+          <div class="preview-dots">
+            <span
+              v-for="(_, idx) in homeSlides"
+              :key="idx"
+              class="preview-dot"
+              :class="{ active: idx === previewIndex }"
+              @click="previewIndex = idx"
+            ></span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -2085,6 +2497,10 @@ function formatDate(value: string) {
   flex: 1;
   min-width: 0;
   max-width: 860px;
+}
+
+.editor-column.full {
+  max-width: none;
 }
 
 /* ==============================
@@ -3257,6 +3673,378 @@ input::placeholder, textarea::placeholder {
 @media (min-width: 1101px) {
   .preview-toggle-btn {
     display: none;
+  }
+}
+
+/* ---------- Existing slideshow styles (keep) ---------- */
+.slideshow-editor {
+  margin-top: 0.25rem;
+}
+
+.slideshow-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.slideshow-editor-actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.slideshow-empty {
+  border: 1px dashed var(--admin-border);
+  border-radius: 12px;
+  padding: 1rem;
+  color: var(--admin-muted);
+  font-weight: 700;
+}
+
+.slide-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.slide-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--admin-border);
+  background: var(--admin-surface-soft);
+}
+
+.slide-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  font-weight: 900;
+  color: var(--admin-contrast);
+}
+
+.slide-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.slide-grid {
+  padding: 0.9rem 1rem 1rem;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+}
+
+.slide-preview {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px dashed var(--admin-border);
+  background: var(--admin-surface-soft);
+  display: grid;
+  place-items: center;
+}
+
+.slide-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slide-placeholder {
+  color: var(--admin-muted);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.upload-wrap {
+  margin-top: 0.65rem;
+  display: grid;
+}
+
+.upload-wrap input[type='file'] {
+  width: 100%;
+}
+
+.upload-copy {
+  margin-top: 0.35rem;
+  color: var(--admin-muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.slide-fields label {
+  font-size: 0.88rem;
+}
+
+.slide-hint {
+  margin-top: 0.35rem;
+  color: var(--admin-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* ---------- NEW styles for slide fields and preview modal ---------- */
+.slide-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.slide-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.slide-field-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--admin-contrast-soft);
+}
+
+.slide-field-row input,
+.slide-field-row select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 8px;
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.slide-field-row input:focus,
+.slide-field-row select:focus {
+  border-color: var(--admin-blue);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+  outline: none;
+}
+
+.preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.preview-modal-content {
+  background: var(--admin-surface);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 1000px;
+  position: relative;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.preview-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--admin-muted);
+  cursor: pointer;
+  z-index: 10;
+  line-height: 1;
+}
+
+.preview-close:hover {
+  color: var(--admin-contrast);
+}
+
+.preview-slideshow {
+  position: relative;
+  height: 100%;
+}
+
+.preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: var(--admin-muted);
+  font-weight: 700;
+}
+
+.preview-slides-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 500px;
+}
+
+.preview-slide {
+  flex: 1;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  background: #1a1a1a;
+}
+
+.preview-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-slide-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2rem;
+  background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent);
+  color: #fff;
+}
+
+.preview-eyebrow {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-bottom: 0.5rem;
+}
+
+.preview-slide-overlay h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0.5rem 0;
+  color: #fff;
+}
+
+.preview-slide-overlay p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 1rem;
+}
+
+.preview-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.preview-btn {
+  display: inline-block;
+  padding: 0.6rem 1.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.preview-btn.primary {
+  background: #16a34a;
+  color: #fff;
+  border: 1px solid #16a34a;
+}
+
+.preview-btn.primary:hover {
+  background: #15803d;
+}
+
+.preview-btn.secondary {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+}
+
+.preview-btn.secondary:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.preview-arrow {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  font-size: 2.5rem;
+  width: 50px;
+  height: 80px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 5;
+  margin: 0 0.5rem;
+}
+
+.preview-arrow:hover {
+  background: rgba(255,255,255,0.4);
+}
+
+.preview-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+
+.preview-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--admin-border-strong);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.preview-dot.active {
+  background: var(--admin-blue);
+}
+
+@media (max-width: 760px) {
+  .slide-grid {
+    grid-template-columns: 1fr;
+  }
+  .slide-field-row {
+    grid-template-columns: 1fr;
+  }
+  .preview-slides-container {
+    height: 300px;
+  }
+  .preview-slide-overlay h2 {
+    font-size: 1.2rem;
+  }
+  .preview-slide-overlay p {
+    font-size: 0.9rem;
+  }
+  .preview-arrow {
+    width: 30px;
+    height: 50px;
+    font-size: 1.8rem;
   }
 }
 </style>
