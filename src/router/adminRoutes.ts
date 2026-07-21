@@ -11,6 +11,7 @@ import LivelihoodDashboardView from '@/views/admin/LivelihoodDashboardView.vue'
 import ChildProtectionDashboardView from '@/views/admin/ChildProtectionDashboardView.vue'
 import ProgramsOverviewView from '@/views/admin/ProgramsOverviewView.vue'
 import DonationLView from '@/views/admin/DonationLView.vue'
+import SlideshowManagerView from '@/views/admin/SlideshowManagerView.vue'
 
 export const adminRoutes = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
@@ -26,4 +27,5 @@ export const adminRoutes = [
   { path: '/admin/programs', component: ProgramsOverviewView, meta: { requiresAuth: true } },
   { path: '/admin/settings', component: SettingsView, meta: { requiresAuth: true } },
   { path: '/admin/donate', component: DonationLView, meta: { requiresAuth: true } },
+  { path: '/admin/slideshow', component: SlideshowManagerView, meta: { requiresAuth: true } },
 ]

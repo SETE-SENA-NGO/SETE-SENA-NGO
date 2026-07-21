@@ -16,7 +16,8 @@ Open Supabase Dashboard, go to SQL Editor, and run these files in order:
 1. `supabase/migrations/0001_initial.sql`
 2. `supabase/migrations/0002_admin_editable_content_schema.sql`
 3. `supabase/migrations/0003_media_free_tier_limits.sql`
-4. `supabase/seed.sql`
+4. `supabase/migrations/0004_home_slides.sql`
+5. `supabase/seed.sql`
 
 ## Create Admin Login
 
