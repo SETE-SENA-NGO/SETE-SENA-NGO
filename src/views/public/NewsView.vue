@@ -579,13 +579,6 @@ const scrollToTop = () => {
 
 <style scoped>
 :root {
-  --color-cream: #faf8f5;
-  --color-border: #e8e3dc;
-  --color-ink: #1e1a16;
-  --color-ink-soft: #5a524a;
-  --primary-color: #2d7a5a;
-  --primary-dark: #1a3d2e;
-  --primary-light: #aad6c7;
   --gold: #c9a84c;
   --gold-light: #e8d5a3;
   --gold-glow: rgba(201, 168, 76, 0.15);
@@ -610,7 +603,7 @@ const scrollToTop = () => {
 
 /* ─── BALANCED HERO (shifted right) ────────────────────────── */
 .hero-static {
-  background: linear-gradient(135deg, #f0f7f4, #ffffff);
+  background: linear-gradient(135deg, var(--color-cream), var(--color-white));
   padding: 4rem 1.5rem 3rem;
   border-bottom: 1px solid var(--color-border);
   text-align: left;
@@ -729,11 +722,11 @@ const scrollToTop = () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  background: #dafff3;
+  background: var(--primary-light);
   border-radius: 20px;
   overflow: hidden;
   box-shadow: var(--shadow-md);
-  border: 1px solid rgba(47, 36, 29, 0.04);
+  border: 1px solid var(--color-border);
   text-decoration: none;
   color: inherit;
   transition: all var(--transition);
@@ -906,6 +899,8 @@ const scrollToTop = () => {
   padding: 0.5rem 1.5rem 0.5rem 1.8rem;
   border: none;
   border-radius: 999px;
+  background: var(--primary-color);
+  color: var(--color-white);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -920,10 +915,9 @@ const scrollToTop = () => {
 }
 
 .read-more-btn:hover {
-  background: rgb(6, 127, 61);
-  box-shadow: 0 8px 24px rgba(19, 237, 146, 0.3);
+  background: var(--primary-dark);
+  box-shadow: 0 8px 24px rgba(74, 222, 128, 0.3);
   transform: translateY(-2px);
-  color: white;
 }
 
 .read-more-btn:hover svg {
@@ -943,8 +937,6 @@ const scrollToTop = () => {
   cursor: pointer;
   transition: all var(--transition);
   font-family: inherit;
-  color: rgb(255, 255, 255);
-  background: #169c14;
   border-radius: 999px;
 }
 
@@ -952,9 +944,9 @@ const scrollToTop = () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgb(154, 224, 199);
-  border: 1px solid transparent;
-  color: black;
+  background: var(--color-cream-soft);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
   opacity: 0.6;
   transition: all var(--transition);
 }
@@ -966,14 +958,14 @@ const scrollToTop = () => {
 }
 
 .icon-btn.active {
-  color: #ef4444;
+  color: #fb7185;
   opacity: 1;
-  background: rgba(239, 68, 68, 0.06);
+  background: rgba(251, 113, 133, 0.1);
 }
 
 .icon-btn.active svg {
-  fill: #ef4444;
-  stroke: #ef4444;
+  fill: #fb7185;
+  stroke: #fb7185;
 }
 
 .icon-btn.small {
@@ -1044,13 +1036,12 @@ const scrollToTop = () => {
 
 /* ── Card: initially hidden, pops when scrolled into view ── */
 .news-card {
-  background: #f9e8e8;
+  background: var(--color-cream);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-border);
   position: relative;
-  border-radius: 20px;
   display: flex;
   flex-direction: column;
   opacity: 0;
@@ -1248,7 +1239,7 @@ const scrollToTop = () => {
   padding: 2rem 2.5rem;
   background: linear-gradient(135deg, var(--primary-dark), #0b623f);
   border-radius: 20px;
-  color: #fff;
+  color: #ffffff;
   box-shadow: 0 12px 48px rgba(26, 61, 46, 0.2);
   transform: scale(0.88);
   opacity: 0.5;
@@ -1280,7 +1271,7 @@ const scrollToTop = () => {
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0 0 0.15rem;
-  color: white;
+  color: #ffffff;
 }
 
 .newsletter-content p {
@@ -1299,8 +1290,8 @@ const scrollToTop = () => {
   padding: 0.5rem 1.2rem;
   border: none;
   border-radius: 999px;
-  background: rgb(224, 227, 226);
-  color: #050505;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
   font-size: 0.85rem;
   min-width: 200px;
   transition: all var(--transition);
@@ -1308,20 +1299,20 @@ const scrollToTop = () => {
 }
 
 .newsletter-input::placeholder {
-  color: rgba(20, 16, 16, 0.975);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .newsletter-input:focus {
   outline: none;
-  background: rgba(236, 221, 221, 0.897);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .newsletter-btn {
   padding: 0.5rem 1.8rem;
   border: none;
   border-radius: 999px;
-  background: rgb(255, 255, 255);
-  color: rgb(19, 135, 73);
+  background: #ffffff;
+  color: var(--primary-dark);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
@@ -1330,10 +1321,9 @@ const scrollToTop = () => {
 }
 
 .newsletter-btn:hover {
-  background: rgb(255, 255, 255);
+  background: #ffffff;
   transform: translateY(-2px);
-  color: rgb(8, 113, 17);
-  box-shadow: 0 8px 24px rgba(14, 14, 14, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 /* ── Bottom Actions ── */
@@ -1352,7 +1342,7 @@ const scrollToTop = () => {
   gap: 0.5rem;
   padding: 0.6rem 1.8rem;
   border-radius: 999px;
-  background: rgb(156, 254, 134);
+  background: var(--color-cream-soft);
   color: var(--color-ink-soft);
   font-weight: 600;
   text-decoration: none;
@@ -1381,7 +1371,7 @@ const scrollToTop = () => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--color-white);
   border: 1px solid var(--color-border);
   color: var(--color-ink-soft);
   cursor: pointer;
@@ -1391,7 +1381,7 @@ const scrollToTop = () => {
 
 .scroll-top:hover {
   background: var(--primary-color);
-  color: #fff;
+  color: #ffffff;
   border-color: var(--primary-color);
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(45, 122, 90, 0.2);

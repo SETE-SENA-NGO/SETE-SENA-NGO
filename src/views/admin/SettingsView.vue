@@ -6,7 +6,7 @@ import { useUiStore } from '@/stores/ui.store'
 
 const ui = useUiStore()
 const siteName = ref('Santi Sena NGO')
-const adminEmail = ref('admin@gmail.com')
+const adminEmail = ref('')
 </script>
 
 <template>
@@ -163,25 +163,11 @@ const adminEmail = ref('admin@gmail.com')
 
 <style scoped>
 .admin-page {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-bg-deep: var(--admin-theme-bg-deep);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-blue: var(--admin-theme-primary);
-  --admin-blue-deep: var(--admin-theme-primary-deep);
-  --admin-shadow: var(--admin-theme-shadow);
-
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--admin-bg);
-  color: var(--admin-text);
+  background: var(--admin-theme-bg);
+  color: var(--admin-theme-text);
   font-family:
     'Inter',
     -apple-system,
@@ -190,18 +176,6 @@ const adminEmail = ref('admin@gmail.com')
     Roboto,
     sans-serif;
   transition: padding-left 0.25s ease;
-}
-
-:global(.admin-dark .admin-page) {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
 }
 
 .admin-layout {
@@ -213,7 +187,7 @@ const adminEmail = ref('admin@gmail.com')
   flex: 1;
   width: 100%;
   padding: 1.5rem 2.25rem 2.5rem;
-  background: var(--admin-bg);
+  background: var(--admin-theme-bg);
 }
 
 .settings-overview {
@@ -225,15 +199,15 @@ const adminEmail = ref('admin@gmail.com')
   display: grid;
   gap: 0.5rem;
   padding: 1.4rem 1.6rem;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--admin-surface-soft), var(--admin-surface));
-  box-shadow: var(--admin-shadow);
+  background: linear-gradient(135deg, var(--admin-theme-surface-soft), var(--admin-theme-surface));
+  box-shadow: var(--admin-theme-shadow);
 }
 
 .eyebrow {
   margin: 0;
-  color: var(--admin-blue-deep);
+  color: var(--admin-theme-primary-deep);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -242,7 +216,7 @@ const adminEmail = ref('admin@gmail.com')
 
 h1 {
   margin: 0;
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 1.85rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -250,7 +224,7 @@ h1 {
 
 .settings-header p:not(.eyebrow) {
   margin: 0;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   line-height: 1.6;
 }
 
@@ -261,10 +235,10 @@ h1 {
 }
 
 .settings-card {
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
   padding: 1.4rem;
   display: grid;
   gap: 1.1rem;
@@ -277,7 +251,7 @@ h1 {
 
 .settings-card:hover {
   transform: translateY(-2px);
-  border-color: var(--admin-border-strong);
+  border-color: var(--admin-theme-border-strong);
   box-shadow: 0 22px 44px rgba(16, 88, 51, 0.13);
 }
 
@@ -285,9 +259,9 @@ h1 {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   padding-bottom: 1rem;
-  border-bottom: 1px dashed var(--admin-border);
+  border-bottom: 1px dashed var(--admin-theme-border);
 }
 
 .settings-icon {
@@ -296,8 +270,8 @@ h1 {
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 11px;
-  background: var(--admin-surface-soft);
-  color: var(--admin-blue-deep);
+  background: var(--admin-theme-surface-soft);
+  color: var(--admin-theme-primary-deep);
   border: 1px solid rgba(22, 163, 74, 0.22);
   flex: 0 0 auto;
 }
@@ -306,7 +280,7 @@ h1 {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 800;
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
 }
 
 .settings-field {
@@ -317,15 +291,15 @@ h1 {
 .settings-field label {
   font-size: 0.84rem;
   font-weight: 700;
-  color: var(--admin-contrast-soft);
+  color: var(--admin-theme-contrast-soft);
 }
 
 .settings-field input {
   min-height: 44px;
-  border: 1.5px solid var(--admin-border-strong);
+  border: 1.5px solid var(--admin-theme-border-strong);
   border-radius: 10px;
-  background: var(--admin-surface);
-  color: var(--admin-text);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
   font-family: inherit;
@@ -335,7 +309,7 @@ h1 {
 }
 
 .settings-field input:focus {
-  border-color: var(--admin-blue);
+  border-color: var(--admin-theme-primary);
   box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
   outline: none;
 }
@@ -343,19 +317,19 @@ h1 {
 .settings-note {
   margin: 0;
   font-size: 0.86rem;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   line-height: 1.55;
-  background: var(--admin-surface-soft);
-  border: 1px solid var(--admin-border);
+  background: var(--admin-theme-surface-soft);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 10px;
   padding: 0.65rem 0.8rem;
 }
 
 .settings-btn {
   min-height: 44px;
-  border: 1px solid var(--admin-blue);
+  border: 1px solid var(--admin-theme-primary);
   border-radius: 10px;
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
+  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
   color: #ffffff;
   padding: 0.6rem 1.15rem;
   font-weight: 700;
@@ -370,7 +344,7 @@ h1 {
 }
 
 .settings-btn:hover {
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
+  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
   transform: translateY(-1px);
   box-shadow: 0 16px 28px rgba(15, 125, 56, 0.3);
 }
@@ -385,10 +359,10 @@ h1 {
   align-items: center;
   gap: 0.45rem;
   min-height: 42px;
-  border: 1.5px solid var(--admin-border-strong);
+  border: 1.5px solid var(--admin-theme-border-strong);
   border-radius: 10px;
-  background: var(--admin-surface-soft);
-  color: var(--admin-text);
+  background: var(--admin-theme-surface-soft);
+  color: var(--admin-theme-text);
   padding: 0.5rem 0.95rem;
   font-weight: 700;
   font-size: 0.88rem;
@@ -400,13 +374,13 @@ h1 {
 }
 
 .theme-option:hover {
-  border-color: var(--admin-blue);
+  border-color: var(--admin-theme-primary);
 }
 
 .theme-option.active {
-  border-color: var(--admin-blue);
-  background: var(--admin-surface-soft);
-  color: var(--admin-blue-deep);
+  border-color: var(--admin-theme-primary);
+  background: var(--admin-theme-surface-soft);
+  color: var(--admin-theme-primary-deep);
 }
 
 @media (min-width: 900px) {

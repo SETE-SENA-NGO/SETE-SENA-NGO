@@ -513,3 +513,23 @@ SELECT '✅ PAGES SEEDED' AS status, COUNT(*) AS count FROM public.pages WHERE s
 SELECT '✅ PROGRAMS SEEDED' AS status, COUNT(*) AS count FROM public.programs WHERE status = 'published';
 SELECT '✅ METRICS SEEDED' AS status, COUNT(*) AS count FROM public.impact_metrics WHERE is_visible = true;
 SELECT '✅ PARTNERS SEEDED' AS status, COUNT(*) AS count FROM public.partners WHERE is_visible = true;
+-- Step 3: Grant your admin user the super_admin role
+INSERT INTO public.profiles (id, email, role, full_name)
+SELECT
+  id,
+  email,
+  'super_admin',
+  'Admin'
+FROM auth.users
+WHERE LOWER(email) = LOWER('replace-with-your-admin-email@example.org')
+ON CONFLICT (id) DO UPDATE
+SET
+  email = EXCLUDED.email,
+  role = 'super_admin',
+  full_name = EXCLUDED.full_name,
+  updated_at = now();
+
+-- Step 4: Verify the result
+SELECT id, email, role, full_name, created_at
+FROM public.profiles
+WHERE LOWER(email) = LOWER('replace-with-your-admin-email@example.org');

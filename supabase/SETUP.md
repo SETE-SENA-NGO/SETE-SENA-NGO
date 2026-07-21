@@ -23,11 +23,12 @@ Open Supabase Dashboard, go to SQL Editor, and run these files in order:
 In Supabase Dashboard, go to Authentication > Users > Add user:
 
 ```text
-Email: admin@gmail.com
-Password: password123
+Email: your real admin email
+Password: a strong unique password
 ```
 
-Then run `supabase/create_admin_profile.sql` to grant that Auth user admin access.
+Then update `supabase/create_admin_profile.sql` with that email and run it to grant the Auth user
+admin access. Do not use public demo credentials for production.
 
 If `public.profiles` does not exist yet, run the migration files above first. The admin profile
 helper also creates the minimal profile table so login can work, but the website CMS still needs

@@ -277,7 +277,7 @@ onBeforeUnmount(() => {
   min-height: 560px;
   border-radius: 1.25rem;
   overflow: hidden;
-  background-color: #e5ddc8; /* fallback while image loads */
+  background-color: var(--color-cream-soft); /* fallback while image loads */
 
   /* scroll-reveal: card fades/rises in, image is clipped by overflow:hidden above */
   opacity: 0;
@@ -308,10 +308,10 @@ onBeforeUnmount(() => {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(15, 61, 42, 0.9) 0%,
-    rgba(15, 61, 42, 0.72) 38%,
-    rgba(15, 61, 42, 0.25) 68%,
-    rgba(15, 61, 42, 0) 100%
+    rgba(6, 18, 13, 0.92) 0%,
+    rgba(6, 18, 13, 0.72) 38%,
+    rgba(6, 18, 13, 0.35) 68%,
+    rgba(6, 18, 13, 0) 100%
   );
 }
 
@@ -321,10 +321,10 @@ onBeforeUnmount(() => {
 .goal-card.reverse .goal-overlay {
   background: linear-gradient(
     270deg,
-    rgba(15, 61, 42, 0.9) 0%,
-    rgba(15, 61, 42, 0.72) 38%,
-    rgba(15, 61, 42, 0.25) 68%,
-    rgba(15, 61, 42, 0) 100%
+    rgba(6, 18, 13, 0.92) 0%,
+    rgba(6, 18, 13, 0.72) 38%,
+    rgba(6, 18, 13, 0.35) 68%,
+    rgba(6, 18, 13, 0) 100%
   );
 }
 
@@ -500,9 +500,9 @@ onBeforeUnmount(() => {
 /* Card body */
 .priority-body {
   width: 100%;
-  background: var(--color-white);
+  background: var(--color-cream);
   border-radius: 18px;
-  border: 1px solid rgba(20, 129, 62, 0.1);
+  border: 1px solid var(--color-border);
   padding: 1.85rem 1.1rem 1.5rem;
   box-shadow:
     0 4px 10px rgba(20, 129, 62, 0.06),
@@ -553,13 +553,13 @@ onBeforeUnmount(() => {
 .priority-label {
   margin: 0;
   font-weight: 400;
-  color: #6b7280;
+  color: var(--color-ink-soft);
   line-height: 1.45;
   font-size: 0.9rem;
   transition: color 0.3s ease;
 }
 .priority-card:hover .priority-label {
-  color: #6b7280;
+  color: var(--color-ink-soft);
 }
 
 @media (max-width: 860px) {

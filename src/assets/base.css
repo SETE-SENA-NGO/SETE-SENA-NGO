@@ -63,6 +63,90 @@
   --admin-theme-shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
 }
 
+/* ─── Public Dark Mode ───────────────────────────────────────────── */
+/* Applied to <html> when dark mode is active on public pages.
+   Overrides the :root light tokens with a rich dark-green palette. */
+.public-dark {
+  --color-cream: #0a1a14;
+  --color-cream-soft: #0f241c;
+  --color-white: #10241f;
+  --color-ink: #e2f0ea;
+  --color-ink-soft: #8da89d;
+  --color-border: #1d3b33;
+
+  --primary-color: #4ade80;
+  --primary-dark: #38c982;
+  --primary-light: #14362a;
+
+  --about-primary: #4ade80;
+  --about-saffron: #38c982;
+  --about-cream: #0f241c;
+  --about-cream-soft: #122e24;
+  --about-ink: #e2f0ea;
+  --about-ink-soft: #8da89d;
+  --about-border: #1d3b33;
+  --about-white: #10241f;
+  --about-surface: color-mix(in srgb, #4ade80 8%, transparent);
+  --about-surface-strong: color-mix(in srgb, #4ade80 92%, #10241f);
+  --about-highlight: #4ade80;
+
+  --admin-theme-bg: #0a1a14;
+  --admin-theme-bg-deep: #0f241c;
+  --admin-theme-surface: #10241f;
+  --admin-theme-surface-soft: #0b1b17;
+  --admin-theme-contrast: #e2f0ea;
+  --admin-theme-contrast-soft: #b9ead5;
+  --admin-theme-text: #c9ddd4;
+  --admin-theme-muted: #8da89d;
+  --admin-theme-border: #1d3b33;
+  --admin-theme-border-strong: #2d554a;
+}
+
+.public-dark .site-header {
+  background: rgba(10, 26, 20, 0.85) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom-color: rgba(53, 208, 190, 0.12) !important;
+}
+
+.public-dark .site-header.is-scrolled {
+  border-bottom-color: rgba(74, 222, 128, 0.18) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+.public-dark .mega-menu-card,
+.public-dark .lang-menu-card {
+  background: #122b23 !important;
+  border-color: #1d3b33 !important;
+}
+
+.public-dark .mega-item:hover {
+  background: rgba(74, 222, 128, 0.08) !important;
+}
+
+.public-dark .lang-option:hover {
+  background: rgba(74, 222, 128, 0.08) !important;
+  color: #4ade80 !important;
+}
+
+.public-dark .site-footer {
+  background: #071311 !important;
+  border-top-color: #1d3b33 !important;
+}
+
+.public-dark .brand-mark {
+  background: #14362a !important;
+}
+
+.public-dark .btn-support {
+  background: #4ade80 !important;
+  color: #0a1a14 !important;
+}
+
+.public-dark .btn-support:hover {
+  background: #38c982 !important;
+}
+
 @media (max-width: 640px) {
   :root {
     --container-padding: 1rem;

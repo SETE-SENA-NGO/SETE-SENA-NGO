@@ -1,4 +1,5 @@
 import HomeView from '@/views/public/HomeView.vue'
+import HomeSlideshowView from '@/views/public/HomeSlideshowView.vue'
 import AboutView from '@/views/public/AboutView.vue'
 import AboutVisionView from '@/views/public/AboutVisionView.vue'
 import ProgramEnviromentView from '@/views/public/ProgramEnviromentView.vue'
@@ -55,6 +56,9 @@ function managedPage(
 export const publicRoutes = [
   // Home
   managedPage('/', 'home', HomeView),
+
+  // Home slideshow page
+  { path: '/home-slideshow', component: HomeSlideshowView },
 
   // About
   managedPage('/about', 'about', AboutView),

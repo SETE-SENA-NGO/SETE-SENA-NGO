@@ -242,34 +242,10 @@ async function confirmDelete(item: { id: string; name: string }) {
 
 <style scoped>
 .media-page {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-blue: var(--admin-theme-teal);
-  --admin-green: var(--admin-theme-primary);
-  --admin-gold: var(--admin-theme-gold);
-  --admin-pink: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-
   min-height: 100vh;
-  background: var(--admin-bg);
-  color: var(--admin-text);
+  background: var(--admin-theme-bg);
+  color: var(--admin-theme-text);
   transition: padding-left 0.25s ease;
-}
-
-:global(.admin-dark .media-page) {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-shadow: var(--admin-theme-shadow);
 }
 
 .admin-layout {
@@ -292,7 +268,7 @@ async function confirmDelete(item: { id: string; name: string }) {
 
 .eyebrow {
   margin: 0 0 0.45rem;
-  color: var(--admin-blue);
+  color: var(--admin-theme-teal);
   font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -300,13 +276,13 @@ async function confirmDelete(item: { id: string; name: string }) {
 
 h1 {
   margin: 0 0 0.35rem;
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: clamp(1.7rem, 3vw, 2.4rem);
 }
 
 .page-desc {
   margin: 0;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   line-height: 1.6;
 }
 
@@ -337,8 +313,8 @@ h1 {
 }
 
 .button-primary {
-  border: 1px solid var(--admin-blue);
-  background: var(--admin-blue);
+  border: 1px solid var(--admin-theme-teal);
+  background: var(--admin-theme-teal);
   color: #ffffff;
   box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
 }
@@ -353,10 +329,10 @@ h1 {
   gap: 0.75rem;
   margin-bottom: 1rem;
   padding: 0.9rem 1rem;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 14px;
-  background: var(--admin-surface);
-  color: var(--admin-muted);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-muted);
   font-weight: 800;
 }
 
@@ -364,7 +340,7 @@ h1 {
   width: 120px;
   height: 6px;
   border-radius: 999px;
-  background: var(--admin-surface-soft);
+  background: var(--admin-theme-surface-soft);
   overflow: hidden;
 }
 
@@ -372,7 +348,7 @@ h1 {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: var(--admin-blue);
+  background: var(--admin-theme-teal);
   animation: progress-pulse 1.2s ease-in-out infinite;
 }
 
@@ -391,10 +367,10 @@ h1 {
   justify-items: center;
   gap: 0.4rem;
   margin-bottom: 1rem;
-  border: 2px dashed var(--admin-border);
+  border: 2px dashed var(--admin-theme-border);
   border-radius: 20px;
-  background: var(--admin-surface);
-  color: var(--admin-muted);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-muted);
   padding: 2.5rem 1rem;
   cursor: pointer;
   transition:
@@ -404,8 +380,8 @@ h1 {
 
 .drop-zone:hover,
 .drop-zone.active {
-  border-color: var(--admin-blue);
-  background: color-mix(in srgb, var(--admin-blue) 4%, var(--admin-surface));
+  border-color: var(--admin-theme-teal);
+  background: color-mix(in srgb, var(--admin-theme-teal) 4%, var(--admin-theme-surface));
 }
 
 .drop-icon {
@@ -426,7 +402,7 @@ h1 {
 }
 
 .drop-zone strong {
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 1rem;
 }
 
@@ -445,17 +421,17 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 999px;
-  background: var(--admin-surface);
-  color: var(--admin-muted);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-muted);
   padding: 0.35rem 0.7rem;
   font-size: 0.82rem;
   font-weight: 800;
 }
 
 .stats-bar strong {
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
 }
 
 .file-grid {
@@ -467,10 +443,10 @@ h1 {
 .file-card {
   display: grid;
   grid-template-rows: 170px auto auto;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
   overflow: hidden;
   transition:
     box-shadow 0.18s ease,
@@ -485,7 +461,7 @@ h1 {
 .file-thumb {
   display: grid;
   place-items: center;
-  background: var(--admin-surface-soft);
+  background: var(--admin-theme-surface-soft);
   overflow: hidden;
   position: relative;
 }
@@ -508,22 +484,22 @@ h1 {
 }
 
 .type-image {
-  background: var(--admin-blue);
+  background: var(--admin-theme-teal);
 }
 .type-video {
   background: #7c3aed;
 }
 .type-audio {
-  background: var(--admin-green);
+  background: var(--admin-theme-primary);
 }
 .type-pdf {
   background: #dc2626;
 }
 .type-doc {
-  background: var(--admin-blue);
+  background: var(--admin-theme-teal);
 }
 .type-sheet {
-  background: var(--admin-green);
+  background: var(--admin-theme-primary);
 }
 .type-file {
   background: #64748b;
@@ -538,7 +514,7 @@ h1 {
 .file-info strong {
   min-width: 0;
   overflow: hidden;
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 0.88rem;
   font-weight: 900;
   text-overflow: ellipsis;
@@ -551,7 +527,7 @@ h1 {
 }
 
 .file-meta small {
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   font-size: 0.76rem;
   font-weight: 800;
 }
@@ -568,9 +544,9 @@ h1 {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
+  border: 1px solid var(--admin-theme-border);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-contrast);
   padding: 0.38rem 0.65rem;
   font-size: 0.78rem;
   font-weight: 800;
@@ -581,7 +557,7 @@ h1 {
 
 .icon-button.danger {
   border-color: rgba(220, 38, 38, 0.3);
-  color: var(--admin-pink);
+  color: var(--admin-theme-danger);
 }
 
 .icon-button:disabled {
@@ -595,7 +571,7 @@ h1 {
   gap: 0.5rem;
   padding: 3rem 1rem;
   text-align: center;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
 }
 
 .empty-icon {
@@ -616,7 +592,7 @@ h1 {
 }
 
 .empty-state strong {
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 1.05rem;
 }
 
