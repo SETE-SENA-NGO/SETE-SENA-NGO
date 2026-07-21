@@ -73,6 +73,7 @@ function readConfig() {
   const supabaseAnonKey =
     env('SUPABASE_PUBLISHABLE_KEY') ||
     env('VITE_SUPABASE_PUBLISHABLE_KEY') ||
+    env('VITE_SUPABASE_ANON_KEY') ||
     env('SUPABASE_ANON_KEY')
   const supabaseServiceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY')
   const folderId = env('GOOGLE_DRIVE_FOLDER_ID')
@@ -414,4 +415,3 @@ function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
   return `${Math.round(bytes / (1024 * 1024))} MB`
 }
-

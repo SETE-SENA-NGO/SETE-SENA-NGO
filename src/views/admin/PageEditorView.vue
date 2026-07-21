@@ -1064,6 +1064,25 @@ watch(homeSlides, () => syncSectionFromHomeSlides(), { deep: true })
 // ===== NEW: Preview modal state =====
 const previewSlideshow = ref(false)
 const previewIndex = ref(0)
+const emptyHomeSlide: HomeSlideEditorItem = {
+  __key: 'empty-preview-slide',
+  image: '',
+  eyebrow: '',
+  title: '',
+  description: '',
+  alt: '',
+  primaryLabel: '',
+  primaryTo: '',
+  secondaryLabel: '',
+  secondaryTo: '',
+  position: 'center',
+}
+const previewSlide = computed(() => homeSlides.value[previewIndex.value] ?? emptyHomeSlide)
+const previewSlideOverlayStyle = computed(() => {
+  const position = previewSlide.value.position
+  const textAlign = position === 'left' || position === 'right' ? position : 'center'
+  return `text-align: ${textAlign}`
+})
 
 function openPreviewModal() {
   syncHomeSlidesFromSection()
@@ -2139,14 +2158,14 @@ function formatDate(value: string) {
           <div v-else class="preview-slides-container">
             <button class="preview-arrow prev" @click="previewIndex = (previewIndex - 1 + homeSlides.length) % homeSlides.length">‹</button>
             <div class="preview-slide">
-              <img :src="homeSlides[previewIndex].image" :alt="homeSlides[previewIndex].alt || homeSlides[previewIndex].title" />
-              <div class="preview-slide-overlay" :style="{ textAlign: homeSlides[previewIndex].position || 'center' }">
-                <div v-if="homeSlides[previewIndex].eyebrow" class="preview-eyebrow">{{ homeSlides[previewIndex].eyebrow }}</div>
-                <h2 v-if="homeSlides[previewIndex].title">{{ homeSlides[previewIndex].title }}</h2>
-                <p v-if="homeSlides[previewIndex].description">{{ homeSlides[previewIndex].description }}</p>
+              <img :src="previewSlide.image" :alt="previewSlide.alt || previewSlide.title" />
+              <div class="preview-slide-overlay" :style="previewSlideOverlayStyle">
+                <div v-if="previewSlide.eyebrow" class="preview-eyebrow">{{ previewSlide.eyebrow }}</div>
+                <h2 v-if="previewSlide.title">{{ previewSlide.title }}</h2>
+                <p v-if="previewSlide.description">{{ previewSlide.description }}</p>
                 <div class="preview-buttons">
-                  <a v-if="homeSlides[previewIndex].primaryLabel" :href="homeSlides[previewIndex].primaryTo || '#'" class="preview-btn primary">{{ homeSlides[previewIndex].primaryLabel }}</a>
-                  <a v-if="homeSlides[previewIndex].secondaryLabel" :href="homeSlides[previewIndex].secondaryTo || '#'" class="preview-btn secondary">{{ homeSlides[previewIndex].secondaryLabel }}</a>
+                  <a v-if="previewSlide.primaryLabel" :href="previewSlide.primaryTo || '#'" class="preview-btn primary">{{ previewSlide.primaryLabel }}</a>
+                  <a v-if="previewSlide.secondaryLabel" :href="previewSlide.secondaryTo || '#'" class="preview-btn secondary">{{ previewSlide.secondaryLabel }}</a>
                 </div>
               </div>
             </div>
