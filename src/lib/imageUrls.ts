@@ -1,4 +1,4 @@
-const useGoogleDriveImages = import.meta.env.VITE_USE_GOOGLE_DRIVE_IMAGES === 'true'
+const useGoogleDriveImages = import.meta.env.VITE_USE_GOOGLE_DRIVE_IMAGES !== 'false'
 
 const svgDataUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`
 const localFavicon = '/favicon.ico'
