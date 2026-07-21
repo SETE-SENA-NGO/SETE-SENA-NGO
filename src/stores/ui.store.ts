@@ -12,29 +12,12 @@ function getInitialDarkMode() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
-function getInitialPublicDarkMode(): boolean {
-  if (typeof window === 'undefined') return true // default to dark
-
-  const saved = window.localStorage.getItem('public-dark-mode')
-  if (saved !== null) return saved === 'true'
-
-  // Default to dark mode
-  return true
-}
-
 function applyTheme(darkMode: boolean) {
   if (typeof document === 'undefined') return
 
   document.documentElement.classList.toggle('admin-dark', darkMode)
   document.documentElement.classList.toggle('dark', darkMode)
   window.localStorage.setItem('admin-theme', darkMode ? 'dark' : 'light')
-}
-
-function applyPublicDarkMode(dark: boolean) {
-  if (typeof document === 'undefined') return
-
-  document.documentElement.classList.toggle('public-dark', dark)
-  window.localStorage.setItem('public-dark-mode', dark ? 'true' : 'false')
 }
 
 function applySidebarState(open: boolean) {
@@ -60,10 +43,8 @@ export const useUiStore = defineStore('ui', () => {
   const loading = ref(false)
   const sidebarOpen = ref(getInitialSidebarOpen())
   const darkMode = ref(getInitialDarkMode())
-  const publicDarkMode = ref(getInitialPublicDarkMode())
 
   applyTheme(darkMode.value)
-  applyPublicDarkMode(publicDarkMode.value)
   applySidebarState(sidebarOpen.value)
 
   function addToast(message: string, type: ToastType = 'info') {
@@ -113,15 +94,6 @@ export const useUiStore = defineStore('ui', () => {
     setDarkMode(!darkMode.value)
   }
 
-  function setPublicDarkMode(state: boolean) {
-    publicDarkMode.value = state
-    applyPublicDarkMode(state)
-  }
-
-  function togglePublicDarkMode() {
-    setPublicDarkMode(!publicDarkMode.value)
-  }
-
   return {
     toasts,
     modal,
@@ -138,8 +110,5 @@ export const useUiStore = defineStore('ui', () => {
     setSidebarOpen,
     setDarkMode,
     toggleDarkMode,
-    publicDarkMode,
-    setPublicDarkMode,
-    togglePublicDarkMode,
   }
 })

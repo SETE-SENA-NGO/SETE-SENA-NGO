@@ -213,31 +213,30 @@ const infoPages = [
 
 <style scoped>
 .cp-dash {
-  --bg: #f3f6fd; --surface: #ffffff; --border: #e8edf6; --border-s: #d4dcee;
-  --text: #1e2a4a; --contrast: #0a142d; --muted: #6a7fa0;
-  --blue: #2563eb; --blue-soft: #ecf2ff;
-  --emerald: #059669; --emerald-soft: #eafaf5;
-  --amber: #d97706; --amber-soft: #fef8ee;
-  --violet: #7c3aed; --violet-glow: rgba(124,58,237,0.25); --violet-soft: #f3efff;
-  --slate: #64748b; --slate-soft: #f0f3f8;
-  --shadow-xs: 0 1px 2px rgba(10,20,45,0.04);
-  --shadow-sm: 0 2px 8px rgba(10,20,45,0.06);
-  --shadow-md: 0 4px 16px rgba(10,20,45,0.07);
+  --bg: var(--admin-theme-bg);
+  --surface: var(--admin-theme-surface);
+  --border: var(--admin-theme-border);
+  --border-s: var(--admin-theme-border-strong);
+  --text: var(--admin-theme-text);
+  --contrast: var(--admin-theme-contrast);
+  --muted: var(--admin-theme-muted);
+  --blue: var(--admin-theme-teal);
+  --blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
+  --emerald: var(--admin-theme-primary);
+  --emerald-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+  --amber: var(--admin-theme-gold);
+  --amber-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
+  --violet: #7c3aed;
+  --violet-glow: rgba(124,58,237,0.25);
+  --violet-soft: color-mix(in srgb, #7c3aed 12%, transparent);
+  --slate: #64748b;
+  --slate-soft: color-mix(in srgb, #64748b 12%, transparent);
+  --shadow-xs: var(--admin-theme-shadow);
+  --shadow-sm: var(--admin-theme-shadow);
+  --shadow-md: var(--admin-theme-shadow);
   --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
   min-height: 100vh; background: var(--bg); color: var(--text);
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-:global(.admin-dark) .cp-dash {
-  --bg: #080c1a; --surface: #101826; --border: #1c2642; --border-s: #263252;
-  --text: #c8d2e6; --contrast: #eaf0f8; --muted: #7a8aaa;
-  --blue: #3b82f6; --blue-soft: #172244;
-  --emerald: #10b981; --emerald-soft: #142a22;
-  --amber: #f59e0b; --amber-soft: #241e14;
-  --violet: #a78bfa; --violet-glow: rgba(167,139,250,0.2); --violet-soft: #1c1640;
-  --slate: #8896b0; --slate-soft: #121a2e;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.15);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
 }
 .dash-layout { display: flex; }
 .dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; }
