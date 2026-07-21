@@ -16,7 +16,7 @@ in Netlify build variables:
 ```env
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
-VITE_USE_GOOGLE_DRIVE_IMAGES=false
+VITE_USE_GOOGLE_DRIVE_IMAGES=true
 ```
 
 Set this secret only for Netlify Functions:

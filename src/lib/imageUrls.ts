@@ -196,8 +196,32 @@ export function normalizeImageUrl(value: string) {
 export function resolveImageUrl(value: string, fallback = imageUrls.programs.hero1) {
   const normalized = normalizeImageUrl(value)
   if (!normalized) return fallback
+  const legacyImageUrl = legacyLocalImageUrl(normalized)
+  if (legacyImageUrl) return legacyImageUrl
   if (normalized.startsWith('/images/') || normalized.startsWith('/assets/')) return fallback
   return normalized
+}
+
+function legacyLocalImageUrl(value: string) {
+  const path = value.split('?')[0]?.replace(/\\/g, '/').toLowerCase() ?? ''
+
+  if (path.endsWith('/images/programs/education-hero.jpg')) {
+    return imageUrls.programs.educationHero
+  }
+
+  if (path.endsWith('/images/programs/environment.jpg')) {
+    return imageUrls.programs.environment
+  }
+
+  if (path.endsWith('/images/programs/livelihood-hero2.jpg')) {
+    return imageUrls.programs.livelihoodHero2
+  }
+
+  if (path.endsWith('/images/programs/child-protection1.jpg')) {
+    return imageUrls.programs.childProtection1
+  }
+
+  return ''
 }
 
 function getGoogleDriveFileId(value: string) {
