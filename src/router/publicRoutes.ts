@@ -1,19 +1,4 @@
-import HomeView from '@/views/public/HomeView.vue'
-import HomeSlideshowView from '@/views/public/HomeSlideshowView.vue'
-import AboutView from '@/views/public/AboutView.vue'
-import AboutVisionView from '@/views/public/AboutVisionView.vue'
-import ProgramEnviromentView from '@/views/public/ProgramEnviromentView.vue'
-import OrganizationView from '@/views/public/OrganizationView.vue'
-import EducationView from '@/views/public/EducationView.vue'
-import ImpactView from '@/views/public/ImpactView.vue'
-import ImpactPartnersView from '@/views/public/ImpactPartnersView.vue'
-import ContactView from '@/views/public/ContactView.vue'
-import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
-import ImpactNumbersView from '@/views/public/ImpactNumbersView.vue'
-import HeadOfficeView from '@/views/public/HeadOfficeView.vue'
-import FieldOfficesView from '@/views/public/FieldOfficesView.vue'
-import ManagedPublicPageView from '@/views/public/ManagedPublicPageView.vue'
-import type { Component } from 'vue'
+import type { RouteRecordRaw } from 'vue-router'
 
 type ViewLoader = () => Promise<unknown>
 
@@ -35,12 +20,16 @@ export const publicRoutes: RouteRecordRaw[] = [
   managedRoute('/', 'home', () => import('@/views/public/HomeView.vue')),
 
   // Home slideshow page
-  { path: '/home-slideshow', component: HomeSlideshowView },
+  { path: '/home-slideshow', component: () => import('@/views/public/HomeSlideshowView.vue') },
 
   // About
-  managedPage('/about', 'about', AboutView),
-  managedPage('/about/vision', 'about-vision', AboutVisionView),
-  managedPage('/about/organization', 'about-organization', OrganizationView),
+  managedRoute('/about', 'about', () => import('@/views/public/AboutView.vue')),
+  managedRoute('/about/vision', 'about-vision', () => import('@/views/public/AboutVisionView.vue')),
+  managedRoute(
+    '/about/organization',
+    'about-organization',
+    () => import('@/views/public/OrganizationView.vue'),
+  ),
 
   managedRoute('/programs', 'programs', () => import('@/views/public/ProgramsView.vue'), 'programs'),
   managedRoute(

@@ -1145,11 +1145,10 @@ async function onHomeSlideImageUpload(e: Event, index: number) {
   if (!file) return
 
   try {
-    await media.upload(file)
-    const newest = media.items[0]
-    if (!newest?.url) throw new Error('Upload succeeded but no URL found.')
+    const uploaded = await media.uploadToGoogleDrive(file)
+    if (!uploaded.url) throw new Error('Upload succeeded but no URL found.')
     if (!homeSlides.value[index]) return
-    homeSlides.value[index].image = newest.url
+    homeSlides.value[index].image = uploaded.url
   } catch (err) {
     ui.addToast(err instanceof Error ? err.message : 'Upload failed', 'error')
   } finally {

@@ -4,7 +4,9 @@ import { RouterLink, useRoute } from 'vue-router'
 import FlagUK from '@/components/icons/FlagUK.vue'
 import FlagKH from '@/components/icons/FlagKH.vue'
 import { useUiStore } from '@/stores/ui.store'
-import logoUrl from '@/assets/santi_sena_logo.png'
+import { imageUrls } from '@/lib/imageUrls'
+
+const logoUrl = imageUrls.logo
 const ui = useUiStore()
 
 type MenuItem = { title: string; desc: string; to: string }

@@ -247,8 +247,10 @@ async function loadOverviewStats() {
   try {
     const { count: programCount } = await supabase.from('programs').select('*', { count: 'exact', head: true }).eq('status', 'published')
     const { count: partnerCount } = await supabase.from('partners').select('*', { count: 'exact', head: true }).eq('is_visible', true)
-    if (programCount !== null) overviewStats.value[2].value = String(programCount)
-    if (partnerCount !== null) overviewStats.value[3].value = String(partnerCount)
+    const programStat = overviewStats.value[2]
+    const partnerStat = overviewStats.value[3]
+    if (programCount !== null && programStat) programStat.value = String(programCount)
+    if (partnerCount !== null && partnerStat) partnerStat.value = String(partnerCount)
   } catch { /* ignore */ }
 }
 

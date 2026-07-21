@@ -34,7 +34,7 @@
             v-for="(card, i) in overviewCards"
             :key="card.title"
             class="overview-card"
-            :class="{ 'card-visible': visibleCards.overview[i] }"
+            :class="{ 'card-visible': visibleCards.overview[i] === true }"
             :style="{ '--delay': `${i * 120}ms` }"
             :ref="el => setRef(el, 'overview', i)"
           >
@@ -84,7 +84,7 @@
             v-for="(item, i) in initiatives"
             :key="item.title"
             class="initiative-item"
-            :class="{ 'initiative-visible': visibleCards.initiatives[i] }"
+            :class="{ 'initiative-visible': visibleCards.initiatives[i] === true }"
             :style="{ '--delay': `${i * 100}ms` }"
             :ref="el => setRef(el, 'initiatives', i)"
           >
@@ -155,7 +155,7 @@
             v-for="(step, i) in processSteps"
             :key="step.number"
             class="process-step"
-            :class="{ 'step-visible': visibleCards.process[i] }"
+            :class="{ 'step-visible': visibleCards.process[i] === true }"
             :style="{ '--delay': `${i * 120}ms` }"
             :ref="el => setRef(el, 'process', i)"
           >
@@ -362,7 +362,9 @@ const displayPartners = computed(() => {
 })
 
 /* ─── Visibility state ─────────────────────────── */
-const visibleCards = reactive<Record<string, boolean[]>>({
+type CardGroup = 'overview' | 'initiatives' | 'process'
+
+const visibleCards = reactive<Record<CardGroup, boolean[]>>({
   overview: Array(overviewCards.length).fill(false),
   initiatives: Array(initiatives.length).fill(false),
   process: Array(processSteps.length).fill(false),
@@ -375,7 +377,7 @@ const partnersVisible = ref(false)
 const activeSection = ref(0)
 
 /* ─── Template refs ────────────────────────────── */
-const cardRefs = reactive<Record<string, (HTMLElement | null)[]>>({ overview: [], initiatives: [], process: [] })
+const cardRefs = reactive<Record<CardGroup, (HTMLElement | null)[]>>({ overview: [], initiatives: [], process: [] })
 const scrollProgressRef = ref<HTMLElement | null>(null)
 const overviewHeaderRef = ref<HTMLElement | null>(null)
 const initHeaderRef = ref<HTMLElement | null>(null)
@@ -390,8 +392,8 @@ const partnersHeaderRef = ref<HTMLElement | null>(null)
 const partnersGridRef = ref<HTMLElement | null>(null)
 const ctaRef = ref<HTMLElement | null>(null)
 
-function setRef(el: HTMLElement | null, group: string, idx: number) {
-  if (el && cardRefs[group]) cardRefs[group][idx] = el
+function setRef(el: unknown, group: CardGroup, idx: number) {
+  if (el instanceof HTMLElement) cardRefs[group][idx] = el
 }
 
 /* ─── IntersectionObserver helper ──────────────── */
@@ -434,12 +436,15 @@ function handleScroll() {
 
   const sections = sectionNavItems.map(item => document.getElementById(item.id)).filter(Boolean) as HTMLElement[]
   for (let i = sections.length - 1; i >= 0; i--) {
-    if (sections[i].getBoundingClientRect().top <= window.innerHeight * 0.3) { activeSection.value = i; break }
+    const section = sections[i]
+    if (section && section.getBoundingClientRect().top <= window.innerHeight * 0.3) { activeSection.value = i; break }
   }
 }
 
 function scrollToSection(index: number) {
-  const el = document.getElementById(sectionNavItems[index].id)
+  const item = sectionNavItems[index]
+  if (!item) return
+  const el = document.getElementById(item.id)
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
@@ -461,7 +466,10 @@ onMounted(() => {
   observe(impactSectionRef.value, () => {
     statsVisible.value = true
     const stats = dbMetrics.value.length > 0 ? dbMetrics.value : impactStatsRaw
-    stats.forEach((_, i) => setTimeout(() => animateCounter(i < impactStats.length ? impactStats[i] : null, stats[i] as unknown as Record<string, unknown>), i * 110))
+    stats.forEach((stat, i) => {
+      const target = impactStats[i] ?? null
+      setTimeout(() => animateCounter(target, stat as unknown as Record<string, unknown>), i * 110)
+    })
   })
   observe(processHeaderRef.value, () => processHeaderRef.value?.classList.add('entered'))
   cardRefs.process.forEach((el, i) => observe(el, () => setTimeout(() => { visibleCards.process[i] = true }, i * 120)))

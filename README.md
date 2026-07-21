@@ -39,14 +39,11 @@ npm run test         # static project safety tests
 npm run build        # type-check + production bundle
 ```
 
-<<<<<<< HEAD
 ## Deployment
 
-Build with `npm run build` and deploy the generated `dist/` directory to your static host. Configure the same public Supabase environment variables in the host dashboard.
+Netlify uses the same command from `netlify.toml` and publishes `dist`. For another static host, build with `npm run build` and deploy the generated `dist/` directory. Configure the same public Supabase environment variables in the host dashboard.
 
 Before production, rotate any secret that was ever placed in a frontend `.env`, keep RLS enabled, and verify admin users use real emails and strong generated passwords.
-=======
-Netlify uses the same command from `netlify.toml` and publishes `dist`.
 
 ## Admin Media Uploads
 
@@ -59,4 +56,3 @@ POST /api/google-drive-upload
 That Netlify Function checks the logged-in Supabase admin role, uploads the image to Google Drive, makes it publicly readable, and stores the public image URL in `public.media_assets`.
 
 For personal Google Drive accounts, use OAuth refresh-token credentials. Service accounts require a Google Workspace Shared Drive.
->>>>>>> c3734c38320487ab00a91c4759e517753619d809

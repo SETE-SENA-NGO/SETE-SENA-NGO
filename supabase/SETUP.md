@@ -21,7 +21,8 @@ Open Supabase Dashboard > SQL Editor and run these files in order:
 2. `supabase/migrations/0002_admin_editable_content_schema.sql`
 3. `supabase/migrations/0002_module_records.sql`
 4. `supabase/migrations/0003_admin_security.sql`
-5. `supabase/seed.sql`
+5. `supabase/migrations/0004_media_free_tier_limits.sql`
+6. `supabase/seed.sql`
 
 After running the schema, refresh Supabase's REST schema cache:
 
