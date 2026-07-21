@@ -37,7 +37,20 @@ const knownMeta: Record<string, Partial<PayMethod>> = {
     badgeTextColor: '#ffffff',
     panelColor: '#eef1f6',
   },
+  'aba-pay': {
+    badgeColor: '#294f8f',
+    badgeTextColor: '#ffffff',
+    panelColor: '#eef1f6',
+  },
   acleda: {
+    badgeColor: '#d9ad2f',
+    badgeTextColor: '#1d3d5c',
+    logo: acledaLogo,
+    logoAlt: 'ACLEDA Bank logo',
+    panelColor: '#fff4d4',
+    numberColor: '#d9ad2f',
+  },
+  'acleda-bank': {
     badgeColor: '#d9ad2f',
     badgeTextColor: '#1d3d5c',
     logo: acledaLogo,

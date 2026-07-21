@@ -11,17 +11,30 @@ export type DonationMethod = {
   currency: string
 }
 
-// Row shape of the donation_methods table (snake_case columns).
+type DonationMetadata = Record<string, unknown>
+
+// Row shape of the canonical donation_methods table.
 type DonationMethodRow = {
-  id: string
-  bank: string
-  subtitle: string
-  header_color: string
-  qr_url: string
+  slug: string
+  name: string
+  account_name: string | null
+  account_number: string | null
+  currency: string | null
+  sort_order: number | null
+  metadata: DonationMetadata | null
+}
+
+type DonationMethodWriteRow = {
+  slug: string
+  name: string
+  method_type: string
+  instructions: string
   account_name: string
-  account_no: string
+  account_number: string
   currency: string
   sort_order: number
+  is_active: boolean
+  metadata: DonationMetadata
 }
 
 export function createDonationMethod(overrides: Partial<DonationMethod> = {}): DonationMethod {
@@ -57,37 +70,52 @@ export function defaultDonationMethods(): DonationMethod[] {
   ]
 }
 
+function metadataString(metadata: DonationMetadata | null, key: string) {
+  const value = metadata?.[key]
+  return typeof value === 'string' ? value : ''
+}
+
 function rowToMethod(row: DonationMethodRow): DonationMethod {
   return {
-    id: row.id,
-    bank: row.bank,
-    subtitle: row.subtitle,
-    headerColor: row.header_color || '#1d3d5c',
-    qrUrl: row.qr_url,
-    accountName: row.account_name,
-    accountNo: row.account_no,
-    currency: row.currency,
+    id: row.slug,
+    bank: row.name,
+    subtitle: metadataString(row.metadata, 'subtitle') || metadataString(row.metadata, 'bank'),
+    headerColor: metadataString(row.metadata, 'header_color') || '#1d3d5c',
+    qrUrl: metadataString(row.metadata, 'qr_url'),
+    accountName: row.account_name || 'SANTI SENA',
+    accountNo: row.account_number || '',
+    currency: row.currency || 'KHR / USD',
   }
 }
 
-function methodToRow(method: DonationMethod, sortOrder: number): DonationMethodRow {
+function methodToRow(method: DonationMethod, sortOrder: number): DonationMethodWriteRow {
+  const bank = method.bank.trim()
+  const accountName = method.accountName.trim() || 'SANTI SENA'
+  const accountNumber = method.accountNo.trim()
+
   return {
-    id: method.id,
-    bank: method.bank.trim(),
-    subtitle: method.subtitle.trim(),
-    header_color: method.headerColor,
-    qr_url: method.qrUrl,
-    account_name: method.accountName.trim(),
-    account_no: method.accountNo.trim(),
-    currency: method.currency.trim(),
+    slug: method.id,
+    name: bank,
+    method_type: 'bank_qr',
+    instructions: `Scan with ${bank || 'your banking app'} or send a transfer to the Santi Sena account.`,
+    account_name: accountName,
+    account_number: accountNumber,
+    currency: method.currency.trim() || 'KHR / USD',
     sort_order: sortOrder,
+    is_active: true,
+    metadata: {
+      subtitle: method.subtitle.trim(),
+      header_color: method.headerColor,
+      qr_url: method.qrUrl,
+    },
   }
 }
 
 export async function fetchDonationMethods(): Promise<DonationMethod[]> {
   const { data, error } = await supabase
     .from('donation_methods')
-    .select('*')
+    .select('slug, name, account_name, account_number, currency, sort_order, metadata')
+    .eq('is_active', true)
     .order('sort_order', { ascending: true })
   if (error) throw error
   return ((data ?? []) as DonationMethodRow[]).map(rowToMethod)
@@ -98,19 +126,19 @@ export async function saveDonationMethods(methods: DonationMethod[]): Promise<vo
 
   const { data: existing, error: fetchError } = await supabase
     .from('donation_methods')
-    .select('id')
+    .select('slug')
   if (fetchError) throw fetchError
 
-  const keep = new Set(rows.map((row) => row.id))
-  const removed = ((existing ?? []) as { id: string }[])
-    .map((row) => row.id)
-    .filter((id) => !keep.has(id))
+  const keep = new Set(rows.map((row) => row.slug))
+  const removed = ((existing ?? []) as { slug: string }[])
+    .map((row) => row.slug)
+    .filter((slug) => !keep.has(slug))
 
   if (removed.length) {
     const { error: deleteError } = await supabase
       .from('donation_methods')
       .delete()
-      .in('id', removed)
+      .in('slug', removed)
     if (deleteError) throw deleteError
   }
 
@@ -119,7 +147,7 @@ export async function saveDonationMethods(methods: DonationMethod[]): Promise<vo
       .from('donation_methods')
       .upsert(
         rows.map((row) => ({ ...row, updated_at: new Date().toISOString() })),
-        { onConflict: 'id' },
+        { onConflict: 'slug' },
       )
     if (upsertError) throw upsertError
   }
