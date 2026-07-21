@@ -18,53 +18,6 @@
       </button>
     </nav>
 
-    <!-- ===================== HERO ===================== -->
-    <section class="hero" ref="heroRef" aria-label="Hero banner">
-      <div class="hero-bg" aria-hidden="true">
-        <div class="hero-overlay"></div>
-        <div class="hero-particles">
-          <span v-for="n in 12" :key="n" class="particle" :style="particleStyle(n)"></span>
-        </div>
-        <div class="hero-leaf leaf-1" aria-hidden="true">
-          <svg viewBox="0 0 100 100" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.5">
-            <path d="M50 5 C30 20 10 40 5 70 C15 60 30 55 50 50 C70 45 85 40 95 30 C85 20 70 10 50 5Z"/>
-          </svg>
-        </div>
-        <div class="hero-leaf leaf-2" aria-hidden="true">
-          <svg viewBox="0 0 100 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5">
-            <path d="M50 95 C70 80 90 60 95 30 C85 40 70 45 50 50 C30 55 15 60 5 70 C15 80 30 90 50 95Z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="hero-content">
-        <div class="hero-badge" ref="heroBadgeRef">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z"/>
-            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-          </svg>
-          Environment Program
-        </div>
-        <h1 class="hero-title" ref="heroTitleRef">
-          <span class="hero-line">Protecting Our</span>
-          <span class="hero-line hero-line-accent">{{ heroTitle || 'Natural Heritage' }}</span>
-        </h1>
-        <p class="hero-subtitle" ref="heroSubRef">
-          {{ heroSubtitle || 'Through community-led conservation, reforestation, and sustainable development, we\'re restoring Cambodia\'s ecosystems and building a greener future for all.' }}
-        </p>
-        <div class="hero-actions" ref="heroActionsRef">
-          <router-link to="/get-involved" class="btn-hero btn-hero-primary">
-            Get Involved
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </router-link>
-          <router-link to="/contact" class="btn-hero btn-hero-secondary">Contact Us</router-link>
-        </div>
-        <div class="hero-scroll-indicator" ref="scrollIndicatorRef">
-          <span class="scroll-text">Scroll to explore</span>
-          <span class="scroll-line"></span>
-        </div>
-      </div>
-    </section>
-
     <!-- ===================== OVERVIEW ===================== -->
     <section class="section overview-section" id="overview">
       <div class="container">
@@ -305,13 +258,8 @@ const {
   metrics: dbMetrics,
   sections: dbSections,
   partners: dbPartners,
-  page: dbPage,
   load: loadDbData,
 } = useEnvironmentProgram()
-
-/* ─── Content from Supabase / static fallback ──── */
-const heroTitle = computed(() => dbPage.value?.hero_headline || null)
-const heroSubtitle = computed(() => dbPage.value?.hero_intro || dbProgram.value?.summary || null)
 
 /* Page sections from DB — shown below overview cards when available */
 const dbSectionsContent = computed(() => {
@@ -413,19 +361,6 @@ const displayPartners = computed(() => {
   return STATIC_PARTNERS
 })
 
-/* ─── Particle helper ──────────────────────────── */
-function particleStyle(n: number) {
-  const x = ((n * 37 + 13) % 100)
-  const y = ((n * 53 + 7) % 100)
-  const size = 3 + ((n * 7) % 5)
-  const dur = 5 + ((n * 3) % 5)
-  const delay = (n * 0.6) % 4
-  return {
-    left: `${x}%`, top: `${y}%`, width: `${size}px`, height: `${size}px`,
-    animationDuration: `${dur}s`, animationDelay: `${delay}s`,
-  }
-}
-
 /* ─── Visibility state ─────────────────────────── */
 const visibleCards = reactive<Record<string, boolean[]>>({
   overview: Array(overviewCards.length).fill(false),
@@ -438,17 +373,10 @@ const ctaVisible = ref(false)
 const galleryVisible = ref(false)
 const partnersVisible = ref(false)
 const activeSection = ref(0)
-const heroEntered = ref(false)
 
 /* ─── Template refs ────────────────────────────── */
 const cardRefs = reactive<Record<string, (HTMLElement | null)[]>>({ overview: [], initiatives: [], process: [] })
 const scrollProgressRef = ref<HTMLElement | null>(null)
-const heroRef = ref<HTMLElement | null>(null)
-const heroBadgeRef = ref<HTMLElement | null>(null)
-const heroTitleRef = ref<HTMLElement | null>(null)
-const heroSubRef = ref<HTMLElement | null>(null)
-const heroActionsRef = ref<HTMLElement | null>(null)
-const scrollIndicatorRef = ref<HTMLElement | null>(null)
 const overviewHeaderRef = ref<HTMLElement | null>(null)
 const initHeaderRef = ref<HTMLElement | null>(null)
 const initCtaRef = ref<HTMLElement | null>(null)
@@ -497,17 +425,6 @@ function animateCounter(target: { displayed: string; end: number; suffix: string
   requestAnimationFrame(tick)
 }
 
-/* ─── Hero entrance animation ──────────────────── */
-function animateHero() {
-  if (heroEntered.value) return
-  heroEntered.value = true
-  setTimeout(() => { heroBadgeRef.value?.classList.add('entered') }, 200)
-  setTimeout(() => { heroTitleRef.value?.classList.add('entered') }, 500)
-  setTimeout(() => { heroSubRef.value?.classList.add('entered') }, 800)
-  setTimeout(() => { heroActionsRef.value?.classList.add('entered') }, 1100)
-  setTimeout(() => { scrollIndicatorRef.value?.classList.add('entered') }, 1400)
-}
-
 /* ─── Scroll progress ──────────────────────────── */
 function handleScroll() {
   const scrollTop = window.scrollY
@@ -529,13 +446,6 @@ function scrollToSection(index: number) {
 /* ─── Mount ─────────────────────────────────────── */
 onMounted(() => {
   void loadDbData()
-
-  if (heroRef.value) {
-    animateHero()
-    const heroIO = new IntersectionObserver(entries => { if (entries[0].isIntersecting) animateHero() }, { threshold: 0.1 })
-    heroIO.observe(heroRef.value)
-    observers.push(heroIO)
-  }
 
   let ticking = false
   window.addEventListener('scroll', () => {
@@ -603,68 +513,6 @@ onBeforeUnmount(() => {
 }
 .section-dot:hover .dot-label, .section-dot.active .dot-label { opacity: 1; transform: translateX(0); }
 @media (max-width: 900px) { .section-nav { display: none; } }
-
-/* ─── HERO ─── */
-.hero {
-  position: relative; min-height: 100vh; display: flex; align-items: center;
-  overflow: hidden; background: linear-gradient(135deg, #0a1f18 0%, #0d3328 40%, #124534 70%, #0d3d2e 100%);
-}
-.hero-bg { position: absolute; inset: 0; }
-.hero-overlay {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 600px 400px at 20% 40%, rgba(15,143,105,0.18) 0%, transparent 60%),
-              radial-gradient(ellipse 500px 500px at 80% 60%, rgba(212,160,23,0.06) 0%, transparent 60%),
-              radial-gradient(ellipse 400px 300px at 50% 80%, rgba(15,143,105,0.08) 0%, transparent 60%);
-  pointer-events: none;
-}
-.hero-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.particle { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.04); animation: floatParticle 6s ease-in-out infinite; }
-@keyframes floatParticle { 0%,100% { transform: translateY(0) scale(1); opacity: 0.3; } 50% { transform: translateY(-20px) scale(1.3); opacity: 0.7; } }
-.hero-leaf { position: absolute; pointer-events: none; opacity: 0.5; }
-.leaf-1 { top: 10%; right: 5%; width: 200px; animation: sway 8s ease-in-out infinite; }
-.leaf-2 { bottom: 15%; left: 3%; width: 160px; animation: sway 10s ease-in-out infinite reverse; }
-@keyframes sway { 0%,100% { transform: rotate(-5deg) translateY(0); } 50% { transform: rotate(5deg) translateY(-10px); } }
-.hero-content { position: relative; z-index: 2; width: min(1120px, calc(100% - 3rem)); margin: 0 auto; padding: 4rem 0; }
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 1rem; border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.85); font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.06em; backdrop-filter: blur(8px); margin-bottom: 1.5rem;
-  opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1), background 0.3s;
-}
-.hero-badge.entered { opacity: 1; transform: translateY(0); }
-.hero-badge:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); }
-.hero-badge svg { color: var(--env-gold); }
-.hero-title { margin: 0; max-width: 780px; }
-.hero-line {
-  display: block; font-size: clamp(2.8rem,8vw,6rem); font-weight: 900; line-height: 1.02;
-  letter-spacing: -0.03em; color: #ffffff; text-shadow: 0 2px 30px rgba(0,0,0,0.2);
-  opacity: 0; transform: translateY(40px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1);
-}
-.hero-line-accent { background: linear-gradient(135deg, #52b788, #d4a017); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.hero-title.entered .hero-line { opacity: 1; transform: translateY(0); }
-.hero-title.entered .hero-line:first-child { transition-delay: 0.1s; }
-.hero-title.entered .hero-line-accent { transition-delay: 0.25s; }
-.hero-subtitle {
-  max-width: 600px; margin: 1.5rem 0 0; color: rgba(255,255,255,0.75); font-size: 1.05rem;
-  line-height: 1.8; opacity: 0; transform: translateY(30px);
-  transition: opacity 0.6s ease 0.4s, transform 0.6s cubic-bezier(0.16,1,0.3,1) 0.4s;
-}
-.hero-subtitle.entered { opacity: 1; transform: translateY(0); }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 2rem; opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease 0.6s, transform 0.6s cubic-bezier(0.16,1,0.3,1) 0.6s; }
-.hero-actions.entered { opacity: 1; transform: translateY(0); }
-.btn-hero { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.75rem; border-radius: 999px; font-size: 0.9rem; font-weight: 700; text-decoration: none; transition: all 0.3s cubic-bezier(0.34,1.4,0.64,1); cursor: pointer; }
-.btn-hero-primary { background: linear-gradient(135deg, var(--env-primary), var(--env-primary-dark)); color: #ffffff; box-shadow: 0 4px 20px rgba(15,143,105,0.3); }
-.btn-hero-primary:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 8px 32px rgba(15,143,105,0.4); }
-.btn-hero-primary:active { transform: translateY(0) scale(0.98); }
-.btn-hero-secondary { background: rgba(255,255,255,0.08); color: #ffffff; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px); }
-.btn-hero-secondary:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.35); transform: translateY(-3px); }
-.hero-scroll-indicator { display: flex; align-items: center; gap: 0.75rem; margin-top: 4rem; opacity: 0; transition: opacity 0.8s ease 1s; }
-.hero-scroll-indicator.entered { opacity: 1; }
-.scroll-text { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); }
-.scroll-line { width: 60px; height: 1.5px; background: linear-gradient(90deg, rgba(255,255,255,0.3), transparent); position: relative; overflow: hidden; }
-.scroll-line::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--env-gold), transparent); animation: scrollPulse 2s ease-in-out infinite; }
-@keyframes scrollPulse { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
 /* ─── SECTIONS SHARED ─── */
 .section { padding: 5rem 0; }
