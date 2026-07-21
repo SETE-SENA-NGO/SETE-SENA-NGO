@@ -974,7 +974,7 @@ const previewItems = computed(() => {
 
 const sectionCountLabel = computed(() => {
   const count = activePage.value.sections.length
-  return `${count} block${count !== 1 ? 's' : ''}`
+  return `${count} section${count !== 1 ? 's' : ''}`
 })
 
 onMounted(() => {
@@ -1218,12 +1218,12 @@ function removeSection(index: number) {
   if (!section) return
 
   ui.openModal(
-    'Remove content block?',
+    'Remove this section?',
     `Remove "${section.label || section.heading || 'this section'}" from ${activePage.value.title}?`,
     () => {
       activePage.value.sections.splice(index, 1)
       if (activeSectionIndex.value === index) activeSectionIndex.value = null
-      ui.addToast('Content block removed.', 'warning')
+      ui.addToast('Section removed.', 'warning')
     },
   )
 }
@@ -1282,6 +1282,191 @@ function formatDate(value: string) {
     timeStyle: 'short',
   }).format(date)
 }
+
+/* ==============================
+   ITEM WIZARD (Program-card style editing)
+   Each "item" line inside a section is parsed into structured
+   fields (icon, title, description, note, photo) so it can be
+   edited one-at-a-time with Previous / Next, matching the
+   reference "Program 1 of 4" card layout.
+   ============================== */
+
+type EditableItem = {
+  icon: string
+  title: string
+  description: string
+  note: string
+  photo: string
+  whatWeDo: string
+  whyItMatters: string
+}
+
+const ICONS = [
+  { key: 'heart', path: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z' },
+  { key: 'people', path: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75' },
+  { key: 'leaf', path: 'M11 20A7 7 0 0 1 4 13c0-8 7-11 15-11 0 9-2 16-8 18z' },
+  { key: 'chat', path: 'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z' },
+  { key: 'megaphone', path: 'M3 11l18-5v12L3 13v-2z M6 13v5a2 2 0 0 0 2 2h1v-6' },
+  { key: 'book', path: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z' },
+  { key: 'shield', path: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+] as const
+
+const ICON_KEYS = new Set(ICONS.map((icon) => icon.key))
+
+function iconPath(key: string) {
+  return ICONS.find((icon) => icon.key === key)?.path ?? ''
+}
+
+function emptyItem(): EditableItem {
+  return {
+    icon: '',
+    title: '',
+    description: '',
+    note: '',
+    photo: '',
+    whatWeDo: '',
+    whyItMatters: '',
+  }
+}
+
+function parseItemLine(line: string): EditableItem {
+  let raw = line
+  let icon = ''
+
+  const separatorIndex = raw.lastIndexOf('::')
+  if (separatorIndex !== -1) {
+    const candidate = raw.slice(separatorIndex + 2).trim()
+    if (ICON_KEYS.has(candidate)) {
+      icon = candidate
+      raw = raw.slice(0, separatorIndex)
+    }
+  }
+
+  const parts = raw.split('|').map((part) => part.trim())
+  return {
+    icon,
+    title: parts[0] ?? '',
+    description: parts[1] ?? '',
+    note: parts[2] ?? '',
+    photo: parts[3] ?? '',
+    whatWeDo: parts[4] ?? '',
+    whyItMatters: parts[5] ?? '',
+  }
+}
+
+function serializeItem(item: EditableItem): string {
+  const parts = [
+    item.title,
+    item.description,
+    item.note,
+    item.photo,
+    item.whatWeDo,
+    item.whyItMatters,
+  ]
+  while (parts.length && !parts[parts.length - 1]) parts.pop()
+
+  let line = parts.join(' | ')
+  if (item.icon) line = `${line}::${item.icon}`
+  return line
+}
+
+function getItems(section: EditableSection): EditableItem[] {
+  return section.items
+    ? section.items.split('\n').filter((line) => line.trim().length > 0).map(parseItemLine)
+    : []
+}
+
+function setItems(section: EditableSection, items: EditableItem[]) {
+  section.items = items.map(serializeItem).join('\n')
+}
+
+const activeItemIndex = ref<Record<string, number>>({})
+
+function getActiveItemIndex(section: EditableSection) {
+  const items = getItems(section)
+  const current = activeItemIndex.value[section.id] ?? 0
+  return Math.min(Math.max(current, 0), Math.max(items.length - 1, 0))
+}
+
+function setActiveItemIndex(section: EditableSection, index: number) {
+  activeItemIndex.value[section.id] = index
+}
+
+/**
+ * Short label used inside the pill-style tab strip.
+ * Some legacy item lines store a full sentence as the "title"
+ * (no `|` separator was used when the content was authored),
+ * which — combined with `white-space: nowrap` on `.item-tab` —
+ * used to render as one giant pill that broke onto its own line
+ * and pushed every other tab out of its expected order visually.
+ * Truncating here keeps every tab a small, uniform pill so the
+ * row wraps cleanly and items stay in their real array order.
+ * The untruncated text is still shown via the `title` attribute
+ * (tooltip) in the template below.
+ */
+function itemTabLabel(item: EditableItem, index: number) {
+  const label = item.title.trim() || `Item ${index + 1}`
+  const maxLength = 28
+  return label.length > maxLength ? `${label.slice(0, maxLength - 2)}…` : label
+}
+
+function updateActiveItem(section: EditableSection, patch: Partial<EditableItem>) {
+  const items = getItems(section)
+  const index = getActiveItemIndex(section)
+  const current = items[index]
+  if (!current) return
+  items[index] = { ...current, ...patch }
+  setItems(section, items)
+}
+
+function addItem(section: EditableSection) {
+  const items = getItems(section)
+  items.push(emptyItem())
+  setItems(section, items)
+  setActiveItemIndex(section, items.length - 1)
+}
+
+function removeItem(section: EditableSection, index: number) {
+  const items = getItems(section)
+  if (items.length <= 1) return
+  items.splice(index, 1)
+  setItems(section, items)
+  const next = Math.min(index, items.length - 1)
+  setActiveItemIndex(section, next)
+}
+
+function goToItem(section: EditableSection, index: number) {
+  const items = getItems(section)
+  if (index < 0 || index >= items.length) return
+  setActiveItemIndex(section, index)
+}
+
+function stepItem(section: EditableSection, direction: -1 | 1) {
+  const items = getItems(section)
+  const current = getActiveItemIndex(section)
+  const next = current + direction
+  if (next < 0 || next >= items.length) return
+  setActiveItemIndex(section, next)
+}
+
+function onPhotoChange(section: EditableSection, event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    if (typeof reader.result === 'string') {
+      updateActiveItem(section, { photo: reader.result })
+    }
+  }
+  reader.readAsDataURL(file)
+  input.value = ''
+}
+
+function clearPhoto(section: EditableSection) {
+  updateActiveItem(section, { photo: '' })
+}
 </script>
 
 <template>
@@ -1311,62 +1496,20 @@ function formatDate(value: string) {
             <!-- Page Header -->
             <header class="editor-header">
               <div class="header-left">
-                <div class="breadcrumb">
-                  <RouterLink to="/admin" class="breadcrumb-link">Dashboard</RouterLink>
-                  <span class="breadcrumb-sep" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                  </span>
-                  <span class="breadcrumb-current">{{ activePage.group }}</span>
-                  <span class="breadcrumb-sep" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                  </span>
-                  <span class="breadcrumb-current">{{ activePage.title }}</span>
-                </div>
-                <div class="page-meta">
-                  <span class="meta-badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    {{ formatDate(activePage.updatedAt) }}
-                  </span>
-                  <span v-if="activePage.route !== 'global'" class="meta-badge route-badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                    {{ activePage.route }}
-                  </span>
-                </div>
+                <h1 class="header-title">Edit {{ activePage.title.toLowerCase() }} page</h1>
+                <p class="header-subtitle">Change the text and photos your visitors see</p>
               </div>
               <div class="header-right">
-                <div class="save-indicator" :class="{ dirty: activePageDirty }">
-                  <span class="save-dot"></span>
-                  <span class="save-label">{{ activePageDirty ? 'Unsaved changes' : 'Saved' }}</span>
-                </div>
                 <div class="header-actions">
-                  <button
-                    class="btn btn-ghost"
-                    type="button"
-                    :disabled="loading"
-                    @click="loadPages"
-                    title="Reload from database"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                    Reload
-                  </button>
                   <RouterLink
                     v-if="activePage.route !== 'global'"
                     class="btn btn-ghost"
                     :to="activePage.route"
-                    title="View public page"
+                    title="View this page on the live site"
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    Preview
+                    View page
                   </RouterLink>
-                  <button
-                    class="btn btn-ghost danger"
-                    type="button"
-                    @click="resetCurrentToDefault"
-                    title="Reset to default content"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-                    Reset
-                  </button>
                   <button
                     class="btn btn-primary"
                     type="button"
@@ -1375,92 +1518,22 @@ function formatDate(value: string) {
                   >
                     <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
                     <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                    {{ savingSlug === activePage.slug ? 'Saving...' : 'Save page' }}
+                    {{ savingSlug === activePage.slug ? 'Saving...' : 'Publish changes' }}
                   </button>
+                  <button class="btn-icon-sm" type="button" @click="resetCurrentToDefault" title="Undo my changes">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                  </button>
+                </div>
+                <div class="save-indicator" :class="{ dirty: activePageDirty }">
+                  <span class="save-dot"></span>
+                  <span class="save-label">{{ activePageDirty ? 'Unsaved changes' : 'Saved' }}</span>
                 </div>
               </div>
             </header>
 
-            <!-- Status bar -->
-            <div class="status-bar">
-              <div class="status-left">
-                <span class="status-bullet" :class="{ dirty: activePageDirty }"></span>
-                <span class="status-text">{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</span>
-              </div>
-              <span class="status-right">{{ sectionCountLabel }} · {{ activePage.slug }}</span>
-            </div>
-
-            <!-- Workflow Steps -->
-            <div class="workflow-steps">
-              <div class="step active completed">
-                <div class="step-indicator">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-                <div class="step-content">
-                  <span class="step-label">Page</span>
-                  <span class="step-desc">Identity</span>
-                </div>
-              </div>
-              <div class="step active">
-                <div class="step-indicator">2</div>
-                <div class="step-content">
-                  <span class="step-label">Content</span>
-                  <span class="step-desc">Blocks</span>
-                </div>
-              </div>
-              <div class="step" :class="{ active: !activePageDirty }">
-                <div class="step-indicator" :class="{ success: !activePageDirty }">
-                  <svg v-if="!activePageDirty" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <template v-else>3</template>
-                </div>
-                <div class="step-content">
-                  <span class="step-label">{{ activePageDirty ? 'Unsaved' : 'Published' }}</span>
-                  <span class="step-desc">Status</span>
-                </div>
-              </div>
-            </div>
-
             <!-- Form Panels -->
             <div class="form-panels">
-              <!-- Page Setup -->
-              <section class="form-card">
-                <div class="card-header">
-                  <div class="card-header-left">
-                    <div class="card-icon card-icon-blue">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    </div>
-                    <div>
-                      <span class="card-eyebrow">Page setup</span>
-                      <h3 class="card-title">Identity</h3>
-                    </div>
-                  </div>
-                  <span class="status-pill" :class="{ dirty: activePageDirty }">
-                    {{ activePageDirty ? 'Unsaved' : 'Saved' }}
-                  </span>
-                </div>
-                <div class="card-body">
-                  <div class="form-grid">
-                    <label class="field">
-                      <span class="field-label">Admin title</span>
-                      <input v-model="activePage.title" name="page-title" placeholder="Page title" />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Slug</span>
-                      <input :value="activePage.slug" name="page-slug" disabled />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Route</span>
-                      <input :value="activePage.route" name="page-route" disabled />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Eyebrow</span>
-                      <input v-model="activePage.eyebrow" name="page-eyebrow" placeholder="Section eyebrow text" />
-                    </label>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Hero Content -->
+              <!-- Top of page -->
               <section class="form-card">
                 <div class="card-header">
                   <div class="card-header-left">
@@ -1468,168 +1541,243 @@ function formatDate(value: string) {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                     </div>
                     <div>
-                      <span class="card-eyebrow">Hero</span>
-                      <h3 class="card-title">Main page copy</h3>
+                      <h3 class="card-title">Top of page</h3>
+                      <span class="card-subtitle">This is the first thing people see</span>
                     </div>
                   </div>
                 </div>
                 <div class="card-body">
                   <label class="field field-block">
-                    <span class="field-label">Hero headline</span>
+                    <span class="field-label">Small label above the title</span>
+                    <input v-model="activePage.eyebrow" name="page-eyebrow" placeholder="e.g. Our Programs" />
+                  </label>
+                  <label class="field field-block">
+                    <span class="field-label">Big title</span>
                     <textarea v-model="activePage.headline" name="page-headline" rows="2" placeholder="The main headline for this page"></textarea>
                   </label>
                   <label class="field field-block">
-                    <span class="field-label">Intro copy</span>
-                    <textarea v-model="activePage.intro" name="page-intro" rows="4" placeholder="Introduction paragraph for the page"></textarea>
+                    <span class="field-label">Short paragraph</span>
+                    <textarea v-model="activePage.intro" name="page-intro" rows="4" placeholder="A short paragraph under the title"></textarea>
                   </label>
                   <div class="form-grid">
                     <label class="field">
-                      <span class="field-label">Primary action</span>
+                      <span class="field-label">Button text</span>
                       <input v-model="activePage.primaryAction" name="page-primary-action" placeholder="e.g. Support Us" />
                     </label>
                     <label class="field">
-                      <span class="field-label">Secondary action</span>
+                      <span class="field-label">Second button text (optional)</span>
                       <input v-model="activePage.secondaryAction" name="page-secondary-action" placeholder="e.g. Learn More" />
                     </label>
                   </div>
                 </div>
               </section>
 
-              <!-- Page Sections -->
-              <section class="form-card sections-card" aria-label="Page sections">
+              <!-- Page Sections (wizard-style, one card per section) -->
+              <section
+                v-for="(section, sIndex) in activePage.sections"
+                :id="`edit-${section.id}`"
+                :key="section.id"
+                class="form-card"
+              >
                 <div class="card-header">
                   <div class="card-header-left">
                     <div class="card-icon card-icon-amber">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                     </div>
                     <div>
-                      <span class="card-eyebrow">Content blocks</span>
-                      <h3 class="card-title">{{ sectionCountLabel }}</h3>
+                      <input v-model="section.label" class="card-title-input" :name="`section-${section.id}-label`" placeholder="Section name" />
+                      <span class="card-subtitle">{{ activePage.sections.length > 1 ? `Section ${sIndex + 1} of ${activePage.sections.length}` : 'One section on this page' }}</span>
                     </div>
                   </div>
-                  <button class="btn btn-secondary add-section-btn" type="button" @click="addSection">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Add block
-                  </button>
+                  <div class="section-actions">
+                    <button type="button" class="btn-icon" :disabled="sIndex === 0" aria-label="Move up" title="Move up" @click="moveSection(sIndex, -1)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                    </button>
+                    <button type="button" class="btn-icon" :disabled="sIndex === activePage.sections.length - 1" aria-label="Move down" title="Move down" @click="moveSection(sIndex, 1)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <button type="button" class="btn-icon" aria-label="Duplicate" title="Duplicate" @click="duplicateSection(sIndex)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
+                    <button type="button" class="btn-icon danger" aria-label="Remove" title="Remove" @click="removeSection(sIndex)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
                 </div>
 
-                <div class="card-body sections-body">
-                  <TransitionGroup name="section-list" tag="div" class="sections-list">
-                    <article
-                      v-for="(section, index) in activePage.sections"
-                      :id="`edit-${section.id}`"
-                      :key="section.id"
-                      class="section-block"
-                      :class="{ 'section-active': activeSectionIndex === index }"
-                    >
-                      <details open @toggle="activeSectionIndex = $event.target.open ? index : null">
-                        <summary class="section-summary">
-                          <div class="summary-drag">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                          </div>
-                          <div class="summary-content">
-                            <span class="summary-index">{{ index + 1 }}</span>
-                            <div class="summary-text">
-                              <strong>{{ section.label || 'Untitled block' }}</strong>
-                              <small v-if="section.heading">{{ section.heading }}</small>
-                              <small v-else class="empty-hint">No heading</small>
-                            </div>
-                          </div>
-                          <div class="summary-badge">
-                            {{ section.items ? `${section.items.split('\n').length} items` : 'Text' }}
-                          </div>
-                        </summary>
+                <div class="card-body">
+                  <label class="field field-block">
+                    <span class="field-label">Heading</span>
+                    <input v-model="section.heading" :name="`section-${section.id}-heading`" placeholder="Section heading" />
+                  </label>
+                  <label class="field field-block">
+                    <span class="field-label">Short description</span>
+                    <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="2" placeholder="A sentence or two about this section"></textarea>
+                  </label>
 
-                        <div class="section-body">
-                          <div class="section-toolbar">
-                            <div class="section-tabs">
-                              <span class="section-tab active">Content</span>
-                            </div>
-                            <div class="section-actions">
-                              <button
-                                type="button"
-                                class="btn-icon"
-                                :disabled="index === 0"
-                                aria-label="Move section up"
-                                title="Move up"
-                                @click.stop="moveSection(index, -1)"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                              </button>
-                              <button
-                                type="button"
-                                class="btn-icon"
-                                :disabled="index === activePage.sections.length - 1"
-                                aria-label="Move section down"
-                                title="Move down"
-                                @click.stop="moveSection(index, 1)"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                              </button>
-                              <div class="btn-sep"></div>
-                              <button
-                                type="button"
-                                class="btn-icon"
-                                aria-label="Duplicate section"
-                                title="Duplicate"
-                                @click.stop="duplicateSection(index)"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                              </button>
-                              <button
-                                type="button"
-                                class="btn-icon danger"
-                                aria-label="Remove section"
-                                title="Remove"
-                                @click.stop="removeSection(index)"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                              </button>
-                            </div>
-                          </div>
+                  <!-- Item wizard -->
+                  <div v-if="getItems(section).length" class="item-wizard">
+                    <span class="field-label">{{ section.label || 'Items' }}</span>
+                    <p class="field-hint-line">One card per item. Switch tabs or use Previous / Next.</p>
 
-                          <div class="section-fields">
-                            <div class="form-grid">
-                              <label class="field">
-                                <span class="field-label">Block label</span>
-                                <input v-model="section.label" :name="`section-${section.id}-label`" placeholder="e.g. Mission, Stats" />
-                              </label>
-                              <label class="field">
-                                <span class="field-label">Heading</span>
-                                <input v-model="section.heading" :name="`section-${section.id}-heading`" placeholder="Section heading" />
-                              </label>
-                            </div>
+                    <div class="item-tabs">
+                      <button
+                        v-for="(item, iIndex) in getItems(section)"
+                        :key="iIndex"
+                        type="button"
+                        class="item-tab"
+                        :class="{ active: getActiveItemIndex(section) === iIndex }"
+                        :title="item.title || `Item ${iIndex + 1}`"
+                        @click="goToItem(section, iIndex)"
+                      >
+                        <svg v-if="item.icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path :d="iconPath(item.icon)" /></svg>
+                        <span class="item-tab-label">{{ itemTabLabel(item, iIndex) }}</span>
+                      </button>
+                    </div>
 
-                            <label class="field field-block">
-                              <span class="field-label">Body</span>
-                              <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="3" placeholder="Descriptive body text"></textarea>
-                            </label>
-
-                            <label class="field field-block">
-                              <span class="field-label">
-                                Items
-                                <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
-                              </span>
-                              <textarea
-                                v-model="section.items"
-                                :name="`section-${section.id}-items`"
-                                rows="4"
-                                placeholder="Item 1&#10;Item 2&#10;Title | Description"
-                              ></textarea>
-                            </label>
-                          </div>
+                    <div class="item-card">
+                      <div class="item-card-header">
+                        <div>
+                          <strong>{{ section.label || 'Item' }} {{ getActiveItemIndex(section) + 1 }} of {{ getItems(section).length }}</strong>
+                          <small>This becomes one card on the page</small>
                         </div>
-                      </details>
-                    </article>
-                  </TransitionGroup>
+                        <button
+                          type="button"
+                          class="btn-icon danger"
+                          :disabled="getItems(section).length <= 1"
+                          title="Remove this item"
+                          @click="removeItem(section, getActiveItemIndex(section))"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                      </div>
 
-                  <div v-if="!activePage.sections.length" class="empty-sections">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                    <p>No content blocks yet</p>
-                    <button class="btn btn-secondary" type="button" @click="addSection">Add your first block</button>
+                      <div class="item-card-body">
+                        <label class="field field-block">
+                          <span class="field-label">Photo</span>
+                          <div class="photo-picker">
+                            <div class="photo-preview" :class="{ filled: !!getItems(section)[getActiveItemIndex(section)]?.photo }">
+                              <img
+                                v-if="getItems(section)[getActiveItemIndex(section)]?.photo"
+                                :src="getItems(section)[getActiveItemIndex(section)]?.photo"
+                                alt=""
+                              />
+                              <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            </div>
+                            <div class="photo-picker-actions">
+                              <label class="btn btn-secondary photo-choose-btn">
+                                Choose photo
+                                <input type="file" accept="image/*" class="photo-input" @change="onPhotoChange(section, $event)" />
+                              </label>
+                              <button
+                                v-if="getItems(section)[getActiveItemIndex(section)]?.photo"
+                                type="button"
+                                class="btn btn-ghost"
+                                @click="clearPhoto(section)"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </label>
+
+                        <label class="field field-block">
+                          <span class="field-label">Icon</span>
+                          <div class="icon-picker">
+                            <button
+                              v-for="icon in ICONS"
+                              :key="icon.key"
+                              type="button"
+                              class="icon-option"
+                              :class="{ active: getItems(section)[getActiveItemIndex(section)]?.icon === icon.key }"
+                              :title="icon.key"
+                              @click="updateActiveItem(section, { icon: getItems(section)[getActiveItemIndex(section)]?.icon === icon.key ? '' : icon.key })"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path :d="icon.path" /></svg>
+                            </button>
+                          </div>
+                        </label>
+
+                        <label class="field field-block">
+                          <span class="field-label">Title</span>
+                          <input
+                            :value="getItems(section)[getActiveItemIndex(section)]?.title"
+                            :name="`item-${section.id}-title`"
+                            placeholder="e.g. Environment"
+                            @input="updateActiveItem(section, { title: ($event.target as HTMLInputElement).value })"
+                          />
+                        </label>
+
+                        <label class="field field-block">
+                          <span class="field-label">Description</span>
+                          <textarea
+                            :value="getItems(section)[getActiveItemIndex(section)]?.description"
+                            :name="`item-${section.id}-description`"
+                            rows="3"
+                            placeholder="A sentence or two about this item"
+                            @input="updateActiveItem(section, { description: ($event.target as HTMLTextAreaElement).value })"
+                          ></textarea>
+                        </label>
+
+                        <label class="field field-block">
+                          <span class="field-label">Quote from the community (optional)</span>
+                          <textarea
+                            :value="getItems(section)[getActiveItemIndex(section)]?.note"
+                            :name="`item-${section.id}-note`"
+                            rows="2"
+                            placeholder="A short quote or extra detail"
+                            @input="updateActiveItem(section, { note: ($event.target as HTMLTextAreaElement).value })"
+                          ></textarea>
+                        </label>
+
+                        <label class="field field-block">
+                          <span class="field-label">What we do (optional)</span>
+                          <textarea
+                            :value="getItems(section)[getActiveItemIndex(section)]?.whatWeDo"
+                            :name="`item-${section.id}-what-we-do`"
+                            rows="3"
+                            placeholder="The main activities for this item"
+                            @input="updateActiveItem(section, { whatWeDo: ($event.target as HTMLTextAreaElement).value })"
+                          ></textarea>
+                        </label>
+
+                        <label class="field field-block">
+                          <span class="field-label">Why it matters (optional)</span>
+                          <textarea
+                            :value="getItems(section)[getActiveItemIndex(section)]?.whyItMatters"
+                            :name="`item-${section.id}-why-it-matters`"
+                            rows="3"
+                            placeholder="Why this work matters to the community"
+                            @input="updateActiveItem(section, { whyItMatters: ($event.target as HTMLTextAreaElement).value })"
+                          ></textarea>
+                        </label>
+                      </div>
+
+                      <div class="item-card-footer">
+                        <button type="button" class="btn btn-ghost" :disabled="getActiveItemIndex(section) === 0" @click="stepItem(section, -1)">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                          Previous
+                        </button>
+                        <span class="section-toolbar-hint">Changes save automatically as you type</span>
+                        <button type="button" class="btn btn-ghost" :disabled="getActiveItemIndex(section) === getItems(section).length - 1" @click="stepItem(section, 1)">
+                          Next
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-else class="empty-sections">
+                    <p>No items in this section yet</p>
+                    <button class="btn btn-secondary" type="button" @click="addItem(section)">Add your first item</button>
                   </div>
                 </div>
               </section>
+
+              <button class="btn btn-secondary add-section-btn-full" type="button" @click="addSection">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add section
+              </button>
             </div>
 
             <!-- Bottom Save Bar -->
@@ -1637,12 +1785,11 @@ function formatDate(value: string) {
               <div class="save-bar-left">
                 <span class="save-dot-large" :class="{ dirty: activePageDirty }"></span>
                 <div>
-                  <strong>{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</strong>
-                  <small>{{ formatDate(activePage.updatedAt) }}</small>
+                  <strong>{{ activePageDirty ? 'You have unsaved changes' : 'Everything is saved' }}</strong>
+                  <small>Last published {{ formatDate(activePage.updatedAt) }}</small>
                 </div>
               </div>
               <div class="save-bar-right">
-                <button class="btn btn-ghost" type="button" @click="resetCurrentToDefault">Reset</button>
                 <button
                   class="btn btn-primary"
                   type="button"
@@ -1651,7 +1798,7 @@ function formatDate(value: string) {
                 >
                   <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
                   <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                  {{ savingSlug === activePage.slug ? 'Saving...' : 'Save page' }}
+                  {{ savingSlug === activePage.slug ? 'Saving...' : 'Publish changes' }}
                 </button>
               </div>
             </div>
@@ -1685,26 +1832,22 @@ function formatDate(value: string) {
                 <!-- Sections Preview -->
                 <div class="preview-sections">
                   <div
-                    v-for="(section, idx) in previewItems"
+                    v-for="section in previewItems"
                     :key="section.id"
                     class="preview-section"
-                    :class="{ 'preview-section-active': activeSectionIndex === idx }"
-                    @click="activeSectionIndex = idx"
                   >
-                    <div class="preview-section-indicator" v-if="activeSectionIndex === idx"></div>
                     <h3 class="preview-section-heading">{{ section.heading || 'Section heading' }}</h3>
                     <p class="preview-section-body" v-if="section.body">{{ section.body }}</p>
 
-                    <!-- Items as cards/list -->
                     <div v-if="section.parsedItems.length" class="preview-items">
                       <template v-for="item in section.parsedItems" :key="item">
                         <div v-if="item.includes('|')" class="preview-item-card">
                           <strong>{{ item.split('|')[0]?.trim() }}</strong>
-                          <span>{{ item.split('|').slice(1).join('|').trim() }}</span>
+                          <span>{{ item.split('|').slice(1).join('|').replace(/::[a-z]+$/, '').trim() }}</span>
                         </div>
                         <div v-else class="preview-item-simple">
                           <span class="preview-bullet"></span>
-                          <span>{{ item }}</span>
+                          <span>{{ item.replace(/::[a-z]+$/, '') }}</span>
                         </div>
                       </template>
                     </div>
@@ -1773,11 +1916,12 @@ function formatDate(value: string) {
   background: var(--admin-bg);
   color: var(--admin-text);
   font-family:
-    'Inter',
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
     Roboto,
+    Helvetica,
+    Arial,
     sans-serif;
   transition: padding-left 0.25s ease;
 }
@@ -1903,10 +2047,10 @@ function formatDate(value: string) {
    ============================== */
 .editor-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0;
+  margin-bottom: 1rem;
   padding: 1rem 1.25rem;
   border: 1px solid var(--admin-border);
   border-radius: 12px;
@@ -1916,68 +2060,29 @@ function formatDate(value: string) {
 
 .header-left {
   min-width: 0;
+  display: grid;
+  gap: 0.15rem;
 }
 
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  margin-bottom: 0.45rem;
-  font-size: 0.72rem;
+.header-title {
+  margin: 0;
+  font-size: 1.15rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  color: var(--admin-contrast);
 }
 
-.breadcrumb-link {
+.header-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--admin-muted);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.breadcrumb-link:hover {
-  color: var(--admin-blue);
-}
-
-.breadcrumb-sep {
-  color: var(--admin-muted-light);
-  display: flex;
-  align-items: center;
-}
-
-.breadcrumb-current {
-  color: var(--admin-muted-light);
-}
-
-.page-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.15rem;
-}
-
-.meta-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  border-radius: 6px;
-  background: var(--admin-bg);
-  color: var(--admin-muted);
-  padding: 0.2rem 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.route-badge {
-  color: var(--admin-blue);
-  background: var(--admin-blue-soft);
 }
 
 .header-right {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
@@ -1989,7 +2094,7 @@ function formatDate(value: string) {
   border-radius: 8px;
   background: var(--admin-green-soft);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #166534;
 }
 
@@ -2021,7 +2126,7 @@ function formatDate(value: string) {
   min-height: 36px;
   border-radius: 8px;
   padding: 0.45rem 0.9rem;
-  font-weight: 750;
+  font-weight: 600;
   font-size: 0.82rem;
   cursor: pointer;
   text-decoration: none;
@@ -2065,19 +2170,13 @@ function formatDate(value: string) {
 .btn-ghost {
   background: transparent;
   color: var(--admin-muted);
-  border-color: transparent;
+  border-color: var(--admin-border);
 }
 
 .btn-ghost:hover:not(:disabled) {
   background: var(--admin-bg);
   color: var(--admin-contrast);
-  border-color: var(--admin-border);
-}
-
-.btn-ghost.danger:hover:not(:disabled) {
-  color: #dc2626;
-  background: var(--admin-red-soft);
-  border-color: rgba(220, 38, 38, 0.2);
+  border-color: var(--admin-border-strong);
 }
 
 .btn-icon {
@@ -2111,24 +2210,25 @@ function formatDate(value: string) {
 .btn-icon-sm {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: var(--admin-surface);
   color: var(--admin-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-icon-sm:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--admin-bg);
+  color: var(--admin-contrast);
 }
 
 .header-actions {
   display: flex;
   gap: 0.35rem;
+  align-items: center;
 }
 
 .spin {
@@ -2137,127 +2237,6 @@ function formatDate(value: string) {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-/* ==============================
-   STATUS BAR
-   ============================== */
-.status-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.25rem;
-  margin-bottom: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--admin-muted);
-  font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
-}
-
-.status-left {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.status-bullet {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: #16a34a;
-}
-
-.status-bullet.dirty {
-  background: var(--admin-amber);
-}
-
-.status-text {
-  color: var(--admin-muted);
-}
-
-.status-right {
-  color: var(--admin-muted-light);
-}
-
-/* ==============================
-   WORKFLOW STEPS
-   ============================== */
-.workflow-steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.step {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  transition: all 0.2s ease;
-}
-
-.step.active {
-  border-color: var(--admin-blue);
-  background: var(--admin-blue-soft);
-}
-
-.step.completed {
-  border-color: var(--admin-green);
-  background: var(--admin-green-soft);
-}
-
-.step-indicator {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: var(--admin-bg-deep);
-  color: var(--admin-muted);
-  font-size: 0.72rem;
-  font-weight: 900;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.step.active .step-indicator {
-  background: var(--admin-blue);
-  border-color: var(--admin-blue);
-  color: #ffffff;
-}
-
-.step.completed .step-indicator {
-  background: var(--admin-green);
-  color: #ffffff;
-}
-
-.step-indicator.success {
-  background: var(--admin-green);
-  color: #ffffff;
-}
-
-.step-content {
-  display: grid;
-  gap: 0.08rem;
-  min-width: 0;
-}
-
-.step-label {
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
-}
-
-.step-desc {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--admin-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 /* ==============================
@@ -2296,6 +2275,7 @@ function formatDate(value: string) {
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
+  flex: 1;
 }
 
 .card-icon {
@@ -2305,11 +2285,6 @@ function formatDate(value: string) {
   place-items: center;
   border-radius: 9px;
   flex-shrink: 0;
-}
-
-.card-icon-blue {
-  background: var(--admin-blue-soft);
-  color: var(--admin-blue);
 }
 
 .card-icon-violet {
@@ -2322,41 +2297,46 @@ function formatDate(value: string) {
   color: var(--admin-amber);
 }
 
-.card-eyebrow {
+.card-subtitle {
   display: block;
-  font-size: 0.68rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--admin-muted);
-  margin-bottom: 0.05rem;
+  margin-top: 0.05rem;
 }
 
 .card-title {
   margin: 0;
-  font-size: 0.92rem;
-  font-weight: 800;
+  font-size: 0.95rem;
+  font-weight: 700;
   color: var(--admin-contrast);
+}
+
+.card-title-input {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--admin-contrast);
+  width: 100%;
+  min-width: 120px;
+}
+
+.card-title-input:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 .card-body {
   padding: 1rem 1.1rem 1.15rem;
 }
 
-.status-pill {
-  border-radius: 999px;
-  background: var(--admin-green-soft);
-  color: #166534;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.7rem;
-  font-weight: 900;
-  white-space: nowrap;
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
   flex-shrink: 0;
-}
-
-.status-pill.dirty {
-  background: var(--admin-amber-soft);
-  color: #92400e;
 }
 
 /* ==============================
@@ -2383,22 +2363,24 @@ function formatDate(value: string) {
 
 .field-label {
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--admin-contrast-soft);
   letter-spacing: 0.01em;
 }
 
 .field-hint {
+  display: block;
   font-weight: 600;
   color: var(--admin-muted);
   font-size: 0.72rem;
+  margin-top: 0.15rem;
 }
 
-.field-hint code {
-  background: var(--admin-bg);
-  padding: 0.08rem 0.25rem;
-  border-radius: 3px;
-  font-size: 0.7rem;
+.field-hint-line {
+  margin: 0.15rem 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--admin-muted);
 }
 
 input, textarea {
@@ -2425,224 +2407,233 @@ input:focus, textarea:focus {
   outline: none;
 }
 
-input:disabled {
-  background: var(--admin-bg-deep);
-  color: var(--admin-muted);
-  cursor: not-allowed;
-}
-
 input::placeholder, textarea::placeholder {
   color: var(--admin-muted-light);
 }
 
 /* ==============================
-   SECTIONS
+   ITEM WIZARD (pill tabs + "Item N of M" card)
    ============================== */
-.sections-card .card-body {
-  padding: 0;
-}
-
-.sections-body {
-  padding: 0;
-}
-
-.sections-list {
-  display: grid;
-  gap: 0.6rem;
-  padding: 0.75rem;
-}
-
-.section-block {
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.section-block:hover {
-  border-color: var(--admin-border-strong);
-}
-
-.section-active {
-  border-color: var(--admin-blue) !important;
-  box-shadow: 0 0 0 1px var(--admin-blue), var(--admin-shadow-md);
-}
-
-.section-summary {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.75rem;
-  cursor: pointer;
-  list-style: none;
-  transition: background 0.15s;
-}
-
-.section-summary::-webkit-details-marker {
-  display: none;
-}
-
-.section-summary::after {
-  content: '';
-  width: 8px;
-  height: 8px;
-  margin-left: auto;
-  border-right: 2px solid var(--admin-muted);
-  border-bottom: 2px solid var(--admin-muted);
-  transform: rotate(-135deg);
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-}
-
-.section-block details[open] > .section-summary::after {
-  transform: rotate(45deg);
-}
-
-.section-summary:hover {
-  background: var(--admin-surface-soft);
-}
-
-.summary-drag {
-  display: grid;
-  place-items: center;
-  color: var(--admin-muted-light);
-  cursor: grab;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.summary-content {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.summary-index {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border-radius: 6px;
-  background: var(--admin-bg);
-  color: var(--admin-muted);
-  font-size: 0.68rem;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-.summary-text {
-  min-width: 0;
-  overflow: hidden;
-}
-
-.summary-text strong {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.summary-text small {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--admin-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
-.summary-text .empty-hint {
-  font-style: italic;
-  opacity: 0.6;
-}
-
-.summary-badge {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: var(--admin-muted);
-  background: var(--admin-bg);
-  padding: 0.18rem 0.45rem;
-  border-radius: 5px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.section-body {
+.item-wizard {
+  margin-top: 1.1rem;
+  padding-top: 1rem;
   border-top: 1px solid var(--admin-border);
-  padding: 0;
 }
 
-.section-toolbar {
+.item-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.item-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--admin-border-strong);
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  /* Constrain each pill so a long, unstructured title (a full
+     sentence stored with no "|" separator) can never expand into
+     a full-width block and shove the following tabs out of the
+     visual row order. Combined with itemTabLabel() truncation
+     above, this keeps every tab compact and the row wrapping
+     predictably in the tabs' real array order. */
+  max-width: 200px;
+  overflow: hidden;
+}
+
+.item-tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-tab:hover {
+  border-color: var(--admin-blue);
+  color: var(--admin-blue);
+}
+
+.item-tab.active {
+  background: var(--admin-blue-soft);
+  border-color: var(--admin-blue);
+  color: var(--admin-blue);
+}
+
+.item-card {
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-surface-soft);
+  overflow: hidden;
+}
+
+.item-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.4rem 0.75rem;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
   border-bottom: 1px solid var(--admin-border);
-  background: var(--admin-surface-soft);
-}
-
-.section-tabs {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.section-tab {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--admin-muted);
-  padding: 0.2rem 0.55rem;
-  border-radius: 5px;
-  cursor: default;
-}
-
-.section-tab.active {
   background: var(--admin-surface);
-  color: var(--admin-blue);
-  box-shadow: var(--admin-shadow-sm);
 }
 
-.section-actions {
+.item-card-header strong {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--admin-contrast);
+}
+
+.item-card-header small {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--admin-muted);
+  margin-top: 0.1rem;
+}
+
+.item-card-body {
+  padding: 0.9rem;
+}
+
+.item-card-footer {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid var(--admin-border);
+  background: var(--admin-surface);
 }
 
-.btn-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--admin-border);
-  margin: 0 0.15rem;
+.item-card-footer .btn {
+  min-height: 32px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
 }
 
-.section-fields {
-  padding: 0.75rem;
+.section-toolbar-hint {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--admin-muted-light);
+  text-align: center;
+  flex: 1;
 }
 
-/* Section List Transitions */
-.section-list-enter-active,
-.section-list-leave-active {
-  transition: all 0.3s ease;
+.photo-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
 }
 
-.section-list-enter-from {
+.photo-preview {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1.5px dashed var(--admin-border-strong);
+  background: var(--admin-surface);
+  color: var(--admin-muted-light);
+  overflow: hidden;
+}
+
+.photo-preview.filled {
+  border-style: solid;
+  border-color: var(--admin-border);
+}
+
+.photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-picker-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.photo-choose-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   opacity: 0;
-  transform: translateX(-20px);
+  cursor: pointer;
 }
 
-.section-list-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
+.icon-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.section-list-move {
-  transition: transform 0.3s ease;
+.icon-option {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1.5px solid var(--admin-border-strong);
+  background: var(--admin-surface);
+  color: var(--admin-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-option:hover {
+  border-color: var(--admin-blue);
+  color: var(--admin-blue);
+}
+
+.icon-option.active {
+  background: var(--admin-blue-soft);
+  border-color: var(--admin-blue);
+  color: var(--admin-blue);
+}
+
+.add-item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1.5px dashed var(--admin-border-strong);
+  background: transparent;
+  color: var(--admin-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.add-item-btn:hover {
+  border-color: var(--admin-blue);
+  color: var(--admin-blue);
+  background: var(--admin-blue-soft);
+}
+
+.add-section-btn-full {
+  justify-content: center;
+  border-style: dashed;
 }
 
 /* Empty state */
@@ -2651,25 +2642,15 @@ input::placeholder, textarea::placeholder {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 2.5rem 1rem;
+  padding: 2rem 1rem;
   color: var(--admin-muted);
   text-align: center;
-}
-
-.empty-sections svg {
-  opacity: 0.4;
 }
 
 .empty-sections p {
   font-size: 0.9rem;
   font-weight: 700;
   margin: 0;
-}
-
-.add-section-btn {
-  font-size: 0.78rem;
-  padding: 0.35rem 0.7rem;
-  min-height: 32px;
 }
 
 /* ==============================
@@ -2700,7 +2681,7 @@ input::placeholder, textarea::placeholder {
 .save-bar-left strong {
   display: block;
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--admin-contrast);
 }
 
@@ -2765,7 +2746,7 @@ input::placeholder, textarea::placeholder {
   align-items: center;
   gap: 0.45rem;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--admin-contrast);
 }
 
@@ -2791,7 +2772,7 @@ input::placeholder, textarea::placeholder {
 
 .preview-eyebrow {
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--admin-blue);
@@ -2800,7 +2781,7 @@ input::placeholder, textarea::placeholder {
 .preview-headline {
   margin: 0;
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--admin-contrast);
   line-height: 1.25;
 }
@@ -2823,7 +2804,7 @@ input::placeholder, textarea::placeholder {
   padding: 0.3rem 0.65rem;
   border-radius: 6px;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .preview-btn-primary {
@@ -2842,37 +2823,14 @@ input::placeholder, textarea::placeholder {
 }
 
 .preview-section {
-  position: relative;
-  cursor: pointer;
   padding: 0.65rem;
   border-radius: 8px;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.preview-section:hover {
-  background: var(--admin-surface-soft);
-}
-
-.preview-section-active {
-  border-color: var(--admin-blue) !important;
-  background: var(--admin-blue-soft) !important;
-}
-
-.preview-section-indicator {
-  position: absolute;
-  left: -1px;
-  top: 0.5rem;
-  bottom: 0.5rem;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--admin-blue);
 }
 
 .preview-section-heading {
   margin: 0 0 0.35rem;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--admin-contrast);
 }
 
@@ -2898,7 +2856,7 @@ input::placeholder, textarea::placeholder {
 .preview-item-card strong {
   display: block;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--admin-contrast);
   margin-bottom: 0.08rem;
 }
@@ -3005,13 +2963,13 @@ input::placeholder, textarea::placeholder {
 
   .editor-header {
     flex-direction: column;
+    align-items: flex-start;
     padding: 0.85rem;
   }
 
   .header-right {
     width: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    align-items: flex-start;
   }
 
   .header-actions {
@@ -3024,16 +2982,7 @@ input::placeholder, textarea::placeholder {
     min-height: 32px;
   }
 
-  .save-indicator {
-    order: -1;
-    width: 100%;
-  }
-
   .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .workflow-steps {
     grid-template-columns: 1fr;
   }
 
@@ -3052,9 +3001,13 @@ input::placeholder, textarea::placeholder {
     bottom: 3rem;
   }
 
-  .section-actions .btn-icon {
-    width: 28px;
-    height: 28px;
+  .item-card-footer {
+    flex-wrap: wrap;
+  }
+
+  .section-toolbar-hint {
+    order: 3;
+    width: 100%;
   }
 }
 
