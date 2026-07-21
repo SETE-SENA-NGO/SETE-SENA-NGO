@@ -368,6 +368,16 @@ void loadAdminSlides()
 
 <style scoped>
 .home-view {
+  --page-bg: var(--color-cream);
+  --surface: var(--color-white);
+  --surface-soft: var(--color-cream-soft);
+  --ink: var(--color-ink);
+  --muted: var(--color-ink-soft);
+  --line: var(--color-border);
+  --accent: var(--admin-theme-primary);
+  --accent-dark: var(--admin-theme-primary-deep);
+  --accent-soft: var(--primary-light);
+  --shadow: var(--shadow-md);
   font-family: inherit;
   color: var(--color-ink);
   background: var(--color-cream);
@@ -495,7 +505,7 @@ void loadAdminSlides()
 .hero-subtitle {
   max-width: 620px;
   margin: 0 0 2rem;
-  color: rgba(226, 240, 234, 0.85);
+  color: var(--text-on-dark-secondary);
   font-size: 1.05rem;
   line-height: 1.7;
 }
@@ -523,21 +533,21 @@ void loadAdminSlides()
 }
 
 .btn--primary {
-  background: var(--primary-color);
-  color: var(--color-white);
+  background: var(--admin-theme-primary);
+  color: var(--admin-theme-bg);
 }
 
 .btn--primary:hover {
-  background: var(--primary-dark);
+  background: var(--admin-theme-primary-deep);
 }
 
 .btn--outline {
-  border-color: rgba(226, 240, 234, 0.6);
-  color: var(--color-white);
+  border-color: var(--text-on-dark-secondary);
+  color: var(--admin-theme-contrast);
 }
 
 .btn--outline:hover {
-  background: rgba(226, 240, 234, 0.1);
+  background: var(--green-tint-light);
 }
 
 /* Stats */
@@ -562,7 +572,7 @@ void loadAdminSlides()
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.02em;
-  color: var(--primary-dark);
+  color: var(--admin-theme-primary);
 }
 
 .stat-label {
@@ -622,7 +632,7 @@ void loadAdminSlides()
 
 .mission-title {
   margin: 0 0 1.5rem;
-  color: var(--primary-dark);
+  color: var(--admin-theme-primary);
 }
 
 .mission-text {
@@ -633,7 +643,7 @@ void loadAdminSlides()
 
 .mission-text em {
   font-style: italic;
-  color: var(--primary-dark);
+  color: var(--admin-theme-primary);
 }
 
 /* Pillars */
@@ -654,7 +664,7 @@ void loadAdminSlides()
 
 .pillars-title {
   margin: 0.5rem 0 0;
-  color: var(--primary-dark);
+  color: var(--admin-theme-primary);
 }
 
 .pillars-link {
@@ -695,7 +705,7 @@ void loadAdminSlides()
 .pillar-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 20px 40px rgba(22, 48, 42, 0.14);
-  border-color: var(--primary-color);
+  border-color: var(--admin-theme-primary);
 }
 
 .pillar-image {
@@ -736,12 +746,12 @@ void loadAdminSlides()
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--primary-color);
+  color: var(--admin-theme-primary);
 }
 
 .pillar-title {
   margin: 0 0 0.6rem;
-  color: var(--primary-dark);
+  color: var(--admin-theme-primary);
   transition: color 0.25s ease;
 }
 
@@ -751,7 +761,7 @@ void loadAdminSlides()
 
 .pillar-desc {
   margin: 0;
-  color: var(--color-ink-soft);
+  color: var(--admin-theme-muted);
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -769,7 +779,7 @@ void loadAdminSlides()
   font-style: italic;
   font-weight: 500;
   line-height: 1.4;
-  color: var(--primary-dark);
+  color: var(--admin-theme-primary);
 }
 
 .quote-attrib {
@@ -778,7 +788,7 @@ void loadAdminSlides()
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-ink-soft);
+  color: var(--admin-theme-muted);
 }
 
 /* CTA */

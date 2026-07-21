@@ -309,7 +309,7 @@ async function logout() {
   background: var(--sb-brand-mark-bg);
   color: var(--sb-brand-mark);
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 700;
   flex-shrink: 0;
   box-shadow: 0 10px 20px rgba(15, 125, 56, 0.22);
 }
@@ -330,13 +330,13 @@ async function logout() {
 .brand-text strong {
   color: var(--sb-text-strong);
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .brand-text small {
   color: var(--sb-muted);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 nav {
@@ -350,7 +350,7 @@ nav {
   margin: 0.85rem 0 0.45rem;
   color: var(--sb-muted);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -363,7 +363,7 @@ nav {
   border-radius: 6px;
   color: var(--sb-text);
   padding: 0.5rem 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
   font-size: 0.9rem;
   opacity: 0.85;
@@ -606,7 +606,7 @@ nav {
 .submenu {
   display: grid;
   gap: 0.1rem;
-  padding: 0.1rem 0 0.35rem 1.4rem;
+  padding: 0.25rem 0.5rem 0.5rem 0.5rem;
   margin-left: 0.35rem;
   border-left: 1px solid var(--sb-divider);
 }
@@ -614,13 +614,15 @@ nav {
 .sub-link {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  border-radius: 5px;
-  color: var(--sb-muted);
-  padding: 0.38rem 0.6rem;
-  font-size: 0.84rem;
-  font-weight: 700;
+  gap: 0.7rem;
+  min-height: 40px;
+  border-radius: 6px;
+  color: var(--sb-text);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   text-decoration: none;
+  opacity: 0.85;
   transition:
     color 0.15s ease,
     background 0.15s ease;
@@ -642,7 +644,7 @@ nav {
 .sub-link.active {
   background: var(--sb-accent-soft);
   color: var(--sb-active-text);
-  box-shadow: inset 2px 0 0 var(--sb-accent);
+  box-shadow: inset 3px 0 0 var(--sb-accent);
 }
 
 /* Active descendant: parent shows a lighter indicator when a child is active */
@@ -744,13 +746,13 @@ nav {
 
 .logout-copy strong {
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .logout-copy small {
   color: var(--sb-danger-sub);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 @media (min-width: 900px) {

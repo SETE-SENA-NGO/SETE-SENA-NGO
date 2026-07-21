@@ -474,7 +474,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div :class="['admin-module-page', { 'sidebar-open': false }]">
+  <div :class="['admin-module-page', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />

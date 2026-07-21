@@ -1186,27 +1186,27 @@ function exportCsv() {
    DESIGN SYSTEM VARIABLES
    ============================================ */
 .admin-module-page {
-  --bg: #f0f4fb;
-  --surface: #ffffff;
-  --surface-soft: #f6f9fe;
-  --border: #e2e9f5;
-  --border-strong: #cbd9ec;
-  --text: #2c3d5f;
-  --contrast: #0f1a33;
-  --muted: #6a7d9e;
-  --blue: #2962ff;
-  --blue-soft: #e8efff;
-  --green: #0f973d;
-  --green-soft: #e6f9ed;
-  --orange: #e67e22;
-  --orange-soft: #fef4e6;
-  --red: #dc2626;
-  --red-soft: #fef2f2;
+  --bg: var(--admin-theme-bg);
+  --surface: var(--admin-theme-surface);
+  --surface-soft: var(--admin-theme-surface-soft);
+  --border: var(--admin-theme-border);
+  --border-strong: var(--admin-theme-border-strong);
+  --text: var(--admin-theme-text);
+  --contrast: var(--admin-theme-contrast);
+  --muted: var(--admin-theme-muted);
+  --blue: var(--admin-theme-teal);
+  --blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
+  --green: var(--admin-theme-primary);
+  --green-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+  --orange: var(--admin-theme-gold);
+  --orange-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
+  --red: var(--admin-theme-danger);
+  --red-soft: color-mix(in srgb, var(--admin-theme-danger) 12%, transparent);
   --slate: #6b7280;
-  --slate-soft: #f1f5f9;
-  --shadow-sm: 0 1px 3px rgba(15, 26, 51, 0.06);
-  --shadow-md: 0 4px 14px rgba(15, 26, 51, 0.07);
-  --shadow-lg: 0 12px 40px rgba(15, 26, 51, 0.09);
+  --slate-soft: color-mix(in srgb, #6b7280 12%, transparent);
+  --shadow-sm: var(--admin-theme-shadow);
+  --shadow-md: var(--admin-theme-shadow);
+  --shadow-lg: var(--admin-theme-shadow);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -1216,30 +1216,6 @@ function exportCsv() {
   background: var(--bg);
   color: var(--text);
   transition: padding-left 0.25s ease;
-}
-
-:global(.admin-dark) .admin-module-page {
-  --bg: #0a0f1f;
-  --surface: #111827;
-  --surface-soft: #0f172a;
-  --border: #1e2a45;
-  --border-strong: #2d3b5a;
-  --text: #c8d2e6;
-  --contrast: #eef2f8;
-  --muted: #8896b5;
-  --blue: #3b82f6;
-  --blue-soft: #1a2a45;
-  --green: #22c55e;
-  --green-soft: #142c1e;
-  --orange: #f59e0b;
-  --orange-soft: #2a2015;
-  --red: #ef4444;
-  --red-soft: #2a1515;
-  --slate: #8b96b0;
-  --slate-soft: #111b2e;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .admin-layout {

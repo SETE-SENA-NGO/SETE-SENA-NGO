@@ -222,31 +222,31 @@ const infoPages = [
 
 <style scoped>
 .edu-dash {
-  --bg: #f3f6fd;
-  --surface: #ffffff;
-  --border: #e8edf6;
-  --border-s: #d4dcee;
-  --text: #1e2a4a;
-  --contrast: #0a142d;
-  --muted: #6a7fa0;
-  --blue: #2563eb;
-  --blue-glow: rgba(37,99,235,0.25);
-  --blue-soft: #ecf2ff;
-  --emerald: #059669;
-  --emerald-glow: rgba(5,150,105,0.25);
-  --emerald-soft: #eafaf5;
-  --amber: #d97706;
-  --amber-glow: rgba(217,119,6,0.25);
-  --amber-soft: #fef8ee;
+  --bg: var(--admin-theme-bg);
+  --surface: var(--admin-theme-surface);
+  --border: var(--admin-theme-border);
+  --border-s: var(--admin-theme-border-strong);
+  --text: var(--admin-theme-text);
+  --contrast: var(--admin-theme-contrast);
+  --muted: var(--admin-theme-muted);
+  --blue: var(--admin-theme-teal);
+  --blue-glow: color-mix(in srgb, var(--admin-theme-teal) 25%, transparent);
+  --blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
+  --emerald: var(--admin-theme-primary);
+  --emerald-glow: color-mix(in srgb, var(--admin-theme-primary) 25%, transparent);
+  --emerald-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+  --amber: var(--admin-theme-gold);
+  --amber-glow: color-mix(in srgb, var(--admin-theme-gold) 25%, transparent);
+  --amber-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
   --violet: #7c3aed;
   --violet-glow: rgba(124,58,237,0.25);
-  --violet-soft: #f3efff;
+  --violet-soft: color-mix(in srgb, #7c3aed 12%, transparent);
   --slate: #64748b;
-  --slate-soft: #f0f3f8;
-  --shadow-xs: 0 1px 2px rgba(10,20,45,0.04);
-  --shadow-sm: 0 2px 8px rgba(10,20,45,0.06);
-  --shadow-md: 0 4px 16px rgba(10,20,45,0.07);
-  --shadow-lg: 0 8px 32px rgba(10,20,45,0.09);
+  --slate-soft: color-mix(in srgb, #64748b 12%, transparent);
+  --shadow-xs: var(--admin-theme-shadow);
+  --shadow-sm: var(--admin-theme-shadow);
+  --shadow-md: var(--admin-theme-shadow);
+  --shadow-lg: var(--admin-theme-shadow);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -255,35 +255,8 @@ const infoPages = [
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
+  font-family: inherit;
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-
-:global(.admin-dark) .edu-dash {
-  --bg: #080c1a;
-  --surface: #101826;
-  --border: #1c2642;
-  --border-s: #263252;
-  --text: #c8d2e6;
-  --contrast: #eaf0f8;
-  --muted: #7a8aaa;
-  --blue: #3b82f6;
-  --blue-glow: rgba(59,130,246,0.2);
-  --blue-soft: #172244;
-  --emerald: #10b981;
-  --emerald-glow: rgba(16,185,129,0.2);
-  --emerald-soft: #142a22;
-  --amber: #f59e0b;
-  --amber-glow: rgba(245,158,11,0.2);
-  --amber-soft: #241e14;
-  --violet: #a78bfa;
-  --violet-glow: rgba(167,139,250,0.2);
-  --violet-soft: #1c1640;
-  --slate: #8896b0;
-  --slate-soft: #121a2e;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.15);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.3);
 }
 
 .dash-layout { display: flex; }
@@ -293,7 +266,7 @@ const infoPages = [
 .btn {
   display: inline-flex; align-items: center; gap: 0.45rem;
   min-height: 36px; padding: 0.4rem 1rem;
-  border-radius: var(--radius-sm); font-weight: 750; font-size: 0.82rem;
+  border-radius: var(--radius-sm); font-weight: 700; font-size: 0.82rem;
   cursor: pointer; text-decoration: none;
   transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
   border: 1px solid transparent; font-family: inherit;
@@ -366,13 +339,13 @@ const infoPages = [
 .banner-text { display: grid; gap: 0.3rem; }
 .banner-badge {
   display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content;
-  font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--blue); background: var(--blue-soft);
   padding: 0.2rem 0.7rem; border-radius: 999px;
 }
 .banner-title {
   margin: 0; color: var(--contrast);
-  font-size: clamp(1.35rem,2.8vw,1.85rem); font-weight: 900;
+  font-size: clamp(1.35rem,2.8vw,1.85rem); font-weight: 700;
   letter-spacing: -0.025em; line-height: 1.1;
 }
 .banner-desc { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.5; max-width: 460px; }
@@ -408,9 +381,9 @@ const infoPages = [
 .bstat-violet .bstat-icon { background: var(--violet-soft); color: var(--violet);
   box-shadow: 0 0 0 0 var(--violet-glow); }
 .bstat-violet:hover .bstat-icon { box-shadow: 0 0 0 4px var(--violet-glow); }
-.bstat-info strong { display: block; color: var(--contrast); font-size: 1.05rem; font-weight: 900; line-height: 1.2; }
-.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
-.bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 600; margin-top: 1px; }
+.bstat-info strong { display: block; color: var(--contrast); font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+.bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 500; margin-top: 1px; }
 
 /* ─── CONTENT GRID ─── */
 .content-grid {
@@ -434,10 +407,10 @@ const infoPages = [
 }
 .card-hdr-left { display: grid; gap: 0.15rem; }
 .card-badge {
-  font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--blue);
 }
-.card-title { margin: 0; color: var(--contrast); font-size: 0.95rem; font-weight: 850; }
+.card-title { margin: 0; color: var(--contrast); font-size: 0.95rem; font-weight: 700; }
 .card-hdr-link {
   display: inline-flex; align-items: center; gap: 0.3rem;
   font-size: 0.78rem; font-weight: 700; color: var(--blue); text-decoration: none;
@@ -471,8 +444,8 @@ const infoPages = [
 .link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
 .link-violet .link-icon { background: var(--violet-soft); color: var(--violet); }
 .link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 800; margin-bottom: 1px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 700; margin-bottom: 1px; }
+.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.2s ease; }
 .link-card:hover .link-arrow { transform: translateX(3px); color: var(--blue); }
 
@@ -505,13 +478,13 @@ const infoPages = [
   color: var(--hc);
 }
 .hcard-count {
-  font-size: 0.72rem; font-weight: 800; color: var(--muted);
+  font-size: 0.72rem; font-weight: 700; color: var(--muted);
   padding: 0.1rem 0.4rem; border-radius: 999px;
   background: var(--surface); border: 1px solid var(--border);
 }
 .hcard-body { padding: 0.5rem 0.7rem 0.65rem; display: grid; gap: 0.12rem; }
-.hcard-body strong { color: var(--contrast); font-size: 0.8rem; font-weight: 800; }
-.hcard-body small { color: var(--muted); font-size: 0.7rem; font-weight: 600; line-height: 1.4; }
+.hcard-body strong { color: var(--contrast); font-size: 0.8rem; font-weight: 700; }
+.hcard-body small { color: var(--muted); font-size: 0.7rem; font-weight: 500; line-height: 1.4; }
 
 /* ─── SIDEBAR ─── */
 .side-card {
@@ -522,10 +495,10 @@ const infoPages = [
 .side-card:hover { box-shadow: var(--shadow-sm); }
 .side-card-hdr { display: grid; gap: 0.15rem; margin-bottom: 0.7rem; }
 .side-card-badge {
-  font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--blue);
 }
-.side-card-hdr h3 { margin: 0; color: var(--contrast); font-size: 0.85rem; font-weight: 800; }
+.side-card-hdr h3 { margin: 0; color: var(--contrast); font-size: 0.85rem; font-weight: 700; }
 
 .side-list { display: grid; gap: 0.5rem; }
 .side-item {
@@ -539,8 +512,8 @@ const infoPages = [
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--blue); flex-shrink: 0;
 }
-.side-item-info strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 900; line-height: 1.2; }
-.side-item-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; }
+.side-item-info strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 700; line-height: 1.2; }
+.side-item-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 600; }
 
 .side-nav { display: grid; gap: 0.25rem; }
 .side-nav-link {
@@ -549,15 +522,15 @@ const infoPages = [
   text-decoration: none; transition: background 0.15s ease;
 }
 .side-nav-link:hover { background: var(--surface); }
-.side-nav-info strong { display: block; color: var(--contrast); font-size: 0.78rem; font-weight: 800; }
-.side-nav-info small { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 600; }
+.side-nav-info strong { display: block; color: var(--contrast); font-size: 0.78rem; font-weight: 700; }
+.side-nav-info small { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 500; }
 .side-nav-link > svg { color: var(--muted); flex-shrink: 0; }
 
 .side-btn {
   display: flex; align-items: center; gap: 0.45rem;
   padding: 0.45rem 0.6rem; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--surface);
-  color: var(--text); font-size: 0.78rem; font-weight: 700;
+  color: var(--text); font-size: 0.78rem; font-weight: 600;
   text-decoration: none; transition: all 0.15s ease;
   margin-bottom: 0.3rem;
 }

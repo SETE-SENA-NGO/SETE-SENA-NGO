@@ -1649,7 +1649,7 @@ function formatDate(value: string) {
                 </div>
               </div>
               <div class="header-right">
-                <div class="save-indicator" :class="{ dirty: activePageDirty }">
+                <div v-if="!previewVisible" class="save-indicator" :class="{ dirty: activePageDirty }">
                   <span class="save-dot"></span>
                   <span class="save-label">{{ activePageDirty ? 'Unsaved changes' : 'Saved' }}</span>
                 </div>
@@ -1699,8 +1699,8 @@ function formatDate(value: string) {
             <!-- Status bar -->
             <div class="status-bar">
               <div class="status-left">
-                <span class="status-bullet" :class="{ dirty: activePageDirty }"></span>
-                <span class="status-text">{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</span>
+              <span v-if="!previewVisible" class="status-bullet" :class="{ dirty: activePageDirty }"></span>
+                <span v-if="!previewVisible" class="status-text">{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</span>
               </div>
               <span class="status-right">{{ sectionCountLabel }} · {{ activePage.slug }}</span>
             </div>
@@ -1724,12 +1724,12 @@ function formatDate(value: string) {
                 </div>
               </div>
               <div class="step" :class="{ active: !activePageDirty }">
-                <div class="step-indicator" :class="{ success: !activePageDirty }">
+                <div v-if="!previewVisible" class="step-indicator" :class="{ success: !activePageDirty }">
                   <svg v-if="!activePageDirty" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   <template v-else>3</template>
                 </div>
                 <div class="step-content">
-                  <span class="step-label">{{ activePageDirty ? 'Unsaved' : 'Published' }}</span>
+                  <span v-if="!previewVisible" class="step-label">{{ activePageDirty ? 'Unsaved' : 'Published' }}</span>
                   <span class="step-desc">Status</span>
                 </div>
               </div>
@@ -1749,7 +1749,7 @@ function formatDate(value: string) {
                       <h3 class="card-title">Identity</h3>
                     </div>
                   </div>
-                  <span class="status-pill" :class="{ dirty: activePageDirty }">
+                  <span v-if="!previewVisible" class="status-pill" :class="{ dirty: activePageDirty }">
                     {{ activePageDirty ? 'Unsaved' : 'Saved' }}
                   </span>
                 </div>
@@ -2063,9 +2063,9 @@ function formatDate(value: string) {
             <!-- Bottom Save Bar -->
             <div class="save-bar">
               <div class="save-bar-left">
-                <span class="save-dot-large" :class="{ dirty: activePageDirty }"></span>
+                <span v-if="!previewVisible" class="save-dot-large" :class="{ dirty: activePageDirty }"></span>
                 <div>
-                  <strong>{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</strong>
+                  <strong v-if="!previewVisible">{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</strong>
                   <small>{{ formatDate(activePage.updatedAt) }}</small>
                 </div>
               </div>
@@ -2339,33 +2339,33 @@ function formatDate(value: string) {
    DESIGN TOKENS
    ============================== */
 .editor-page {
-  --admin-bg: #f1f5f9;
-  --admin-bg-deep: #e2e8f0;
-  --admin-surface: #ffffff;
-  --admin-surface-soft: #f8fafc;
-  --admin-contrast: #0f172a;
-  --admin-contrast-soft: #1e293b;
-  --admin-text: #334155;
-  --admin-muted: #64748b;
-  --admin-muted-light: #94a3b8;
-  --admin-border: #e2e8f0;
-  --admin-border-strong: #cbd5e1;
-  --admin-blue: #2563eb;
-  --admin-blue-soft: #eff6ff;
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-muted-light: color-mix(in srgb, var(--admin-theme-muted) 70%, transparent);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
   --admin-violet: #7c3aed;
-  --admin-violet-soft: #f5f3ff;
-  --admin-amber: #d97706;
-  --admin-amber-soft: #fffbeb;
-  --admin-green: #16a34a;
-  --admin-green-soft: #f0fdf4;
-  --admin-red: #dc2626;
-  --admin-red-soft: #fef2f2;
-  --admin-gold: #f59e0b;
-  --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --admin-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --admin-shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.08);
+  --admin-violet-soft: color-mix(in srgb, #7c3aed 12%, transparent);
+  --admin-amber: var(--admin-theme-gold);
+  --admin-amber-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
+  --admin-green: var(--admin-theme-primary);
+  --admin-green-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+  --admin-red: var(--admin-theme-danger);
+  --admin-red-soft: color-mix(in srgb, var(--admin-theme-danger) 12%, transparent);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-shadow: var(--admin-theme-shadow);
+  --admin-shadow-sm: var(--admin-theme-shadow);
+  --admin-shadow-md: var(--admin-theme-shadow);
+  --admin-shadow-lg: var(--admin-theme-shadow);
+  --admin-shadow-xl: var(--admin-theme-shadow);
 
   min-height: 100vh;
   display: flex;
@@ -2380,30 +2380,6 @@ function formatDate(value: string) {
     Roboto,
     sans-serif;
   transition: padding-left 0.25s ease;
-}
-
-:global(.admin-dark) .editor-page {
-  --admin-bg: #0b1120;
-  --admin-bg-deep: #111827;
-  --admin-surface: #1a2332;
-  --admin-surface-soft: #0f172a;
-  --admin-contrast: #f1f5f9;
-  --admin-contrast-soft: #e2e8f0;
-  --admin-text: #cbd5e1;
-  --admin-muted: #94a3b8;
-  --admin-muted-light: #64748b;
-  --admin-border: #1e293b;
-  --admin-border-strong: #334155;
-  --admin-blue-soft: rgba(37, 99, 235, 0.12);
-  --admin-violet-soft: rgba(124, 58, 237, 0.12);
-  --admin-amber-soft: rgba(217, 119, 6, 0.12);
-  --admin-green-soft: rgba(22, 163, 74, 0.12);
-  --admin-red-soft: rgba(220, 38, 38, 0.12);
-  --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-  --admin-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --admin-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
-  --admin-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .admin-layout {
