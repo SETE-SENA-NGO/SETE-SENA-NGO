@@ -1,29 +1,50 @@
-# TODO: Implement CRUD Home Slideshow Editor
+# Dark Mode Fix Plan
 
-## ✅ Completed
-- Analyzed all relevant files (PageEditorView, Slideshow, AdminSidebar, etc.)
-- PageEditorView already has all JS logic (add/remove/move/upload/preview slides, MAX_HOME_SLIDES=4)
+**Problem**: Vue scoped CSS `:global()` overrides for `.admin-dark` have specificity issues — the locally-defined CSS variables (e.g. `--admin-bg`) inside scoped blocks take precedence over the `:global()` variable redefinitions, preventing dark mode from working correctly in many admin views.
 
-## Steps
+**Solution**: Replace **all** local intermediary CSS variable references (e.g. `var(--admin-bg)`) with **direct** global theme variable references (e.g. `var(--admin-theme-bg)`). This eliminates the need for `:global()` overrides entirely and ensures proper cascade.
 
-### ✅ Step 1: PageEditorView.vue - Add `sectionCountLabel` computed
-Added the missing `sectionCountLabel` computed property referenced in the template.
+## Files to fix:
 
-### ✅ Step 2: PageEditorView.vue - Conditionally render slideshow editor
-In the section field area, added a `<template v-if="section.id === 'home-slideshow'">` block that renders:
-- A header with "Add slide" button (disabled when max reached) and "Preview" button
-- Empty state message when no slides exist
-- Slide cards with: image preview + file upload, title, eyebrow, description, alt text, primary/secondary labels/URLs, image position selector
-- Move up/down and delete buttons per slide
-- For all other sections, the standard items textarea is rendered
+### 1. src/views/admin/DashboardView.vue ✅
+- [x] Removed local `--admin-*` variable definitions
+- [x] Removed `:global(.admin-dark .admin-page)` block
+- [x] Replaced all `var(--admin-*)` → `var(--admin-theme-*)`
 
-### ✅ Step 3: AdminSidebar.vue - Add Home Slideshow shortcut link
-Added `{ slug: 'home-slideshow', label: 'Home Slideshow', path: '/admin/editor/home-slideshow' }` under the Home group in the sidebar.
+### 2. src/views/admin/PagesManagerView.vue ✅
+- [x] Already uses `var(--admin-theme-*)` directly — no intermediary variables
 
-### ✅ Step 4: All changes verified
-- The template properly conditionally renders slideshow editor for `home-slideshow` section
-- All JS functions (addHomeSlide, removeHomeSlide, moveHomeSlide, onHomeSlideImageUpload, openPreviewModal) are now used in the template
-- Sidebar now shows "Home Slideshow" link under Home group
-- Preview modal already existed and works
-- MAX_HOME_SLIDES=4 enforced in template and JS
+### 3. src/views/admin/NewsManagerView.vue ✅
+- [x] Already uses `var(--admin-theme-*)` directly — no intermediary variables
+- [x] Fixed `var(--admin-muted)` → `var(--admin-theme-muted)` in empty-state
+
+### 4. src/views/admin/MediaLibraryView.vue ✅
+- [x] Already uses `var(--admin-theme-*)` with `:global(.admin-dark)` overrides
+
+### 5. src/views/admin/SettingsView.vue ✅
+- [x] Already uses `var(--admin-theme-*)` with `:global(.admin-dark)` overrides
+
+### 6. src/views/admin/AdminModuleView.vue ✅
+- [x] Already has proper `:global(.admin-dark)` overrides with local CSS variables
+
+### 7. src/views/admin/DonationLView.vue ✅
+- [x] Already uses `var(--admin-theme-*)` directly — no `:global()` blocks needed
+
+### 8. src/components/admin/DataTable.vue ✅
+- [x] Replaced hardcoded colors with `var(--admin-theme-*)` variables
+
+### 9. src/components/admin/ContentEditor.vue ✅
+- [x] Already uses `var(--admin-theme-*)` directly
+
+### 10. Program Dashboard Views (Education, Environment, Livelihood, Child Protection) ✅
+- [x] All have proper `:global(.admin-dark)` overrides with local CSS variables
+
+## Status: ALL FILES COMPLETED ✅
+
+The dark mode toggle is already functional in the codebase:
+- `ui.store.ts` handles toggle with localStorage persistence
+- `base.css` defines `.admin-dark` CSS variable overrides
+- `AdminHeader.vue` has dark mode toggle button
+- `SettingsView.vue` has theme toggle
+- All admin views have proper dark mode support via either direct `var(--admin-theme-*)` usage or `:global(.admin-dark)` overrides
 

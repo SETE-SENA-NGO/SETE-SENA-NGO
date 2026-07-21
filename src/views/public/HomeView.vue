@@ -435,12 +435,12 @@ void loadAdminSlides()
   background:
     linear-gradient(
       90deg,
-      rgba(6, 18, 13, 0.92) 0%,
-      rgba(6, 18, 13, 0.68) 38%,
-      rgba(6, 18, 13, 0.3) 65%,
+      rgba(6, 18, 13, 0.88) 0%,
+      rgba(6, 18, 13, 0.65) 38%,
+      rgba(6, 18, 13, 0.28) 65%,
       rgba(6, 18, 13, 0.05) 100%
     ),
-    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.4) 0%, transparent 55%);
+    radial-gradient(circle at 82% 25%, rgba(74, 222, 128, 0.15) 0%, transparent 55%);
 }
 
 .hero-inner {
@@ -487,13 +487,13 @@ void loadAdminSlides()
 
 .hero-title {
   margin: 0.75rem 0 1.25rem;
-  color: #fdf8ef;
+  color: var(--color-white);
 }
 
 .hero-subtitle {
   max-width: 620px;
   margin: 0 0 2rem;
-  color: rgba(253, 248, 239, 0.85);
+  color: rgba(226, 240, 234, 0.85);
   font-size: 1.05rem;
   line-height: 1.7;
 }
@@ -530,12 +530,12 @@ void loadAdminSlides()
 }
 
 .btn--outline {
-  border-color: rgba(253, 248, 239, 0.6);
-  color: #fdf8ef;
+  border-color: rgba(226, 240, 234, 0.6);
+  color: var(--color-white);
 }
 
 .btn--outline:hover {
-  background: rgba(253, 248, 239, 0.1);
+  background: rgba(226, 240, 234, 0.1);
 }
 
 /* Stats */
@@ -605,7 +605,7 @@ void loadAdminSlides()
 
 .btn--news:hover {
   background: var(--primary-color);
-  color: #fff;
+  color: var(--color-white);
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(22, 48, 42, 0.18);
 }
@@ -803,12 +803,12 @@ void loadAdminSlides()
 
 .cta-title {
   margin: 0 0 0.75rem;
-  color: #fdf8ef;
+  color: #ffffff;
 }
 
 .cta-desc {
   margin: 0;
-  color: rgba(253, 248, 239, 0.8);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 1rem;
   line-height: 1.6;
 }

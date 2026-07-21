@@ -60,9 +60,9 @@ function selectRow(row: unknown) {
 <style scoped>
 .data-table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 0.5rem;
-  background: var(--panel);
+  background: var(--admin-theme-surface);
 }
 .data-table {
   width: 100%;
@@ -72,18 +72,21 @@ th,
 td {
   text-align: left;
   padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--admin-theme-border);
   font-size: 0.9rem;
+  color: var(--admin-theme-text);
 }
 th {
-  background: #0c0c0e;
+  background: var(--admin-theme-surface-soft);
+  color: var(--admin-theme-muted);
+  font-weight: 700;
 }
 .is-selectable {
   cursor: pointer;
 }
 .is-selectable:hover,
 .is-selectable:focus {
-  background: rgba(255, 255, 255, 0.04);
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, transparent);
   outline: none;
 }
 </style>
