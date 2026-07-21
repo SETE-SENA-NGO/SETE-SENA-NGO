@@ -222,31 +222,31 @@ const infoPages = [
 
 <style scoped>
 .edu-dash {
-  --bg: #f3f6fd;
-  --surface: #ffffff;
-  --border: #e8edf6;
-  --border-s: #d4dcee;
-  --text: #1e2a4a;
-  --contrast: #0a142d;
-  --muted: #6a7fa0;
-  --blue: #2563eb;
-  --blue-glow: rgba(37,99,235,0.25);
-  --blue-soft: #ecf2ff;
-  --emerald: #059669;
-  --emerald-glow: rgba(5,150,105,0.25);
-  --emerald-soft: #eafaf5;
-  --amber: #d97706;
-  --amber-glow: rgba(217,119,6,0.25);
-  --amber-soft: #fef8ee;
+  --bg: var(--admin-theme-bg);
+  --surface: var(--admin-theme-surface);
+  --border: var(--admin-theme-border);
+  --border-s: var(--admin-theme-border-strong);
+  --text: var(--admin-theme-text);
+  --contrast: var(--admin-theme-contrast);
+  --muted: var(--admin-theme-muted);
+  --blue: var(--admin-theme-teal);
+  --blue-glow: color-mix(in srgb, var(--admin-theme-teal) 25%, transparent);
+  --blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
+  --emerald: var(--admin-theme-primary);
+  --emerald-glow: color-mix(in srgb, var(--admin-theme-primary) 25%, transparent);
+  --emerald-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+  --amber: var(--admin-theme-gold);
+  --amber-glow: color-mix(in srgb, var(--admin-theme-gold) 25%, transparent);
+  --amber-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
   --violet: #7c3aed;
   --violet-glow: rgba(124,58,237,0.25);
-  --violet-soft: #f3efff;
+  --violet-soft: color-mix(in srgb, #7c3aed 12%, transparent);
   --slate: #64748b;
-  --slate-soft: #f0f3f8;
-  --shadow-xs: 0 1px 2px rgba(10,20,45,0.04);
-  --shadow-sm: 0 2px 8px rgba(10,20,45,0.06);
-  --shadow-md: 0 4px 16px rgba(10,20,45,0.07);
-  --shadow-lg: 0 8px 32px rgba(10,20,45,0.09);
+  --slate-soft: color-mix(in srgb, #64748b 12%, transparent);
+  --shadow-xs: var(--admin-theme-shadow);
+  --shadow-sm: var(--admin-theme-shadow);
+  --shadow-md: var(--admin-theme-shadow);
+  --shadow-lg: var(--admin-theme-shadow);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -256,34 +256,6 @@ const infoPages = [
   background: var(--bg);
   color: var(--text);
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-
-:global(.admin-dark) .edu-dash {
-  --bg: #080c1a;
-  --surface: #101826;
-  --border: #1c2642;
-  --border-s: #263252;
-  --text: #c8d2e6;
-  --contrast: #eaf0f8;
-  --muted: #7a8aaa;
-  --blue: #3b82f6;
-  --blue-glow: rgba(59,130,246,0.2);
-  --blue-soft: #172244;
-  --emerald: #10b981;
-  --emerald-glow: rgba(16,185,129,0.2);
-  --emerald-soft: #142a22;
-  --amber: #f59e0b;
-  --amber-glow: rgba(245,158,11,0.2);
-  --amber-soft: #241e14;
-  --violet: #a78bfa;
-  --violet-glow: rgba(167,139,250,0.2);
-  --violet-soft: #1c1640;
-  --slate: #8896b0;
-  --slate-soft: #121a2e;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.15);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.3);
 }
 
 .dash-layout { display: flex; }

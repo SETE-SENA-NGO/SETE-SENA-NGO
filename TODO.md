@@ -1,50 +1,14 @@
-# Dark Mode Fix Plan
+# Remove Dark Mode from Public Website
 
-**Problem**: Vue scoped CSS `:global()` overrides for `.admin-dark` have specificity issues — the locally-defined CSS variables (e.g. `--admin-bg`) inside scoped blocks take precedence over the `:global()` variable redefinitions, preventing dark mode from working correctly in many admin views.
+## Completed
+- [x] 1. Remove `publicDarkMode` state and functions from `src/stores/ui.store.ts`
+- [x] 2. Remove dark mode toggle button from `src/layouts/HeaderView.vue`
+- [x] 3. Remove `.public-dark` CSS block from `src/assets/base.css`
+- [x] 4. Clean up any remaining references
 
-**Solution**: Replace **all** local intermediary CSS variable references (e.g. `var(--admin-bg)`) with **direct** global theme variable references (e.g. `var(--admin-theme-bg)`). This eliminates the need for `:global()` overrides entirely and ensures proper cascade.
-
-## Files to fix:
-
-### 1. src/views/admin/DashboardView.vue ✅
-- [x] Removed local `--admin-*` variable definitions
-- [x] Removed `:global(.admin-dark .admin-page)` block
-- [x] Replaced all `var(--admin-*)` → `var(--admin-theme-*)`
-
-### 2. src/views/admin/PagesManagerView.vue ✅
-- [x] Already uses `var(--admin-theme-*)` directly — no intermediary variables
-
-### 3. src/views/admin/NewsManagerView.vue ✅
-- [x] Already uses `var(--admin-theme-*)` directly — no intermediary variables
-- [x] Fixed `var(--admin-muted)` → `var(--admin-theme-muted)` in empty-state
-
-### 4. src/views/admin/MediaLibraryView.vue ✅
-- [x] Already uses `var(--admin-theme-*)` with `:global(.admin-dark)` overrides
-
-### 5. src/views/admin/SettingsView.vue ✅
-- [x] Already uses `var(--admin-theme-*)` with `:global(.admin-dark)` overrides
-
-### 6. src/views/admin/AdminModuleView.vue ✅
-- [x] Already has proper `:global(.admin-dark)` overrides with local CSS variables
-
-### 7. src/views/admin/DonationLView.vue ✅
-- [x] Already uses `var(--admin-theme-*)` directly — no `:global()` blocks needed
-
-### 8. src/components/admin/DataTable.vue ✅
-- [x] Replaced hardcoded colors with `var(--admin-theme-*)` variables
-
-### 9. src/components/admin/ContentEditor.vue ✅
-- [x] Already uses `var(--admin-theme-*)` directly
-
-### 10. Program Dashboard Views (Education, Environment, Livelihood, Child Protection) ✅
-- [x] All have proper `:global(.admin-dark)` overrides with local CSS variables
-
-## Status: ALL FILES COMPLETED ✅
-
-The dark mode toggle is already functional in the codebase:
-- `ui.store.ts` handles toggle with localStorage persistence
-- `base.css` defines `.admin-dark` CSS variable overrides
-- `AdminHeader.vue` has dark mode toggle button
-- `SettingsView.vue` has theme toggle
-- All admin views have proper dark mode support via either direct `var(--admin-theme-*)` usage or `:global(.admin-dark)` overrides
-
+## Summary
+- ✅ Store: Removed `publicDarkMode`, `getInitialPublicDarkMode()`, `applyPublicDarkMode()`, `setPublicDarkMode()`, `togglePublicDarkMode()` - admin dark mode (`darkMode`/`toggleDarkMode`) remains untouched
+- ✅ Header: Removed the sun/moon dark mode toggle button and its associated CSS
+- ✅ base.css: Removed the entire `.public-dark` CSS block (including all `.public-dark .site-header`, `.public-dark .mega-menu-card`, etc.)
+- ✅ Build: Passes successfully with no errors
+- ✅ Admin dark mode still works: The toggle in `AdminHeader.vue` and `SettingsView.vue` still uses `ui.toggleDarkMode()` and `ui.setDarkMode()` which are unchanged
