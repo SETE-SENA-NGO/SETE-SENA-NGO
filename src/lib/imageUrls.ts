@@ -2,9 +2,11 @@ const useGoogleDriveImages = import.meta.env.VITE_USE_GOOGLE_DRIVE_IMAGES === 't
 
 const svgDataUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`
 const localFavicon = '/favicon.ico'
+const publicGoogleDriveFolderId = import.meta.env.VITE_PUBLIC_GOOGLE_DRIVE_FOLDER_ID || ''
 
-export const googleDriveImageFolderUrl =
-  'https://drive.google.com/drive/folders/1U2OJUG4Z9N_u1jIYrMI07uYhmavuHvYO'
+export const googleDriveImageFolderUrl = publicGoogleDriveFolderId
+  ? `https://drive.google.com/drive/folders/${encodeURIComponent(publicGoogleDriveFolderId)}`
+  : ''
 
 export function googleDriveImageUrl(fileId: string, size = 'w1600') {
   return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=${size}`
