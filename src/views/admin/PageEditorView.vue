@@ -1636,7 +1636,7 @@ function formatDate(value: string) {
                 </div>
               </div>
               <div class="header-right">
-                <div class="save-indicator" :class="{ dirty: activePageDirty }">
+                <div v-if="!previewVisible" class="save-indicator" :class="{ dirty: activePageDirty }">
                   <span class="save-dot"></span>
                   <span class="save-label">{{ activePageDirty ? 'Unsaved changes' : 'Saved' }}</span>
                 </div>
@@ -1686,8 +1686,8 @@ function formatDate(value: string) {
             <!-- Status bar -->
             <div class="status-bar">
               <div class="status-left">
-                <span class="status-bullet" :class="{ dirty: activePageDirty }"></span>
-                <span class="status-text">{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</span>
+              <span v-if="!previewVisible" class="status-bullet" :class="{ dirty: activePageDirty }"></span>
+                <span v-if="!previewVisible" class="status-text">{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</span>
               </div>
               <span class="status-right">{{ sectionCountLabel }} · {{ activePage.slug }}</span>
             </div>
@@ -1711,12 +1711,12 @@ function formatDate(value: string) {
                 </div>
               </div>
               <div class="step" :class="{ active: !activePageDirty }">
-                <div class="step-indicator" :class="{ success: !activePageDirty }">
+                <div v-if="!previewVisible" class="step-indicator" :class="{ success: !activePageDirty }">
                   <svg v-if="!activePageDirty" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   <template v-else>3</template>
                 </div>
                 <div class="step-content">
-                  <span class="step-label">{{ activePageDirty ? 'Unsaved' : 'Published' }}</span>
+                  <span v-if="!previewVisible" class="step-label">{{ activePageDirty ? 'Unsaved' : 'Published' }}</span>
                   <span class="step-desc">Status</span>
                 </div>
               </div>
@@ -1736,7 +1736,7 @@ function formatDate(value: string) {
                       <h3 class="card-title">Identity</h3>
                     </div>
                   </div>
-                  <span class="status-pill" :class="{ dirty: activePageDirty }">
+                  <span v-if="!previewVisible" class="status-pill" :class="{ dirty: activePageDirty }">
                     {{ activePageDirty ? 'Unsaved' : 'Saved' }}
                   </span>
                 </div>
@@ -2050,9 +2050,9 @@ function formatDate(value: string) {
             <!-- Bottom Save Bar -->
             <div class="save-bar">
               <div class="save-bar-left">
-                <span class="save-dot-large" :class="{ dirty: activePageDirty }"></span>
+                <span v-if="!previewVisible" class="save-dot-large" :class="{ dirty: activePageDirty }"></span>
                 <div>
-                  <strong>{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</strong>
+                  <strong v-if="!previewVisible">{{ activePageDirty ? 'Unsaved changes' : 'All changes saved' }}</strong>
                   <small>{{ formatDate(activePage.updatedAt) }}</small>
                 </div>
               </div>
