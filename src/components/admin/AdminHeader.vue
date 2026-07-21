@@ -27,6 +27,11 @@ const pageTitle = computed(() => {
     const slug = path.replace('/admin/editor/', '')
     return titleFromSlug(slug)
   }
+  if (path === '/admin/programs') return 'Programs Overview'
+  if (path === '/admin/education') return 'Education Dashboard'
+  if (path === '/admin/environment') return 'Environment Dashboard'
+  if (path === '/admin/livelihood') return 'Livelihood Dashboard'
+  if (path === '/admin/child-protection') return 'Child Protection Dashboard'
   if (path === '/admin/media') return 'Media Library'
   if (path === '/admin/pages') return 'Pages Manager'
   if (path === '/admin/settings') return 'Settings'
@@ -41,6 +46,11 @@ const pageTitle = computed(() => {
 const pageContext = computed(() => {
   const path = route.path
   if (path.startsWith('/admin/editor/')) return 'Website page'
+  if (path === '/admin/programs') return 'Program overview'
+  if (path === '/admin/education') return 'Program management'
+  if (path === '/admin/environment') return 'Program management'
+  if (path === '/admin/livelihood') return 'Program management'
+  if (path === '/admin/child-protection') return 'Program management'
   if (path.startsWith('/admin/modules/')) return 'Content module'
   if (path === '/admin/media') return 'Asset library'
   if (path === '/admin/settings') return 'Preferences'
@@ -48,7 +58,7 @@ const pageContext = computed(() => {
 })
 
 const userInitials = computed(() => {
-  const email = auth.user?.email || 'admin@santisena.org'
+  const email = auth.user?.email || ''
   const namePart = email.split('@')[0] ?? ''
   const parts = namePart.split(/[._-]/)
   if (parts.length >= 2) {
@@ -60,7 +70,7 @@ const userInitials = computed(() => {
   return 'AD'
 })
 
-const userEmail = computed(() => auth.user?.email || 'admin@santisena.org')
+const userEmail = computed(() => auth.user?.email || 'Not signed in')
 
 function goToSite() {
   void router.push('/')
@@ -123,11 +133,27 @@ function goToSite() {
 
       <div class="actions">
         <div class="icon-group">
-          <button class="icon-btn view-site-btn" type="button" aria-label="View public site" @click="goToSite">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button
+            class="icon-btn view-site-btn"
+            type="button"
+            aria-label="View public site"
+            @click="goToSite"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <circle cx="12" cy="12" r="10" />
               <line x1="2" y1="12" x2="22" y2="12" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              <path
+                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+              />
             </svg>
             <span class="icon-btn-label">View Site</span>
           </button>
@@ -138,7 +164,17 @@ function goToSite() {
             :aria-pressed="ui.darkMode"
             @click="ui.toggleDarkMode"
           >
-            <svg v-if="ui.darkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              v-if="ui.darkMode"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <circle cx="12" cy="12" r="5" />
               <line x1="12" y1="1" x2="12" y2="3" />
               <line x1="12" y1="21" x2="12" y2="23" />
@@ -149,7 +185,17 @@ function goToSite() {
               <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
             </svg>
-            <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              v-else
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
           </button>
@@ -182,7 +228,13 @@ function goToSite() {
   color: var(--hdr-text);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 .admin-header-inner {
@@ -305,7 +357,10 @@ function goToSite() {
   color: var(--hdr-muted);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .icon-btn:hover {

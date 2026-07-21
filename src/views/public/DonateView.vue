@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import acledaLogo from '@/assets/acleda-logo.png'
+import {
+  defaultDonationMethods,
+  fetchDonationMethods,
+  type DonationMethod,
+} from '@/lib/donationSettings'
 
-type Tab = 'qr' | 'card'
+type Tab = 'qr'
 const activeTab = ref<Tab>('qr')
 
 interface PayMethod {
@@ -10,7 +15,7 @@ interface PayMethod {
   bank: string
   subtitle: string
   badge: string
-  qrFile: string
+  qrUrl: string
   accountName: string
   accountNo: string
   currency: string
@@ -24,34 +29,15 @@ interface PayMethod {
   numberColor: string
 }
 
-const methods: PayMethod[] = [
-  {
-    key: 'aba',
-    bank: 'ABA Pay',
-    subtitle: 'ABA BANK - CAMBODIA',
-    badge: 'ABA',
-    qrFile: 'qr-aba.png',
-    accountName: 'SANTI SENA',
-    accountNo: '000 000 000',
-    currency: 'KHR / USD',
-    steps: ['Open ABA Mobile app', 'Tap ABA PAY or Scan', 'Scan the QR code above', 'Confirm amount & payment'],
-    headerColor: '#0d2c63',
+// Extra styling for banks we ship artwork/colors for; any other bank the
+// admin adds derives its look from the card color chosen in the admin panel.
+const knownMeta: Record<string, Partial<PayMethod>> = {
+  aba: {
     badgeColor: '#294f8f',
     badgeTextColor: '#ffffff',
     panelColor: '#eef1f6',
-    numberColor: '#0d2c63',
   },
-  {
-    key: 'acleda',
-    bank: 'ACLEDA Bank',
-    subtitle: 'ACLEDA - CAMBODIA',
-    badge: 'ACL',
-    qrFile: 'qr-acleda.png',
-    accountName: 'SANTI SENA',
-    accountNo: '0000 0000 000',
-    currency: 'KHR / USD',
-    steps: ['Open ACLEDA Mobile app', 'Tap QR Payment or Scan', 'Scan the QR code above', 'Confirm amount & payment'],
-    headerColor: '#1d3d5c',
+  acleda: {
     badgeColor: '#d9ad2f',
     badgeTextColor: '#1d3d5c',
     logo: acledaLogo,
@@ -59,7 +45,56 @@ const methods: PayMethod[] = [
     panelColor: '#fff4d4',
     numberColor: '#d9ad2f',
   },
-]
+}
+
+function badgeFor(bank: string) {
+  return (
+    bank
+      .replace(/[^a-zA-Z]/g, '')
+      .slice(0, 3)
+      .toUpperCase() || 'QR'
+  )
+}
+
+function toPayMethod(method: DonationMethod): PayMethod {
+  return {
+    key: method.id,
+    bank: method.bank,
+    subtitle: method.subtitle,
+    badge: badgeFor(method.bank),
+    qrUrl: method.qrUrl,
+    accountName: method.accountName,
+    accountNo: method.accountNo,
+    currency: method.currency,
+    steps: [
+      `Open the ${method.bank} mobile app`,
+      'Tap QR Payment or Scan',
+      'Scan the QR code above',
+      'Confirm amount & payment',
+    ],
+    headerColor: method.headerColor,
+    badgeColor: method.headerColor,
+    badgeTextColor: '#ffffff',
+    panelColor: `color-mix(in srgb, ${method.headerColor} 9%, #ffffff)`,
+    numberColor: method.headerColor,
+    ...knownMeta[method.id],
+  }
+}
+
+const savedMethods = ref<DonationMethod[]>([])
+
+onMounted(async () => {
+  try {
+    savedMethods.value = await fetchDonationMethods()
+  } catch {
+    // No admin settings saved yet — fall back to the defaults.
+  }
+})
+
+const methods = computed<PayMethod[]>(() => {
+  const source = savedMethods.value.length ? savedMethods.value : defaultDonationMethods()
+  return source.map(toPayMethod)
+})
 </script>
 
 <template>
@@ -72,11 +107,8 @@ const methods: PayMethod[] = [
       </p>
 
       <div class="tabs">
-        <button :class="['tab', { active: activeTab === 'qr' }]" @click="activeTab = 'qr'">
+        <button :class="['tab', { active: true }]" type="button">
           Pay with QR
-        </button>
-        <button :class="['tab', { active: activeTab === 'card' }]" @click="activeTab = 'card'">
-          Pay with credit card
         </button>
       </div>
     </header>
@@ -101,10 +133,20 @@ const methods: PayMethod[] = [
         </div>
 
         <div class="card-body">
-          <div class="qr-box" :style="{ borderColor: m.headerColor }">
-            <span class="qr-icon" :style="{ color: m.headerColor }">&#9635;</span>
-            <span class="qr-caption" :style="{ color: m.headerColor }">SCAN TO DONATE</span>
-            <span class="qr-file">{{ m.qrFile }}</span>
+          <div
+            class="qr-box"
+            :class="{ 'has-qr': m.qrUrl }"
+            :style="{ borderColor: m.headerColor }"
+          >
+            <template v-if="m.qrUrl">
+              <img class="qr-image" :src="m.qrUrl" :alt="`${m.bank} donation QR code`" />
+              <span class="qr-caption" :style="{ color: m.headerColor }">SCAN TO DONATE</span>
+            </template>
+            <template v-else>
+              <span class="qr-icon" :style="{ color: m.headerColor }">&#9635;</span>
+              <span class="qr-caption" :style="{ color: m.headerColor }">SCAN TO DONATE</span>
+              <span class="qr-file">QR coming soon</span>
+            </template>
             <span class="mini-badge" :style="{ background: m.headerColor }">{{
               m.badge.slice(0, 3)
             }}</span>
@@ -138,10 +180,6 @@ const methods: PayMethod[] = [
       </article>
     </section>
 
-    <section v-else class="card-payment">
-      <p>Credit card donations are coming soon. Please use the QR payment methods above for now.</p>
-    </section>
-
     <div class="notice">
       <span class="notice-icon">&#9432;</span>
       <div>
@@ -149,7 +187,9 @@ const methods: PayMethod[] = [
           After completing your donation, please send your <strong>payment screenshot</strong> to
           <a href="mailto:SANTISENAMONK@GMAIL.COM">SANTISENAMONK@GMAIL.COM</a>.
         </p>
-        <p class="notice-sub">This allows us to send you an official receipt and our sincere gratitude.</p>
+        <p class="notice-sub">
+          This allows us to send you an official receipt and our sincere gratitude.
+        </p>
       </div>
     </div>
   </div>
@@ -291,6 +331,19 @@ const methods: PayMethod[] = [
   gap: 0.35rem;
   opacity: 0.85;
   margin-bottom: 1.5rem;
+}
+.qr-box.has-qr {
+  border-style: solid;
+  opacity: 1;
+  padding: 1rem;
+}
+.qr-image {
+  max-width: 200px;
+  max-height: 200px;
+  width: 100%;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  background: #fff;
 }
 .qr-icon {
   font-size: 2rem;

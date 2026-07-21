@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
+import { useScrollReveal } from '@/composables/useScrollReveal'
 
-const slideItems = [
-  { image: '/images/programs/hero-2.jpg', caption: '' },
-  { image: '/images/programs/education-hero.jpg', caption: '' },
-  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
-]
+defineOptions({
+  name: 'GetInvolvedDonateView',
+})
 
 const giftUses = [
   {
@@ -59,6 +57,8 @@ const trustNotes = [
 const description =
   'Donate to Santi Sena through practical support for school materials, safe water, learning books and rural livelihood inputs.'
 
+useScrollReveal()
+
 let previousTitle = ''
 let descriptionMeta: HTMLMetaElement | null = null
 let previousDescription: string | null = null
@@ -94,21 +94,8 @@ onUnmounted(() => {
 
 <template>
   <main class="donate-page">
-    <Slideshow :slides="slideItems" :interval-ms="5600">
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <p class="eyebrow">Get involved - Support us</p>
-        <h1>Give practical support.</h1>
-        <p class="lead">Your gift can become school items, clean water, books or farming inputs.</p>
-        <div class="hero-actions" aria-label="Donation actions">
-          <RouterLink to="/qr-donate" class="button button-primary">Donate by QR</RouterLink>
-          <a href="#gift-use" class="button button-secondary">See gift use</a>
-        </div>
-      </div>
-    </Slideshow>
-
     <section id="gift-use" class="gift-section" aria-labelledby="gift-heading">
-      <div class="section-heading">
+      <div class="section-heading reveal">
         <p class="eyebrow">Gift use</p>
         <h2 id="gift-heading">Small items. Real field value.</h2>
       </div>
@@ -117,8 +104,9 @@ onUnmounted(() => {
         <article
           v-for="(item, index) in giftUses"
           :key="item.title"
-          class="gift-card"
+          class="gift-card reveal"
           :class="{ 'gift-card--featured': index === 0 }"
+          :style="{ animationDelay: `${index * 0.1}s` }"
           tabindex="0"
         >
           <img :src="item.image" :alt="item.title" loading="lazy" />
@@ -136,27 +124,51 @@ onUnmounted(() => {
     </section>
 
     <section class="trust-section" aria-labelledby="trust-heading">
-      <div class="trust-copy">
+      <div class="trust-copy reveal">
         <p class="eyebrow">Stewardship</p>
         <h2 id="trust-heading">Clear handling matters.</h2>
+        <p>
+          Practical giving needs careful records, written guidance and clear reporting back to the
+          work it supports.
+        </p>
       </div>
       <div class="trust-grid">
-        <article v-for="note in trustNotes" :key="note.title" class="trust-card">
+        <article
+          v-for="(note, index) in trustNotes"
+          :key="note.title"
+          class="trust-card reveal"
+          :style="{ animationDelay: `${index * 0.11}s` }"
+        >
           <h3>{{ note.title }}</h3>
           <p>{{ note.body }}</p>
         </article>
       </div>
     </section>
 
-    <section class="cta-band" aria-label="Donate now">
+    <section class="cta-band" aria-labelledby="cta-heading">
       <div class="cta-band__inner">
-        <div>
-          <p class="eyebrow">Ready to give</p>
-          <h2>Support the next practical need.</h2>
+        <div class="cta-band__visual reveal" aria-hidden="true">
+          <figure class="cta-photo cta-photo--small reveal" style="animation-delay: 0.08s">
+            <img src="/images/programs/hero-2.jpg" alt="" loading="lazy" />
+          </figure>
+          <figure class="cta-photo cta-photo--large reveal" style="animation-delay: 0.18s">
+            <img src="/images/programs/livelihood-hero3.jpg" alt="" loading="lazy" />
+          </figure>
         </div>
-        <div class="cta-actions">
-          <RouterLink to="/qr-donate" class="button button-primary">Donate by QR</RouterLink>
-          <RouterLink to="/contact" class="button button-secondary">Contact team</RouterLink>
+
+        <div class="cta-band__copy reveal" style="animation-delay: 0.12s">
+          <p class="eyebrow">Ready to give</p>
+          <h2 id="cta-heading">Support the next practical need.</h2>
+          <div class="cta-quote reveal" style="animation-delay: 0.24s">
+            <p>
+              The strongest giving is simple, specific and steady. Your donation helps Santi Sena
+              turn urgent local needs into practical materials communities can use.
+            </p>
+          </div>
+          <div class="cta-actions reveal" style="animation-delay: 0.34s">
+            <RouterLink to="/qr-donate" class="button button-primary">Donate by QR</RouterLink>
+            <RouterLink to="/contact" class="button button-secondary">Contact team</RouterLink>
+          </div>
         </div>
       </div>
     </section>
@@ -178,44 +190,29 @@ onUnmounted(() => {
   color: var(--ink);
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(6, 18, 13, 0.86) 0%,
-      rgba(6, 18, 13, 0.58) 44%,
-      rgba(6, 18, 13, 0.18) 74%,
-      transparent 100%
-    ),
-    linear-gradient(to top, rgba(0, 0, 0, 0.32), transparent 44%);
+.reveal {
+  opacity: 0;
 }
 
-.hero-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  max-width: 700px;
-  margin: 0;
-  left: var(--container-offset);
-  padding: 3rem 1.5rem;
-  text-align: left;
-  animation: fadeInUp 0.8s ease-out;
+.reveal--visible {
+  opacity: 1;
+  animation: revealPop 0.78s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
-@keyframes fadeInUp {
-  from {
+@keyframes revealPop {
+  0% {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(34px) scale(0.97);
   }
 
-  to {
+  70% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-5px) scale(1.01);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -229,12 +226,6 @@ onUnmounted(() => {
   text-transform: uppercase;
 }
 
-.hero-content .eyebrow,
-.cta-band .eyebrow {
-  color: var(--primary-light);
-}
-
-.hero-content h1,
 .section-heading h2,
 .trust-copy h2,
 .cta-band h2 {
@@ -244,21 +235,6 @@ onUnmounted(() => {
   text-wrap: balance;
 }
 
-.hero-content h1 {
-  max-width: 48rem;
-  margin-bottom: 1rem;
-  color: var(--color-white);
-}
-
-.lead {
-  max-width: 40rem;
-  margin: 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.05rem;
-  line-height: 1.7;
-}
-
-.hero-actions,
 .cta-actions {
   display: flex;
   flex-wrap: wrap;
@@ -286,7 +262,16 @@ onUnmounted(() => {
 }
 
 .button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-3px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green-light) 80%, var(--color-white));
+  outline-offset: 3px;
 }
 
 .button-primary {
@@ -349,6 +334,10 @@ onUnmounted(() => {
   background: var(--green-dark);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
   isolation: isolate;
+  transform-origin: center bottom;
+  transition:
+    box-shadow 0.28s ease,
+    transform 0.28s ease;
 }
 
 .gift-card--featured {
@@ -456,6 +445,18 @@ onUnmounted(() => {
   transform: scale(1.06);
 }
 
+.gift-card:hover,
+.gift-card:focus-within,
+.gift-card:focus {
+  box-shadow: 0 24px 48px rgba(22, 35, 29, 0.16);
+  transform: translateY(-8px);
+}
+
+.gift-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--green) 36%, var(--green-light));
+  outline-offset: 4px;
+}
+
 .gift-card:hover .gift-card__hover,
 .gift-card:focus-within .gift-card__hover,
 .gift-card:focus .gift-card__hover {
@@ -470,76 +471,273 @@ onUnmounted(() => {
 }
 
 .trust-section {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1fr);
-  gap: 3rem;
-  padding-block: 0 6rem;
+  padding-block: 5.25rem 6.25rem;
+  text-align: center;
+}
+
+.trust-copy {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.trust-copy p:not(.eyebrow) {
+  max-width: 650px;
+  margin: 1rem auto 0;
+  color: var(--muted);
+  line-height: 1.7;
 }
 
 .trust-grid {
   display: grid;
-  gap: 0.9rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1.4rem;
+  margin-top: 2.6rem;
 }
 
 .trust-card {
-  border-left: 4px solid var(--green);
+  position: relative;
+  min-height: 260px;
+  display: grid;
+  align-content: start;
+  gap: 1.4rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--green) 12%, var(--line));
   border-radius: 8px;
   background: var(--panel);
-  padding: 1.2rem 1.35rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  padding: 2rem 1.75rem 1.8rem;
+  box-shadow: 0 16px 32px rgba(43, 43, 40, 0.08);
+  text-align: left;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.trust-card::before {
+  content: '\201C';
+  display: block;
+  margin-bottom: -0.9rem;
+  color: color-mix(in srgb, var(--green) 24%, var(--green-light));
+  font-family: Georgia, serif;
+  font-size: 5.4rem;
+  font-weight: 900;
+  line-height: 0.7;
+}
+
+.trust-card::after {
+  position: absolute;
+  inset: auto 1.2rem 1.1rem auto;
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--green-light) 72%, var(--panel));
+  content: '';
+  opacity: 0.7;
+}
+
+.trust-card:hover {
+  border-color: color-mix(in srgb, var(--green) 24%, var(--line));
+  box-shadow: 0 24px 46px rgba(43, 43, 40, 0.14);
+  transform: translateY(-8px);
 }
 
 .trust-card h3 {
   margin: 0;
   color: var(--ink);
-  font-size: 1.1rem;
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .trust-card p {
-  margin: 0.45rem 0 0;
+  margin: 0;
   color: var(--muted);
-  line-height: 1.55;
+  font-size: 0.96rem;
+  font-style: italic;
+  line-height: 1.75;
 }
 
 .cta-band {
   position: relative;
-  isolation: isolate;
   overflow: hidden;
-  background: var(--green-dark);
-  padding: 5rem 0;
+  background: var(--panel);
+  padding: clamp(5rem, 8vw, 7rem) 0;
 }
 
 .cta-band::before {
   position: absolute;
-  inset: 0;
-  z-index: -2;
-  background: url('/images/programs/hero-3.jpg') center / cover;
+  top: 39%;
+  left: 0;
+  width: min(62vw, 760px);
+  height: clamp(9rem, 20vw, 13.5rem);
+  background: color-mix(in srgb, var(--green) 52%, #d1c870);
   content: '';
-}
-
-.cta-band::after {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(90deg, rgba(6, 18, 13, 0.9), rgba(6, 18, 13, 0.58));
-  content: '';
+  transform: translateY(-50%);
 }
 
 .cta-band__inner {
   width: min(100% - 3rem, var(--container-max-width));
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(390px, 0.95fr) minmax(320px, 0.85fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
+  gap: clamp(3rem, 7vw, 6rem);
+}
+
+.cta-band__visual {
+  position: relative;
+  min-height: clamp(440px, 48vw, 560px);
+}
+
+.cta-band__visual::before,
+.cta-band__visual::after {
+  position: absolute;
+  border-radius: 999px;
+  content: '';
+  pointer-events: none;
+}
+
+.cta-band__visual::before {
+  inset: 13% 12% 8% 8%;
+  background: radial-gradient(circle, rgba(15, 143, 105, 0.18), transparent 68%);
+  filter: blur(18px);
+}
+
+.cta-band__visual::after {
+  right: 14%;
+  bottom: 8%;
+  width: min(40vw, 250px);
+  height: min(40vw, 250px);
+  background: color-mix(in srgb, var(--green-light) 82%, var(--color-white));
+  opacity: 0.68;
+}
+
+.cta-photo {
+  position: absolute;
+  z-index: 1;
+  margin: 0;
+  overflow: hidden;
+  border: 10px solid var(--panel);
+  border-radius: 1.6rem;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(15, 143, 105, 0.34)) border-box;
+  box-shadow:
+    0 26px 60px rgba(22, 35, 29, 0.18),
+    0 8px 22px rgba(15, 143, 105, 0.12);
+  transition:
+    box-shadow 0.28s ease,
+    transform 0.28s ease;
+}
+
+.cta-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: calc(1.6rem - 10px);
+  transition: transform 0.35s ease;
+}
+
+.cta-photo:hover {
+  box-shadow:
+    0 34px 70px rgba(22, 35, 29, 0.22),
+    0 12px 30px rgba(15, 143, 105, 0.16);
+  transform: translateY(-6px);
+}
+
+.cta-photo:hover img {
+  transform: scale(1.04);
+}
+
+.cta-photo--small {
+  bottom: 0;
+  left: 0;
+  width: min(47%, 320px);
+  aspect-ratio: 4 / 5;
+  border-radius: 1.4rem 2.2rem 1.4rem 2.2rem;
+}
+
+.cta-photo--large {
+  top: 0;
+  left: 39%;
+  width: min(47%, 340px);
+  aspect-ratio: 4 / 5;
+  border-radius: 2.4rem 1.4rem 2.2rem 1.4rem;
+}
+
+.cta-band__copy {
+  position: relative;
+  z-index: 1;
+}
+
+.cta-band .eyebrow {
+  color: var(--green);
 }
 
 .cta-band h2 {
+  max-width: 28rem;
+  color: var(--ink);
+  font-size: clamp(2.1rem, 4vw, 3.5rem);
+  font-weight: 700;
+}
+
+.cta-quote {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 2.4rem;
+}
+
+.cta-quote::before {
+  color: color-mix(in srgb, var(--green) 62%, #d1c870);
+  content: '\201C';
+  font-family: Georgia, serif;
+  font-size: clamp(6rem, 11vw, 8rem);
+  font-weight: 900;
+  line-height: 0.8;
+}
+
+.cta-quote p {
+  max-width: 23rem;
+  margin: 0.8rem 0 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.cta-band .button-primary {
+  background: var(--green);
   color: var(--color-white);
 }
 
 .cta-band .button-secondary {
-  background: rgba(255, 255, 255, 0.08);
+  border-color: color-mix(in srgb, var(--green) 36%, var(--line));
+  background: transparent;
+  color: var(--green-dark);
+}
+
+.cta-band .button-secondary:hover {
+  background: var(--green-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal--visible {
+    opacity: 1;
+    animation: none;
+  }
+
+  .button,
+  .gift-card,
+  .gift-card img,
+  .gift-card__copy,
+  .gift-card__hover,
+  .trust-card,
+  .cta-photo,
+  .cta-photo img {
+    transition: none;
+  }
 }
 
 @media (max-width: 980px) {
@@ -548,27 +746,88 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
   }
 
+  .trust-grid {
+    grid-template-columns: 1fr;
+  }
+
   .gift-card--featured,
   .gift-card {
     min-height: 360px;
   }
 
+  .cta-band::before {
+    top: 30%;
+    width: 78vw;
+  }
+
   .cta-band__inner {
-    align-items: flex-start;
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .cta-band__visual {
+    width: min(100%, 620px);
+    min-height: 430px;
+  }
+
+  .cta-band__copy {
+    max-width: 640px;
   }
 }
 
 @media (max-width: 640px) {
-  .hero-content {
-    padding: 2rem 1.5rem;
+  .cta-band {
+    padding: 4rem 0;
   }
 
-  .lead {
-    font-size: 1rem;
+  .cta-band::before {
+    top: 22%;
+    width: 92vw;
+    height: 8.5rem;
   }
 
-  .hero-actions,
+  .cta-band__inner {
+    width: min(100% - 2rem, var(--container-max-width));
+  }
+
+  .cta-band__visual {
+    min-height: 360px;
+  }
+
+  .cta-photo {
+    border-width: 7px;
+    border-radius: 1.15rem;
+  }
+
+  .cta-photo img {
+    border-radius: calc(1.15rem - 7px);
+  }
+
+  .cta-photo--small {
+    width: 56%;
+    border-radius: 1rem 1.7rem 1rem 1.7rem;
+  }
+
+  .cta-photo--large {
+    left: 41%;
+    width: 55%;
+    border-radius: 1.8rem 1rem 1.7rem 1rem;
+  }
+
+  .cta-quote {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+    margin-top: 1.7rem;
+  }
+
+  .cta-quote::before {
+    font-size: 5.4rem;
+  }
+
+  .cta-quote p {
+    margin-top: 0;
+  }
+
   .cta-actions {
     align-items: stretch;
     flex-direction: column;

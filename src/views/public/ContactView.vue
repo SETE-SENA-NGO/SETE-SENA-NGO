@@ -1,17 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import Slideshow from '@/components/shared/Slideshow.vue'
+import { useScrollReveal } from '@/composables/useScrollReveal'
 import cambodiaMap from '@/assets/maps/Cambodia Map.png'
+import locationIcon from '@/assets/maps/location_icon.png'
 import preyVengMap from '@/assets/maps/Prey_Veng.png'
 import svayRiengMap from '@/assets/maps/Svay_Rieng.png'
-import logoUrl from '@/assets/logo.png'
-
-const slideItems = [
-  { image: '/images/programs/hero-1.jpg', caption: '' },
-  { image: '/images/programs/hero-4.jpg', caption: '' },
-  { image: '/images/programs/environment-hero1.jpg', caption: '' },
-]
+import logoUrl from '@/assets/santi_sena_icon.ico'
 
 const headquarters = {
   name: 'Our headquarters in Svay Rieng',
@@ -49,8 +44,10 @@ const offices = [
     contact: 'General coordination, donors, partners and project visits',
     mapLabel: 'Santi Sena Head Office',
     mapImage: svayRiengMap,
-    pinLeft: '59%',
-    pinTop: '54%',
+    pinLeft: '61.8%',
+    pinTop: '81.4%',
+    countryPinLeft: '61.8%',
+    countryPinTop: '81.4%',
   },
   {
     id: 'prey-veng-office',
@@ -64,8 +61,10 @@ const offices = [
     contact: 'Environment, livelihood and education program coordination',
     mapLabel: 'Prey Veng Field Office',
     mapImage: preyVengMap,
-    pinLeft: '52%',
-    pinTop: '63%',
+    pinLeft: '53.5%',
+    pinTop: '72.4%',
+    countryPinLeft: '53.5%',
+    countryPinTop: '72.4%',
   },
 ] as const
 
@@ -75,20 +74,111 @@ const visitNotes = [
   'Village visits should be arranged through the head office two weeks in advance.',
 ]
 
+const contactMethods = [
+  {
+    id: 'email',
+    tab: 'Email',
+    type: 'Contact form',
+    heading: 'Email to Us',
+    fieldLabel: 'Email',
+    inputType: 'email',
+    autocomplete: 'email',
+    placeholder: 'name@example.com',
+    buttonLabel: 'Send message',
+    sentLabel: 'Message ready',
+    status: 'Thank you. Your message is ready for our team.',
+  },
+  {
+    id: 'telegram',
+    tab: 'Telegram',
+    type: 'Quick chat',
+    heading: 'Telegram to Us',
+    fieldLabel: 'Telegram',
+    inputType: 'text',
+    autocomplete: 'off',
+    placeholder: '@yourtelegram',
+    buttonLabel: 'Send via Telegram',
+    sentLabel: 'Telegram ready',
+    status: 'Thank you. Your Telegram contact is ready for our team.',
+  },
+] as const
+
+const telegramContact = {
+  qrImage: '/images/contact/telegram-qr.jpg',
+  url: 'https://t.me/sannta_close',
+}
+
 const name = ref('')
-const email = ref('')
+const contactDetail = ref('')
 const subject = ref('')
 const message = ref('')
 const formSent = ref(false)
+const contactFormBarsVisible = ref(false)
+const contactFormMotionActive = ref(false)
 const messageMaxLength = 600
+let contactFormMotionFrame: number | undefined
+let contactFormMotionTimer: number | undefined
 
 const activeOfficeId = ref<(typeof offices)[number]['id']>('all')
+const activeContactMethodId = ref<(typeof contactMethods)[number]['id']>('email')
 const activeOffice = computed(
   () => offices.find((office) => office.id === activeOfficeId.value) ?? offices[0],
 )
-const canSubmit = computed(() =>
-  Boolean(name.value.trim() && email.value.trim() && message.value.trim()),
+const activeContactMethod = computed(
+  () =>
+    contactMethods.find((contactMethod) => contactMethod.id === activeContactMethodId.value) ??
+    contactMethods[0],
 )
+const isTelegramMethod = computed(() => activeContactMethodId.value === 'telegram')
+const mapOfficeHotspots = computed(() =>
+  offices.filter(
+    (office): office is Extract<(typeof offices)[number], { countryPinLeft: string }> =>
+      'countryPinLeft' in office && 'countryPinTop' in office,
+  ),
+)
+const canSubmit = computed(() =>
+  !isTelegramMethod.value &&
+  Boolean(name.value.trim() && contactDetail.value.trim() && message.value.trim()),
+)
+
+useScrollReveal()
+
+function selectOffice(officeId: (typeof offices)[number]['id']) {
+  activeOfficeId.value = officeId
+}
+
+function selectContactMethod(contactMethodId: (typeof contactMethods)[number]['id']) {
+  if (activeContactMethodId.value === contactMethodId) return
+
+  activeContactMethodId.value = contactMethodId
+  contactDetail.value = ''
+  formSent.value = false
+  triggerContactFormMotion()
+}
+
+function triggerContactFormMotion() {
+  contactFormBarsVisible.value = true
+
+  if (contactFormMotionFrame !== undefined) {
+    window.cancelAnimationFrame(contactFormMotionFrame)
+  }
+  if (contactFormMotionTimer !== undefined) {
+    window.clearTimeout(contactFormMotionTimer)
+  }
+
+  contactFormMotionActive.value = false
+
+  contactFormMotionFrame = window.requestAnimationFrame(() => {
+    contactFormMotionFrame = window.requestAnimationFrame(() => {
+      contactFormMotionActive.value = true
+      contactFormMotionFrame = undefined
+      contactFormMotionTimer = window.setTimeout(() => {
+        contactFormMotionActive.value = false
+        contactFormMotionTimer = undefined
+      }, 720)
+    })
+  })
+}
 
 function submitContact() {
   if (!canSubmit.value) return
@@ -98,29 +188,21 @@ function submitContact() {
 onMounted(() => {
   document.title = 'Contact Santi Sena'
 })
+
+onUnmounted(() => {
+  if (contactFormMotionFrame !== undefined) {
+    window.cancelAnimationFrame(contactFormMotionFrame)
+  }
+  if (contactFormMotionTimer !== undefined) {
+    window.clearTimeout(contactFormMotionTimer)
+  }
+})
 </script>
 
 <template>
   <main class="contact-page">
-    <Slideshow class="contact-hero" :slides="slideItems" :interval-ms="5600">
-      <div class="hero-overlay" />
-
-      <div class="hero-inner">
-        <p class="eyebrow eyebrow--light">Contact Santi Sena</p>
-        <h1 id="contact-heading">Get in touch with us easily!</h1>
-        <p class="hero-subtitle">
-          Find the right office, arrange a visit, or write to our team about partnership and
-          community programs.
-        </p>
-        <div class="hero-actions">
-          <a href="#head-office" class="btn btn--primary">Head office</a>
-          <a href="#field-offices" class="btn btn--outline">Field offices</a>
-        </div>
-      </div>
-    </Slideshow>
-
     <section id="head-office" class="headquarters-section" aria-labelledby="headquarters-heading">
-      <div class="section-intro">
+      <div class="section-intro reveal">
         <p class="section-kicker">Contact us</p>
         <h2 id="headquarters-heading">Our headquarters in Cambodia</h2>
         <p>
@@ -130,11 +212,11 @@ onMounted(() => {
       </div>
 
       <div class="headquarters-layout">
-        <figure class="headquarters-photo">
+        <figure class="headquarters-photo reveal" style="animation-delay: 0.1s">
           <img src="/images/programs/hero-1.jpg" alt="Santi Sena team meeting in Cambodia" />
         </figure>
 
-        <article class="headquarters-details">
+        <article class="headquarters-details reveal" style="animation-delay: 0.22s">
           <p class="office-type">Head office</p>
           <h3>{{ headquarters.name }}</h3>
           <dl class="details-list">
@@ -166,7 +248,7 @@ onMounted(() => {
     </section>
 
     <section id="field-offices" class="centers-section" aria-labelledby="centers-heading">
-      <div class="section-intro">
+      <div class="section-intro reveal">
         <p class="section-kicker">Contact us</p>
         <h2 id="centers-heading">Our offices across Cambodia</h2>
         <p>
@@ -175,7 +257,7 @@ onMounted(() => {
         </p>
       </div>
 
-      <div class="office-tabs" role="tablist" aria-label="Santi Sena offices">
+      <div class="office-tabs reveal" role="tablist" aria-label="Santi Sena offices">
         <button
           v-for="office in offices"
           :id="`${office.id}-tab`"
@@ -186,7 +268,7 @@ onMounted(() => {
           :aria-selected="activeOfficeId === office.id"
           class="office-tab"
           :class="{ 'office-tab--active': activeOfficeId === office.id }"
-          @click="activeOfficeId = office.id"
+          @click="selectOffice(office.id)"
         >
           <span class="office-tab__label">{{ office.tab }}</span>
           <span class="office-tab__meta">{{ office.type }}</span>
@@ -195,17 +277,44 @@ onMounted(() => {
 
       <article
         :id="`${activeOffice.id}-panel`"
-        class="office-map"
+        class="office-map reveal"
         role="tabpanel"
         :aria-labelledby="`${activeOffice.id}-tab`"
         :style="{ '--pin-left': activeOffice.pinLeft, '--pin-top': activeOffice.pinTop }"
       >
         <p class="province-badge">{{ activeOffice.provinceName }}</p>
 
-        <div class="map-illustration" aria-hidden="true">
+        <div class="map-illustration">
           <Transition name="map-slide" mode="out-in">
-            <div :key="activeOffice.id" class="map-frame">
-              <img class="contact-map-image" :src="activeOffice.mapImage" alt="" />
+            <div
+              :key="activeOffice.id"
+              class="map-frame"
+              :class="{ 'map-frame--interactive': activeOffice.id === 'all' }"
+            >
+              <div class="map-image-shell">
+                <img class="contact-map-image" :src="activeOffice.mapImage" alt="" />
+                <img
+                  v-if="activeOffice.id !== 'all'"
+                  class="map-location-pin"
+                  :src="locationIcon"
+                  :alt="activeOffice.mapLabel"
+                  :style="{ left: activeOffice.pinLeft, top: activeOffice.pinTop }"
+                />
+                <div v-if="activeOffice.id === 'all'" class="map-hotspots">
+                  <button
+                    v-for="office in mapOfficeHotspots"
+                    :key="office.id"
+                    type="button"
+                    class="map-hotspot"
+                    :style="{ left: office.countryPinLeft, top: office.countryPinTop }"
+                    :aria-label="`View ${office.tab} office details`"
+                    @click.stop="selectOffice(office.id)"
+                  >
+                    <img class="map-hotspot__icon" :src="locationIcon" alt="" aria-hidden="true" />
+                    <span class="map-hotspot__label">{{ office.tab }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </Transition>
           <template v-if="false">
@@ -412,58 +521,78 @@ onMounted(() => {
           </template>
         </div>
 
-        <div class="office-panel">
-          <div class="office-panel__header">
-            <div>
-              <p class="section-kicker">Contact us</p>
-              <h3>{{ activeOffice.title }}</h3>
+        <Transition name="office-card" mode="out-in">
+          <div :key="activeOffice.id" class="office-panel">
+            <div class="office-panel__header">
+              <div>
+                <p class="section-kicker">Contact us</p>
+                <h3>{{ activeOffice.title }}</h3>
+              </div>
+              <p class="office-panel__badge">{{ activeOffice.type }}</p>
             </div>
-            <p class="office-panel__badge">{{ activeOffice.type }}</p>
+
+            <dl class="details-list details-list--compact">
+              <div>
+                <dt>Address</dt>
+                <dd>{{ activeOffice.address }}</dd>
+              </div>
+              <div>
+                <dt>Phone</dt>
+                <dd>
+                  <a :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
+                    {{ activeOffice.phone }}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>
+                  <a :href="`mailto:${activeOffice.email}`">{{ activeOffice.email }}</a>
+                </dd>
+              </div>
+              <div>
+                <dt>Contact</dt>
+                <dd>{{ activeOffice.contact }}</dd>
+              </div>
+            </dl>
+
+            <div class="office-actions">
+              <a class="email-button email-button--primary" :href="`mailto:${activeOffice.email}`">
+                Email us
+              </a>
+              <a class="email-button" :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
+                Call office
+              </a>
+            </div>
           </div>
-
-          <dl class="details-list details-list--compact">
-            <div>
-              <dt>Address</dt>
-              <dd>{{ activeOffice.address }}</dd>
-            </div>
-            <div>
-              <dt>Phone</dt>
-              <dd>
-                <a :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
-                  {{ activeOffice.phone }}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt>Email</dt>
-              <dd>
-                <a :href="`mailto:${activeOffice.email}`">{{ activeOffice.email }}</a>
-              </dd>
-            </div>
-            <div>
-              <dt>Contact</dt>
-              <dd>{{ activeOffice.contact }}</dd>
-            </div>
-          </dl>
-
-          <div class="office-actions">
-            <a class="email-button email-button--primary" :href="`mailto:${activeOffice.email}`">
-              Email us
-            </a>
-            <a class="email-button" :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
-              Call office
-            </a>
-          </div>
-        </div>
-
-        <div v-if="false" class="map-pin" aria-hidden="true">
-          <span>{{ activeOffice.mapLabel }}</span>
-        </div>
+        </Transition>
       </article>
     </section>
 
-    <section id="write" class="contact-form-section" aria-labelledby="form-heading">
-      <div class="contact-form-intro">
+    <section id="write" class="contact-form-section reveal" aria-labelledby="form-heading">
+      <div
+        class="contact-method-section reveal"
+        style="animation-delay: 0.04s"
+        aria-label="Choose how to contact us"
+      >
+        <div class="contact-method-tabs" role="radiogroup" aria-label="Contact method">
+          <button
+            v-for="contactMethod in contactMethods"
+            :key="contactMethod.id"
+            type="button"
+            role="radio"
+            :aria-checked="activeContactMethodId === contactMethod.id"
+            class="contact-method-tab"
+            :class="{ 'contact-method-tab--active': activeContactMethodId === contactMethod.id }"
+            @click="selectContactMethod(contactMethod.id)"
+          >
+            <span class="contact-method-tab__label">{{ contactMethod.tab }}</span>
+            <span class="contact-method-tab__meta">{{ contactMethod.type }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="contact-form-intro reveal" style="animation-delay: 0.12s">
         <p class="section-kicker">Write to us</p>
         <h2 id="form-heading">Send a message to our team</h2>
         <p>
@@ -475,102 +604,127 @@ onMounted(() => {
         </figure>
       </div>
 
-      <form class="contact-form" @submit.prevent="submitContact">
-        <div class="form-card-header">
-          <div>
-            <p class="form-overline">Contact form</p>
-            <h3>Tell us how we can help</h3>
-          </div>
-          <p>Replies usually arrive within 24-48 hours.</p>
-        </div>
+      <form
+        class="contact-form"
+        :class="{
+          'contact-form--bars-visible': contactFormBarsVisible,
+          'contact-form--method-motion': contactFormMotionActive,
+        }"
+        style="animation-delay: 0.2s"
+        @submit.prevent="submitContact"
+      >
+        <p class="form-kicker">Contact form</p>
+        <p class="form-heading">{{ activeContactMethod.heading }}</p>
 
-        <div class="form-row">
-          <label class="form-field">
-            <span class="field-topline">
-              <span class="field-label">Name</span>
-              <span class="field-required">Required</span>
-            </span>
-            <span class="field-control">
-              <input
-                v-model="name"
-                required
-                autocomplete="name"
-                type="text"
-                placeholder="Your full name"
-              />
-            </span>
-          </label>
-
-          <label class="form-field">
-            <span class="field-topline">
-              <span class="field-label">Email</span>
-              <span class="field-required">Required</span>
-            </span>
-            <span class="field-control">
-              <input
-                v-model="email"
-                required
-                autocomplete="email"
-                type="email"
-                placeholder="name@example.com"
-              />
-            </span>
-          </label>
-        </div>
-
-        <label class="form-field">
-          <span class="field-topline">
-            <span class="field-label">Subject</span>
-            <span class="field-optional">Optional</span>
-          </span>
-          <span class="field-control">
-            <input
-              v-model="subject"
-              autocomplete="off"
-              type="text"
-              placeholder="What would you like to discuss?"
+        <div v-if="isTelegramMethod" class="telegram-contact-panel">
+          <figure class="telegram-qr-figure">
+            <img
+              class="telegram-qr-image"
+              :src="telegramContact.qrImage"
+              alt="Telegram QR code for Santi Sena"
+              loading="lazy"
             />
-          </span>
-        </label>
-
-        <label class="form-field form-field--message">
-          <span class="field-topline">
-            <span class="field-label">Message</span>
-            <span class="field-count">{{ message.length }}/{{ messageMaxLength }}</span>
-          </span>
-          <span class="field-control">
-            <textarea
-              v-model="message"
-              required
-              rows="5"
-              :maxlength="messageMaxLength"
-              placeholder="Share a few details so the right team can reply."
-            ></textarea>
-          </span>
-        </label>
-
-        <div class="form-actions">
-          <button type="submit" class="form-submit" :disabled="!canSubmit">
-            {{ formSent ? 'Message ready' : 'Send message' }}
-          </button>
-          <p v-if="formSent" class="form-status" role="status">
-            Thank you. Your message is ready for our team.
-          </p>
+          </figure>
+          <a
+            class="form-submit telegram-open-button"
+            :href="telegramContact.url"
+            target="_blank"
+            rel="noopener"
+          >
+            Open Telegram
+          </a>
         </div>
+
+        <template v-else>
+          <div class="form-row">
+            <label class="form-field">
+              <span class="field-topline">
+                <span class="field-label">Name</span>
+                <span class="field-required">Required</span>
+              </span>
+              <span class="field-control">
+                <input
+                  v-model="name"
+                  required
+                  autocomplete="name"
+                  type="text"
+                  placeholder="Your full name"
+                />
+              </span>
+            </label>
+
+            <label class="form-field">
+              <span class="field-topline">
+                <span class="field-label">{{ activeContactMethod.fieldLabel }}</span>
+                <span class="field-required">Required</span>
+              </span>
+              <span class="field-control">
+                <input
+                  :key="activeContactMethod.id"
+                  v-model="contactDetail"
+                  required
+                  :autocomplete="activeContactMethod.autocomplete"
+                  :type="activeContactMethod.inputType"
+                  :placeholder="activeContactMethod.placeholder"
+                />
+              </span>
+            </label>
+          </div>
+
+          <label class="form-field">
+            <span class="field-topline">
+              <span class="field-label">Subject</span>
+              <span class="field-optional">Optional</span>
+            </span>
+            <span class="field-control">
+              <input
+                v-model="subject"
+                autocomplete="off"
+                type="text"
+                placeholder="What would you like to discuss?"
+              />
+            </span>
+          </label>
+
+          <label class="form-field form-field--message">
+            <span class="field-topline">
+              <span class="field-label">Message</span>
+              <span class="field-count">{{ message.length }}/{{ messageMaxLength }}</span>
+            </span>
+            <span class="field-control">
+              <textarea
+                v-model="message"
+                required
+                rows="5"
+                :maxlength="messageMaxLength"
+                placeholder="Share a few details so the right team can reply."
+              ></textarea>
+            </span>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" class="form-submit" :disabled="!canSubmit">
+              {{ formSent ? activeContactMethod.sentLabel : activeContactMethod.buttonLabel }}
+            </button>
+            <p v-if="formSent" class="form-status" role="status">
+              {{ activeContactMethod.status }}
+            </p>
+          </div>
+        </template>
       </form>
     </section>
 
-    <section class="visit-section" aria-labelledby="write-heading">
-      <div>
+    <section class="visit-section reveal" aria-labelledby="write-heading">
+      <div class="reveal" style="animation-delay: 0.06s">
         <p class="section-kicker section-kicker--light">Write to us</p>
         <h2 id="write-heading">A little coordination helps us welcome you well.</h2>
       </div>
 
-      <ul class="visit-notes">
+      <ul class="visit-notes reveal" style="animation-delay: 0.16s">
         <li v-for="note in visitNotes" :key="note">{{ note }}</li>
       </ul>
 
-      <div class="visit-actions">
+      <div class="visit-actions reveal" style="animation-delay: 0.26s">
         <a class="visit-button visit-button--primary" href="mailto:info@santisena.org">Email us</a>
         <RouterLink class="visit-button visit-button--ghost" to="/get-involved/partner">
           Partnership
@@ -587,11 +741,26 @@ onMounted(() => {
   color: var(--color-ink);
 }
 
-.contact-page .contact-hero {
-  height: 420px;
+.reveal {
+  opacity: 0;
 }
 
-.eyebrow,
+.reveal--visible {
+  opacity: 1;
+  animation: revealUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .section-kicker,
 .office-type {
   display: inline-block;
@@ -603,64 +772,16 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.eyebrow--light,
 .section-kicker--light {
   color: var(--primary-light);
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(6, 18, 13, 0.92) 0%,
-      rgba(6, 18, 13, 0.68) 42%,
-      rgba(6, 18, 13, 0.22) 78%,
-      rgba(6, 18, 13, 0.08) 100%
-    ),
-    radial-gradient(circle at 78% 24%, rgba(27, 163, 79, 0.28) 0%, transparent 52%);
-}
-
-.hero-inner {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: min(100%, var(--container-max-width));
-  margin: 0 auto;
-  padding: 3rem var(--container-padding);
-  text-align: left;
-}
-
-.hero-inner h1 {
-  max-width: 660px;
-  margin: 0.8rem 0 1rem;
-  color: #fffaf2;
-  font-size: clamp(2.2rem, 5vw, 4rem);
-  font-weight: 700;
-  line-height: 1.05;
-}
-
-.hero-subtitle {
-  max-width: 640px;
-  margin: 0 0 2rem;
-  color: rgba(255, 250, 242, 0.88);
-  font-size: 1.05rem;
-  line-height: 1.65;
-}
-
-.hero-actions,
 .visit-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.btn,
 .email-button,
 .visit-button {
   display: inline-flex;
@@ -678,34 +799,9 @@ onMounted(() => {
     transform 0.2s ease;
 }
 
-.btn:hover,
 .email-button:hover,
 .visit-button:hover {
   transform: translateY(-1px);
-}
-
-.btn {
-  padding: 0.85rem 1.8rem;
-  border: 1px solid transparent;
-}
-
-.btn--primary {
-  background: var(--primary-color);
-  color: var(--color-white);
-  box-shadow: 0 18px 36px rgba(27, 163, 79, 0.22);
-}
-
-.btn--primary:hover {
-  background: var(--primary-dark);
-}
-
-.btn--outline {
-  border-color: rgba(255, 250, 242, 0.62);
-  color: #fffaf2;
-}
-
-.btn--outline:hover {
-  background: rgba(255, 250, 242, 0.12);
 }
 
 .headquarters-section,
@@ -954,7 +1050,6 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 390px;
-  pointer-events: none;
 }
 
 .map-frame {
@@ -973,12 +1068,22 @@ onMounted(() => {
   box-shadow: none;
 }
 
-.map-slide-enter-active,
-.map-slide-leave-active {
-  transition:
-    opacity 0.32s ease,
-    transform 0.32s ease;
+.map-frame--interactive {
+  cursor: pointer;
 }
+
+.map-image-shell {
+  position: relative;
+  width: min(100%, 440px);
+  aspect-ratio: 1448 / 1086;
+}
+
+  .map-slide-enter-active,
+  .map-slide-leave-active {
+    transition:
+      opacity 0.32s ease,
+      transform 0.32s ease;
+  }
 
 .map-slide-enter-from {
   opacity: 0;
@@ -991,12 +1096,111 @@ onMounted(() => {
 }
 
 .contact-map-image {
-  width: min(100%, 540px);
+  display: block;
+  width: 100%;
   height: 100%;
-  max-height: 330px;
   object-fit: contain;
   object-position: center;
   filter: none;
+}
+
+.map-location-pin {
+  position: absolute;
+  z-index: 3;
+  width: clamp(20px, 3.5vw, 20px);
+  height: auto;
+  filter: drop-shadow(0 7px 11px rgba(20, 129, 62, 0.24));
+  transform: translate(30%, -50%);
+  pointer-events: none;
+}
+
+.map-hotspots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.map-hotspot {
+  position: absolute;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: start end;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transform: translate(-30%, -100%);
+  pointer-events: auto;
+}
+
+.map-hotspot::after {
+  position: absolute;
+  border-radius: 999px;
+  content: '';
+}
+
+
+.map-hotspot__icon {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 20px;
+  height: auto;
+  filter: drop-shadow(0 9px 9px rgba(20, 129, 62, 0.26));
+  transition:
+    filter 0.2s ease,
+    transform 0.2s ease;
+}
+
+.map-hotspot:hover .map-hotspot__icon,
+.map-hotspot:focus-visible .map-hotspot__icon {
+  filter: drop-shadow(0 8px 12px rgba(20, 129, 62, 0.34));
+  transform: translateY(-2px);
+}
+
+.map-hotspot:focus-visible {
+  outline: 3px solid rgba(20, 129, 62, 0.28);
+  outline-offset: 40px;
+}
+
+.map-hotspot__label {
+  position: absolute;
+  bottom: calc(100% - 0.15rem);
+  left: 50%;
+  z-index: 4;
+  min-width: max-content;
+  padding: 0.28rem 0.48rem;
+  border-radius: 6px;
+  background: var(--primary-dark);
+  color: var(--color-white);
+  font-size: 0.72rem;
+  font-weight: 800;
+  opacity: 0;
+  transform: translate(-10%, 6px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  pointer-events: none;
+}
+
+.map-hotspot:hover .map-hotspot__label,
+.map-hotspot:focus-visible .map-hotspot__label {
+  opacity: 1;
+  transform: translate(0%, 0);
+}
+
+@keyframes mapHotspotPulse {
+  0% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.28);
+  }
 }
 
 .contact-map {
@@ -1085,12 +1289,50 @@ onMounted(() => {
   grid-row: 1;
   width: 100%;
   margin: 0;
+  overflow: hidden;
   padding: clamp(1.35rem, 2.6vw, 2rem);
   border: 1px solid rgba(232, 228, 223, 0.9);
-  border-left: 4px solid var(--primary-color);
   border-radius: 8px;
   background: var(--color-white);
   box-shadow: none;
+  transition:
+    border-color 0.32s ease,
+    box-shadow 0.32s ease,
+    transform 0.32s ease;
+}
+
+.office-panel::before,
+.office-panel::after {
+  position: absolute;
+  left: 0;
+  z-index: 0;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  content: '';
+  pointer-events: none;
+}
+
+.office-panel::before {
+  top: 0;
+  width: 100%;
+}
+
+.office-panel::after {
+  top: calc(100% - 5px);
+  width: 100%;
+}
+
+.office-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.office-panel:hover,
+.office-panel:focus-within {
+  border-color: rgba(20, 129, 62, 0.18);
+  box-shadow: 0 20px 42px rgba(20, 129, 62, 0.1);
+  transform: translateY(-2px);
 }
 
 .office-panel__header {
@@ -1158,6 +1400,39 @@ onMounted(() => {
   color: var(--primary-dark);
 }
 
+.office-card-enter-active,
+.office-card-leave-active {
+  transition:
+    opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.34s ease;
+}
+
+.office-card-enter-active::before {
+  animation: officeAccentSweep 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.office-card-enter-from {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateX(-28px) scale(0.985);
+}
+
+.office-card-leave-to {
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateX(22px) scale(0.985);
+}
+
+@keyframes officeAccentSweep {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 .email-button {
   min-width: 132px;
   padding: 0.68rem 1rem;
@@ -1183,43 +1458,6 @@ onMounted(() => {
   color: var(--color-white);
 }
 
-.map-pin {
-  position: absolute;
-  top: var(--pin-top);
-  left: var(--pin-left);
-  z-index: 3;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  max-width: 280px;
-  pointer-events: none;
-}
-
-.map-pin::before {
-  width: 20px;
-  height: 20px;
-  border: 6px solid var(--color-white);
-  border-radius: 999px;
-  background: var(--primary-color);
-  box-shadow:
-    0 0 0 8px rgba(27, 163, 79, 0.18),
-    0 18px 36px rgba(20, 129, 62, 0.22);
-  content: '';
-  flex: 0 0 auto;
-}
-
-.map-pin span {
-  padding: 0.5rem 0.7rem;
-  border-radius: 6px;
-  background: var(--primary-color);
-  color: var(--color-white);
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.25;
-  box-shadow: 0 14px 30px rgba(20, 129, 62, 0.24);
-}
-
 .contact-form-section {
   display: grid;
   grid-template-columns: minmax(260px, 0.82fr) minmax(0, 1.18fr);
@@ -1228,6 +1466,12 @@ onMounted(() => {
   width: min(100%, var(--container-max-width));
   margin: 0 auto;
   padding: clamp(3rem, 6vw, 4.5rem) var(--container-padding);
+}
+
+.contact-method-section {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding-bottom: clamp(0.5rem, 1.8vw, 1rem);
 }
 
 .contact-form-intro {
@@ -1264,9 +1508,9 @@ onMounted(() => {
 .contact-form {
   position: relative;
   display: grid;
-  gap: 1.15rem;
+  gap: 0.85rem;
   overflow: hidden;
-  padding: clamp(1.25rem, 3vw, 2.15rem);
+  padding: clamp(1rem, 2.2vw, 1.45rem);
   border: 1px solid rgba(232, 228, 223, 0.95);
   border-radius: 8px;
   background:
@@ -1277,50 +1521,259 @@ onMounted(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 
-.contact-form::before {
+.contact-form::before,
+.contact-form::after {
   position: absolute;
   top: 0;
-  right: 0;
   left: 0;
+  width: 0;
   height: 5px;
+  border-radius: 999px;
   background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+.contact-form--bars-visible::before,
+.contact-form--method-motion::before {
+  top: 0;
+  left: calc(100% - 6px);
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  opacity: 1;
+}
+
+.contact-form--bars-visible::after,
+.contact-form--method-motion::after {
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+  opacity: 1;
+}
+
+.contact-form--method-motion::before {
+  animation: contactFormRightBar 0.72s ease both;
+}
+
+.contact-form--method-motion::after {
+  animation: contactFormLeftBar 0.72s ease both;
+}
+
+@keyframes contactFormRightBar {
+  0% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  45% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  65% {
+    top: calc(100% - 5px);
+    left: calc(100% - 6px);
+    width: 6px;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  100% {
+    top: 0;
+    left: calc(100% - 6px);
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+}
+
+@keyframes contactFormLeftBar {
+  0% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  45% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  65% {
+    top: calc(100% - 5px);
+    left: 0;
+    width: 5px;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+
+  100% {
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-dark), var(--primary-color), #7bd89b);
+    opacity: 1;
+  }
+}
+
+.form-kicker {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.form-heading {
+  margin: -0.35rem 0 0.2rem;
+  color: var(--color-ink);
+  font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.contact-method-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(232, 228, 223, 0.96);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.contact-method-tab {
+  position: relative;
+  display: grid;
+  min-height: 68px;
+  align-content: center;
+  gap: 0.08rem;
+  padding: 0.5rem 0.65rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.contact-method-tab::after {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.38rem;
+  left: 0.7rem;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--primary-color);
+  opacity: 0;
   content: '';
 }
 
-.form-card-header {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding-bottom: 0.35rem;
+.contact-method-tab__label,
+.contact-method-tab__meta {
+  position: relative;
+  z-index: 1;
 }
 
-.form-card-header h3 {
-  margin: 0.18rem 0 0;
-  color: var(--color-ink);
-  font-size: clamp(1.3rem, 2vw, 1.75rem);
-  line-height: 1.18;
+.contact-method-tab__label {
+  overflow-wrap: anywhere;
 }
 
-.form-card-header p {
+.contact-method-tab__meta {
+  color: var(--color-ink-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.contact-method-tab:hover,
+.contact-method-tab--active {
+  color: var(--primary-dark);
+}
+
+.contact-method-tab:hover {
+  background: rgba(230, 246, 236, 0.74);
+}
+
+.contact-method-tab--active {
+  border-color: rgba(20, 129, 62, 0.28);
+  background: linear-gradient(180deg, rgba(230, 246, 236, 0.98), rgba(255, 250, 242, 0.94));
+  box-shadow:
+    0 10px 22px rgba(20, 129, 62, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.84);
+}
+
+.contact-method-tab--active .contact-method-tab__label,
+.contact-method-tab--active .contact-method-tab__meta {
+  color: var(--primary-dark);
+}
+
+.contact-method-tab--active::after {
+  opacity: 1;
+}
+
+.telegram-contact-panel {
+  display: grid;
+  justify-items: center;
+  gap: 2.5rem;
+  padding: clamp(2.5rem, 2vw, 2rem) 0 0.25rem;
+}
+
+.telegram-qr-figure {
+  width: min(100%, 280px);
   margin: 0;
 }
 
-.form-card-header > p {
-  max-width: 210px;
-  color: var(--color-ink-soft);
-  font-size: 0.86rem;
-  font-weight: 600;
-  line-height: 1.45;
-  text-align: right;
+.telegram-qr-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border: 1px solid rgba(20, 129, 62, 0.18);
+  border-radius: 8px;
+  background: var(--color-white);
+  padding: 0.7rem;
+  box-shadow: 0 16px 34px rgba(43, 43, 40, 0.08);
 }
 
-.form-overline {
-  color: var(--primary-dark);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.telegram-open-button {
+  min-width: 190px;
+  text-decoration: none;
 }
 
 .form-row {
@@ -1332,7 +1785,7 @@ onMounted(() => {
 .contact-form label,
 .form-field {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.35rem;
   color: var(--color-ink);
   font-size: 0.92rem;
   font-weight: 700;
@@ -1343,7 +1796,7 @@ onMounted(() => {
   gap: 0.75rem;
   align-items: center;
   justify-content: space-between;
-  min-height: 1.4rem;
+  min-height: 1.2rem;
 }
 
 .field-label {
@@ -1397,7 +1850,7 @@ onMounted(() => {
   color: var(--color-ink);
   font: inherit;
   outline: none;
-  padding: 0.95rem 1rem;
+  padding: 0.68rem 0.85rem;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.75),
     0 8px 18px rgba(43, 43, 40, 0.04);
@@ -1408,11 +1861,11 @@ onMounted(() => {
 }
 
 .contact-form input {
-  min-height: 62px;
+  min-height: 48px;
 }
 
 .contact-form textarea {
-  min-height: 180px;
+  min-height: 125px;
   resize: vertical;
 }
 
@@ -1450,12 +1903,12 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 0.85rem;
   align-items: center;
-  padding-top: 0.25rem;
+  padding-top: 0.1rem;
 }
 
 .form-submit {
   display: inline-flex;
-  min-height: 48px;
+  min-height: 44px;
   min-width: 150px;
   align-items: center;
   justify-content: center;
@@ -1597,10 +2050,6 @@ onMounted(() => {
     min-height: 340px;
   }
 
-  .map-pin {
-    left: 70%;
-  }
-
   .office-map {
     grid-template-columns: minmax(260px, 0.92fr) minmax(0, 1.08fr);
   }
@@ -1616,8 +2065,8 @@ onMounted(() => {
     min-height: 300px;
   }
 
-  .contact-map-image {
-    max-height: 300px;
+  .map-image-shell {
+    width: min(100%, 400px);
   }
 
   .visit-actions {
@@ -1626,16 +2075,6 @@ onMounted(() => {
 }
 
 @media (max-width: 720px) {
-  .contact-page .contact-hero {
-    height: 440px;
-  }
-
-  .hero-inner h1 {
-    font-size: 2.35rem;
-  }
-
-  .hero-actions,
-  .btn,
   .visit-actions,
   .visit-button {
     width: 100%;
@@ -1689,38 +2128,20 @@ onMounted(() => {
     min-height: 250px;
   }
 
-  .contact-map,
-  .contact-map-image {
+  .contact-map {
     max-height: 240px;
   }
 
-  .map-pin {
-    position: relative;
-    top: auto;
-    left: auto;
-    order: 4;
-    width: calc(100% - 2rem);
-    margin: 0 auto 1.25rem;
-    transform: none;
-    justify-content: center;
+  .map-image-shell {
+    width: min(100%, 320px);
   }
 
   .form-row {
     grid-template-columns: 1fr;
   }
 
-  .form-card-header,
   .form-actions {
     align-items: stretch;
-  }
-
-  .form-card-header {
-    flex-direction: column;
-  }
-
-  .form-card-header > p {
-    max-width: none;
-    text-align: left;
   }
 
   .contact-logo-visual {
@@ -1753,6 +2174,14 @@ onMounted(() => {
     gap: 0.55rem;
   }
 
+  .contact-method-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-method-tab {
+    min-height: 50px;
+  }
+
   .form-submit,
   .form-actions {
     width: 100%;
@@ -1779,14 +2208,42 @@ onMounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reveal--visible {
+    animation: none;
+  }
+
+  .office-panel,
+  .office-panel::before,
+  .office-panel::after,
+  .office-card-enter-active,
+  .office-card-leave-active,
+  .map-hotspot__label,
+  .contact-form::before,
+  .contact-form::after {
+    transition: none;
+  }
+
+  .office-card-enter-active::before,
+  .map-hotspot::after {
+    animation: none;
+  }
+
+  .office-panel:hover,
+  .office-panel:focus-within {
+    transform: none;
+  }
+
   .map-slide-enter-active,
   .map-slide-leave-active {
     transition: none;
   }
 
   .map-slide-enter-from,
-  .map-slide-leave-to {
+  .map-slide-leave-to,
+  .office-card-enter-from,
+  .office-card-leave-to {
     opacity: 1;
+    filter: none;
     transform: none;
   }
 }

@@ -99,9 +99,7 @@ onMounted(() => {
 async function loadPageStats() {
   loading.value = true
   try {
-    const { data, error } = await supabase
-      .from('pages')
-      .select('slug, updated_at')
+    const { data, error } = await supabase.from('pages').select('slug, updated_at')
 
     if (error) throw error
 
@@ -225,8 +223,6 @@ function barWidth(value: number, total: number) {
               </div>
             </article>
           </section>
-
-
         </section>
       </main>
     </div>
@@ -258,7 +254,13 @@ function barWidth(value: number, total: number) {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   transition: padding-left 0.25s ease;
 }
 
@@ -303,7 +305,9 @@ function barWidth(value: number, total: number) {
   text-transform: uppercase;
 }
 
-h1, h2, p {
+h1,
+h2,
+p {
   margin-top: 0;
 }
 
@@ -390,7 +394,11 @@ h2 {
   font-size: 0.92rem;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
 }
 
 .button:hover {
@@ -445,7 +453,10 @@ h2 {
   border-radius: 16px;
   background: var(--admin-surface);
   box-shadow: var(--admin-shadow);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .dashboard-card:hover {
@@ -518,11 +529,24 @@ h2 {
   line-height: 1.55;
 }
 
-.card-blue { --card-accent: var(--admin-blue); }
-.card-green { --card-accent: var(--admin-green); }
-.card-orange, .card-gold { --card-accent: var(--admin-gold); }
-.card-red, .card-pink { --card-accent: var(--admin-pink); }
-.card-slate, .card-violet { --card-accent: #64748b; }
+.card-blue {
+  --card-accent: var(--admin-blue);
+}
+.card-green {
+  --card-accent: var(--admin-green);
+}
+.card-orange,
+.card-gold {
+  --card-accent: var(--admin-gold);
+}
+.card-red,
+.card-pink {
+  --card-accent: var(--admin-pink);
+}
+.card-slate,
+.card-violet {
+  --card-accent: #64748b;
+}
 
 /* Analytics Grid */
 .analytics-grid {
@@ -656,7 +680,10 @@ h2 {
   color: var(--admin-text);
   padding: 0.85rem;
   text-decoration: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .quick-action:hover {
@@ -685,10 +712,18 @@ h2 {
   content: '→';
 }
 
-.action-blue { --action-color: var(--admin-blue); }
-.action-green { --action-color: var(--admin-green); }
-.action-orange { --action-color: var(--admin-gold); }
-.action-slate { --action-color: #64748b; }
+.action-blue {
+  --action-color: var(--admin-blue);
+}
+.action-green {
+  --action-color: var(--admin-green);
+}
+.action-orange {
+  --action-color: var(--admin-gold);
+}
+.action-slate {
+  --action-color: #64748b;
+}
 
 .quick-action strong {
   color: var(--admin-contrast);

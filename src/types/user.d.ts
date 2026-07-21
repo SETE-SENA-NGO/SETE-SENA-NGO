@@ -1,5 +1,7 @@
 export interface UserProfile {
   id: string
   email: string
-  role: 'admin' | 'editor' | 'viewer'
+  role: 'super_admin' | 'admin' | 'editor' | 'viewer'
+  full_name?: string | null
+  avatar_url?: string | null
 }
