@@ -257,7 +257,7 @@ h1 {
 }
 
 .stat-card {
-  background: #fffdfa;
+  background: var(--color-white);
   padding: 1.75rem;
 }
 
@@ -279,7 +279,7 @@ h1 {
   margin-top: 0.6rem;
   line-height: 1.6;
   font-size: 0.9rem;
-  color: rgba(31, 41, 55, 0.72);
+  color: var(--color-ink-soft);
 }
 
 .timeline-shell {
@@ -329,7 +329,7 @@ h1 {
 .timeline-description {
   margin-top: 0.5rem;
   line-height: 1.7;
-  color: rgba(31, 41, 55, 0.74);
+  color: var(--color-ink-soft);
 }
 
 .partners-heading {
@@ -347,7 +347,7 @@ h1 {
   margin: 1rem auto 0;
   max-width: 640px;
   line-height: 1.75;
-  color: rgba(31, 41, 55, 0.72);
+  color: var(--color-ink-soft);
 }
 
 .marquee-mask {

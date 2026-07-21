@@ -17,6 +17,8 @@ export const adminRoutes = [
   { path: '/admin', component: DashboardView, meta: { requiresAuth: true } },
   { path: '/admin/pages', component: PagesManagerView, meta: { requiresAuth: true } },
   { path: '/admin/editor/:slug', component: PageEditorView, meta: { requiresAuth: true } },
+  // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
+  { path: '/admin/editor/home-slideshow', component: PageEditorView, meta: { requiresAuth: true } },
   { path: '/admin/media', component: MediaLibraryView, meta: { requiresAuth: true } },
   { path: '/admin/modules/:module', component: AdminModuleView, meta: { requiresAuth: true } },
   { path: '/admin/education', component: EducationDashboardView, meta: { requiresAuth: true } },

@@ -81,6 +81,8 @@ function onSaved(page: PageContent) {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--admin-theme-bg);
+  color: var(--admin-theme-text);
 }
 .admin-layout {
   display: flex;
@@ -106,14 +108,15 @@ function onSaved(page: PageContent) {
   margin: 0 0 1rem;
 }
 .toolbar button {
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-theme-border-strong);
   border-radius: 0.45rem;
-  background: var(--panel);
-  color: var(--text);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
   cursor: pointer;
   padding: 0.55rem 0.8rem;
+  transition: background 0.15s ease;
 }
 .toolbar button:hover {
-  background: #27272a;
+  background: var(--admin-theme-surface-soft);
 }
 </style>
