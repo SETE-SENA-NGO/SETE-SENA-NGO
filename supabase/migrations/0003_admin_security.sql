@@ -1,6 +1,6 @@
--- Enforce the admin role at the database level. Before this migration, any
--- authenticated user could write pages, donation methods and storage objects.
--- Now writes require profiles.role = 'admin'.
+-- Enforce admin roles at the database level. Before this migration, any
+-- authenticated user could write some admin-managed tables.
+-- Now writes require profiles.role to be super_admin, admin, or editor.
 
 -- SECURITY DEFINER so policies can check the caller's role without
 -- re-triggering RLS on profiles (a plain subquery would recurse).
@@ -13,7 +13,8 @@ SET search_path = public
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles
-    WHERE id = auth.uid() AND role = 'admin'
+    WHERE id = auth.uid()
+      AND role IN ('super_admin', 'admin', 'editor')
   );
 $$;
 
@@ -56,13 +57,11 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, role)
+  INSERT INTO public.profiles (id, email, role)
   VALUES (
     NEW.id,
-    CASE
-      WHEN NEW.email IN ('admin@santisena.org', 'sannsiv49@gmail.com') THEN 'admin'
-      ELSE 'viewer'
-    END
+    NEW.email,
+    'viewer'
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
@@ -74,8 +73,5 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Grant the admin role to the site admin accounts, if they exist already.
-INSERT INTO profiles (id, role)
-SELECT id, 'admin' FROM auth.users
-WHERE email IN ('admin@santisena.org', 'sannsiv49@gmail.com')
-ON CONFLICT (id) DO UPDATE SET role = 'admin';
+-- Promote the customer's first admin by running supabase/create_admin_profile.sql
+-- after creating the Auth user in Supabase Dashboard.

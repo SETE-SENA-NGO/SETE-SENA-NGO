@@ -1,48 +1,50 @@
-# santi_sena_ngo
+# Santi Sena NGO Website
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 + Vite public website with a Supabase-backed admin console and Google Drive media uploads through Netlify Functions.
 
-## Recommended IDE Setup
+## Customer Setup
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+For production handoff, start here:
 
-## Recommended Browser Setup
+- [Customer handoff checklist](docs/customer-handoff.md)
+- [Supabase setup](supabase/SETUP.md)
+- [Environment template](.env.example)
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+The customer only needs to provide environment variables and run the Supabase SQL setup. No credentials should be committed to the repo.
 
-## Type Support for `.vue` Imports in TS
+## Required Production Services
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+- Netlify site connected to this repository
+- Supabase project for auth, database, and admin roles
+- Google Drive folder for uploaded images
+- Google OAuth credentials for personal My Drive uploads, or a service account for Google Workspace Shared Drive uploads
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## Local Development
 
 ```sh
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
+cp .env.example .env
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+Fill only local development values in `.env`. Production secrets belong in Netlify environment variables.
+
+## Production Build
 
 ```sh
 npm run build
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+Netlify uses the same command from `netlify.toml` and publishes `dist`.
 
-```sh
-npm run lint
+## Admin Media Uploads
+
+The admin media library uploads images to:
+
+```text
+POST /api/google-drive-upload
 ```
+
+That Netlify Function checks the logged-in Supabase admin role, uploads the image to Google Drive, makes it publicly readable, and stores the public image URL in `public.media_assets`.
+
+For personal Google Drive accounts, use OAuth refresh-token credentials. Service accounts require a Google Workspace Shared Drive.
