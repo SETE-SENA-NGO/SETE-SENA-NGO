@@ -12,6 +12,7 @@ type EditableSection = {
   heading: string
   body: string
   items: string
+  image?: string
 }
 
 type PageDraft = {
@@ -497,7 +498,7 @@ const defaultPages: PageDraft[] = [
         heading: 'Impact numbers',
         body: 'Main impact counters on the Impact page.',
         items:
-          '293 | Villages served\n570+ | Hectares of forest\n120+ | Full-time staff\n15+ | International partners\n32 | Years of service\n4 | Strategic pillars',
+          '293 | Villages served | Across 43 communes in southeastern Cambodia.\n570+ | Hectares of forest | Managed through community forestry and nurseries.\n120+ | Full-time staff | Experts in management, agriculture and rural development.\n15+ | International partners | Including UNDP, ADB and Oxfam.\n32 | Years of service | Founded in 1994; still walking beside villages.\n4 | Strategic pillars | Environment, education, livelihoods and child protection.',
       },
       {
         id: 'impact-timeline',
@@ -505,7 +506,7 @@ const defaultPages: PageDraft[] = [
         heading: 'A journey rooted in patience.',
         body: 'Milestones shown on the Impact page.',
         items:
-          '1994 | Founding\n2002 | First community forestry\n2008 | Saving-for-Change\n2014 | 20-year horizon\n2024 | Today',
+          '1994 | Founding | Santi Sena is established to support rural communities with practical development programs.\n2002 | First community forestry | The organisation expands its work around forest stewardship and local ownership.\n2008 | Saving-for-Change | Household savings groups begin to strengthen financial resilience and local entrepreneurship.\n2014 | 20-year horizon | Programs deepen across education, livelihoods and environmental protection.\n2024 | Today | The organisation continues to support resilient, community-led change at scale.',
       },
       {
         id: 'impact-partners',
@@ -531,18 +532,35 @@ const defaultPages: PageDraft[] = [
     sections: [
       {
         id: 'numbers-overview',
-        label: 'Overview',
-        heading: 'Overview numbers',
-        body: 'Top-level statistics and labels for the public numbers page.',
+        label: 'Overview Map Stats',
+        heading: 'Our Areas of Operation',
+        body: 'Since 1994, our programs have maintained a continuous field presence, working closely with rural communities across three provinces to create sustainable impact.',
         items:
-          'Villages reached\nCommunes served\nHouseholds supported\nChildren reached\nForests protected',
+          '293 | Villages | Across 43 communes in three provinces.\n43 | Communes | Svay Rieng, Prey Veng and Kratie.\n3 | Provinces | Continuous field presence since 1994.',
       },
       {
-        id: 'numbers-method',
-        label: 'How we count',
-        heading: 'How we count',
-        body: 'Plain-language notes explaining impact measurement.',
-        items: 'Field reports\nPartner verification\nCommunity records\nAnnual review',
+        id: 'numbers-card-environment',
+        label: 'Environment Flip Card',
+        heading: 'Environment',
+        body: 'Community-led conservation that protects biodiversity and builds climate resilience.',
+        items:
+          '570+ | Hectares | Community forest protected and restored.\n50k+ | Saplings | Grown yearly in village nurseries.\n300+ | Biogas units | Installed in rural kitchens.',
+      },
+      {
+        id: 'numbers-card-education',
+        label: 'Education Flip Card',
+        heading: 'Education',
+        body: 'Early childhood education and lifelong learning opportunities for every child.',
+        items:
+          '120+ | Pre-school children | Enrolled each year.\n8 | Mobile libraries | Reaching remote villages.\n60+ | Annual scholarships | For the poorest students.',
+      },
+      {
+        id: 'numbers-card-livelihoods',
+        label: 'Livelihoods Flip Card',
+        heading: 'Livelihoods & Child Protection',
+        body: 'Economic empowerment and child safeguarding go hand in hand.',
+        items:
+          '2,400+ | SfC members | Saving and lending together.\n12 | Cooperatives | Rice, vegetables and enterprise.\n600+ | Peer educators | Trained in child rights.',
       },
     ],
     updatedAt: '',
@@ -560,11 +578,11 @@ const defaultPages: PageDraft[] = [
     sections: [
       {
         id: 'timeline-events',
-        label: 'Events',
+        label: 'Timeline Events',
         heading: 'Progress built through patient partnership.',
-        body: 'Timeline event titles and dates.',
+        body: 'Timeline milestones showing thirty years of growth.',
         items:
-          '1994 | Founded in Svay Rieng\n2002 | First community forestry site\n2008 | Saving-for-Change begins\n2014 | 20th anniversary and Kratie office opens\n2020 | COVID-19 response\n2024 | 30-year strategic plan',
+          '2024 | 30-Year Strategic Plan | New five-year strategy to deepen quality, diversify funding and invest in youth leadership. | The plan prioritises three pillars: (1) expanding community-led education programmes, (2) strengthening child protection systems, and (3) launching a dedicated youth innovation fund. Over 50 community dialogues were held to co‑design the strategy.\n2022 | Melaleuca Oil Enterprise | Village forest guardians launch a rural enterprise from non-timber forest products. | With technical support from Santi Sena, 12 village cooperatives now sustainably harvest melaleuca leaves, producing essential oils sold locally and exported. The enterprise provides income for 200 families while preserving the forest.\n2020 | COVID-19 Response | Emergency food, hygiene and remote-learning kits reach more than 200 villages. | In partnership with local authorities, we distributed 3,500 food packs, 5,000 hygiene kits, and 2,000 radio‑based learning materials to keep children learning despite school closures.\n2018 | Child Protection Networks | CPNs become active across 43 communes with 24/7 referral pathways. | Each network includes trained volunteers, social workers, and local police. They have handled over 1,200 cases, ensuring vulnerable children receive immediate care and legal support.\n2014 | 20th Anniversary | Kratie office opens. Programs extend to a third province and staff grows past 30 full-time. | The expansion to Kratie brought our integrated approach to another province, reaching an additional 80 villages. We also launched our first youth leadership camp that year.\n2011 | Biogas program launched | Household biogas units begin replacing firewood in remote kitchens. | By 2015, we had installed over 400 biogas units, reducing deforestation and improving indoor air quality. The program also trains local technicians to maintain the systems.\n2007 | Expansion to Prey Veng | Education and child protection programming reaches a second province. | We partnered with the provincial government to replicate the Svay Rieng model, focusing on school enrolment and community‑based child protection committees.\n2003 | Saving-for-Change begins | First women-led savings circles launched in Svay Rieng; the model becomes a program backbone. | Today, over 500 savings groups exist, with more than 12,000 members. The groups provide micro‑loans and financial literacy training, empowering women to start small businesses.\n1998 | First community forestry site | Village committees take legal stewardship of 120 hectares of degraded forest. | The site has since become a model for community‑led reforestation, with over 50,000 trees planted and a thriving biodiversity corridor. It now serves as a learning hub for other villages.\n1994 | Founded in Svay Rieng | Buddhist monks and community elders establish the Peace Army after the war, focused on moral regeneration and rural recovery. | The founding team began with just five monks and a handful of volunteers. Their first project was rebuilding a primary school destroyed during the conflict, which became the spark for decades of community development.',
       },
     ],
     updatedAt: '',
@@ -583,34 +601,34 @@ const defaultPages: PageDraft[] = [
     sections: [
       {
         id: 'partners-supporters',
-        label: 'Supporters',
+        label: 'Supporters logos',
         heading: 'Partners & Supporters',
-        body: 'International donors and supporters shown on the partners page.',
-        items: 'UNDP\nADB\nOxfam\nWorld Vision\nSave the Children\nActionAid\nCare',
+        body: 'These organizations and institutions make our work possible through funding, technical expertise, and shared commitment to sustainable development.',
+        items: 'UNDP\nAsian Development Bank\nOxfam\nBread for the World\nMisereor\nEuropean Union\nUSAID / Winrock\nDiakonia\nHeinrich Böll Stiftung\nCaritas',
       },
       {
         id: 'partners-government',
-        label: 'Government',
+        label: 'Government Relations',
         heading: 'Government Coordination',
-        body: 'Government partners and line ministries.',
+        body: 'We work hand-in-hand with national and provincial government bodies to align our programs with Cambodia\'s development priorities.',
         items:
-          'Ministry of Interior\nMinistry of Environment\nMinistry of Women and Affairs\nMinistry of Education, Youth and Sport\nProvincial Departments',
+          'Ministry of Interior | Policy, registration, and governance. | building\nMinistry of Environment | Community forestry, nursery support, and conservation. | tree\nMinistry of Women\'s Affairs | Child protection, gender equity, and safe migration. | users\nMinistry of Education, Youth and Sport | Pre-schools, mobile libraries, and youth learning. | book\nProvincial Departments | Field-level coordination in Svay Rieng, Prey Veng, and Kratie. | map-pin',
       },
       {
         id: 'partners-local',
-        label: 'Local partners',
+        label: 'Local partners list',
         heading: 'Local Partners',
-        body: 'Local institutions that make field work possible.',
+        body: 'Sustainable change is built from the ground up. These local institutions and networks are the backbone of every program we run.',
         items:
-          'Pagoda and Monastic Networks\nCommune Councils and Child Protection\nNGO Forum and Working Groups\nAcademic Partnerships\nSocial Enterprises',
+          '01 | Pagoda & Monastic Networks | Buddhist monks act as community guides and project facilitators.\n02 | Commune Councils & Child Rights | Local authorities coordinate child protection networks in 43 communes.\n03 | NGO Forum & Working Groups | Collaborative platforms for advocacy and knowledge sharing at the national level.',
       },
       {
         id: 'partners-why',
-        label: 'Why partners stay',
+        label: 'Why partners stay list',
         heading: 'Why Partners Stay',
-        body: 'Reasons shown as cards on the public page.',
+        body: 'Long-term partnerships don\'t happen by chance. Here\'s what keeps our partners committed year after year.',
         items:
-          '30 years of unbroken presence\nAudited financial systems\nDeep community trust\nProven ability to scale',
+          '30 Years of Presence | Founded in 1994, our deep roots in villages ensure long-term stability. | building\nAudited Financial Systems | External annual audits guarantee complete transparency and stewardship of funds. | bar-chart\nDeep Community Trust | Decades of relationship-building mean villages lead their own growth. | handshake\nProven Ability to Scale | A structures network of field offices lets us scale programs efficiently. | rocket',
       },
     ],
     updatedAt: '',
@@ -933,6 +951,32 @@ const defaultPages: PageDraft[] = [
     ],
     updatedAt: '',
   },
+  {
+    slug: 'news',
+    route: '/news',
+    group: 'News',
+    title: 'News',
+    eyebrow: 'News & Updates',
+    headline: 'Announcements, stories and updates from the field.',
+    intro: 'Keep up to date with Santi Sena\'s work in community development, environment and education.',
+    primaryAction: '',
+    secondaryAction: '',
+    sections: [],
+    updatedAt: '',
+  },
+  {
+    slug: 'news-detail',
+    route: '/news/:slug',
+    group: 'News',
+    title: 'News Detail',
+    eyebrow: 'Article',
+    headline: 'News Article Title Placeholder',
+    intro: 'News Article Introduction Summary Placeholder',
+    primaryAction: '',
+    secondaryAction: '',
+    sections: [],
+    updatedAt: '',
+  },
 ]
 
 const route = useRoute()
@@ -946,6 +990,114 @@ const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 const savedSnapshot = ref<Record<string, string>>({})
 const previewVisible = ref(true)
 const activeSectionIndex = ref<number | null>(null)
+
+// ─── Visual Table Editor Helpers ─────────────────────────────────
+const showRawItems = ref<Record<string, boolean>>({})
+
+function toggleRawItems(sectionId: string) {
+  showRawItems.value[sectionId] = !showRawItems.value[sectionId]
+}
+
+function parseItemsToRows(itemsStr: string): string[][] {
+  if (!itemsStr) return [[]]
+  return itemsStr.split('\n').map(line => line.split('|').map(s => s.trim()))
+}
+
+function rowsToItemsStr(rows: string[][]): string {
+  return rows.map(cols => cols.join(' | ')).join('\n')
+}
+
+function updateItemValue(section: EditableSection, rowIndex: number, colIndex: number, value: string) {
+  const rows = parseItemsToRows(section.items)
+  const row = rows[rowIndex]
+  if (!row) return
+  
+  // Make sure row has enough columns
+  while (row.length <= colIndex) {
+    row.push('')
+  }
+  
+  // Clean pipes to avoid breaking structure
+  row[colIndex] = value.replace(/\|/g, '').trim()
+  section.items = rowsToItemsStr(rows)
+}
+
+function addRow(section: EditableSection, numCols: number) {
+  const rows = section.items ? parseItemsToRows(section.items) : []
+  rows.push(Array(numCols).fill(''))
+  section.items = rowsToItemsStr(rows)
+}
+
+function deleteRow(section: EditableSection, rowIndex: number) {
+  const rows = parseItemsToRows(section.items)
+  rows.splice(rowIndex, 1)
+  section.items = rowsToItemsStr(rows)
+}
+
+function moveRow(section: EditableSection, rowIndex: number, direction: -1 | 1) {
+  const rows = parseItemsToRows(section.items)
+  const targetIndex = rowIndex + direction
+  const temp = rows[rowIndex]
+  const target = rows[targetIndex]
+  if (!temp || !target) return
+  rows[rowIndex] = target
+  rows[targetIndex] = temp
+  section.items = rowsToItemsStr(rows)
+}
+
+function getSectionColCount(section: EditableSection): number {
+  const headers = getColumnHeaders(section.id, 99)
+  const firstHeader = headers[0]
+  if (headers && headers.length > 0 && firstHeader && !firstHeader.startsWith('Column ')) {
+    return headers.length
+  }
+  const rows = parseItemsToRows(section.items)
+  let maxCols = 1
+  for (const row of rows) {
+    if (row.length > maxCols) maxCols = row.length
+  }
+  return Math.max(1, maxCols)
+}
+
+function getColumnHeaders(sectionId: string, maxCols: number): string[] {
+  const headersMap: Record<string, string[]> = {
+    'impact-stats': ['Value', 'Label', 'Description'],
+    'timeline-events': ['Year', 'Title', 'Short Description', 'Detailed Info', 'Image URL (optional)'],
+    'numbers-overview': ['Value', 'Label', 'Description'],
+    'numbers-card-environment': ['Value', 'Label', 'Description'],
+    'numbers-card-education': ['Value', 'Label', 'Description'],
+    'numbers-card-livelihoods': ['Value', 'Label', 'Description'],
+    'partners-supporters': ['Partner Name', 'Logo Image URL (optional)'],
+    'partners-government': ['Ministry / Department', 'Description', 'Icon Name (building/tree/users/book/map-pin)'],
+    'partners-local': ['Number / ID', 'Title', 'Description'],
+    'partners-why': ['Title / Highlight', 'Description', 'Icon Name (building/bar-chart/handshake/rocket)'],
+    'donate-support': ['Stat / Title', 'Description'],
+    'donate-areas': ['Program Area'],
+    'donate-contact': ['Contact Info'],
+    'volunteer-pathways': ['Pathway Description'],
+    'volunteer-skills': ['Skill Name'],
+    'volunteer-steps': ['Step Title'],
+    'partner-practice': ['Practice Title'],
+    'partner-areas': ['Area Name'],
+    'partner-commitments': ['Commitment Details'],
+    'contact-offices': ['Office Type', 'Contact Info / Address'],
+    'contact-form': ['Field Label'],
+    'head-office-contact': ['Type', 'Contact Details'],
+    'head-office-travel': ['Travel Note'],
+    'head-office-guidance': ['Visitor Guidance'],
+    'field-offices-list': ['Office Name', 'Location', 'Email', 'Phone / Extra'],
+    'field-offices-visits': ['Visits Guidance'],
+    'field-offices-hours': ['Hours Details'],
+    'qr-methods': ['Bank Name', 'Bank Subtitle', 'Account Name', 'Account Number', 'Currencies'],
+    'qr-notice': ['Notice Text'],
+  }
+  
+  const headers = headersMap[sectionId]
+  if (headers) return headers.slice(0, maxCols)
+  
+  return Array.from({ length: maxCols }, (_, i) => `Column ${i + 1}`)
+}
+
 
 const requestedSlug = computed(() => {
   const slug = route.params.slug
@@ -1010,6 +1162,7 @@ function cloneSection(section?: Partial<EditableSection>): EditableSection {
     heading: section?.heading || '',
     body: section?.body || '',
     items: section?.items || '',
+    image: section?.image || '',
   }
 }
 
@@ -1098,6 +1251,7 @@ function getSections(value: unknown): EditableSection[] {
       heading: getString(section, 'heading'),
       body: getString(section, 'body'),
       items: getString(section, 'items'),
+      image: getString(section, 'image'),
     }),
   )
 }
@@ -1645,18 +1799,128 @@ function formatDate(value: string) {
                               <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="3" placeholder="Descriptive body text"></textarea>
                             </label>
 
-                            <label class="field field-block">
-                              <span class="field-label">
-                                Items
-                                <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
-                              </span>
-                              <textarea
-                                v-model="section.items"
-                                :name="`section-${section.id}-items`"
-                                rows="4"
-                                placeholder="Item 1&#10;Item 2&#10;Title | Description"
-                              ></textarea>
+                            <label v-if="activePage.group === 'Impact'" class="field field-block">
+                              <span class="field-label">Image URL (Optional)</span>
+                              <input v-model="section.image" :name="`section-${section.id}-image`" placeholder="Paste image URL (from Media Library or external source)" />
                             </label>
+
+                            <div class="items-editor-container">
+                              <!-- Impact Group Pages: Structured Visual Table Editor -->
+                              <template v-if="activePage.group === 'Impact'">
+                                <div class="items-editor-header">
+                                  <span class="field-label">
+                                    Items (Structured list)
+                                    <span class="field-hint" v-if="!showRawItems[section.id]">
+                                      Fill in the fields below. Row order maps to public order.
+                                    </span>
+                                    <span class="field-hint" v-else>
+                                      Edit raw list. Use <code>|</code> to separate columns.
+                                    </span>
+                                  </span>
+                                  <button 
+                                    type="button" 
+                                    class="toggle-raw-btn" 
+                                    @click="toggleRawItems(section.id)"
+                                  >
+                                    {{ showRawItems[section.id] ? 'Visual Table' : 'Raw Text' }}
+                                  </button>
+                                </div>
+
+                                <!-- Raw Textarea Mode -->
+                                <textarea
+                                  v-if="showRawItems[section.id]"
+                                  v-model="section.items"
+                                  :name="`section-${section.id}-items`"
+                                  rows="8"
+                                  placeholder="Item 1&#10;Item 2&#10;Title | Description"
+                                ></textarea>
+
+                                <!-- Visual Table Mode -->
+                                <div v-else class="table-editor-wrapper">
+                                  <table class="editor-table">
+                                    <thead>
+                                      <tr>
+                                        <th class="col-drag"></th>
+                                        <th 
+                                          v-for="(header, hIdx) in getColumnHeaders(section.id, getSectionColCount(section))" 
+                                          :key="hIdx"
+                                        >
+                                          {{ header }}
+                                        </th>
+                                        <th class="col-actions"></th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr v-for="(row, rIdx) in parseItemsToRows(section.items)" :key="rIdx">
+                                        <td class="col-drag">
+                                          <div class="row-arrows">
+                                            <button 
+                                              type="button" 
+                                              class="btn-arrow" 
+                                              :disabled="rIdx === 0" 
+                                              @click="moveRow(section, rIdx, -1)"
+                                              title="Move row up"
+                                            >▲</button>
+                                            <button 
+                                              type="button" 
+                                              class="btn-arrow" 
+                                              :disabled="rIdx === parseItemsToRows(section.items).length - 1" 
+                                              @click="moveRow(section, rIdx, 1)"
+                                              title="Move row down"
+                                            >▼</button>
+                                          </div>
+                                        </td>
+                                        <td 
+                                          v-for="cIdx in getSectionColCount(section)" 
+                                          :key="cIdx - 1"
+                                        >
+                                          <input 
+                                            type="text" 
+                                            :value="row[cIdx - 1] || ''"
+                                            @input="updateItemValue(section, rIdx, cIdx - 1, ($event.target as HTMLInputElement).value)"
+                                            placeholder="Enter value..."
+                                          />
+                                        </td>
+                                        <td class="col-actions">
+                                          <button 
+                                            type="button" 
+                                            class="btn-delete-row" 
+                                            @click="deleteRow(section, rIdx)"
+                                            title="Delete row"
+                                          >
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  <button 
+                                    type="button" 
+                                    class="btn btn-secondary btn-sm add-row-btn" 
+                                    @click="addRow(section, getSectionColCount(section))"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    Add Row
+                                  </button>
+                                </div>
+                              </template>
+
+                              <!-- Other Pages: Default Raw Textarea -->
+                              <template v-else>
+                                <label class="field field-block" style="margin-top: 0;">
+                                  <span class="field-label">
+                                    Items
+                                    <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
+                                  </span>
+                                  <textarea
+                                    v-model="section.items"
+                                    :name="`section-${section.id}-items`"
+                                    rows="4"
+                                    placeholder="Item 1&#10;Item 2&#10;Title | Description"
+                                  ></textarea>
+                                </label>
+                              </template>
+                            </div>
                           </div>
                         </div>
                       </details>
@@ -3102,5 +3366,168 @@ input::placeholder, textarea::placeholder {
   .preview-toggle-btn {
     display: none;
   }
+}
+
+/* ==============================
+   ITEMS VISUAL TABLE EDITOR
+   ============================== */
+.items-editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.items-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.toggle-raw-btn {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.5rem;
+  min-height: auto;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--admin-blue);
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.toggle-raw-btn:hover {
+  background: rgba(37, 99, 235, 0.16);
+}
+
+.table-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.editor-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.88rem;
+  background: var(--admin-surface-soft);
+}
+
+.editor-table th,
+.editor-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--admin-border);
+  text-align: left;
+}
+
+.editor-table th {
+  background: var(--admin-bg-deep);
+  color: var(--admin-contrast-soft);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.editor-table td {
+  vertical-align: middle;
+}
+
+.col-drag {
+  width: 48px;
+  padding: 0.35rem !important;
+  text-align: center;
+}
+
+.col-actions {
+  width: 44px;
+  text-align: center;
+  padding: 0.35rem !important;
+}
+
+.row-arrows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.btn-arrow {
+  width: 22px;
+  height: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--admin-muted);
+  line-height: 1;
+}
+
+.btn-arrow:hover:not(:disabled) {
+  background: var(--admin-blue-soft);
+  color: var(--admin-blue);
+  border-color: var(--admin-blue);
+}
+
+.btn-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.editor-table input[type="text"] {
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 6px;
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  font-size: 0.85rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.editor-table input[type="text"]:focus {
+  outline: none;
+  border-color: var(--admin-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.btn-delete-row {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-delete-row:hover {
+  background: var(--admin-red-soft);
+  color: var(--admin-red);
+}
+
+.add-row-btn {
+  align-self: flex-start;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
 }
 </style>

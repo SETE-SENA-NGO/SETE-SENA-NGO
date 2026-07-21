@@ -78,52 +78,58 @@ function actionRoute(index: number) {
 </script>
 
 <template>
-  <main v-if="content" class="managed-page">
-    <section class="managed-hero">
-      <div class="managed-hero-inner">
-        <p class="managed-eyebrow">{{ content.eyebrow || content.group }}</p>
-        <h1>{{ content.headline || content.title }}</h1>
-        <p class="managed-intro">{{ content.intro }}</p>
-        <div class="managed-actions">
-          <RouterLink
-            v-if="content.primaryAction"
-            class="managed-button managed-button-primary"
-            :to="actionRoute(0)"
-          >
-            {{ content.primaryAction }}
-          </RouterLink>
-          <RouterLink
-            v-if="content.secondaryAction"
-            class="managed-button managed-button-secondary"
-            :to="actionRoute(1)"
-          >
-            {{ content.secondaryAction }}
-          </RouterLink>
-        </div>
-      </div>
-    </section>
+  <component
+    v-if="fallbackComponent"
+    :is="fallbackComponent"
+    :content="content"
+  />
 
-    <section class="managed-sections" aria-label="Page content">
-      <article v-for="section in content.sections" :key="section.id" class="managed-section">
-        <p class="managed-section-label">{{ section.label }}</p>
-        <h2>{{ section.heading }}</h2>
-        <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
-
-        <div v-if="sectionItems(section).length" class="managed-item-grid">
-          <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
-            <strong>{{ item.title }}</strong>
-            <p v-if="item.detail">{{ item.detail }}</p>
+  <template v-else>
+    <main v-if="loaded && content" class="managed-page">
+      <section class="managed-hero">
+        <div class="managed-hero-inner">
+          <p class="managed-eyebrow">{{ content.eyebrow || content.group }}</p>
+          <h1>{{ content.headline || content.title }}</h1>
+          <p class="managed-intro">{{ content.intro }}</p>
+          <div class="managed-actions">
+            <RouterLink
+              v-if="content.primaryAction"
+              class="managed-button managed-button-primary"
+              :to="actionRoute(0)"
+            >
+              {{ content.primaryAction }}
+            </RouterLink>
+            <RouterLink
+              v-if="content.secondaryAction"
+              class="managed-button managed-button-secondary"
+              :to="actionRoute(1)"
+            >
+              {{ content.secondaryAction }}
+            </RouterLink>
           </div>
         </div>
-      </article>
-    </section>
-  </main>
+      </section>
 
-  <component v-else-if="loaded && fallbackComponent" :is="fallbackComponent" />
+      <section class="managed-sections" aria-label="Page content">
+        <article v-for="section in content.sections" :key="section.id" class="managed-section">
+          <p class="managed-section-label">{{ section.label }}</p>
+          <h2>{{ section.heading }}</h2>
+          <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
 
-  <main v-else class="managed-loading" aria-live="polite">
-    <p>{{ statusMessage }}</p>
-  </main>
+          <div v-if="sectionItems(section).length" class="managed-item-grid">
+            <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
+              <strong>{{ item.title }}</strong>
+              <p v-if="item.detail">{{ item.detail }}</p>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <main v-else class="managed-loading" aria-live="polite">
+      <p>{{ statusMessage }}</p>
+    </main>
+  </template>
 </template>
 
 <style scoped>

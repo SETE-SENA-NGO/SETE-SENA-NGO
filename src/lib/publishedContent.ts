@@ -4,6 +4,7 @@ export type EditableSection = {
   heading: string
   body: string
   items: string
+  image?: string
 }
 
 export type PublishedPageContent = {
@@ -106,6 +107,7 @@ function getSections(value: unknown): EditableSection[] {
     heading: getString(section, 'heading'),
     body: getString(section, 'body'),
     items: getString(section, 'items'),
+    image: getString(section, 'image'),
   }))
 }
 

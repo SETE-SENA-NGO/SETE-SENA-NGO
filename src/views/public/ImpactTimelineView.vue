@@ -1,8 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, computed, watch } from 'vue'
+
+const props = defineProps<{
+  content?: {
+    headline?: string
+    intro?: string
+    sections?: Array<{
+      id: string
+      heading: string
+      body: string
+      items: string
+    }>
+  } | null
+}>()
+
+const headline = computed(() => props.content?.headline || 'Thirty years of walking with villages.')
+const intro = computed(() => props.content?.intro || 'From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones that shaped Santi Sena.')
 
 // ─── Milestones data ──────────────────────────────────────────────
-const allMilestones = [
+const defaultMilestones = [
   {
     year: '2024',
     title: '30-Year Strategic Plan',
@@ -90,15 +106,53 @@ const allMilestones = [
   },
 ]
 
+const allMilestones = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'timeline-events')
+  if (!section || !section.items) return defaultMilestones
+  
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    const year = parts[0] || ''
+    
+    let imageFilename = '1994.png'
+    if (['2024', '2022', '2020', '2018', '2014', '2011', '2007', '2003', '1998', '1994'].includes(year)) {
+      imageFilename = year === '2020' ? '2019.png' : `${year}.png`
+    }
+    
+    const customImage = parts[4] || ''
+    
+    return {
+      year,
+      title: parts[1] || '',
+      description: parts[2] || '',
+      detail: parts[3] || '',
+      image: customImage || new URL(`../../assets/maps/${imageFilename}`, import.meta.url).href
+    }
+  })
+})
+
+const timelineHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'timeline-events')
+  return {
+    heading: section?.heading || 'Progress built through patient partnership.',
+    body: section?.body || 'Each step reflects a commitment to long-term, community-led change grounded in trust, dignity and local stewardship.'
+  }
+})
+
 // ─── State ──────────────────────────────────────────────────────────
 const itemsToShow = ref(6)
 const showAll = ref(false)
 
 const visibleMilestones = computed(() => {
-  return showAll.value ? allMilestones : allMilestones.slice(0, itemsToShow.value)
+  return showAll.value ? allMilestones.value : allMilestones.value.slice(0, itemsToShow.value)
 })
 
-const expanded = ref<boolean[]>(Array.from({ length: allMilestones.length }, () => false))
+const expanded = ref<boolean[]>([])
+
+watch(allMilestones, (newVal) => {
+  expanded.value = Array.from({ length: newVal.length }, () => false)
+}, { immediate: true })
+
 const cardRefs: (HTMLElement | null)[] = []
 
 function toggleExpand(index: number) {
@@ -195,10 +249,7 @@ onBeforeUnmount(() => {
           </h1>
 
           <!-- Subtext -->
-          <p class="hero-subtext">
-            From a small pagoda in Svay Rieng to 293 villages across three provinces — the
-            milestones that shaped Santi Sena.
-          </p>
+          <p class="hero-subtext">{{ intro }}</p>
 
           <!-- Stats -->
           <div class="hero-stats">
@@ -244,11 +295,8 @@ onBeforeUnmount(() => {
       <div class="container">
         <div class="section-heading">
           <span class="label">Timeline</span>
-          <h2>Progress built through patient partnership.</h2>
-          <p>
-            Each step reflects a commitment to long-term, community-led change grounded in trust,
-            dignity and local stewardship.
-          </p>
+          <h2>{{ timelineHeader.heading }}</h2>
+          <p>{{ timelineHeader.body }}</p>
         </div>
 
         <div class="timeline-wrapper">
