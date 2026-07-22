@@ -346,34 +346,6 @@ async function save() {
                       placeholder="One or two sentences shown under the title"
                     />
                   </div>
-                  <div class="field-row">
-                    <div class="field">
-                      <label :for="`${activeSlide.id}-primary-label`">Primary button label</label>
-                      <input :id="`${activeSlide.id}-primary-label`" v-model="activeSlide.primaryLabel" />
-                    </div>
-                    <div class="field">
-                      <label :for="`${activeSlide.id}-primary-to`">Primary button link</label>
-                      <input
-                        :id="`${activeSlide.id}-primary-to`"
-                        v-model="activeSlide.primaryTo"
-                        placeholder="/qr-donate"
-                      />
-                    </div>
-                  </div>
-                  <div class="field-row">
-                    <div class="field">
-                      <label :for="`${activeSlide.id}-secondary-label`">Secondary button label</label>
-                      <input :id="`${activeSlide.id}-secondary-label`" v-model="activeSlide.secondaryLabel" />
-                    </div>
-                    <div class="field">
-                      <label :for="`${activeSlide.id}-secondary-to`">Secondary button link</label>
-                      <input
-                        :id="`${activeSlide.id}-secondary-to`"
-                        v-model="activeSlide.secondaryTo"
-                        placeholder="/about"
-                      />
-                    </div>
-                  </div>
                 </div>
               </div>
             </article>
@@ -671,11 +643,28 @@ h1 {
   gap: 1.75rem;
 }
 
-.media-column,
-.fields-column {
+.media-column {
   display: grid;
   gap: 1rem;
   align-content: start;
+}
+
+.fields-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fields-column .field:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.fields-column .field:last-child textarea {
+  flex: 1;
+  min-height: 120px;
+  resize: none;
 }
 
 .image-preview {

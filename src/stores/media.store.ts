@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
-import { MAX_IMAGE_UPLOAD_SIZE, imageUploadHelpText, isAllowedImageFile } from '@/lib/media'
+import {
+  MEDIA_BUCKET,
+  MAX_IMAGE_UPLOAD_SIZE,
+  imageUploadHelpText,
+  isAllowedImageFile,
+  safeStorageFileName,
+} from '@/lib/media'
 
 export interface MediaItem {
   id: string
@@ -60,37 +66,42 @@ export const useMediaStore = defineStore('media', () => {
       throw new Error(`Upload ${imageUploadHelpText()}`)
     }
 
-    const sessionResult = await supabase.auth.getSession()
-    const accessToken = sessionResult.data.session?.access_token
-
-    if (sessionResult.error || !accessToken) {
-      throw new Error('Please log in as an admin before uploading images.')
-    }
-
     uploading.value = true
     progress.value = 10
     error.value = null
 
+    const path = `website-images/${Date.now()}_${safeStorageFileName(file.name)}`
+
     try {
-      const formData = new FormData()
-      formData.append('file', file, file.name)
+      const { data: uploaded, error: uploadError } = await supabase.storage
+        .from(MEDIA_BUCKET)
+        .upload(path, file, { upsert: false })
 
-      const response = await fetch('/api/google-drive-upload', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: formData,
-      })
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string; media?: MediaAssetRow }
-        | null
+      if (uploadError) throw uploadError
 
-      if (!response.ok || !payload?.media) {
-        throw new Error(payload?.error || 'Could not upload image to Google Drive.')
-      }
+      const publicUrl = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(uploaded.path).data
+        .publicUrl
 
-      const item = toMediaItem(payload.media)
+      const { data: assetRow, error: assetError } = await supabase
+        .from('media_assets')
+        .upsert(
+          {
+            bucket: MEDIA_BUCKET,
+            path: uploaded.path,
+            public_url: publicUrl,
+            file_name: file.name,
+            mime_type: file.type,
+            file_size: file.size,
+            folder: 'website-images',
+          },
+          { onConflict: 'bucket,path' },
+        )
+        .select('id, bucket, path, public_url, file_name, mime_type, file_size, created_at')
+        .single()
+
+      if (assetError) throw assetError
+
+      const item = toMediaItem(assetRow as MediaAssetRow)
       items.value = [item, ...items.value.filter((existing) => existing.id !== item.id)]
       progress.value = 100
       return item

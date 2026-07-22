@@ -23,10 +23,6 @@ interface NgoSlide {
   eyebrow: string
   title: string
   description: string
-  primaryLabel: string
-  primaryTo: string
-  secondaryLabel: string
-  secondaryTo: string
   position?: string
 }
 
@@ -38,10 +34,6 @@ function toNgoSlide(slide: HomeSlide): NgoSlide {
     eyebrow: slide.eyebrow,
     title: slide.title,
     description: slide.description,
-    primaryLabel: slide.primaryLabel,
-    primaryTo: slide.primaryTo,
-    secondaryLabel: slide.secondaryLabel,
-    secondaryTo: slide.secondaryTo,
     position: 'center',
   }
 }
@@ -84,12 +76,8 @@ useScrollReveal()
             }}
           </p>
           <div class="hero-actions">
-            <RouterLink :to="activeSlide?.primaryTo ?? '/qr-donate'" class="btn btn--primary">
-              {{ activeSlide?.primaryLabel ?? 'Support Us' }}
-            </RouterLink>
-            <RouterLink :to="activeSlide?.secondaryTo ?? '/about'" class="btn btn--outline">
-              {{ activeSlide?.secondaryLabel ?? 'Stand with us' }}
-            </RouterLink>
+            <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
+            <RouterLink to="/about" class="btn btn--outline">Stand with us</RouterLink>
           </div>
         </div>
       </div>

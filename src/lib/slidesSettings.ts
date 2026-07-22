@@ -7,10 +7,6 @@ export type HomeSlide = {
   eyebrow: string
   title: string
   description: string
-  primaryLabel: string
-  primaryTo: string
-  secondaryLabel: string
-  secondaryTo: string
 }
 
 // Row shape of the home_slides table (snake_case columns).
@@ -21,10 +17,6 @@ type HomeSlideRow = {
   eyebrow: string
   title: string
   description: string
-  primary_label: string
-  primary_to: string
-  secondary_label: string
-  secondary_to: string
   sort_order: number
 }
 
@@ -36,10 +28,6 @@ export function createHomeSlide(overrides: Partial<HomeSlide> = {}): HomeSlide {
     eyebrow: '',
     title: '',
     description: '',
-    primaryLabel: 'Support Us',
-    primaryTo: '/qr-donate',
-    secondaryLabel: 'Learn more',
-    secondaryTo: '/about',
     ...overrides,
   }
 }
@@ -56,10 +44,6 @@ export function defaultHomeSlides(): HomeSlide[] {
       title: 'Helping children learn with confidence.',
       description:
         'Santi Sena supports schools, mobile libraries, scholarships and Buddhist education so children can keep learning close to home.',
-      primaryLabel: 'Support education',
-      primaryTo: '/qr-donate',
-      secondaryLabel: 'Explore programs',
-      secondaryTo: '/programs',
     }),
     createHomeSlide({
       id: 'environment',
@@ -69,10 +53,6 @@ export function defaultHomeSlides(): HomeSlide[] {
       title: 'Protecting the land that sustains villages.',
       description:
         'Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.',
-      primaryLabel: 'Support the work',
-      primaryTo: '/qr-donate',
-      secondaryLabel: 'Environment program',
-      secondaryTo: '/programs/environment',
     }),
     createHomeSlide({
       id: 'livelihood',
@@ -82,10 +62,6 @@ export function defaultHomeSlides(): HomeSlide[] {
       title: 'Growing practical income and food security.',
       description:
         'Savings groups, home gardens, cooperatives and farmer support help rural families build steadier livelihoods.',
-      primaryLabel: 'Get involved',
-      primaryTo: '/get-involved',
-      secondaryLabel: 'Livelihood program',
-      secondaryTo: '/programs/livelihood',
     }),
     createHomeSlide({
       id: 'child-protection',
@@ -95,10 +71,6 @@ export function defaultHomeSlides(): HomeSlide[] {
       title: 'Safeguarding children through local action.',
       description:
         'Child rights campaigns, youth peer groups and community networks help children grow in safer, more caring communities.',
-      primaryLabel: 'Stand with us',
-      primaryTo: '/get-involved',
-      secondaryLabel: 'Protection program',
-      secondaryTo: '/programs/child-protection',
     }),
   ]
 }
@@ -111,10 +83,6 @@ function rowToSlide(row: HomeSlideRow): HomeSlide {
     eyebrow: row.eyebrow,
     title: row.title,
     description: row.description,
-    primaryLabel: row.primary_label,
-    primaryTo: row.primary_to,
-    secondaryLabel: row.secondary_label,
-    secondaryTo: row.secondary_to,
   }
 }
 
@@ -126,10 +94,6 @@ function slideToRow(slide: HomeSlide, sortOrder: number): HomeSlideRow {
     eyebrow: slide.eyebrow.trim(),
     title: slide.title.trim(),
     description: slide.description.trim(),
-    primary_label: slide.primaryLabel.trim(),
-    primary_to: slide.primaryTo.trim(),
-    secondary_label: slide.secondaryLabel.trim(),
-    secondary_to: slide.secondaryTo.trim(),
     sort_order: sortOrder,
   }
 }
