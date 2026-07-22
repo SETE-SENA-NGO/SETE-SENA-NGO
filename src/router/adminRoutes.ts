@@ -28,4 +28,11 @@ export const adminRoutes = [
   { path: '/admin/settings', component: SettingsView, meta: { requiresAuth: true } },
   { path: '/admin/donate', component: DonationLView, meta: { requiresAuth: true } },
   { path: '/admin/slideshow', component: SlideshowManagerView, meta: { requiresAuth: true } },
+
+  { path: '/admin/get-involved', component: () => import('@/views/admin/GetinvolvedManagement.vue'), meta: { requiresAuth: true } },
+  { path: '/admin/editor/get-involved', redirect: '/admin/get-involved', meta: { requiresAuth: true } },
+  // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
+  { path: '/admin/editor/home-slideshow', component: () => import('@/views/admin/PageEditorView.vue'), meta: { requiresAuth: true } },
+  // Redirect old /admin/news to the News page editor
+  { path: '/admin/news', redirect: '/admin/editor/news' },
 ]

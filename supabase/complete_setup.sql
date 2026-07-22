@@ -79,3 +79,5 @@ SET
 SELECT id, email, role, full_name, created_at
 FROM public.profiles
 WHERE LOWER(email) = LOWER('replace-with-your-admin-email@example.org');
+
+SELECT pg_notify('pgrst', 'reload schema');
