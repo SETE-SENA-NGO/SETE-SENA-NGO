@@ -1,76 +1,43 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { imageUrls } from '@/lib/imageUrls'
+import { supabase } from '@/lib/supabase'
 
 const familyNetworkImage = imageUrls.programs.childProtection3
 const childProtectionImage = imageUrls.programs.childProtection
 const childProtectionPeerImage = imageUrls.programs.childProtection1
 
-const stats = [
+const FALLBACK_STATS = [
   { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin', image: imageUrls.programs.childProtection },
   { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.', icon: 'users', image: imageUrls.programs.childProtection1 },
   { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.', icon: 'phone', image: imageUrls.programs.childProtection2 },
 ]
 
-// "What we do" — six focus areas, each with a photo, title and description.
-const whatWeDo = [
-  {
-    title: 'Anti-Trafficking Campaigns',
-    text: 'Anti-child-trafficking campaigns at borders, markets and schools',
-    image: imageUrls.programs.childProtection,
-    color: '#0a7d5c',
-  },
-  {
-    title: 'Child Protection Networks',
-    text: 'Village Child Protection Networks (CPN) trained in identification and referral',
-    image: imageUrls.programs.childProtection1,
-    color: '#2c7be5',
-  },
-  {
-    title: 'Child Rights Advocacy',
-    text: 'Child rights advocacy with commune councils and provincial authorities',
-    image: imageUrls.programs.childProtection2,
-    color: '#e8871e',
-  },
-  {
-    title: 'Peer Educators',
-    text: 'Peer-educator youth groups on safe migration, health and rights',
-    image: imageUrls.programs.childProtection3,
-    color: '#8b5cf6',
-  },
-  {
-    title: 'Family Reintegration',
-    text: 'Family reintegration support for children returning from unsafe labour',
-    image: imageUrls.programs.childProtection,
-    color: '#e0475a',
-  },
-  {
-    title: 'Safeguarding Training',
-    text: 'Safeguarding training for every teacher, monk and volunteer we work with',
-    image: imageUrls.programs.childProtection1,
-    color: '#c9a227',
-  },
+interface WorkItem {
+  title: string
+  text: string
+  image: string
+  color: string
+}
+
+const FALLBACK_WHAT_WE_DO: WorkItem[] = [
+  { title: 'Anti-Trafficking Campaigns', text: 'Anti-child-trafficking campaigns at borders, markets and schools', image: imageUrls.programs.childProtection, color: '#0a7d5c' },
+  { title: 'Child Protection Networks', text: 'Village Child Protection Networks (CPN) trained in identification and referral', image: imageUrls.programs.childProtection1, color: '#2c7be5' },
+  { title: 'Child Rights Advocacy', text: 'Child rights advocacy with commune councils and provincial authorities', image: imageUrls.programs.childProtection2, color: '#e8871e' },
+  { title: 'Peer Educators', text: 'Peer-educator youth groups on safe migration, health and rights', image: imageUrls.programs.childProtection3, color: '#8b5cf6' },
+  { title: 'Family Reintegration', text: 'Family reintegration support for children returning from unsafe labour', image: imageUrls.programs.childProtection, color: '#e0475a' },
+  { title: 'Safeguarding Training', text: 'Safeguarding training for every teacher, monk and volunteer we work with', image: imageUrls.programs.childProtection1, color: '#c9a227' },
 ]
 
-// A referral case moves through three real stages described in "Our approach" below —
-// this list just breaks that same sentence into steps for the pathway diagram.
 const pathway = [
-  {
-    step: 'Village, at dawn',
-    text: 'A trusted community member — mother, monk, teacher or commune council member — identifies a case early.',
-    icon: 'village',
-  },
-  {
-    step: 'Trained & connected',
-    text: 'That network is trained, coached and connected by Santi Sena to formal referral pathways.',
-    icon: 'link',
-  },
-  {
-    step: 'Province, by dusk',
-    text: 'The case reaches the provincial social affairs office the same day it was identified.',
-    icon: 'office',
-  },
+  { step: 'Village, at dawn', text: 'A trusted community member — mother, monk, teacher or commune council member — identifies a case early.', icon: 'village' },
+  { step: 'Trained & connected', text: 'That network is trained, coached and connected by Santi Sena to formal referral pathways.', icon: 'link' },
+  { step: 'Province, by dusk', text: 'The case reaches the provincial social affairs office the same day it was identified.', icon: 'office' },
 ]
+
+/* ─── Dynamic data from DB ─────────────────────── */
+const dynamicStats = ref<Array<{ number: string; label: string; description: string; icon: string; image: string }>>(FALLBACK_STATS)
+const whatWeDoItems = ref<WorkItem[]>(FALLBACK_WHAT_WE_DO)
 
 // Generic scroll-reveal: every ref below gets an `in-view` class added the
 // first time it enters the viewport, then is unobserved. One shared observer
@@ -88,7 +55,143 @@ let revealObserver: IntersectionObserver | undefined
 let parallaxRaf = 0
 let parallaxTicking = false
 
+/* Subtle parallax: the story collage drifts slightly slower than scroll speed */
+function updateParallax() {
+  parallaxTicking = false
+  const el = collageEl.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const viewportCenter = window.innerHeight / 2
+  const elCenter = rect.top + rect.height / 2
+  const offset = (viewportCenter - elCenter) * 0.06
+  el.style.transform = `translateY(${offset}px)`
+}
+
+function onScroll() {
+  if (!parallaxTicking) {
+    parallaxTicking = true
+    parallaxRaf = requestAnimationFrame(updateParallax)
+  }
+}
+
+/* ─── Parse page body JSON into reactive refs ─── */
+const STAT_ICON_MAP: Record<string, string> = {
+  group: 'users',
+  educator: 'users',
+  network: 'pin',
+  campaign: 'pin',
+  hotline: 'phone',
+  advocacy: 'phone',
+}
+
+function labelToIcon(label: string): string {
+  const lower = label.toLowerCase()
+  for (const [key, icon] of Object.entries(STAT_ICON_MAP)) {
+    if (lower.includes(key)) return icon
+  }
+  return 'pin'
+}
+
+function applyPageBody(body: string) {
+  try {
+    const parsed = JSON.parse(body) as Record<string, unknown>
+    if (parsed.kind !== 'santi-sena-page-content') return
+
+    const sections = parsed.sections as Array<Record<string, unknown>> | undefined
+    if (!Array.isArray(sections)) return
+
+    // Stats — from 'child-protection-stats' section items
+    const statsSection = sections.find((s) => s.id === 'child-protection-stats')
+    if (statsSection && typeof statsSection.items === 'string' && statsSection.items.trim()) {
+      const lines = statsSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        dynamicStats.value = lines.map((line: string, i: number) => {
+          const number = line.match(/^[\d,/+]+/)?.[0] || ''
+          const label = line.replace(/^[\d,/+]+\s*/, '').toUpperCase() || 'STAT'
+          return {
+            number,
+            label,
+            description: line,
+            icon: labelToIcon(label),
+            image: FALLBACK_STATS[i % FALLBACK_STATS.length]?.image || imageUrls.programs.childProtection,
+          }
+        })
+      }
+    }
+
+    // What we do — from 'child-protection-work' section items
+    const workSection = sections.find((s) => s.id === 'child-protection-work')
+    if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
+      const lines = workSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        whatWeDoItems.value = lines.map((title: string, i: number) => ({
+          title,
+          text: (typeof workSection.body === 'string' ? workSection.body : '') || FALLBACK_WHAT_WE_DO[i]?.text || '',
+          image: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.childProtection,
+          color: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.color || '#0a7d5c',
+        }))
+      }
+    }
+  } catch {
+    // Invalid JSON — keep fallbacks
+  }
+}
+
+/* ─── Load from pages table ───────────────────── */
+async function loadFromDb() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('body')
+      .eq('slug', 'programs-child-protection')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[CPView] DB load failed:', error.message)
+      return
+    }
+
+    if (!data || !data.body) {
+      console.warn('[CPView] No page data found, using fallbacks')
+      return
+    }
+
+    applyPageBody(data.body as string)
+  } catch (e) {
+    console.warn('[CPView] DB load crashed:', e)
+  }
+}
+
+/* ─── Real-time subscription ───────────────────── */
+let realtimeChannelCP: ReturnType<typeof supabase.channel> | null = null
+
+function setupRealtime() {
+  realtimeChannelCP = supabase
+    .channel('cp-page-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'pages',
+        filter: 'slug=eq.programs-child-protection',
+      },
+      (payload) => {
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (typeof row.body === 'string') {
+            applyPageBody(row.body)
+          }
+        }
+      },
+    )
+    .subscribe()
+}
+
 onMounted(() => {
+  void loadFromDb()
+  setupRealtime()
+
   const revealTargets = [
     trustBarEl.value,
     introEl.value,
@@ -112,37 +215,18 @@ onMounted(() => {
 
   revealTargets.forEach((el) => revealObserver?.observe(el))
 
-  // Subtle parallax: the story collage drifts slightly slower than scroll
-  // speed, adding depth without being distracting, in both scroll directions.
-  const updateParallax = () => {
-    parallaxTicking = false
-    const el = collageEl.value
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const viewportCenter = window.innerHeight / 2
-    const elCenter = rect.top + rect.height / 2
-    const offset = (viewportCenter - elCenter) * 0.06
-    el.style.transform = `translateY(${offset}px)`
-  }
-
-  const onScroll = () => {
-    if (!parallaxTicking) {
-      parallaxTicking = true
-      parallaxRaf = requestAnimationFrame(updateParallax)
-    }
-  }
-
   window.addEventListener('scroll', onScroll, { passive: true })
   updateParallax()
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('scroll', onScroll)
-    cancelAnimationFrame(parallaxRaf)
-  })
 })
 
 onBeforeUnmount(() => {
   revealObserver?.disconnect()
+  window.removeEventListener('scroll', onScroll)
+  cancelAnimationFrame(parallaxRaf)
+  if (realtimeChannelCP) {
+    supabase.removeChannel(realtimeChannelCP)
+    realtimeChannelCP = null
+  }
 })
 </script>
 
@@ -151,7 +235,7 @@ onBeforeUnmount(() => {
     <!-- Trust bar -->
     <section class="trust-bar">
       <div class="container trust-bar-inner" ref="trustBarEl">
-        <div v-for="stat in stats" :key="stat.label" class="trust-card">
+        <div v-for="(stat, idx) in dynamicStats" :key="'cp-' + idx + '-' + stat.label" class="trust-card">
           <img :src="stat.image" :alt="stat.label" class="trust-card-img" />
           <div class="trust-card-overlay" aria-hidden="true"></div>
           <span class="trust-card-icon">
@@ -199,7 +283,7 @@ onBeforeUnmount(() => {
           <h2 class="section-title text-center">What we do</h2>
 
           <div class="do-grid" ref="doGridEl">
-            <div v-for="item in whatWeDo" :key="item.title" class="do-card">
+            <div v-for="item in whatWeDoItems" :key="item.title" class="do-card">
               <div class="do-image">
                 <img :src="item.image" :alt="item.title" />
               </div>

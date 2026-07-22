@@ -18,6 +18,22 @@ const tabs: { id: TabId; label: string; icon: string }[] = [
   { id: 'sections', label: 'Page Sections', icon: 'layout' },
 ]
 
+/* ─── Quick Links (Overview tab) ────────────────── */
+interface QuickLink {
+  title: string
+  desc: string
+  to: string
+  tabId?: TabId
+  color: string
+}
+
+const quickLinks: QuickLink[] = [
+  { title: 'Edit Hero & Stats', desc: 'Headline, intro & stats band', to: '#', tabId: 'hero', color: 'blue' },
+  { title: 'Edit Page Sections', desc: 'What we do, approach & why', to: '#', tabId: 'sections', color: 'emerald' },
+  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
+  { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'violet' },
+]
+
 /* ─── Toast ─────────────────────────────────────── */
 interface Toast { message: string; type: 'success' | 'error' | 'info'; id: number }
 const toasts = ref<Toast[]>([])
@@ -447,12 +463,7 @@ function formatDate(value: string) {
         <section v-if="activeTab === 'overview'" class="tab-content">
           <!-- Quick action links -->
           <div class="quick-links-grid">
-            <RouterLink v-for="link in [
-              { title: 'Edit Hero & Stats', desc: 'Headline, intro & stats band', to: '#', tabId: 'hero' as TabId, color: 'blue' },
-              { title: 'Edit Page Sections', desc: 'What we do, approach & why', to: '#', tabId: 'sections' as TabId, color: 'emerald' },
-              { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
-              { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'violet' },
-            ]" :key="link.title" :to="link.to || '/admin'" class="link-card" :class="'link-' + link.color"
+            <RouterLink v-for="link in quickLinks" :key="link.title" :to="link.to || '/admin'" class="link-card" :class="'link-' + link.color"
               @click.prevent="link.tabId ? activeTab = link.tabId : undefined">
               <div class="link-icon">
                 <svg v-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>

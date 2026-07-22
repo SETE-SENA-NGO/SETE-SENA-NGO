@@ -104,6 +104,75 @@ export function useEnvironmentProgram() {
     }
   }
 
+  /* ─── Real-time subscriptions ─────────────────── */
+  const realtimeChannels: ReturnType<typeof supabase.channel>[] = []
+
+  function setupRealtime() {
+    // 1. Subscribe to programs table changes for the environment slug
+    const progChannel = supabase.channel('env-program-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'programs',
+          filter: 'slug=eq.programs-environment',
+        },
+        () => { void loadProgramOnly() },
+      )
+      .subscribe()
+    realtimeChannels.push(progChannel)
+
+    // 2. Subscribe to impact_metrics changes
+    const metricsChannel = supabase.channel('env-metrics-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'impact_metrics',
+        },
+        () => { void loadMetricsOnly() },
+      )
+      .subscribe()
+    realtimeChannels.push(metricsChannel)
+
+    // 3. Subscribe to partners changes
+    const partnersChannel = supabase.channel('env-partners-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'partners',
+        },
+        () => { void loadPartnersOnly() },
+      )
+      .subscribe()
+    realtimeChannels.push(partnersChannel)
+  }
+
+  function cleanupRealtime() {
+    for (const ch of realtimeChannels) {
+      supabase.removeChannel(ch)
+    }
+    realtimeChannels.length = 0
+  }
+
+  // Targeted re-fetch functions for real-time updates (no loading state)
+  async function loadProgramOnly() {
+    const result = await fetchProgram()
+    if (result) program.value = result
+  }
+
+  async function loadMetricsOnly() {
+    metrics.value = await fetchMetrics()
+  }
+
+  async function loadPartnersOnly() {
+    partners.value = await fetchPartners()
+  }
+
   return {
     loading,
     error,
@@ -114,6 +183,8 @@ export function useEnvironmentProgram() {
     page,
     hasData,
     load,
+    setupRealtime,
+    cleanupRealtime,
   }
 }
 

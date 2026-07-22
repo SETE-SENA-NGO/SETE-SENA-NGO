@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { imageUrls } from '@/lib/imageUrls'
+import { supabase } from '@/lib/supabase'
 
-const stats = [
+/* ─── Fallback data ────────────────────────────── */
+const FALLBACK_STATS = [
   {
     number: '180+',
     label: 'SAVINGS GROUPS',
@@ -39,7 +41,7 @@ interface WorkItem {
   image: string
 }
 
-const whatWeDo: [WorkItem, WorkItem, WorkItem, WorkItem, WorkItem, WorkItem] = [
+const FALLBACK_WHAT_WE_DO: WorkItem[] = [
   {
     title: 'Integrated Farming',
     text: 'Rice, fish, vegetables and livestock combined on one plot for year-round food and income.',
@@ -72,9 +74,7 @@ const whatWeDo: [WorkItem, WorkItem, WorkItem, WorkItem, WorkItem, WorkItem] = [
   },
 ]
 
-// icon + image per bullet — icon renders as a badge over the image;
-// clicking a card opens the image with the text large in a popup (see openImpactModal)
-const whyItMatters = [
+const FALLBACK_WHY_IT_MATTERS = [
   {
     text: 'Household income diversification reduces the risk of debt bondage and trafficking',
     icon: 'shield-halved',
@@ -97,10 +97,15 @@ const whyItMatters = [
   },
 ]
 
-// modal state for "Why it matters" cards — clicking a card opens its image + text large in a popup
-const activeImpactItem = ref<(typeof whyItMatters)[number] | null>(null)
+/* ─── Dynamic data from DB ─────────────────────── */
+const dynamicStats = ref<Array<{ number: string; label: string; description: string; icon: string }>>(FALLBACK_STATS)
+const whatWeDoItems = ref<WorkItem[]>(FALLBACK_WHAT_WE_DO)
+const whyMattersItems = ref<Array<{ text: string; icon: string; image: string }>>(FALLBACK_WHY_IT_MATTERS)
 
-function openImpactModal(item: (typeof whyItMatters)[number]) {
+// modal state for "Why it matters" cards — clicking a card opens its image + text large in a popup
+const activeImpactItem = ref<{ text: string; icon: string; image: string } | null>(null)
+
+function openImpactModal(item: (typeof FALLBACK_WHY_IT_MATTERS)[number]) {
   activeImpactItem.value = item
 }
 function closeImpactModal() {
@@ -139,7 +144,121 @@ function animateCount(el: HTMLElement, target: number, suffix: string) {
   requestAnimationFrame(step)
 }
 
+/* ─── Parse page body JSON into reactive refs ─── */
+function applyPageBody(body: string) {
+  try {
+    const parsed = JSON.parse(body) as Record<string, unknown>
+    if (parsed.kind !== 'santi-sena-page-content') return
+
+    const sections = parsed.sections as Array<Record<string, unknown>> | undefined
+    if (!Array.isArray(sections)) return
+
+    // Stats — from 'livelihood-stats' section items
+    const statsSection = sections.find((s) => s.id === 'livelihood-stats')
+    if (statsSection && typeof statsSection.items === 'string' && statsSection.items.trim()) {
+      const lines = statsSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        dynamicStats.value = lines.map((line: string) => {
+          const label = line.toUpperCase()
+          const icon = label.includes('GROUP') || label.includes('SAVING') ? 'wallet'
+            : label.includes('MEMBER') || label.includes('FAMILY') ? 'users'
+            : 'building'
+          return {
+            number: line.match(/^[\d,+]+\.?/)?.[0] || '',
+            label: line.replace(/^[\d,+]+\s*/, '').toUpperCase() || label,
+            description: line,
+            icon,
+          }
+        })
+      }
+    }
+
+    // What we do — from 'livelihood-work' section items
+    const workSection = sections.find((s) => s.id === 'livelihood-work')
+    if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
+      const lines = workSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        const defaultText = (typeof workSection.body === 'string' && workSection.body.trim()) ? workSection.body : ''
+        whatWeDoItems.value = lines.map((title: string, i: number) => ({
+          title,
+          text: defaultText || FALLBACK_WHAT_WE_DO[i]?.text || '',
+          image: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.livelihoodHero1,
+        }))
+      }
+    }
+
+    // Why it matters — from 'livelihood-why' section items
+    const whySection = sections.find((s) => s.id === 'livelihood-why')
+    if (whySection && typeof whySection.items === 'string' && whySection.items.trim()) {
+      const lines = whySection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        whyMattersItems.value = lines.map((text: string, i: number) => ({
+          text,
+          icon: FALLBACK_WHY_IT_MATTERS[i]?.icon || 'shield-halved',
+          image: FALLBACK_WHY_IT_MATTERS[i % FALLBACK_WHY_IT_MATTERS.length]?.image || imageUrls.programs.livelihoodHero1,
+        }))
+      }
+    }
+  } catch {
+    // Invalid JSON — keep fallbacks
+  }
+}
+
+/* ─── Load from pages table ───────────────────── */
+async function loadFromDb() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('body')
+      .eq('slug', 'programs-livelihood')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[LivelihoodView] DB load failed:', error.message)
+      return
+    }
+
+    if (!data || !data.body) {
+      console.warn('[LivelihoodView] No page data found, using fallbacks')
+      return
+    }
+
+    applyPageBody(data.body as string)
+  } catch (e) {
+    console.warn('[LivelihoodView] DB load crashed:', e)
+  }
+}
+
+/* ─── Real-time subscription ───────────────────── */
+let realtimeChannelLivelihood: ReturnType<typeof supabase.channel> | null = null
+
+function setupRealtime() {
+  realtimeChannelLivelihood = supabase
+    .channel('livelihood-page-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'pages',
+        filter: 'slug=eq.programs-livelihood',
+      },
+      (payload) => {
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (typeof row.body === 'string') {
+            applyPageBody(row.body)
+          }
+        }
+      },
+    )
+    .subscribe()
+}
+
 onMounted(() => {
+  void loadFromDb()
+  setupRealtime()
+
   // "What we do" satellite gallery: toggling the class (rather than
   // unobserving) means each photo/orbit item fades in scrolling down AND
   // fades back out + replays scrolling back up past the section.
@@ -184,7 +303,7 @@ onMounted(() => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             numberEls.forEach((el, i) => {
-              const { numeric, suffix } = parseStatNumber(stats[i]?.number ?? '0')
+              const { numeric, suffix } = parseStatNumber(dynamicStats.value[i]?.number ?? '0')
               animateCount(el, numeric, suffix)
             })
             countObserver?.disconnect()
@@ -201,6 +320,10 @@ onBeforeUnmount(() => {
   radialObserver?.disconnect()
   revealObserver?.disconnect()
   countObserver?.disconnect()
+  if (realtimeChannelLivelihood) {
+    supabase.removeChannel(realtimeChannelLivelihood)
+    realtimeChannelLivelihood = null
+  }
 })
 </script>
 
@@ -211,7 +334,7 @@ onBeforeUnmount(() => {
     <!-- Stats band — bridges hero into content -->
     <div class="container stats-band-wrap">
       <div class="stats-band" ref="statsBandEl">
-        <template v-for="(stat, i) in stats" :key="stat.label">
+        <template v-for="(stat, i) in dynamicStats" :key="i + '-' + stat.label">
           <div class="stat-item">
             <span class="stat-icon">
               <svg
@@ -230,7 +353,7 @@ onBeforeUnmount(() => {
               <p class="stat-desc">{{ stat.description }}</p>
             </div>
           </div>
-          <div v-if="i < stats.length - 1" class="stat-divider" aria-hidden="true"></div>
+          <div v-if="i < dynamicStats.length - 1" class="stat-divider" aria-hidden="true"></div>
         </template>
       </div>
     </div>
@@ -256,47 +379,47 @@ onBeforeUnmount(() => {
 
           <div class="radial-wrap" ref="radialWrap">
             <div class="radial-center">
-              <img :src="whatWeDo[0]?.image" alt="" />
-              <p class="radial-center-text">{{ whatWeDo[0]?.text }}</p>
+              <img :src="whatWeDoItems[0]?.image" alt="" />
+              <p class="radial-center-text">{{ whatWeDoItems[0]?.text }}</p>
             </div>
 
             <div class="radial-item radial-item--1">
-              <div class="radial-thumb"><img :src="whatWeDo[1]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[1]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[1]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[1]?.text }}</p>
+                <p class="radial-title">{{ whatWeDoItems[1]?.title }}</p>
+                <p class="radial-text">{{ whatWeDoItems[1]?.text }}</p>
               </div>
             </div>
 
             <div class="radial-item radial-item--2">
-              <div class="radial-thumb"><img :src="whatWeDo[2]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[2]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[2]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[2]?.text }}</p>
+                <p class="radial-title">{{ whatWeDoItems[2]?.title }}</p>
+                <p class="radial-text">{{ whatWeDoItems[2]?.text }}</p>
               </div>
             </div>
 
             <div class="radial-item radial-item--3">
-              <div class="radial-thumb"><img :src="whatWeDo[3]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[3]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[3]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[3]?.text }}</p>
+                <p class="radial-title">{{ whatWeDoItems[3]?.title }}</p>
+                <p class="radial-text">{{ whatWeDoItems[3]?.text }}</p>
               </div>
             </div>
 
             <div class="radial-item radial-item--4">
-              <div class="radial-thumb"><img :src="whatWeDo[4]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[4]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[4]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[4]?.text }}</p>
+                <p class="radial-title">{{ whatWeDoItems[4]?.title }}</p>
+                <p class="radial-text">{{ whatWeDoItems[4]?.text }}</p>
               </div>
             </div>
 
             <div class="radial-item radial-item--5">
-              <div class="radial-thumb"><img :src="whatWeDo[5]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[5]?.image" alt="" /></div>
               <div class="radial-copy">
-                <p class="radial-title">{{ whatWeDo[5]?.title }}</p>
-                <p class="radial-text">{{ whatWeDo[5]?.text }}</p>
+                <p class="radial-title">{{ whatWeDoItems[5]?.title }}</p>
+                <p class="radial-text">{{ whatWeDoItems[5]?.text }}</p>
               </div>
             </div>
           </div>
@@ -345,8 +468,8 @@ onBeforeUnmount(() => {
           <h2 class="section-title">Why it matters</h2>
           <div class="impact-grid">
             <div
-              v-for="item in whyItMatters"
-              :key="item.text"
+              v-for="item in whyMattersItems"
+              :key="'why-' + item.text"
               class="impact-card"
               role="button"
               tabindex="0"
@@ -363,9 +486,7 @@ onBeforeUnmount(() => {
       </div>
     </section>
     <!-- Popup: shows the clicked card's image with its text large and clear -->
-    <Teleport to="body">
-      <div
-        v-if="activeImpactItem"
+    <Teleport to="body">            <div v-if="activeImpactItem"
         class="impact-modal-overlay"
         @click.self="closeImpactModal"
       >

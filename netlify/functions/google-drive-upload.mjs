@@ -11,6 +11,7 @@ export default async function googleDriveUpload(request) {
 
   try {
     const config = readConfig()
+    const authorization = request.headers.get('authorization') || ''
     const user = await requireAdminUser(request, config)
     const formData = await request.formData()
     const file = formData.get('file')
@@ -50,7 +51,7 @@ export default async function googleDriveUpload(request) {
       mimeType,
       size: file.size,
       driveFile,
-    })
+    }, authorization) // authorization from request header, used instead of service role key
 
     return jsonResponse({
       url: publicUrl,
@@ -75,14 +76,12 @@ function readConfig() {
     env('VITE_SUPABASE_PUBLISHABLE_KEY') ||
     env('VITE_SUPABASE_ANON_KEY') ||
     env('SUPABASE_ANON_KEY')
-  const supabaseServiceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY')
   const folderId = env('GOOGLE_DRIVE_FOLDER_ID')
   const googleAuth = googleAuthConfig()
 
   const missing = []
   if (!supabaseUrl) missing.push('SUPABASE_URL')
   if (!supabaseAnonKey) missing.push('SUPABASE_PUBLISHABLE_KEY')
-  if (!supabaseServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY')
   if (!folderId) missing.push('GOOGLE_DRIVE_FOLDER_ID')
   missing.push(...missingGoogleAuthFields(googleAuth))
 
@@ -94,7 +93,6 @@ function readConfig() {
     supabase: {
       url: trimSlash(supabaseUrl),
       anonKey: supabaseAnonKey,
-      serviceRoleKey: supabaseServiceRoleKey,
     },
     google: {
       folderId,
@@ -171,12 +169,18 @@ async function requireAdminUser(request, config) {
   const user = await userResponse.json()
   if (!user?.id) throw httpError('Admin login is invalid or expired.', 401)
 
+  // Query the profiles table using the user's own auth token (not service role key)
+  // so that RLS allows reading the profile. This matches how the frontend verifies admin.
   const profileUrl = `${config.supabase.url}/rest/v1/profiles?id=eq.${encodeURIComponent(
     user.id,
   )}&select=id,email,role&limit=1`
 
   const profileResponse = await fetch(profileUrl, {
-    headers: serviceHeaders(config.supabase),
+    headers: {
+      apikey: config.supabase.anonKey,
+      authorization,
+      'content-type': 'application/json',
+    },
   })
 
   if (!profileResponse.ok) throw httpError('Could not verify admin profile.', 403)
@@ -325,13 +329,14 @@ function driveErrorMessage(data, fallback) {
   return message
 }
 
-async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, size, driveFile }) {
+async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, size, driveFile }, authorization) {
   const response = await fetch(
     `${config.url}/rest/v1/media_assets?on_conflict=bucket,path&select=id,bucket,path,public_url,file_name,mime_type,file_size,created_at`,
     {
       method: 'POST',
       headers: {
-        ...serviceHeaders(config),
+        apikey: config.anonKey,
+        authorization,
         'content-type': 'application/json',
         prefer: 'resolution=merge-duplicates,return=representation',
       },
@@ -359,22 +364,6 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
   }
 
   return Array.isArray(data) ? data[0] : data
-}
-
-function serviceHeaders(config) {
-  const headers = {
-    apikey: config.serviceRoleKey,
-  }
-
-  if (isJwtKey(config.serviceRoleKey)) {
-    headers.authorization = `Bearer ${config.serviceRoleKey}`
-  }
-
-  return headers
-}
-
-function isJwtKey(value) {
-  return typeof value === 'string' && value.split('.').length === 3
 }
 
 function googleThumbnailUrl(fileId) {

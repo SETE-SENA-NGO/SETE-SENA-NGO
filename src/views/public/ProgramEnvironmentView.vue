@@ -259,6 +259,8 @@ const {
   sections: dbSections,
   partners: dbPartners,
   load: loadDbData,
+  setupRealtime: setupEnvRealtime,
+  cleanupRealtime: cleanupEnvRealtime,
 } = useEnvironmentProgram()
 
 /* Page sections from DB — shown below overview cards when available */
@@ -451,6 +453,7 @@ function scrollToSection(index: number) {
 /* ─── Mount ─────────────────────────────────────── */
 onMounted(() => {
   void loadDbData()
+  setupEnvRealtime()
 
   let ticking = false
   window.addEventListener('scroll', () => {
@@ -484,6 +487,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   observers.forEach(io => io.disconnect())
   window.removeEventListener('scroll', handleScroll)
+  cleanupEnvRealtime()
 })
 </script>
 

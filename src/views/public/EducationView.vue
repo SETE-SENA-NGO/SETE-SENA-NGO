@@ -2,13 +2,15 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { imageUrls } from '@/lib/imageUrls'
+import { supabase } from '@/lib/supabase'
 
 const childIntroImage = imageUrls.education.intro
 const childReadingImage = imageUrls.education.reading
 const childStudyImage = imageUrls.education.study
 const childTeacherImage = imageUrls.education.teacher
 
-const stats = [
+/* ─── Static fallback data ──────────────────────── */
+const FALLBACK_STATS = [
   {
     number: '120+',
     label: 'PRE-SCHOOL CHILDREN',
@@ -29,7 +31,7 @@ const stats = [
   },
 ]
 
-const bulletsWhatWeDo: string[] = [
+const FALLBACK_WHAT_WE_DO: string[] = [
   'Community pre-schools led by trained local teachers in remote villages',
   'Mobile library service bringing books, audio and learning kits to children',
   'Scholarships covering uniforms, supplies and transport for the poorest students',
@@ -38,7 +40,7 @@ const bulletsWhatWeDo: string[] = [
   'Teacher training and parent engagement to keep children in school',
 ]
 
-const teamCards = [
+const FALLBACK_TEAM_CARDS = [
   {
     role: 'Program Director',
     desc: 'Oversees education initiatives, partnerships, and donor reporting across all provinces.',
@@ -61,12 +63,142 @@ const teamCards = [
   },
 ]
 
-const whyItems: string[] = [
+const FALLBACK_WHY_ITEMS: string[] = [
   'Children who attend pre-school are far more likely to complete primary and secondary school',
   'Scholarships keep the poorest girls in class through the most vulnerable years',
   'Mobile libraries reach children a bus route never will',
   'Pagoda-based ethics classes preserve Khmer language and moral tradition',
 ]
+
+/* ─── Dynamic data from DB (replaces hardcoded) ── */
+const heroTitle = ref('Access to Education')
+const heroDesc = ref(
+  'Community pre-schools, mobile libraries, scholarships for poor children and the preservation of Buddhist education in pagoda settings across rural Cambodia.'
+)
+const dynamicStats = ref<Array<{ number: string; label: string; description: string; icon: string }>>(FALLBACK_STATS)
+const whatWeDoItems = ref<string[]>(FALLBACK_WHAT_WE_DO)
+const approachText = ref(
+  'We hire teachers from the villages we serve, train them in early-childhood pedagogy, and pair every classroom with a parent committee. Curriculum blends the national standard with Buddhist ethics, Khmer culture and hands-on environmental learning — so a child grows up rooted in both the national curriculum and the wisdom of the pagoda.'
+)
+const whyItems = ref<string[]>(FALLBACK_WHY_ITEMS)
+const teamCards = ref(FALLBACK_TEAM_CARDS)
+
+/* ─── Map stat label to icon name ──────────────── */
+function iconForLabel(label: string): string {
+  const lower = label.toLowerCase()
+  if (lower.includes('pre-school') || lower.includes('child')) return 'book'
+  if (lower.includes('library')) return 'library'
+  if (lower.includes('scholarship') || lower.includes('student')) return 'star'
+  return 'star'
+}
+
+/* ─── Parse metadata into reactive refs ────────── */
+function applyMetadata(meta: Record<string, unknown>) {
+  // Hero title & intro
+  if (typeof meta.headline === 'string' && meta.headline.trim()) {
+    heroTitle.value = meta.headline.trim()
+  }
+  if (typeof meta.intro === 'string' && meta.intro.trim()) {
+    heroDesc.value = meta.intro.trim()
+  }
+
+  // Stats band
+  if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+    dynamicStats.value = meta.statsBand.map((s: Record<string, unknown>) => ({
+      number: String(s.number ?? ''),
+      label: String(s.label ?? ''),
+      description: String(s.description ?? ''),
+      icon: iconForLabel(String(s.label ?? '')),
+    }))
+  }
+
+  // Sections
+  if (Array.isArray(meta.sections)) {
+    const sections = meta.sections as Array<Record<string, unknown>>
+
+    // What we do — from 'education-work' section items
+    const workSection = sections.find((s) => s.id === 'education-work')
+    if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
+      const parsed = workSection.items
+        .split('\n')
+        .map((l: string) => l.trim())
+        .filter(Boolean)
+      if (parsed.length > 0) {
+        whatWeDoItems.value = parsed
+      }
+    }
+
+    // Approach — from 'education-approach' section body
+    const approachSection = sections.find((s) => s.id === 'education-approach')
+    if (approachSection && typeof approachSection.body === 'string' && approachSection.body.trim()) {
+      approachText.value = approachSection.body.trim()
+    }
+
+    // Why it matters — from 'education-why' section items
+    const whySection = sections.find((s) => s.id === 'education-why')
+    if (whySection && typeof whySection.items === 'string' && whySection.items.trim()) {
+      const parsed = whySection.items
+        .split('\n')
+        .map((l: string) => l.trim())
+        .filter(Boolean)
+      if (parsed.length > 0) {
+        whyItems.value = parsed
+      }
+    }
+  }
+}
+
+/* ─── Load from programs table ─────────────────── */
+async function loadFromDb() {
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('title, summary, metadata')
+      .eq('slug', 'programs-education')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[EducationView] DB load failed:', error.message)
+      return
+    }
+
+    if (!data || !data.metadata) {
+      console.warn('[EducationView] No program data found, using fallbacks')
+      return
+    }
+
+    applyMetadata(data.metadata as Record<string, unknown>)
+  } catch (e) {
+    console.warn('[EducationView] DB load crashed:', e)
+  }
+}
+
+/* ─── Real-time subscription ───────────────────── */
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+
+function setupRealtime() {
+  realtimeChannel = supabase
+    .channel('education-page-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'programs',
+        filter: 'slug=eq.programs-education',
+      },
+      (payload) => {
+        // On INSERT or UPDATE — apply new metadata
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (row.metadata) {
+            applyMetadata(row.metadata as Record<string, unknown>)
+          }
+        }
+      },
+    )
+    .subscribe()
+}
 
 // Scroll reveal
 const revealElements = ref<HTMLElement[]>([])
@@ -78,7 +210,7 @@ function setRevealRef(el: unknown, index: number) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.title = 'Education Program — Santi Sena'
 
   const setMeta = (name: string, content: string) => {
@@ -109,6 +241,12 @@ onMounted(() => {
   setOgMeta('og:title', 'Education — Santi Sena')
   setOgMeta('og:description', 'Learning that starts at three years old and never stops.')
 
+  // Load dynamic data from programs table
+  await loadFromDb()
+
+  // Subscribe to real-time changes so updates appear without refresh
+  setupRealtime()
+
   // Set up scroll observer
   observer = new IntersectionObserver(
     (entries) => {
@@ -127,6 +265,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   observer?.disconnect()
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel)
+    realtimeChannel = null
+  }
 })
 </script>
 
@@ -135,11 +277,8 @@ onBeforeUnmount(() => {
     <!-- ════════════════════ PAGE HEADER ════════════════════ -->
     <div class="page-header">
       <div class="container">
-        <h1 class="page-header-title">Access to Education</h1>
-        <p class="page-header-desc">
-          Community pre-schools, mobile libraries, scholarships for poor children and the
-          preservation of Buddhist education in pagoda settings across rural Cambodia.
-        </p>
+        <h1 class="page-header-title">{{ heroTitle }}</h1>
+        <p class="page-header-desc">{{ heroDesc }}</p>
       </div>
     </div>
 
@@ -147,7 +286,7 @@ onBeforeUnmount(() => {
     <div class="stats-band-wrap">
       <div class="container">
         <div class="stats-band">
-          <template v-for="(stat, i) in stats" :key="stat.label">
+          <template v-for="(stat, i) in dynamicStats" :key="i + '-' + stat.label">
             <div class="stat-item">
               <span class="stat-icon">
                 <svg v-if="stat.icon === 'book'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -172,7 +311,7 @@ onBeforeUnmount(() => {
                 <p class="stat-desc">{{ stat.description }}</p>
               </div>
             </div>
-            <div v-if="i < stats.length - 1" class="stat-divider" aria-hidden="true"></div>
+            <div v-if="i < dynamicStats.length - 1" class="stat-divider" aria-hidden="true"></div>
           </template>
         </div>
       </div>
@@ -214,7 +353,7 @@ onBeforeUnmount(() => {
             <p class="section-eyebrow">Our Work</p>
             <h2 class="section-title">What we do</h2>
             <ul class="check-grid">
-              <li v-for="item in bulletsWhatWeDo" :key="item">
+              <li v-for="item in whatWeDoItems" :key="item">
                 <span class="check-icon">
                   <svg viewBox="0 0 24 24" fill="none">
                     <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
@@ -247,12 +386,7 @@ onBeforeUnmount(() => {
         <div :ref="(el) => setRevealRef(el, 4)" class="reveal">
           <p class="section-eyebrow section-eyebrow--light text-center">Methodology</p>
           <h2 class="section-title section-title--light text-center">Our approach</h2>
-          <p class="approach-text">
-            We hire teachers from the villages we serve, train them in early-childhood pedagogy, and
-            pair every classroom with a parent committee. Curriculum blends the national standard
-            with Buddhist ethics, Khmer culture and hands-on environmental learning — so a child
-            grows up rooted in both the national curriculum and the wisdom of the pagoda.
-          </p>
+          <p class="approach-text">{{ approachText }}</p>
         </div>
 
         <div :ref="(el) => setRevealRef(el, 5)" class="reveal testimonial-block">
