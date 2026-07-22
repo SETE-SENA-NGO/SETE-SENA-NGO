@@ -15,6 +15,17 @@ Never expose the service role key through a `VITE_` variable.
 
 ## Apply Database Schema
 
+Fast path for a new or partially configured project:
+
+1. Open `supabase/complete_setup.sql`.
+2. Replace `replace-with-your-admin-email@example.org` with your real admin login email.
+3. Run the whole file in Supabase Dashboard > SQL Editor.
+
+That file creates the tables, seeds default content, promotes the admin profile, and reloads the REST
+schema cache.
+
+Manual path:
+
 Open Supabase Dashboard > SQL Editor and run these files in order:
 
 1. `supabase/migrations/0001_initial.sql`
@@ -72,4 +83,10 @@ If an admin page reports that a table cannot be found in the schema cache, rerun
 
 ```sql
 select pg_notify('pgrst', 'reload schema');
+```
+
+If only `public.news_posts` and `public.partners` are missing, run:
+
+```text
+supabase/fix_missing_news_partners.sql
 ```

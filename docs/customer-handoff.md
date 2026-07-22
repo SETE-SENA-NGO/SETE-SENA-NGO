@@ -14,10 +14,10 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_USE_GOOGLE_DRIVE_IMAGES=true
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
 ```
 
-`SUPABASE_URL` can be the same value as `VITE_SUPABASE_URL`. `SUPABASE_SERVICE_ROLE_KEY` is private and must never be added to frontend code or a `VITE_` variable.
+`SUPABASE_URL` can be the same value as `VITE_SUPABASE_URL`. The upload function uses the logged-in
+admin session and does not need the Supabase service-role key.
 
 ### Google Drive
 
@@ -25,6 +25,7 @@ For a normal personal Google Drive folder, ask for OAuth credentials:
 
 ```env
 GOOGLE_DRIVE_FOLDER_ID=
+GOOGLE_DRIVE_AUTH_TYPE=oauth
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=
 GOOGLE_OAUTH_REFRESH_TOKEN=
@@ -34,6 +35,7 @@ For a Google Workspace Shared Drive folder, a service account can be used instea
 
 ```env
 GOOGLE_DRIVE_FOLDER_ID=
+GOOGLE_DRIVE_AUTH_TYPE=service_account
 GOOGLE_SERVICE_ACCOUNT_JSON_BASE64=
 ```
 
@@ -60,8 +62,8 @@ Functions scope:
 ```env
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
 GOOGLE_DRIVE_FOLDER_ID=
+GOOGLE_DRIVE_AUTH_TYPE=oauth
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=
 GOOGLE_OAUTH_REFRESH_TOKEN=
@@ -131,6 +133,12 @@ The upload function is reachable, but the request is not logged in as an admin.
 `Service Accounts do not have storage quota.`
 
 The customer used a service account with a personal My Drive folder. Switch to OAuth, or move the folder to a Google Workspace Shared Drive.
+
+`Invalid JWT Signature.`
+
+Google rejected the service-account key before upload. Create a new JSON key for the same service
+account, replace `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`, and restart the local dev server or redeploy
+Netlify. Also confirm the Drive folder is shared with the service-account email as Editor.
 
 `Could not find the table 'public.media_assets' in the schema cache.`
 

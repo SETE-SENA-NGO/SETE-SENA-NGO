@@ -19,13 +19,15 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 VITE_USE_GOOGLE_DRIVE_IMAGES=true
 ```
 
-Set this secret only for Netlify Functions:
+Set these server-side values for Netlify Functions:
 
 ```env
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 ```
 
-Never use `VITE_` for the service role key.
+The upload function verifies the logged-in admin through Supabase Auth and RLS, so it does not need
+the Supabase service-role key.
 
 ## Netlify
 
@@ -39,7 +41,8 @@ The repo includes `netlify.toml`:
 ```
 
 In Netlify, add environment variables in Project configuration > Environment variables. Public
-`VITE_` variables need Build scope. Secret upload variables need Functions scope.
+`VITE_` variables need Build scope. Google OAuth or service-account upload variables need Functions
+scope.
 
 ## Google Drive Manual URL Mode
 
@@ -74,8 +77,8 @@ happens, use the OAuth option.
 ```env
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
+GOOGLE_DRIVE_AUTH_TYPE=service_account
 GOOGLE_SERVICE_ACCOUNT_JSON_BASE64=base64-encoded-service-account-json
 ```
 
@@ -84,6 +87,10 @@ On Windows PowerShell, encode the service account JSON:
 ```powershell
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\path\service-account.json"))
 ```
+
+If upload fails with `Invalid JWT Signature`, create a fresh JSON key for the same service account,
+replace `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`, and restart the dev server or redeploy. That error
+means Google could not verify the private key signature.
 
 ### Option B: OAuth Refresh Token
 
@@ -94,8 +101,8 @@ Add these Netlify Function secrets instead of the service-account JSON:
 ```env
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
+GOOGLE_DRIVE_AUTH_TYPE=oauth
 GOOGLE_OAUTH_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_OAUTH_CLIENT_SECRET=your-google-oauth-client-secret
 GOOGLE_OAUTH_REFRESH_TOKEN=your-google-oauth-refresh-token
@@ -113,14 +120,21 @@ resulting URL into `media_assets`.
 
 ## Local Testing
 
-Use Netlify Dev for testing the upload function locally:
+The local Vite dev server includes a dev-only middleware for the upload function, so this works for
+admin upload testing:
+
+```powershell
+npm run dev
+```
+
+Open the app at `http://localhost:5173`. The browser can post to `POST /api/google-drive-upload`
+from that same origin.
+
+You can still use Netlify Dev when you want to test the full Netlify runtime locally:
 
 ```powershell
 npx netlify dev
 ```
-
-Plain `npm run dev` runs only Vite. It can test pasted image URLs, but not the Netlify upload
-function.
 
 ## References
 

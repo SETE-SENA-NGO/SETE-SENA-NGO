@@ -67,6 +67,7 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'get-involved',
     label: 'Get Involved',
+    path: '/admin/get-involved',
     items: [
       { slug: 'get-involved-donate', label: 'Donate' },
       { slug: 'get-involved-volunteer', label: 'Volunteer' },
@@ -126,7 +127,7 @@ async function logout() {
   <div class="backdrop" v-show="ui.sidebarOpen" @click="ui.closeSidebar"></div>
   <aside :class="['admin-sidebar', { open: ui.sidebarOpen }]">
     <RouterLink class="brand" to="/admin" @click="ui.closeSidebarForNavigation">
-      <span class="brand-mark" aria-hidden="true">SS</span>
+      <img class="brand-mark" src="/favicon.ico" alt="SANTI SENA">
       <span class="brand-text">
         <strong>SANTI SENA</strong>
         <small>Admin Console</small>
@@ -288,17 +289,11 @@ async function logout() {
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--sb-brand-mark-bg);
-  color: var(--sb-brand-mark);
-  font-size: 0.78rem;
-  font-weight: 900;
+  width: 46px;
+  height: 46px;
+  display: block;
+  object-fit: contain;
   flex-shrink: 0;
-  box-shadow: 0 10px 20px rgba(15, 125, 56, 0.22);
 }
 
 .brand-text {
