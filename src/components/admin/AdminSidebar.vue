@@ -32,7 +32,6 @@ const loggingOut = ref(false)
 const workspaceLinks: NavItem[] = [
   { to: '/admin', label: 'Dashboard', icon: 'icon-dashboard' },
   { to: '/admin/donate', label: 'Donation QR', icon: 'icon-media' },
-  { to: '/admin/news', label: 'News Manager', icon: 'icon-news' },
 ]
 
 const pageGroups: PageGroup[] = [

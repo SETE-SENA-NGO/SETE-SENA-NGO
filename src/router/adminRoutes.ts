@@ -5,7 +5,6 @@ import PageEditorView from '@/views/admin/PageEditorView.vue'
 import AdminModuleView from '@/views/admin/AdminModuleView.vue'
 import MediaLibraryView from '@/views/admin/MediaLibraryView.vue'
 import SettingsView from '@/views/admin/SettingsView.vue'
-import NewsManagerView from '@/views/admin/NewsManagerView.vue'
 import EducationDashboardView from '@/views/admin/EducationDashboardView.vue'
 import EnvironmentDashboardView from '@/views/admin/EnvironmentDashboardView.vue'
 import LivelihoodDashboardView from '@/views/admin/LivelihoodDashboardView.vue'
@@ -21,7 +20,6 @@ export const adminRoutes = [
   // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
   { path: '/admin/editor/home-slideshow', component: PageEditorView, meta: { requiresAuth: true } },
   { path: '/admin/media', component: MediaLibraryView, meta: { requiresAuth: true } },
-  { path: '/admin/news', component: NewsManagerView, meta: { requiresAuth: true } },
   { path: '/admin/modules/:module', component: AdminModuleView, meta: { requiresAuth: true } },
   { path: '/admin/education', component: EducationDashboardView, meta: { requiresAuth: true } },
   { path: '/admin/environment', component: EnvironmentDashboardView, meta: { requiresAuth: true } },
