@@ -173,7 +173,8 @@ async function saveCard(method: DonationMethod, index: number) {
                 :aria-selected="i === activeIndex"
                 @click="activeIndex = i"
               >
-                {{ m.bank || `Bank ${i + 1}` }}
+                <span class="tab-badge">{{ i + 1 }}</span>
+                {{ i === 0 ? 'First bank' : 'Second bank' }}
               </button>
             </div>
 
@@ -408,6 +409,9 @@ h1 {
 }
 
 .switch-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   min-height: 40px;
   border: none;
   border-radius: 9px;
@@ -430,6 +434,26 @@ h1 {
   background: var(--admin-surface);
   color: var(--admin-contrast);
   box-shadow: var(--admin-shadow);
+}
+
+.tab-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--admin-border);
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.switch-tab.active .tab-badge {
+  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
+  color: #ffffff;
 }
 
 .method-card {
