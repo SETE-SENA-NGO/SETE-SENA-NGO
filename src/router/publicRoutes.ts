@@ -31,7 +31,7 @@ export const publicRoutes: RouteRecordRaw[] = [
     () => import('@/views/public/OrganizationView.vue'),
   ),
 
-  managedRoute('/programs', 'programs', () => import('@/views/public/ProgramsView.vue'), 'programs'),
+  { path: '/programs', component: () => import('@/views/public/ProgramsView.vue'), name: 'programs' },
   managedRoute(
     '/programs/environment',
     'programs-environment',
