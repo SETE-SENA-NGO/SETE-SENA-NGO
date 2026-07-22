@@ -18,31 +18,4 @@ CREATE TABLE IF NOT EXISTS home_slides (
 ALTER TABLE home_slides ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read" ON home_slides FOR SELECT USING (true);
 CREATE POLICY "Allow authenticated write" ON home_slides FOR ALL USING (auth.role() = 'authenticated');
-
-INSERT INTO home_slides (
-    id,
-    image_url,
-    alt,
-    eyebrow,
-    title,
-    description,
-    primary_label,
-    primary_to,
-    secondary_label,
-    secondary_to,
-    sort_order
-)
-VALUES (
-    'slide-1',
-    'https://example.com/images/hero.jpg',
-    'Children learning',
-    'Welcome',
-    'Empowering Communities',
-    'Helping people build better futures through education and livelihood.',
-    'Learn More',
-    '/about',
-    'Contact Us',
-    '/contact',
-    1
-);
-
+ 
