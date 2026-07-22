@@ -9,6 +9,8 @@
 -- PART 1: MIGRATION 0001 — Initial Schema
 -- ============================================================
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS pages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug TEXT UNIQUE NOT NULL,
@@ -23,10 +25,14 @@ CREATE TABLE IF NOT EXISTS profiles (
 );
 
 ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read" ON pages;
+DROP POLICY IF EXISTS "Allow authenticated write" ON pages;
 CREATE POLICY "Allow public read" ON pages FOR SELECT USING (true);
 CREATE POLICY "Allow authenticated write" ON pages FOR ALL USING (auth.role() = 'authenticated');
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
+DROP POLICY IF EXISTS "Admins can upsert profiles" ON profiles;
 CREATE POLICY "Users can read own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Admins can upsert profiles" ON profiles FOR ALL USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
@@ -35,8 +41,6 @@ CREATE POLICY "Admins can upsert profiles" ON profiles FOR ALL USING (
 -- ============================================================
 -- PART 2: MIGRATION 0002 — Admin Editable Content Schema
 -- ============================================================
-
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -80,7 +84,7 @@ $$;
 
 CREATE TABLE IF NOT EXISTS public.media_assets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  bucket text NOT NULL DEFAULT 'media',
+  bucket text NOT NULL DEFAULT 'google-drive',
   path text NOT NULL,
   public_url text,
   file_name text NOT NULL,
@@ -359,6 +363,34 @@ ALTER TABLE public.donation_methods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.content_revisions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies (public read + admin write for all tables)
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can upsert profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Users can read own profile or admins can read all" ON public.profiles;
+DROP POLICY IF EXISTS "Super admins can manage profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Allow public read" ON public.pages;
+DROP POLICY IF EXISTS "Allow authenticated write" ON public.pages;
+DROP POLICY IF EXISTS "Published pages are public" ON public.pages;
+DROP POLICY IF EXISTS "Content admins can manage pages" ON public.pages;
+DROP POLICY IF EXISTS "Media assets are public" ON public.media_assets;
+DROP POLICY IF EXISTS "Content admins can manage media assets" ON public.media_assets;
+DROP POLICY IF EXISTS "Published sections are public" ON public.page_sections;
+DROP POLICY IF EXISTS "Content admins can manage sections" ON public.page_sections;
+DROP POLICY IF EXISTS "Published section items are public" ON public.section_items;
+DROP POLICY IF EXISTS "Content admins can manage section items" ON public.section_items;
+DROP POLICY IF EXISTS "Published programs are public" ON public.programs;
+DROP POLICY IF EXISTS "Content admins can manage programs" ON public.programs;
+DROP POLICY IF EXISTS "Visible impact metrics are public" ON public.impact_metrics;
+DROP POLICY IF EXISTS "Content admins can manage impact metrics" ON public.impact_metrics;
+DROP POLICY IF EXISTS "Visible partners are public" ON public.partners;
+DROP POLICY IF EXISTS "Content admins can manage partners" ON public.partners;
+DROP POLICY IF EXISTS "Visible navigation is public" ON public.navigation_items;
+DROP POLICY IF EXISTS "Content admins can manage navigation" ON public.navigation_items;
+DROP POLICY IF EXISTS "Published news posts are public" ON public.news_posts;
+DROP POLICY IF EXISTS "Content admins can manage news posts" ON public.news_posts;
+DROP POLICY IF EXISTS "Visible offices are public" ON public.offices;
+DROP POLICY IF EXISTS "Content admins can manage offices" ON public.offices;
+DROP POLICY IF EXISTS "Active donation methods are public" ON public.donation_methods;
+DROP POLICY IF EXISTS "Content admins can manage donation methods" ON public.donation_methods;
 CREATE POLICY "Users can read own profile or admins can read all" ON public.profiles FOR SELECT USING (auth.uid() = id OR public.is_super_admin());
 CREATE POLICY "Super admins can manage profiles" ON public.profiles FOR ALL USING (public.is_super_admin()) WITH CHECK (public.is_super_admin());
 CREATE POLICY "Published pages are public" ON public.pages FOR SELECT USING (status = 'published' OR public.is_content_admin());
@@ -533,3 +565,5 @@ SET
 SELECT id, email, role, full_name, created_at
 FROM public.profiles
 WHERE LOWER(email) = LOWER('replace-with-your-admin-email@example.org');
+
+SELECT pg_notify('pgrst', 'reload schema');

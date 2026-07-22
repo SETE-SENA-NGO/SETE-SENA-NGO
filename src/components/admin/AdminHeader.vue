@@ -28,6 +28,7 @@ const pageTitle = computed(() => {
     return titleFromSlug(slug)
   }
   if (path === '/admin/programs') return 'Programs Overview'
+  if (path === '/admin/get-involved') return 'Get Involved'
   if (path === '/admin/education') return 'Education Dashboard'
   if (path === '/admin/environment') return 'Environment Dashboard'
   if (path === '/admin/livelihood') return 'Livelihood Dashboard'
@@ -47,6 +48,7 @@ const pageContext = computed(() => {
   const path = route.path
   if (path.startsWith('/admin/editor/')) return 'Website page'
   if (path === '/admin/programs') return 'Program overview'
+  if (path === '/admin/get-involved') return 'Page management'
   if (path === '/admin/education') return 'Program management'
   if (path === '/admin/environment') return 'Program management'
   if (path === '/admin/livelihood') return 'Program management'
