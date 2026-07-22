@@ -8,6 +8,8 @@ export const adminRoutes: RouteRecordRaw[] = [
   // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
   { path: '/admin/editor/home-slideshow', component: () => import('@/views/admin/PageEditorView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/media', component: () => import('@/views/admin/MediaLibraryView.vue'), meta: { requiresAuth: true } },
+  // Redirect old /admin/news to the News page editor
+  { path: '/admin/news', redirect: '/admin/editor/news' },
   { path: '/admin/modules/:module', component: () => import('@/views/admin/AdminModuleView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/education', component: () => import('@/views/admin/EducationDashboardView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/environment', component: () => import('@/views/admin/EnvironmentDashboardView.vue'), meta: { requiresAuth: true } },

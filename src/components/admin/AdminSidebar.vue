@@ -462,6 +462,21 @@ nav {
   transform: skewX(-24deg);
 }
 
+.icon-news::before {
+  inset: 0.08rem;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.icon-news::after {
+  left: 0.18rem;
+  right: 0.18rem;
+  top: 0.28rem;
+  height: 0.06rem;
+  background: currentColor;
+  box-shadow: 0 0.2rem 0 currentColor, 0 0.4rem 0 currentColor;
+}
+
 .icon-programs::before {
   inset: 0.08rem;
   border-top: 2px solid currentColor;
