@@ -259,6 +259,14 @@ const defaultPages: PageDraft[] = [
     secondaryAction: '',
     sections: [
       {
+        id: 'organization-facts',
+        label: 'Key Facts',
+        heading: 'The Peace Army by the numbers',
+        body: 'Santi Sena is a growing organization with professional staff, deep community roots, and trusted partnerships across southeastern Cambodia.',
+        items:
+          '30+ | Full-time staff | Advanced degrees in management, agriculture, education and rural development.\n3 | Provinces | Svay Rieng \u00b7 Prey Veng \u00b7 Kratie.\n10+ | Donor partners | UNDP, ADB, Oxfam and eight more managed grants.',
+      },
+      {
         id: 'organization-structure',
         label: 'Structure',
         heading: 'How we are organized',
