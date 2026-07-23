@@ -61,13 +61,24 @@ function isSkippableElement(element: Element | null) {
         'svg',
         'input',
         'textarea',
-        'select',
-        'option',
         '[contenteditable="true"]',
         '[data-no-localize]',
-        '.admin-top-bar',
-        '.confirm-dialog',
-        '.toast-region',
+      ].join(','),
+    ),
+  )
+}
+
+function isSkippableAttributeElement(element: Element | null) {
+  if (!element) return true
+
+  return Boolean(
+    element.closest(
+      [
+        'script',
+        'style',
+        'svg',
+        '[contenteditable="true"]',
+        '[data-no-localize]',
       ].join(','),
     ),
   )
@@ -125,6 +136,7 @@ function translateElementText(root: Element, locale: SupportedLocale) {
   elements.forEach((element) => {
     if (isSkippableElement(element)) return
     if (!element.textContent) return
+    if (element.children.length > 0) return
 
     const key = normalizeTranslationKey(element.textContent)
     const translated = translateContentText(key, locale)
@@ -164,7 +176,7 @@ function translateTextNodes(root: Element, locale: SupportedLocale) {
 
 function translateAttributes(root: Element, locale: SupportedLocale) {
   root.querySelectorAll('*').forEach((element) => {
-    if (isSkippableElement(element)) return
+    if (isSkippableAttributeElement(element)) return
 
     TRANSLATABLE_ATTRIBUTES.forEach((attributeName) => {
       const value = element.getAttribute(attributeName)
@@ -244,13 +256,13 @@ export function useLocalizedDomContent(isAdminRoute: ComputedRef<boolean>) {
 
   async function applyAfterRender() {
     await nextTick()
-    scheduleApply(currentLocale(), isAdminRoute.value)
+    scheduleApply(currentLocale(), false)
   }
 
   onMounted(() => {
     observer = new MutationObserver(() => {
       if (applying) return
-      scheduleApply(currentLocale(), isAdminRoute.value)
+      scheduleApply(currentLocale(), false)
     })
 
     const root = getRoot()
