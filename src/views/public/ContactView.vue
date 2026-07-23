@@ -1,7 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { localizeContentValue } from '@/i18n/contentTranslations'
+import type { SupportedLocale } from '@/i18n'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import {
+  contactPageSlug,
+  fallbackContactContent,
+  mergeContactContent,
+  parseContactCmsBody,
+  type ContactOffice,
+  type ContactPageContent,
+} from '@/lib/contactContent'
+import { useContentStore } from '@/stores/content.store'
 import { useUiStore } from '@/stores/ui.store'
 import cambodiaMap from '@/assets/maps/Cambodia Map.png'
 import locationIcon from '@/assets/maps/location_icon.png'
@@ -9,107 +21,95 @@ import preyVengMap from '@/assets/maps/Prey_Veng.png'
 import svayRiengMap from '@/assets/maps/Svay_Rieng.png'
 import logoUrl from '@/assets/santi_sena_icon.ico'
 
-const ui = useUiStore()
+type ContactMethodId = 'email' | 'telegram'
 
-const headquarters = {
-  name: 'Our headquarters in Svay Rieng',
-  address: 'Svay Rieng Town, Svay Rieng Province, Kingdom of Cambodia',
-  email: 'info@santisena.org',
-  phone: '+855 (0) 12 345 678',
-  hours: 'Monday - Friday, 8:00 - 17:00',
+type ContactMethod = {
+  id: ContactMethodId
+  tab: string
+  type: string
+  heading: string
+  fieldLabel: string
+  inputType: 'email' | 'text'
+  autocomplete: string
+  placeholder: string
+  buttonLabel: string
+  sentLabel: string
+  status: string
 }
 
-const offices = [
-  {
-    id: 'all',
-    tab: 'Cambodia',
-    title: 'Santi Sena offices in Cambodia',
-    type: 'All provinces',
-    provinceName: 'Cambodia',
-    address: 'Head office in Svay Rieng with field office support in Prey Veng',
-    phone: '+855 (0) 12 345 678',
-    email: 'info@santisena.org',
-    contact: 'Select a province above to view that province map and office details.',
-    mapLabel: 'Cambodia offices',
-    mapImage: cambodiaMap,
-    pinLeft: '62%',
-    pinTop: '54%',
-  },
-  {
-    id: 'head-office',
-    tab: 'Svay Rieng',
-    title: 'Svay Rieng Head Office',
-    type: 'Head office',
-    provinceName: 'Svay Rieng Province',
-    address: 'Svay Rieng Town, Svay Rieng Province, Kingdom of Cambodia',
-    phone: '+855 (0) 12 345 678',
-    email: 'info@santisena.org',
-    contact: 'General coordination, donors, partners and project visits',
-    mapLabel: 'Santi Sena Head Office',
-    mapImage: svayRiengMap,
-    pinLeft: '61.8%',
-    pinTop: '81.4%',
-    countryPinLeft: '61.8%',
-    countryPinTop: '81.4%',
-  },
-  {
-    id: 'prey-veng-office',
-    tab: 'Prey Veng',
-    title: 'Prey Veng Field Office',
-    type: 'Field office',
-    provinceName: 'Prey Veng Province',
-    address: 'Prey Veng Town, Prey Veng Province, Cambodia',
-    phone: '+855 (0) 12 111 222',
-    email: 'preyveng@santisena.org',
-    contact: 'Environment, livelihood and education program coordination',
-    mapLabel: 'Prey Veng Field Office',
-    mapImage: preyVengMap,
-    pinLeft: '53.5%',
-    pinTop: '72.4%',
-    countryPinLeft: '53.5%',
-    countryPinTop: '72.4%',
-  },
-] as const
+type ResolvedContactOffice = ContactOffice & {
+  mapImage: string
+}
 
-const visitNotes = [
-  'Field staff are often in villages, so email replies may take 24-48 hours.',
-  'Donors, partners and researchers are welcome by appointment.',
-  'Village visits should be arranged through the head office two weeks in advance.',
-]
+const ui = useUiStore()
+const contentStore = useContentStore()
+const { locale } = useI18n()
 
-const contactMethods = [
+const defaultMapImages: Record<string, string> = {
+  all: cambodiaMap,
+  'head-office': svayRiengMap,
+  'prey-veng-office': preyVengMap,
+}
+
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
+const cmsContent = ref<Partial<ContactPageContent> | null>(null)
+let stopCmsSubscription: (() => void) | null = null
+
+const pageContent = computed<ContactPageContent>(() => {
+  const merged = mergeContactContent(fallbackContactContent, cmsContent.value)
+  return activeLocale.value === 'kh'
+    ? localizeContentValue(merged, activeLocale.value)
+    : merged
+})
+
+const headquarters = computed(() => pageContent.value.headquarters)
+const officesIntro = computed(() => pageContent.value.officesIntro)
+const formContent = computed(() => pageContent.value.form)
+const telegramContact = computed(() => pageContent.value.telegram)
+const visitContent = computed(() => pageContent.value.visit)
+const visitNotes = computed(() => pageContent.value.visit.notes.filter(Boolean))
+const contactLogoImage = computed(() => formContent.value.logoImage.trim() || logoUrl)
+const messageMaxLength = computed(() => formContent.value.messageMaxLength || 600)
+const offices = computed<ResolvedContactOffice[]>(() => {
+  const source = pageContent.value.offices.length
+    ? pageContent.value.offices
+    : fallbackContactContent.offices
+
+  return source.map((office) => ({
+    ...office,
+    mapImage: resolveMapImage(office),
+  }))
+})
+const contactMethods = computed<ContactMethod[]>(() => [
   {
     id: 'email',
-    tab: 'Email',
-    type: 'Contact form',
-    heading: 'Email to Us',
-    fieldLabel: 'Email',
+    tab: formContent.value.emailTab,
+    type: formContent.value.emailType,
+    heading: formContent.value.emailHeading,
+    fieldLabel: formContent.value.emailFieldLabel,
     inputType: 'email',
     autocomplete: 'email',
-    placeholder: 'name@example.com',
-    buttonLabel: 'Send message',
-    sentLabel: 'Message ready',
-    status: 'Thank you. Your message is ready for our team.',
+    placeholder: formContent.value.emailPlaceholder,
+    buttonLabel: formContent.value.emailButtonLabel,
+    sentLabel: formContent.value.emailSentLabel,
+    status: formContent.value.emailStatus,
   },
   {
     id: 'telegram',
-    tab: 'Telegram',
-    type: 'Quick chat',
-    heading: 'Telegram to Us',
-    fieldLabel: 'Telegram',
+    tab: formContent.value.telegramTab,
+    type: formContent.value.telegramType,
+    heading: formContent.value.telegramHeading,
+    fieldLabel: formContent.value.telegramTab,
     inputType: 'text',
     autocomplete: 'off',
-    placeholder: '@yourtelegram',
-    buttonLabel: 'Send via Telegram',
-    sentLabel: 'Telegram ready',
-    status: 'Thank you. Your Telegram contact is ready for our team.',
+    placeholder: '',
+    buttonLabel: formContent.value.telegramButtonLabel,
+    sentLabel: formContent.value.telegramSentLabel,
+    status: formContent.value.telegramStatus,
   },
-] as const
-
-const telegramContact = {
-  qrImage: '/images/contact/telegram-qr.jpg',
-  url: 'https://t.me/sannta_close',
-}
+])
 
 const name = ref('')
 const contactDetail = ref('')
@@ -118,25 +118,29 @@ const message = ref('')
 const formSent = ref(false)
 const contactFormBarsVisible = ref(false)
 const contactFormMotionActive = ref(false)
-const messageMaxLength = 600
 let contactFormMotionFrame: number | undefined
 let contactFormMotionTimer: number | undefined
 
-const activeOfficeId = ref<(typeof offices)[number]['id']>('all')
-const activeContactMethodId = ref<(typeof contactMethods)[number]['id']>('email')
+const activeOfficeId = ref('all')
+const activeContactMethodId = ref<ContactMethodId>('email')
 const activeOffice = computed(
-  () => offices.find((office) => office.id === activeOfficeId.value) ?? offices[0],
+  () => offices.value.find((office) => office.id === activeOfficeId.value) ?? offices.value[0],
 )
 const activeContactMethod = computed(
   () =>
-    contactMethods.find((contactMethod) => contactMethod.id === activeContactMethodId.value) ??
-    contactMethods[0],
+    contactMethods.value.find(
+      (contactMethod) => contactMethod.id === activeContactMethodId.value,
+    ) ?? contactMethods.value[0],
 )
 const isTelegramMethod = computed(() => activeContactMethodId.value === 'telegram')
 const mapOfficeHotspots = computed(() =>
-  offices.filter(
-    (office): office is Extract<(typeof offices)[number], { countryPinLeft: string }> =>
-      'countryPinLeft' in office && 'countryPinTop' in office,
+  offices.value.filter(
+    (
+      office,
+    ): office is ResolvedContactOffice & {
+      countryPinLeft: string
+      countryPinTop: string
+    } => Boolean(office.countryPinLeft && office.countryPinTop),
   ),
 )
 const canSubmit = computed(() =>
@@ -146,11 +150,30 @@ const canSubmit = computed(() =>
 
 useScrollReveal()
 
-function selectOffice(officeId: (typeof offices)[number]['id']) {
+watch(
+  offices,
+  (nextOffices) => {
+    if (!nextOffices.length) return
+    if (!nextOffices.some((office) => office.id === activeOfficeId.value)) {
+      activeOfficeId.value = nextOffices[0].id
+    }
+  },
+  { immediate: true },
+)
+
+watch(activeLocale, () => {
+  void loadCmsContent()
+})
+
+function resolveMapImage(office: ContactOffice) {
+  return office.mapImage.trim() || defaultMapImages[office.id] || cambodiaMap
+}
+
+function selectOffice(officeId: string) {
   activeOfficeId.value = officeId
 }
 
-function selectContactMethod(contactMethodId: (typeof contactMethods)[number]['id']) {
+function selectContactMethod(contactMethodId: ContactMethodId) {
   if (activeContactMethodId.value === contactMethodId) return
 
   activeContactMethodId.value = contactMethodId
@@ -188,11 +211,31 @@ function submitContact() {
   formSent.value = true
 }
 
-onMounted(() => {
+function isExternalLink(to: string) {
+  return /^(mailto:|tel:|https?:\/\/)/i.test(to)
+}
+
+async function loadCmsContent() {
+  try {
+    const page = await contentStore.fetchBySlug(contactPageSlug, activeLocale.value)
+    cmsContent.value = page ? parseContactCmsBody(page.body) : null
+  } catch {
+    cmsContent.value = null
+  }
+}
+
+onMounted(async () => {
   document.title = 'Contact Santi Sena'
+  stopCmsSubscription = contentStore.subscribeToSlug(contactPageSlug, () => {
+    void loadCmsContent()
+  })
+  await loadCmsContent()
 })
 
 onUnmounted(() => {
+  stopCmsSubscription?.()
+  stopCmsSubscription = null
+
   if (contactFormMotionFrame !== undefined) {
     window.cancelAnimationFrame(contactFormMotionFrame)
   }
@@ -206,21 +249,20 @@ onUnmounted(() => {
   <main class="contact-page">
     <section id="head-office" class="headquarters-section" aria-labelledby="headquarters-heading">
       <div class="section-intro reveal">
-        <p class="section-kicker">Contact us</p>
-        <h2 id="headquarters-heading">Our headquarters in Cambodia</h2>
+        <p class="section-kicker">{{ headquarters.eyebrow }}</p>
+        <h2 id="headquarters-heading">{{ headquarters.title }}</h2>
         <p>
-          Our Svay Rieng headquarters is the main contact point for partnerships, donor
-          coordination, visits and support for village programs across Cambodia.
+          {{ headquarters.intro }}
         </p>
       </div>
 
       <div class="headquarters-layout">
         <figure class="headquarters-photo reveal" style="animation-delay: 0.1s">
-          <img src="/images/programs/hero-1.jpg" alt="Santi Sena team meeting in Cambodia" />
+          <img :src="headquarters.image" :alt="headquarters.imageAlt" />
         </figure>
 
         <article class="headquarters-details reveal" style="animation-delay: 0.22s">
-          <p class="office-type">Head office</p>
+          <p class="office-type">{{ headquarters.type }}</p>
           <h3>{{ headquarters.name }}</h3>
           <dl class="details-list">
             <div>
@@ -250,11 +292,10 @@ onUnmounted(() => {
 
     <section id="field-offices" class="centers-section" aria-labelledby="centers-heading">
       <div class="section-intro reveal">
-        <p class="section-kicker">Contact us</p>
-        <h2 id="centers-heading">Our offices across Cambodia</h2>
+        <p class="section-kicker">{{ officesIntro.eyebrow }}</p>
+        <h2 id="centers-heading">{{ officesIntro.title }}</h2>
         <p>
-          Santi Sena works from the head office and a provincial field office. Choose an office
-          below to see the best contact details for your visit or message.
+          {{ officesIntro.body }}
         </p>
       </div>
 
@@ -537,7 +578,7 @@ onUnmounted(() => {
           <div :key="activeOffice.id" class="office-panel">
             <div class="office-panel__header">
               <div>
-                <p class="section-kicker">Contact us</p>
+                <p class="section-kicker">{{ officesIntro.eyebrow }}</p>
                 <h3>{{ activeOffice.title }}</h3>
               </div>
               <p class="office-panel__badge">{{ activeOffice.type }}</p>
@@ -580,9 +621,9 @@ onUnmounted(() => {
       <div
         class="contact-method-section reveal"
         style="animation-delay: 0.04s"
-        aria-label="Choose how to contact us"
+        :aria-label="formContent.chooserLabel"
       >
-        <div class="contact-method-tabs" role="radiogroup" aria-label="Contact method">
+        <div class="contact-method-tabs" role="radiogroup" :aria-label="formContent.chooserLabel">
           <button
             v-for="contactMethod in contactMethods"
             :key="contactMethod.id"
@@ -600,14 +641,13 @@ onUnmounted(() => {
       </div>
 
       <div class="contact-form-intro reveal" style="animation-delay: 0.12s">
-        <p class="section-kicker">Write to us</p>
-        <h2 id="form-heading">Send a message to our team</h2>
+        <p class="section-kicker">{{ formContent.introEyebrow }}</p>
+        <h2 id="form-heading">{{ formContent.title }}</h2>
         <p>
-          Share your question, visit request, or partnership idea and our team will follow up from
-          the right office.
+          {{ formContent.body }}
         </p>
-        <figure class="contact-logo-visual" aria-label="Santi Sena seal">
-          <img class="contact-logo" :src="logoUrl" alt="Santi Sena seal" loading="lazy" />
+        <figure class="contact-logo-visual" :aria-label="formContent.logoAlt">
+          <img class="contact-logo" :src="contactLogoImage" :alt="formContent.logoAlt" loading="lazy" />
         </figure>
       </div>
 
@@ -620,7 +660,7 @@ onUnmounted(() => {
         style="animation-delay: 0.2s"
         @submit.prevent="submitContact"
       >
-        <p class="form-kicker">Contact form</p>
+        <p class="form-kicker">{{ formContent.kicker }}</p>
         <p class="form-heading">{{ activeContactMethod.heading }}</p>
 
         <div v-if="isTelegramMethod" class="telegram-contact-panel">
@@ -628,7 +668,7 @@ onUnmounted(() => {
             <img
               class="telegram-qr-image"
               :src="telegramContact.qrImage"
-              alt="Telegram QR code for Santi Sena"
+              :alt="telegramContact.qrAlt"
               loading="lazy"
             />
           </figure>
@@ -638,7 +678,7 @@ onUnmounted(() => {
             target="_blank"
             rel="noopener"
           >
-            Open Telegram
+            {{ telegramContact.openLabel }}
           </a>
         </div>
 
@@ -646,8 +686,8 @@ onUnmounted(() => {
           <div class="form-row">
             <label class="form-field">
               <span class="field-topline">
-                <span class="field-label">Name</span>
-                <span class="field-required">Required</span>
+                <span class="field-label">{{ formContent.nameLabel }}</span>
+                <span class="field-required">{{ formContent.requiredLabel }}</span>
               </span>
               <span class="field-control">
                 <input
@@ -657,7 +697,7 @@ onUnmounted(() => {
                   required
                   autocomplete="name"
                   type="text"
-                  placeholder="Your full name"
+                  :placeholder="formContent.namePlaceholder"
                 />
               </span>
             </label>
@@ -665,7 +705,7 @@ onUnmounted(() => {
             <label class="form-field">
               <span class="field-topline">
                 <span class="field-label">{{ activeContactMethod.fieldLabel }}</span>
-                <span class="field-required">Required</span>
+                <span class="field-required">{{ formContent.requiredLabel }}</span>
               </span>
               <span class="field-control">
                 <input
@@ -684,8 +724,8 @@ onUnmounted(() => {
 
           <label class="form-field">
             <span class="field-topline">
-              <span class="field-label">Subject</span>
-              <span class="field-optional">Optional</span>
+              <span class="field-label">{{ formContent.subjectLabel }}</span>
+              <span class="field-optional">{{ formContent.optionalLabel }}</span>
             </span>
             <span class="field-control">
               <input
@@ -694,14 +734,14 @@ onUnmounted(() => {
                 name="contact-subject"
                 autocomplete="off"
                 type="text"
-                placeholder="What would you like to discuss?"
+                :placeholder="formContent.subjectPlaceholder"
               />
             </span>
           </label>
 
           <label class="form-field form-field--message">
             <span class="field-topline">
-              <span class="field-label">Message</span>
+              <span class="field-label">{{ formContent.messageLabel }}</span>
               <span class="field-count">{{ message.length }}/{{ messageMaxLength }}</span>
             </span>
             <span class="field-control">
@@ -712,7 +752,7 @@ onUnmounted(() => {
                 required
                 rows="5"
                 :maxlength="messageMaxLength"
-                placeholder="Share a few details so the right team can reply."
+                :placeholder="formContent.messagePlaceholder"
               ></textarea>
             </span>
           </label>
@@ -729,10 +769,14 @@ onUnmounted(() => {
       </form>
     </section>
 
-    <section class="visit-section reveal" aria-labelledby="write-heading">
+    <section
+      class="visit-section reveal"
+      aria-labelledby="write-heading"
+      :style="{ '--visit-bg': `url('${visitContent.backgroundImage}')` }"
+    >
       <div class="reveal" style="animation-delay: 0.06s">
-        <p class="section-kicker section-kicker--light">Write to us</p>
-        <h2 id="write-heading">A little coordination helps us welcome you well.</h2>
+        <p class="section-kicker section-kicker--light">{{ visitContent.eyebrow }}</p>
+        <h2 id="write-heading">{{ visitContent.title }}</h2>
       </div>
 
       <ul class="visit-notes reveal" style="animation-delay: 0.16s">
@@ -740,9 +784,33 @@ onUnmounted(() => {
       </ul>
 
       <div class="visit-actions reveal" style="animation-delay: 0.26s">
-        <a class="visit-button visit-button--primary" href="mailto:info@santisena.org">Email us</a>
-        <RouterLink class="visit-button visit-button--ghost" to="/get-involved/partner">
-          Partnership
+        <a
+          v-if="isExternalLink(visitContent.primaryCta.to)"
+          class="visit-button visit-button--primary"
+          :href="visitContent.primaryCta.to"
+        >
+          {{ visitContent.primaryCta.label }}
+        </a>
+        <RouterLink
+          v-else
+          class="visit-button visit-button--primary"
+          :to="visitContent.primaryCta.to"
+        >
+          {{ visitContent.primaryCta.label }}
+        </RouterLink>
+        <a
+          v-if="isExternalLink(visitContent.secondaryCta.to)"
+          class="visit-button visit-button--ghost"
+          :href="visitContent.secondaryCta.to"
+        >
+          {{ visitContent.secondaryCta.label }}
+        </a>
+        <RouterLink
+          v-else
+          class="visit-button visit-button--ghost"
+          :to="visitContent.secondaryCta.to"
+        >
+          {{ visitContent.secondaryCta.label }}
         </RouterLink>
       </div>
     </section>
@@ -2008,7 +2076,7 @@ onUnmounted(() => {
       rgba(18, 19, 18, 0.86) 52%,
       rgba(18, 19, 18, 0.7) 100%
     ),
-    url('/images/programs/hero-4.jpg') center / cover no-repeat;
+    var(--visit-bg, url('/images/programs/hero-4.jpg')) center / cover no-repeat;
   color: #fffaf2;
   padding: clamp(3rem, 6vw, 4.5rem)
     max(
