@@ -249,12 +249,127 @@ export const khmerContentTranslations: Record<string, string> = {
   'Start here': 'ចាប់ផ្តើមទីនេះ',
 
   'Partner with Santi Sena': 'សហការជាដៃគូជាមួយសន្តិសេនា',
+  'Get involved - Partner': 'ចូលរួម - ដៃគូ',
+  'Support practical programs with communities, local authorities, Buddhist networks and technical partners.':
+    'គាំទ្រកម្មវិធីជាក់ស្តែងជាមួយសហគមន៍ អាជ្ញាធរមូលដ្ឋាន បណ្តាញព្រះពុទ្ធសាសនា និងដៃគូបច្ចេកទេស។',
+  'Start a partnership': 'ចាប់ផ្តើមភាពជាដៃគូ',
+  'View portfolio': 'មើលសំណុំគម្រោង',
+  'Recent and current portfolio': 'សំណុំគម្រោងថ្មីៗ និងបច្ចុប្បន្ន',
   'Current portfolio.': 'សំណុំគម្រោងបច្ចុប្បន្ន។',
+  'A quick view of active project themes, timeframes and funding partners moving through the field system now.':
+    'ទិដ្ឋភាពសង្ខេបអំពីប្រធានបទគម្រោងសកម្ម រយៈពេល និងដៃគូមូលនិធិដែលកំពុងដំណើរការតាមប្រព័ន្ធការងារមូលដ្ឋាន។',
+  'See active work': 'មើលការងារសកម្ម',
+  '3 months': '៣ ខែ',
+  'Portfolio active': 'សំណុំគម្រោងសកម្ម',
+  'Healthy environment for children': 'បរិស្ថានមានសុខភាពល្អសម្រាប់កុមារ',
+  'Health and environment support for disadvantaged families in Svay Rieng.':
+    'ការគាំទ្រផ្នែកសុខភាព និងបរិស្ថានសម្រាប់គ្រួសារខ្វះខាតនៅខេត្តស្វាយរៀង។',
+  'Mekong climate adaptation': 'ការបន្សាំអាកាសធាតុតំបន់មេគង្គ',
+  'Children and youth action across Cambodia, Thailand, Laos PDR and Vietnam.':
+    'សកម្មភាពកុមារ និងយុវជនទូទាំងកម្ពុជា ថៃ ឡាវ និងវៀតណាម។',
+  'Food security, sanitation and hygiene': 'សន្តិសុខស្បៀង អនាម័យ និងសុខភាពបរិស្ថាន',
+  'Food security, sanitation and hygiene with rural communities.':
+    'សន្តិសុខស្បៀង អនាម័យ និងសុខភាពបរិស្ថានជាមួយសហគមន៍ជនបទ។',
+  'Buddhist primary education': 'ការអប់រំបឋមតាមព្រះពុទ្ធសាសនា',
+  'Learning support through monastery-based primary schools.':
+    'ការគាំទ្រការរៀនសូត្រតាមសាលាបឋមដែលមានមូលដ្ឋាននៅវត្ត។',
+  'My Planet, My Right in ASEAN': 'ភពផែនដីខ្ញុំ សិទ្ធិខ្ញុំ ក្នុងអាស៊ាន',
+  'Child and youth advocacy for environmental rights.':
+    'ការតស៊ូមតិរបស់កុមារ និងយុវជនសម្រាប់សិទ្ធិបរិស្ថាន។',
   'How partnership works': 'របៀបដំណើរការភាពជាដៃគូ',
   'Clear field rhythm.': 'លំនាំការងារមូលដ្ឋានច្បាស់លាស់។',
+  'Support moves through planning, reporting, monitoring and learning.':
+    'ការគាំទ្រដំណើរការតាមរយៈការរៀបចំផែនការ ការរាយការណ៍ ការតាមដាន និងការរៀនសូត្រ។',
+  'Local delivery': 'ការអនុវត្តនៅមូលដ្ឋាន',
+  'Field teams': 'ក្រុមការងារមូលដ្ឋាន',
+  'Project staff work with beneficiaries, local authorities and government stakeholders.':
+    'បុគ្គលិកគម្រោងធ្វើការជាមួយអ្នកទទួលផល អាជ្ញាធរមូលដ្ឋាន និងភាគីពាក់ព័ន្ធរបស់រដ្ឋាភិបាល។',
+  'Clear tracking': 'ការតាមដានច្បាស់លាស់',
+  'Monthly plans': 'ផែនការប្រចាំខែ',
+  'Teams prepare action plans, budgets and achievement reports.':
+    'ក្រុមការងាររៀបចំផែនការសកម្មភាព ថវិកា និងរបាយការណ៍សមិទ្ធផល។',
+  'Quarterly partner updates': 'បច្ចុប្បន្នភាពជូនដៃគូប្រចាំត្រីមាស',
+  'Donor reports': 'របាយការណ៍ជូនម្ចាស់ជំនួយ',
+  'Progress reports are shared every three months or as required.':
+    'របាយការណ៍វឌ្ឍនភាពត្រូវបានចែករំលែករៀងរាល់បីខែ ឬតាមការទាមទារ។',
+  '3-month M&E rhythm': 'លំនាំតាមដាន និងវាយតម្លៃរៀងរាល់ ៣ ខែ',
+  'Monitoring and evaluation': 'ការតាមដាន និងវាយតម្លៃ',
+  'M&E includes staff, beneficiaries and local authorities.':
+    'ការតាមដាន និងវាយតម្លៃរួមមានបុគ្គលិក អ្នកទទួលផល និងអាជ្ញាធរមូលដ្ឋាន។',
+  'Lessons retained': 'រក្សាទុកមេរៀន',
+  'Learning review': 'ការពិនិត្យមេរៀន',
+  'Final reports capture lessons for the next project cycle.':
+    'របាយការណ៍ចុងក្រោយកត់ត្រាមេរៀនសម្រាប់វដ្តគម្រោងបន្ទាប់។',
   'Strategic partnership space': 'កន្លែងភាពជាដៃគូយុទ្ធសាស្ត្រ',
+  'Where partners can help next.': 'កន្លែងដែលដៃគូអាចជួយបន្ត។',
+  'Partners can strengthen the next cycle of village-led work through funding, learning, technical systems and practical field support.':
+    'ដៃគូអាចពង្រឹងវដ្តបន្ទាប់នៃការងារដែលដឹកនាំដោយភូមិ តាមរយៈមូលនិធិ ការរៀនសូត្រ ប្រព័ន្ធបច្ចេកទេស និងការគាំទ្រមូលដ្ឋានជាក់ស្តែង។',
+  'Diversified funding': 'មូលនិធិចម្រុះ',
+  'Long-term donors and wider income sources improve stability.':
+    'ម្ចាស់ជំនួយរយៈពេលវែង និងប្រភពចំណូលចម្រុះជួយបង្កើនស្ថិរភាព។',
+  'Multi-year grants and local income streams.':
+    'ជំនួយរយៈពេលច្រើនឆ្នាំ និងប្រភពចំណូលមូលដ្ឋាន។',
+  'Field learning can become research, evidence and advocacy.':
+    'ការរៀនសូត្រពីមូលដ្ឋានអាចក្លាយជាការស្រាវជ្រាវ ភស្តុតាង និងការតស៊ូមតិ។',
+  'Studies, learning notes and technical support.':
+    'ការសិក្សា កំណត់ត្រាមេរៀន និងការគាំទ្របច្ចេកទេស។',
+  'Social enterprise and rural markets': 'សហគ្រាសសង្គម និងទីផ្សារជនបទ',
+  'Farmer groups and cooperatives need practical market links.':
+    'ក្រុមកសិករ និងសហករណ៍ត្រូវការការភ្ជាប់ទីផ្សារជាក់ស្តែង។',
+  'Producer coaching and enterprise support.':
+    'ការបណ្តុះបណ្តាលអ្នកផលិត និងការគាំទ្រសហគ្រាស។',
+  'Resource center and outreach library': 'មជ្ឈមណ្ឌលធនធាន និងបណ្ណាល័យចល័ត',
+  'Libraries connect children, youth and farmers to useful knowledge.':
+    'បណ្ណាល័យភ្ជាប់កុមារ យុវជន និងកសិករទៅកាន់ចំណេះដឹងមានប្រយោជន៍។',
+  'Books, outreach and digital learning.':
+    'សៀវភៅ ការផ្សព្វផ្សាយ និងការរៀនសូត្រឌីជីថល។',
+  'Climate and WASH readiness': 'ការត្រៀមខ្លួនផ្នែកអាកាសធាតុ និង WASH',
+  'Villages need practical systems for water, hygiene and climate adaptation.':
+    'ភូមិត្រូវការប្រព័ន្ធជាក់ស្តែងសម្រាប់ទឹក អនាម័យ និងការបន្សាំអាកាសធាតុ។',
+  'Technical design, training and resilient infrastructure.':
+    'ការរចនាបច្ចេកទេស ការបណ្តុះបណ្តាល និងហេដ្ឋារចនាសម្ព័ន្ធធន់នឹងហានិភ័យ។',
+  'Child rights and safe migration': 'សិទ្ធិកុមារ និងការធ្វើចំណាកស្រុកដោយសុវត្ថិភាព',
+  'Young people benefit when protection networks can respond early.':
+    'យុវជនទទួលបានអត្ថប្រយោជន៍នៅពេលបណ្តាញការពារអាចឆ្លើយតបបានទាន់ពេល។',
+  'Safeguarding systems, outreach and peer education.':
+    'ប្រព័ន្ធការពារ ការផ្សព្វផ្សាយ និងការអប់រំមិត្តភក្តិ។',
+  'Network layers': 'ស្រទាប់បណ្តាញ',
+  'Connected beyond the office.': 'ភ្ជាប់លើសពីការិយាល័យ។',
+  'Civil society, faith and youth networks help learning reach villages.':
+    'បណ្តាញសង្គមស៊ីវិល សាសនា និងយុវជនជួយឱ្យការរៀនសូត្រទៅដល់ភូមិ។',
+  'National civil society': 'សង្គមស៊ីវិលជាតិ',
+  'Coordination on child rights, environment and development.':
+    'ការសម្របសម្រួលលើសិទ្ធិកុមារ បរិស្ថាន និងការអភិវឌ្ឍ។',
+  'Faith and peace': 'សាសនា និងសន្តិភាព',
+  "A values-based network linked to Santi Sena's Buddhist roots.":
+    'បណ្តាញផ្អែកលើតម្លៃ ដែលភ្ជាប់ទៅនឹងឫសគល់ព្រះពុទ្ធសាសនារបស់សន្តិសេនា។',
+  'Regional biodiversity': 'ជីវចម្រុះតំបន់',
+  'Regional learning for natural resources and climate adaptation.':
+    'ការរៀនសូត្រតំបន់សម្រាប់ធនធានធម្មជាតិ និងការបន្សាំអាកាសធាតុ។',
+  'Community intermediaries': 'អ្នកសម្របសម្រួលសហគមន៍',
+  'Monks, youth and child-peer promoters': 'ព្រះសង្ឃ យុវជន និងក្រុមកុមារផ្សព្វផ្សាយ',
+  'Local people who carry awareness into villages.':
+    'ប្រជាជនមូលដ្ឋានដែលនាំយកការយល់ដឹងទៅកាន់ភូមិ។',
+  'Funding history': 'ប្រវត្តិមូលនិធិ',
+  'A wider support base.': 'មូលដ្ឋានគាំទ្រទូលំទូលាយ។',
+  'Past supporters across development, multilateral, child-focused and education programs.':
+    'អ្នកគាំទ្រកន្លងមកក្នុងកម្មវិធីអភិវឌ្ឍ ពហុភាគី ផ្តោតលើកុមារ និងអប់រំ។',
+  'Development donors': 'ម្ចាស់ជំនួយអភិវឌ្ឍន៍',
+  'CIDSE Cambodia, OXFAM G.B., Pact Cambodia, U.S. Embassy and CRS.':
+    'CIDSE Cambodia, OXFAM G.B., Pact Cambodia, ស្ថានទូតអាមេរិក និង CRS។',
+  'UN and multilateral support': 'ការគាំទ្រពីអង្គការសហប្រជាជាតិ និងពហុភាគី',
+  'UNDP-GEF-SGP, UNDP-PTF-SGP and ADB through Plan Cambodia.':
+    'UNDP-GEF-SGP, UNDP-PTF-SGP និង ADB តាមរយៈ Plan Cambodia។',
+  'Child and community partners': 'ដៃគូកុមារ និងសហគមន៍',
+  'Tdh Netherlands, ChildFund, Heifer and Habitat Cambodia.':
+    'Tdh Netherlands, ChildFund, Heifer និង Habitat Cambodia។',
+  'WASH and education partners': 'ដៃគូ WASH និងអប់រំ',
+  'Global Sanitation Fund through Plan International Cambodia and Khyentse Foundation.':
+    'Global Sanitation Fund តាមរយៈ Plan International Cambodia និង Khyentse Foundation។',
   'Bring funding, technical skill or learning capacity into a working field system.':
     'នាំយកមូលនិធិ ជំនាញបច្ចេកទេស ឬសមត្ថភាពរៀនសូត្រចូលទៅក្នុងប្រព័ន្ធការងារមូលដ្ឋាន។',
+  'Share your focus area and timeframe. The team can match it to current programs and community priorities.':
+    'ចែករំលែកវិស័យផ្តោត និងរយៈពេលរបស់អ្នក។ ក្រុមការងារអាចភ្ជាប់វាជាមួយកម្មវិធីបច្ចុប្បន្ន និងអាទិភាពសហគមន៍។',
   'Contact partnerships team': 'ទំនាក់ទំនងក្រុមភាពជាដៃគូ',
   'Portfolio window': 'រយៈពេលសំណុំគម្រោង',
   'M&E review cycle': 'វដ្តពិនិត្យតាមដាន និងវាយតម្លៃ',
