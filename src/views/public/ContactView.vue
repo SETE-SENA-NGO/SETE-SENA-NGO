@@ -1996,9 +1996,9 @@ onUnmounted(() => {
   background:
     linear-gradient(
       90deg,
-      rgba(4, 48, 29, 0.94) 0%,
-      rgba(4, 48, 29, 0.9) 52%,
-      rgba(4, 48, 29, 0.76) 100%
+      rgba(18, 19, 18, 0.92) 0%,
+      rgba(18, 19, 18, 0.86) 52%,
+      rgba(18, 19, 18, 0.7) 100%
     ),
     url('/images/programs/hero-4.jpg') center / cover no-repeat;
   color: #fffaf2;
@@ -2010,7 +2010,7 @@ onUnmounted(() => {
 }
 
 .visit-section .section-kicker--light {
-  color: #bff6c6;
+  color: #e6e3dc;
 }
 
 .visit-section h2 {
@@ -2044,7 +2044,7 @@ onUnmounted(() => {
   height: 0.48rem;
   border: 2px solid rgba(255, 250, 242, 0.86);
   border-radius: 999px;
-  background: #bff6c6;
+  background: #d8d4ca;
   content: '';
 }
 
@@ -2055,7 +2055,7 @@ onUnmounted(() => {
 
 .visit-button--primary {
   background: var(--color-white);
-  color: #073f27;
+  color: #1d1f1d;
   box-shadow: none;
 }
 
@@ -2065,8 +2065,8 @@ onUnmounted(() => {
 }
 
 .visit-button--primary:hover {
-  background: #bff6c6;
-  color: #073f27;
+  background: #e6e3dc;
+  color: #1d1f1d;
 }
 
 .visit-button--ghost:hover {
