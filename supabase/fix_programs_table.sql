@@ -34,7 +34,7 @@ CREATE POLICY "Allow public read" ON public.programs
 CREATE POLICY "Allow authenticated write" ON public.programs
   FOR ALL USING (auth.role() = 'authenticated')
   WITH CHECK (auth.role() = 'authenticated');
-
+git 
 -- 3. Create profiles table (needed for admin login role)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
