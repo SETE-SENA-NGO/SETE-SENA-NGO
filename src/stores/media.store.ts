@@ -29,6 +29,7 @@ type MediaAssetRow = {
   mime_type: string | null
   file_size: number | null
   created_at: string
+  metadata?: Record<string, unknown> | null
 }
 
 type UploadErrorDetails = {
@@ -46,6 +47,12 @@ type UploadResponsePayload = {
   error?: string
   details?: UploadErrorDetails
   media?: MediaAssetRow
+}
+
+type DeleteResponsePayload = {
+  error?: string
+  details?: UploadErrorDetails
+  deleted?: boolean
 }
 
 export const useMediaStore = defineStore('media', () => {
@@ -189,9 +196,32 @@ export const useMediaStore = defineStore('media', () => {
   }
 
   async function remove(id: string) {
-    const { error: assetError } = await supabase.from('media_assets').delete().eq('id', id)
+    const asset = await fetchMediaAsset(id)
 
-    if (assetError) throw assetError
+    if (!asset) {
+      items.value = items.value.filter((item) => item.id !== id)
+      return
+    }
+
+    if (isGoogleDriveAsset(asset)) {
+      await deleteGoogleDriveMediaAsset(id)
+    } else {
+      if (asset.bucket && asset.path && !isExternalUrl(asset.path)) {
+        const { error: storageError } = await supabase.storage
+          .from(asset.bucket)
+          .remove([asset.path])
+
+        if (storageError) throw storageError
+      }
+
+      const { error: assetError } = await supabase
+        .from('media_assets')
+        .delete()
+        .eq('id', id)
+
+      if (assetError) throw assetError
+    }
+
     items.value = items.value.filter((item) => item.id !== id)
   }
 
@@ -227,6 +257,59 @@ function uploadErrorMessage(response: Response, payload: UploadResponsePayload |
     .join(' ')
 
   return suffix ? `${message} ${suffix}` : `${message} HTTP ${response.status}.`
+}
+
+async function fetchMediaAsset(id: string) {
+  const { data, error } = await supabase
+    .from('media_assets')
+    .select('id, bucket, path, public_url, file_name, mime_type, file_size, created_at, metadata')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) throw error
+  return data ? (data as MediaAssetRow) : null
+}
+
+async function deleteGoogleDriveMediaAsset(id: string) {
+  const sessionResult = await supabase.auth.getSession()
+  const accessToken = sessionResult.data.session?.access_token
+
+  if (sessionResult.error || !accessToken) {
+    throw new Error('Please log in as an admin before deleting images.')
+  }
+
+  const response = await fetch('/api/google-drive-upload', {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id }),
+  })
+  const payload = (await response.json().catch(() => null)) as DeleteResponsePayload | null
+
+  if (!response.ok || !payload?.deleted) {
+    const message = uploadErrorMessage(response, payload)
+    throw new Error(message)
+  }
+}
+
+function isGoogleDriveAsset(asset: MediaAssetRow) {
+  return (
+    asset.bucket === 'google-drive' ||
+    Boolean(asset.metadata?.google_drive_file_id) ||
+    isGoogleDriveUrl(asset.public_url) ||
+    isGoogleDriveUrl(asset.path)
+  )
+}
+
+function isExternalUrl(value: string | null | undefined) {
+  return /^https?:\/\//i.test(value ?? '')
+}
+
+function isGoogleDriveUrl(value: string | null | undefined) {
+  return /(^https?:\/\/)?(drive|lh3)\.googleusercontent\.com/i.test(value ?? '') ||
+    /(^https?:\/\/)?drive\.google\.com/i.test(value ?? '')
 }
 
 function mediaDatabaseErrorMessage(error: unknown, fallback: string) {

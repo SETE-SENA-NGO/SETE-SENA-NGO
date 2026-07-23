@@ -16,6 +16,8 @@ interface CachedPageRecord {
   expiresAt: number
 }
 
+type PageChangeCallback = () => void
+
 function normalizeLocale(locale: string | undefined): SupportedLocale {
   return locale === 'kh' ? 'kh' : 'en'
 }
@@ -40,6 +42,8 @@ export const useContentStore = defineStore('content', () => {
   const pages = ref<Record<string, PageContent>>({})
   const loading = ref(false)
   const schemaMissing = ref(getInitialSchemaMissing())
+  const pageChangeSubscribers = new Map<string, Set<PageChangeCallback>>()
+  let realtimeStarted = false
 
   const getAll = computed(() => Object.values(pages.value))
 
@@ -55,6 +59,73 @@ export const useContentStore = defineStore('content', () => {
   function useLocalFallback() {
     setSchemaMissingState(true)
     pages.value = mergeStoredFallbackPages(pages.value)
+  }
+
+  function subscribeToSlug(slug: string, callback: PageChangeCallback) {
+    startRealtime()
+
+    const callbacks = pageChangeSubscribers.get(slug) ?? new Set()
+    callbacks.add(callback)
+    pageChangeSubscribers.set(slug, callbacks)
+
+    return () => {
+      callbacks.delete(callback)
+      if (!callbacks.size) pageChangeSubscribers.delete(slug)
+    }
+  }
+
+  function startRealtime() {
+    if (realtimeStarted || typeof window === 'undefined') return
+    realtimeStarted = true
+
+    supabase
+      .channel('content-pages-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pages' },
+        handleRealtimePageChange,
+      )
+      .subscribe()
+  }
+
+  function handleRealtimePageChange(payload: unknown) {
+    if (!isRecord(payload)) return
+
+    const nextPage = isPageContent(payload.new)
+      ? normalizePageContent(payload.new)
+      : null
+    const previousPage = isPageContent(payload.old)
+      ? normalizePageContent(payload.old)
+      : null
+    const changedSlug = nextPage?.slug ?? previousPage?.slug
+
+    if (!changedSlug) return
+
+    if (nextPage) {
+      const key = pageKey(nextPage.slug, nextPage.locale)
+      rememberPreviousPageIfChanged(pages.value[key], nextPage)
+      cachePage(nextPage)
+      pages.value = { ...pages.value, [key]: nextPage }
+    } else if (previousPage) {
+      const key = pageKey(previousPage.slug, previousPage.locale)
+      const { [key]: _removedPage, ...remainingPages } = pages.value
+      pages.value = remainingPages
+    }
+
+    notifyPageChange(changedSlug)
+  }
+
+  function notifyPageChange(slug: string) {
+    const callbacks = pageChangeSubscribers.get(slug)
+    if (!callbacks) return
+
+    callbacks.forEach((callback) => {
+      try {
+        callback()
+      } catch (error) {
+        if (import.meta.env.DEV) console.warn('Realtime content callback failed.', error)
+      }
+    })
   }
 
   async function fetchAll() {
@@ -210,7 +281,7 @@ export const useContentStore = defineStore('content', () => {
       }
       if (isMissingLocaleConflict(error)) {
         throw new Error(
-          'Supabase pages must support one row per language. Run supabase/migrations/0005_page_locale_uniqueness.sql, then reload the Supabase schema cache.',
+          'Supabase pages must support one row per language. Run supabase/migrations/0007_page_locale_uniqueness.sql, then reload the Supabase schema cache.',
         )
       }
       throw error
@@ -231,6 +302,7 @@ export const useContentStore = defineStore('content', () => {
     getAll,
     retrySchema,
     useLocalFallback,
+    subscribeToSlug,
     fetchAll,
     fetchBySlug,
     upsert,

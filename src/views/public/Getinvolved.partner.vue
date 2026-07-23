@@ -272,6 +272,7 @@ const fallbackContent: PartnerPageContent = {
 
 const contentStore = useContentStore()
 const cmsContent = ref<Partial<PartnerPageContent> | null>(null)
+let stopCmsSubscription: (() => void) | null = null
 
 const pageContent = computed<PartnerPageContent>(() => {
   const merged = mergePartnerContent(fallbackContent, cmsContent.value)
@@ -552,6 +553,9 @@ function initScrollReveal() {
 onMounted(async () => {
   previousTitle = document.title
   setDocumentMeta()
+  stopCmsSubscription = contentStore.subscribeToSlug(PAGE_SLUG, () => {
+    void loadCmsContent()
+  })
   await loadCmsContent()
   setDocumentMeta()
   await nextTick()
@@ -561,6 +565,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  stopCmsSubscription?.()
+  stopCmsSubscription = null
   revealObserver?.disconnect()
   window.removeEventListener('resize', updateProjectNavState)
   document.title = previousTitle

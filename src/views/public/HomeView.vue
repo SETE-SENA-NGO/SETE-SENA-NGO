@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import { defaultHomeSlides, fetchHomeSlides, type HomeSlide } from '@/lib/slidesSettings'
+import { subscribeToTableChanges } from '@/lib/realtime'
 import environmentImg from '@/assets/home-image/environtment.jpg'
 import educationImg from '@/assets/home-image/education.jpg'
 import livelihoodImg from '@/assets/home-image/livelihood.jpg'
@@ -41,14 +42,27 @@ function toNgoSlide(slide: HomeSlide): NgoSlide {
 // Managed from the admin Slideshow screen — starts from the built-in
 // defaults and swaps in the saved slides once they load.
 const slideItems = ref<NgoSlide[]>(defaultHomeSlides().map(toNgoSlide))
+let stopSlidesSubscription: (() => void) | null = null
 
-onMounted(async () => {
+async function loadSlides() {
   try {
     const saved = await fetchHomeSlides()
     if (saved.length) slideItems.value = saved.map(toNgoSlide)
   } catch {
     // Keep the default slides if the saved slideshow can't be loaded.
   }
+}
+
+onMounted(async () => {
+  stopSlidesSubscription = subscribeToTableChanges('home_slides', () => {
+    void loadSlides()
+  })
+  await loadSlides()
+})
+
+onUnmounted(() => {
+  stopSlidesSubscription?.()
+  stopSlidesSubscription = null
 })
 
 useScrollReveal()

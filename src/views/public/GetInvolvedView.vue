@@ -146,6 +146,7 @@ const fallbackContent: GetInvolvedPageContent = {
 
 const contentStore = useContentStore()
 const cmsContent = ref<Partial<GetInvolvedPageContent> | null>(null)
+let stopCmsSubscription: (() => void) | null = null
 
 const pageContent = computed<GetInvolvedPageContent>(() => {
   const merged = mergeGetInvolvedContent(fallbackContent, cmsContent.value)
@@ -168,6 +169,9 @@ onMounted(async () => {
   previousTitle = document.title
   document.title = 'Get Involved with Santi Sena'
   setDescription(description)
+  stopCmsSubscription = contentStore.subscribeToSlug(PAGE_SLUG, () => {
+    void loadCmsContent()
+  })
 
   await loadCmsContent()
 
@@ -180,6 +184,8 @@ watch(activeLocale, () => {
 })
 
 onUnmounted(() => {
+  stopCmsSubscription?.()
+  stopCmsSubscription = null
   document.title = previousTitle
 
   if (descriptionMeta && createdDescriptionMeta) {

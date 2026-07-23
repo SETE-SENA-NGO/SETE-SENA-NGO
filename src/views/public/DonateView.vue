@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import acledaLogo from '@/assets/acleda-logo.png'
 import {
   defaultDonationMethods,
   fetchDonationMethods,
   type DonationMethod,
 } from '@/lib/donationSettings'
+import { subscribeToTableChanges } from '@/lib/realtime'
 
 type Tab = 'qr'
 const activeTab = ref<Tab>('qr')
@@ -82,13 +83,26 @@ function toPayMethod(method: DonationMethod): PayMethod {
 }
 
 const savedMethods = ref<DonationMethod[]>([])
+let stopDonationSubscription: (() => void) | null = null
 
-onMounted(async () => {
+async function loadDonationMethods() {
   try {
     savedMethods.value = await fetchDonationMethods()
   } catch {
     // No admin settings saved yet — fall back to the defaults.
   }
+}
+
+onMounted(async () => {
+  stopDonationSubscription = subscribeToTableChanges('donation_methods', () => {
+    void loadDonationMethods()
+  })
+  await loadDonationMethods()
+})
+
+onUnmounted(() => {
+  stopDonationSubscription?.()
+  stopDonationSubscription = null
 })
 
 const methods = computed<PayMethod[]>(() => {

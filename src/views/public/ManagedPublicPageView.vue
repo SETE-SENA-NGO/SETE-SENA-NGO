@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onUnmounted,
+  ref,
+  shallowRef,
+  watch,
+} from 'vue'
 import type { Component } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -7,6 +14,7 @@ import { localizeContentValue } from '@/i18n/contentTranslations'
 import type { SupportedLocale } from '@/i18n'
 import { supabase } from '@/lib/supabase'
 import Slideshow from '@/components/shared/Slideshow.vue'
+import { useContentStore } from '@/stores/content.store'
 import {
   parsePublishedPage,
   sectionItems,
@@ -16,10 +24,12 @@ import {
 
 const route = useRoute()
 const { locale } = useI18n()
+const contentStore = useContentStore()
 const content = ref<PublishedPageContent | null>(null)
 const loaded = ref(false)
 const loadError = ref('')
 const fallbackComponent = shallowRef<Component | null>(null)
+let stopPageSubscription: (() => void) | null = null
 
 const slug = computed(() => {
   return typeof route.meta.contentSlug === 'string'
@@ -186,6 +196,24 @@ watch(
 )
 
 watch([slug, activeLocale], () => void loadPage(), { immediate: true })
+
+watch(
+  slug,
+  (nextSlug) => {
+    stopPageSubscription?.()
+    stopPageSubscription = nextSlug
+      ? contentStore.subscribeToSlug(nextSlug, () => {
+          void loadPage()
+        })
+      : null
+  },
+  { immediate: true },
+)
+
+onUnmounted(() => {
+  stopPageSubscription?.()
+  stopPageSubscription = null
+})
 
 async function loadPage() {
   if (!slug.value) {
