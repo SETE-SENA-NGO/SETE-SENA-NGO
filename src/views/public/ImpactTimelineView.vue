@@ -131,6 +131,24 @@ const allMilestones = computed(() => {
   })
 })
 
+const heroStats = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'timeline-stats')
+  if (!section || !section.items) {
+    return [
+      { number: '293', label: 'Villages' },
+      { number: '43', label: 'Communes' },
+      { number: '3', label: 'Provinces' },
+    ]
+  }
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      number: parts[0] || '',
+      label: parts[1] || ''
+    }
+  })
+})
+
 const timelineHeader = computed(() => {
   const section = props.content?.sections?.find(s => s.id === 'timeline-events')
   return {
@@ -253,20 +271,13 @@ onBeforeUnmount(() => {
 
           <!-- Stats -->
           <div class="hero-stats">
-            <div class="stat-item">
-              <span class="stat-number">293</span>
-              <span class="stat-label">Villages</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-number">43</span>
-              <span class="stat-label">Communes</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-number">3</span>
-              <span class="stat-label">Provinces</span>
-            </div>
+            <template v-for="(stat, idx) in heroStats" :key="idx">
+              <div class="stat-item">
+                <span class="stat-number">{{ stat.number }}</span>
+                <span class="stat-label">{{ stat.label }}</span>
+              </div>
+              <div v-if="idx < heroStats.length - 1" class="stat-divider"></div>
+            </template>
           </div>
         </div>
 

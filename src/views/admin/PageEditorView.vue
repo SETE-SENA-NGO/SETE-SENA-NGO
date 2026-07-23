@@ -577,6 +577,13 @@ const defaultPages: PageDraft[] = [
     secondaryAction: '',
     sections: [
       {
+        id: 'timeline-stats',
+        label: 'Hero Reach Stats',
+        heading: 'Key Reach Numbers',
+        body: 'The key reach numbers shown at the top of the Timeline page.',
+        items: '293 | Villages\n43 | Communes\n3 | Provinces',
+      },
+      {
         id: 'timeline-events',
         label: 'Timeline Events',
         heading: 'Progress built through patient partnership.',
@@ -1062,6 +1069,7 @@ function getSectionColCount(section: EditableSection): number {
 function getColumnHeaders(sectionId: string, maxCols: number): string[] {
   const headersMap: Record<string, string[]> = {
     'impact-stats': ['Value', 'Label', 'Description'],
+    'timeline-stats': ['Number / Value', 'Label'],
     'timeline-events': ['Year', 'Title', 'Short Description', 'Detailed Info', 'Image URL (optional)'],
     'numbers-overview': ['Value', 'Label', 'Description'],
     'numbers-card-environment': ['Value', 'Label', 'Description'],
@@ -1799,11 +1807,6 @@ function formatDate(value: string) {
                               <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="3" placeholder="Descriptive body text"></textarea>
                             </label>
 
-                            <label v-if="activePage.group === 'Impact'" class="field field-block">
-                              <span class="field-label">Image URL (Optional)</span>
-                              <input v-model="section.image" :name="`section-${section.id}-image`" placeholder="Paste image URL (from Media Library or external source)" />
-                            </label>
-
                             <div class="items-editor-container">
                               <!-- Impact Group Pages: Structured Visual Table Editor -->
                               <template v-if="activePage.group === 'Impact'">
@@ -2199,7 +2202,7 @@ function formatDate(value: string) {
 .editor-column {
   flex: 1;
   min-width: 0;
-  max-width: 860px;
+  max-width: 1200px;
 }
 
 /* ==============================

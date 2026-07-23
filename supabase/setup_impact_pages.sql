@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.pages (
   seo_title TEXT,
   seo_description TEXT,
   sort_order INTEGER NOT NULL DEFAULT 0,
+  
   published_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -184,6 +185,13 @@ VALUES
       "primaryAction": "Take the next step",
       "secondaryAction": "",
       "sections": [
+        {
+          "id": "timeline-stats",
+          "label": "Hero Reach Stats",
+          "heading": "Key Reach Numbers",
+          "body": "The key reach numbers shown at the top of the Timeline page.",
+          "items": "293 | Villages\n43 | Communes\n3 | Provinces"
+        },
         {
           "id": "timeline-events",
           "label": "Timeline Events",
