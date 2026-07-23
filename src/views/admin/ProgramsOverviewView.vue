@@ -538,6 +538,8 @@ onMounted(() => {
   --violet-soft: #f3efff;
   --slate: #64748b;
   --slate-soft: #f0f3f8;
+  --btn-primary-bg: #0a142d;
+  --btn-primary-text: #ffffff;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -549,7 +551,14 @@ onMounted(() => {
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 
-:global(.admin-dark) .edu-dash {
+/* ── FIX: entire selector must be inside :global() together,
+   otherwise Vue's scoped-CSS compiler appends the component's
+   data-v-xxxx attribute to ".admin-dark" too, and since that
+   class lives on <html> (which never gets the attribute) the
+   rule can never match. Wrapping both sides in one :global()
+   call keeps the whole selector unscoped, exactly like the
+   Education page does. ── */
+:global(.admin-dark .edu-dash) {
   --bg: #080c1a;
   --surface: #101826;
   --border: #1c2642;
@@ -568,6 +577,8 @@ onMounted(() => {
   --violet-soft: #1c1640;
   --slate: #8896b0;
   --slate-soft: #121a2e;
+  --btn-primary-bg: #3b82f6;
+  --btn-primary-text: #ffffff;
 }
 
 .dash-layout { display: flex; }
@@ -582,7 +593,7 @@ onMounted(() => {
   transition: all 0.15s ease;
   border: 1px solid transparent; font-family: inherit;
 }
-.btn-primary { background: var(--contrast); color: #fff; border-color: transparent; }
+.btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-text); border-color: transparent; }
 .btn-primary:hover:not(:disabled) { opacity: 0.9; }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-ghost { background: var(--surface); color: var(--contrast); border-color: var(--border-s); }
