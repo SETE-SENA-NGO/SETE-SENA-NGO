@@ -11,15 +11,16 @@ Do not put `SUPABASE_SECRET_KEY` in the frontend `.env`. This app only needs the
 
 ## Apply Database Schema
 
-Open Supabase Dashboard, go to SQL Editor, and run these files in order:
-Fast path for a new or partially configured project:
+Open Supabase Dashboard, go to SQL Editor, and run these files in order.
+
+Admin-profile helper after the schema is installed:
 
 1. Open `supabase/complete_setup.sql`.
 2. Replace `replace-with-your-admin-email@example.org` with your real admin login email.
 3. Run the whole file in Supabase Dashboard > SQL Editor.
 
-That file creates the tables, seeds default content, promotes the admin profile, and reloads the REST
-schema cache.
+That file promotes the admin profile and reloads the REST schema cache. The normalized website
+tables come from the migrations below, and default content comes from `supabase/seed.sql`.
 
 Manual path:
 
@@ -27,9 +28,13 @@ Open Supabase Dashboard > SQL Editor and run these files in order:
 
 1. `supabase/migrations/0001_initial.sql`
 2. `supabase/migrations/0002_admin_editable_content_schema.sql`
-3. `supabase/migrations/0003_media_free_tier_limits.sql`
-4. `supabase/migrations/0004_home_slides.sql`
-5. `supabase/seed.sql`
+3. `supabase/migrations/0003_module_records.sql`
+4. `supabase/migrations/0004_admin_security.sql`
+5. `supabase/migrations/0005_media_free_tier_limits.sql`
+6. `supabase/migrations/0006_home_slides.sql`
+7. `supabase/migrations/0007_page_locale_uniqueness.sql`
+8. `supabase/migrations/0008_content_realtime_and_media_cleanup.sql`
+9. `supabase/seed.sql`
 
 ## Create Admin Login
 
@@ -72,6 +77,9 @@ The admin app expects these tables from the setup:
 - `public.media_assets`
 - `public.donation_methods`
 - `public.module_records`
+- `public.home_slides`
+- `public.news_posts`
+- `public.partners`
 
 If an admin page reports that a table cannot be found in the schema cache, rerun the missing migration and then run:
 

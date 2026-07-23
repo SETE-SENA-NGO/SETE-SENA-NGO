@@ -770,7 +770,7 @@ onBeforeUnmount(() => {
 }
 
 .quote-text {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-family-base);
   font-size: 1.5rem;
   font-style: italic;
   line-height: 1.6;

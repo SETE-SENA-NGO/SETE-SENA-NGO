@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FooterView from '@/layouts/FooterView.vue'
 import HeaderView from '@/layouts/HeaderView.vue'
+import { useLocalizedDomContent } from '@/i18n/useLocalizedDomContent'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
@@ -15,6 +16,7 @@ const showAdminBar = computed(() => !isAdminRoute.value && auth.isAuthenticated)
 
 // Initialize auth session
 void auth.init()
+useLocalizedDomContent(isAdminRoute)
 
 function confirmModal() {
   ui.modal.onConfirm?.()
@@ -25,7 +27,6 @@ function goToAdmin() {
   void router.push('/admin')
 }
 </script>
-
 
 <template>
   <Transition name="bar-slide">
@@ -65,18 +66,32 @@ function goToAdmin() {
   <FooterView v-if="!isAdminRoute" />
 
   <div class="toast-region" aria-live="polite" aria-atomic="true">
-    <div v-for="toast in ui.toasts" :key="toast.id" class="toast" :class="`toast-${toast.type}`">
+    <div
+      v-for="toast in ui.toasts"
+      :key="toast.id"
+      class="toast"
+      :class="`toast-${toast.type}`"
+    >
       {{ toast.message }}
     </div>
   </div>
 
   <div v-if="ui.modal.open" class="confirm-overlay" @click.self="ui.closeModal">
-    <section class="confirm-dialog" role="dialog" aria-modal="true" :aria-label="ui.modal.title">
+    <section
+      class="confirm-dialog"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="ui.modal.title"
+    >
       <h2>{{ ui.modal.title }}</h2>
       <p>{{ ui.modal.body }}</p>
       <div class="confirm-actions">
-        <button type="button" class="confirm-secondary" @click="ui.closeModal">Cancel</button>
-        <button type="button" class="confirm-primary" @click="confirmModal">Confirm</button>
+        <button type="button" class="confirm-secondary" @click="ui.closeModal">
+          Cancel
+        </button>
+        <button type="button" class="confirm-primary" @click="confirmModal">
+          Confirm
+        </button>
       </div>
     </section>
   </div>
@@ -216,7 +231,12 @@ function goToAdmin() {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(53, 208, 190, 0.35), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(53, 208, 190, 0.35),
+    transparent
+  );
   content: '';
 }
 

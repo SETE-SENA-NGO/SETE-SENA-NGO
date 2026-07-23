@@ -631,7 +631,7 @@ onBeforeUnmount(() => {
 }
 .story-badge svg { width: 17px; height: 17px; }
 .story-text {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-family-base);
   font-style: italic;
   font-size: 1.15rem;
   color: var(--primary-dark);

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { imageUploadHelpText, normalizeMediaUrl } from '@/lib/media'
@@ -8,6 +9,7 @@ import { useContentStore } from '@/stores/content.store'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
 import type { PageContent } from '@/types/content'
+import type { SupportedLocale } from '@/i18n'
 
 type ActionLink = {
   label: string
@@ -151,6 +153,7 @@ const fallbackContent: GetInvolvedPageContent = {
 const contentStore = useContentStore()
 const media = useMediaStore()
 const ui = useUiStore()
+const { locale } = useI18n()
 
 const pageRow = ref<PageContent | null>(null)
 const loading = ref(true)
@@ -162,12 +165,21 @@ const savedAt = ref('')
 
 const draft = reactive<GetInvolvedPageContent>(cloneContent(fallbackContent))
 
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
+const activeLocaleName = computed(() =>
+  activeLocale.value === 'kh' ? 'Khmer' : 'English',
+)
 const heroPreview = computed(() => resolveImageUrl(draft.hero.image, fallbackContent.hero.image))
 const imageHint = imageUploadHelpText()
 const canAddCard = computed(() => draft.supportCards.length < MAX_SUPPORT_CARDS)
 
 onMounted(() => {
-  contentStore.useLocalFallback()
+  void loadPage()
+})
+
+watch(activeLocale, () => {
   void loadPage()
 })
 
@@ -176,7 +188,7 @@ async function loadPage() {
   loadError.value = ''
 
   try {
-    const page = await contentStore.fetchBySlug(PAGE_SLUG)
+    const page = await contentStore.fetchBySlug(PAGE_SLUG, activeLocale.value)
     pageRow.value = page
     replaceDraft(mergeContent(fallbackContent, parseCmsBody(page?.body ?? '')))
     savedAt.value = page?.updated_at ?? ''
@@ -218,13 +230,18 @@ async function savePage() {
       slug: PAGE_SLUG,
       title: 'Get Involved',
       body: JSON.stringify(content, null, 2),
+      locale: activeLocale.value,
+      route_path: '/get-involved',
+      nav_group: 'Get Involved',
+      template: 'standard',
+      status: 'published',
       updated_at: pageRow.value?.updated_at ?? '',
     })
 
     pageRow.value = saved
     replaceDraft(content)
     savedAt.value = saved.updated_at
-    ui.addToast('Get Involved content saved.', 'success')
+    ui.addToast(`Get Involved ${activeLocaleName.value} content saved.`, 'success')
   } catch (error) {
     ui.addToast(error instanceof Error ? error.message : 'Could not save Get Involved content.', 'error')
   } finally {
@@ -463,6 +480,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
             <p class="eyebrow">Get Involved</p>
             <h1>Manage content</h1>
             <div class="manager-meta" aria-label="Editable sections">
+              <span>{{ activeLocaleName }} content</span>
               <span>Hero image</span>
               <span>{{ draft.supportCards.length }} cards</span>
             </div>
@@ -503,12 +521,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
                 <div class="field-row">
                   <label class="field">
                     <span>Hero image URL</span>
-                    <input v-model="draft.hero.image" type="url" :placeholder="imageHint" />
+                    <input
+                      id="get-involved-hero-image"
+                      v-model="draft.hero.image"
+                      name="get-involved-hero-image"
+                      type="url"
+                      :placeholder="imageHint"
+                    />
                   </label>
                 </div>
                 <label class="upload-field upload-box">
                   <span>{{ uploadingHero ? 'Uploading image...' : 'Upload replacement image' }}</span>
-                  <input type="file" accept="image/*" :disabled="uploadingHero" @change="uploadHeroImage" />
+                  <input
+                    id="get-involved-hero-upload"
+                    name="get-involved-hero-upload"
+                    type="file"
+                    accept="image/*"
+                    :disabled="uploadingHero"
+                    @change="uploadHeroImage"
+                  />
                 </label>
               </div>
             </div>
@@ -555,18 +586,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
                 <div class="card-editor-top">
                   <figure class="image-preview card-preview">
-                    <img :src="resolveImageUrl(card.image, fallbackContent.hero.image)" alt="" />
+                    <img :src="resolveImageUrl(card.image, fallbackContent.supportCards[0]?.image ?? '')" alt="" />
                   </figure>
 
                   <div class="card-image-controls image-control-panel">
                     <label class="field">
                       <span>Image URL</span>
-                      <input v-model="card.image" type="url" :placeholder="imageHint" />
+                      <input
+                        :id="`get-involved-card-${index}-image`"
+                        v-model="card.image"
+                        :name="`get-involved-card-${index}-image`"
+                        type="url"
+                        :placeholder="imageHint"
+                      />
                     </label>
                     <label class="upload-field upload-box">
                       <span>{{ uploadingCardIndex === index ? 'Uploading image...' : 'Upload card image' }}</span>
                       <input
                         type="file"
+                        :name="`get-involved-card-${index}-upload`"
                         accept="image/*"
                         :disabled="uploadingCardIndex === index"
                         @change="uploadCardImage($event, index)"
@@ -578,15 +616,30 @@ function isRecord(value: unknown): value is Record<string, unknown> {
                 <div class="card-form-grid">
                   <label class="field">
                     <span>Label</span>
-                    <input v-model="card.label" type="text" />
+                    <input
+                      :id="`get-involved-card-${index}-label`"
+                      v-model="card.label"
+                      :name="`get-involved-card-${index}-label`"
+                      type="text"
+                    />
                   </label>
                   <label class="field">
                     <span>Title</span>
-                    <input v-model="card.title" type="text" />
+                    <input
+                      :id="`get-involved-card-${index}-title`"
+                      v-model="card.title"
+                      :name="`get-involved-card-${index}-title`"
+                      type="text"
+                    />
                   </label>
                   <label class="field wide">
                     <span>Description</span>
-                    <textarea v-model="card.body" rows="3"></textarea>
+                    <textarea
+                      :id="`get-involved-card-${index}-body`"
+                      v-model="card.body"
+                      :name="`get-involved-card-${index}-body`"
+                      rows="3"
+                    ></textarea>
                   </label>
                 </div>
               </article>

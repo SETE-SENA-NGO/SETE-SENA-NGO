@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import type { SupportedLocale } from '@/i18n'
 import { supabase } from '@/lib/supabase'
+import {
+  explainPageSaveError,
+  savePageByLocale,
+  type PageLocalePayload,
+} from '@/lib/pagePersistence'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
 
@@ -35,6 +42,7 @@ type PageRow = {
   slug: string
   title: string
   body: string
+  locale?: string
   updated_at: string | null
 }
 
@@ -989,6 +997,15 @@ const defaultPages: PageDraft[] = [
 
 const route = useRoute()
 const router = useRouter()
+const { locale } = useI18n()
+
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
+const activeLocaleName = computed(() =>
+  activeLocale.value === 'kh' ? 'Khmer' : 'English',
+)
+
 const ui = useUiStore()
 const mediaStore = useMediaStore()
 
@@ -1165,6 +1182,10 @@ onMounted(() => {
   void loadPages()
 })
 
+watch(activeLocale, () => {
+  void loadPages()
+})
+
 watch(
   requestedSlug,
   (slug) => {
@@ -1253,6 +1274,10 @@ function isDirty(slug: string) {
   return savedSnapshot.value[slug] !== snapshot(page)
 }
 
+function rowKey(slug: string, locale: string | undefined) {
+  return `${locale === 'kh' ? 'kh' : 'en'}:${slug}`
+}
+
 function parseStoredBody(body: string): Partial<StoredPageBody> | null {
   try {
     const parsed = JSON.parse(body) as unknown
@@ -1332,26 +1357,34 @@ async function loadPages() {
 
   try {
     const slugs = defaultPages.map((page) => page.slug)
+    const localeToLoad = activeLocale.value
+    const locales = localeToLoad === 'en' ? ['en'] : [localeToLoad, 'en']
     const { data, error } = await supabase
       .from('pages')
-      .select('slug, title, body, updated_at')
+      .select('slug, title, body, locale, updated_at')
       .in('slug', slugs)
+      .in('locale', locales)
 
     if (error) throw error
 
     const rows = new Map<string, PageRow>()
     for (const row of (data ?? []) as PageRow[]) {
-      rows.set(row.slug, row)
+      rows.set(rowKey(row.slug, row.locale), row)
     }
 
+    const snapshots: Record<string, string> = {}
     drafts.value = defaultPages.map((page) => {
-      const row = rows.get(page.slug)
-      return row ? mergeRow(page, row) : clonePage(page)
+      const exactRow = rows.get(rowKey(page.slug, localeToLoad))
+      const fallbackRow =
+        localeToLoad === 'en' ? undefined : rows.get(rowKey(page.slug, 'en'))
+      const row = exactRow ?? fallbackRow
+      const draft = row ? mergeRow(page, row) : clonePage(page)
+      snapshots[page.slug] =
+        exactRow || localeToLoad === 'en' ? snapshot(draft) : ''
+      return draft
     })
 
-    savedSnapshot.value = Object.fromEntries(
-      drafts.value.map((page) => [page.slug, snapshot(page)]),
-    )
+    savedSnapshot.value = snapshots
   } catch (error) {
     notice.value = {
       type: 'error',
@@ -1364,13 +1397,13 @@ async function loadPages() {
 
 async function persistPage(page: PageDraft): Promise<PageDraft> {
   const savedAt = new Date().toISOString()
-  const payload = {
+  const payload: PageLocalePayload = {
     slug: page.slug,
     title: page.title.trim() || page.headline.trim() || page.slug,
     body: serializeBody(page),
     route_path: page.route,
     nav_group: page.group,
-    locale: 'en',
+    locale: activeLocale.value,
     template: page.route === 'global' ? 'global' : 'standard',
     status: 'published',
     hero_eyebrow: page.eyebrow.trim() || null,
@@ -1387,13 +1420,12 @@ async function persistPage(page: PageDraft): Promise<PageDraft> {
     updated_at: savedAt,
   }
 
-  const { data, error } = await supabase
-    .from('pages')
-    .upsert(payload, { onConflict: 'slug' })
-    .select('slug, title, body, updated_at')
-    .single()
+  const { data, error } = await savePageByLocale<PageRow>(
+    payload,
+    'slug, title, body, locale, updated_at',
+  )
 
-  if (error) throw error
+  if (error) throw explainPageSaveError(error)
 
   return data ? mergeRow(page, data as PageRow) : { ...clonePage(page), updatedAt: savedAt }
 }
@@ -1412,8 +1444,11 @@ async function saveCurrentPage() {
 
   try {
     replaceDraft(await persistPage(page))
-    notice.value = { type: 'success', message: `${page.title} saved.` }
-    ui.addToast(`${page.title} saved.`, 'success')
+    notice.value = {
+      type: 'success',
+      message: `${page.title} ${activeLocaleName.value} content saved.`,
+    }
+    ui.addToast(notice.value.message, 'success')
   } catch (error) {
     notice.value = {
       type: 'error',
@@ -1861,6 +1896,9 @@ function formatDate(value: string) {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                     {{ activePage.route }}
                   </span>
+                  <span class="meta-badge locale-badge">
+                    {{ activeLocaleName }} content
+                  </span>
                 </div>
               </div>
               <div class="header-right">
@@ -2306,13 +2344,7 @@ function formatDate(value: string) {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
   transition: padding-left 0.25s ease;
 }
 
@@ -2510,6 +2542,11 @@ function formatDate(value: string) {
 .route-badge {
   color: var(--admin-blue);
   background: var(--admin-blue-soft);
+}
+
+.locale-badge {
+  color: var(--admin-theme-primary-deep);
+  background: color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
 }
 
 .header-right {

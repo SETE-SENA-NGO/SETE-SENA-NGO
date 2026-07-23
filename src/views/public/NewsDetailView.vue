@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { localizeContentValue } from '@/i18n/contentTranslations'
+import type { SupportedLocale } from '@/i18n'
 import { fetchPublishedNews, fetchPublishedNewsArticle } from '@/lib/newsContent'
 
 const route = useRoute()
+const { locale } = useI18n()
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
 const articleId = computed(() => {
   const id = route.params.id
   return typeof id === 'string' ? id : '1'
@@ -130,8 +137,21 @@ type Article = {
   tags?: string[]
 }
 
-const article = ref<Article | null>(null)
-const allArticles = ref<Article[]>(articles as Article[])
+const sourceArticle = ref<Article | null>(null)
+const sourceArticles = ref<Article[]>(articles as Article[])
+const article = computed<Article | null>(() => {
+  const currentArticle = sourceArticle.value
+  if (!currentArticle) return null
+
+  return activeLocale.value === 'kh'
+    ? localizeContentValue(currentArticle, activeLocale.value)
+    : currentArticle
+})
+const allArticles = computed<Article[]>(() => {
+  return activeLocale.value === 'kh'
+    ? localizeContentValue(sourceArticles.value, activeLocale.value)
+    : sourceArticles.value
+})
 
 onMounted(async () => {
   const fallback = (articles as Article[]).find((a) => a.id === articleId.value) ?? null
@@ -142,10 +162,10 @@ onMounted(async () => {
       fetchPublishedNews(),
     ])
 
-    if (publishedNews.length) allArticles.value = publishedNews
-    article.value = loadedArticle ?? fallback
+    if (publishedNews.length) sourceArticles.value = publishedNews
+    sourceArticle.value = loadedArticle ?? fallback
   } catch {
-    article.value = fallback
+    sourceArticle.value = fallback
   }
 
   await nextTick()
@@ -486,7 +506,9 @@ const copyLink = () => {
               <p>Get the latest updates delivered to your inbox.</p>
               <div class="newsletter-mini-form">
                 <input
+                  id="news-detail-newsletter-email"
                   type="email"
+                  name="news-detail-newsletter-email"
                   placeholder="Your email"
                   class="mini-input"
                 />

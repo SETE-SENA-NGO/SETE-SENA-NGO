@@ -519,7 +519,7 @@ onUnmounted(() => {
   display: block;
   margin-bottom: -0.9rem;
   color: color-mix(in srgb, var(--green) 24%, var(--green-light));
-  font-family: Georgia, serif;
+  font-family: var(--font-family-base);
   font-size: 5.4rem;
   font-weight: 900;
   line-height: 0.7;
@@ -693,7 +693,7 @@ onUnmounted(() => {
 .cta-quote::before {
   color: color-mix(in srgb, var(--green) 62%, #d1c870);
   content: '\201C';
-  font-family: Georgia, serif;
+  font-family: var(--font-family-base);
   font-size: clamp(6rem, 11vw, 8rem);
   font-weight: 900;
   line-height: 0.8;

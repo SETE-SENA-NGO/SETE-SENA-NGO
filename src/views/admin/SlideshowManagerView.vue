@@ -8,7 +8,6 @@ import { imageUploadHelpText, isAllowedImageFile } from '@/lib/media'
 import {
   createHomeSlide,
   defaultHomeSlides,
-  deleteHomeSlide,
   fetchHomeSlides,
   saveHomeSlides,
   type HomeSlide,
@@ -20,7 +19,7 @@ const MAX_SLIDES = 5
 const ui = useUiStore()
 const media = useMediaStore()
 
-const slides = ref<HomeSlide[]>(defaultHomeSlides())
+const slides = ref<HomeSlide[]>(normalizeSlideSlots(defaultHomeSlides()))
 const pendingFiles = reactive<Record<string, File>>({})
 const previews = reactive<Record<string, string>>({})
 
@@ -32,13 +31,14 @@ const messageType = ref<'success' | 'error'>('success')
 // Only one slide is edited at a time — pick which one via the selector strip.
 const activeIndex = ref(0)
 const activeSlide = computed(() => slides.value[activeIndex.value])
-const removingId = ref<string | null>(null)
+const filledSlideCount = computed(() => slides.value.filter(hasSlideImage).length)
 
 onMounted(async () => {
   try {
     const saved = await fetchHomeSlides()
-    if (saved.length) slides.value = saved
+    slides.value = normalizeSlideSlots(saved.length ? saved : defaultHomeSlides())
   } catch {
+    slides.value = normalizeSlideSlots(defaultHomeSlides())
     // No settings saved yet — start from defaults.
   } finally {
     loading.value = false
@@ -58,6 +58,25 @@ function revokePreview(id: string) {
 
 function displayedImage(slide: HomeSlide) {
   return previews[slide.id] || slide.imageUrl
+}
+
+function hasSlideImage(slide: HomeSlide) {
+  return Boolean(displayedImage(slide).trim())
+}
+
+function slotStatus(slide: HomeSlide) {
+  if (pendingFiles[slide.id]) return 'Pending upload'
+  return hasSlideImage(slide) ? 'Image ready' : 'Blank slot'
+}
+
+function slotHasContent(slide: HomeSlide) {
+  return Boolean(
+    displayedImage(slide).trim() ||
+      slide.alt.trim() ||
+      slide.eyebrow.trim() ||
+      slide.title.trim() ||
+      slide.description.trim(),
+  )
 }
 
 function onFileChange(slide: HomeSlide, event: Event) {
@@ -84,47 +103,24 @@ function removeImage(slide: HomeSlide) {
 }
 
 function selectSlide(index: number) {
+  if (index < 0 || index >= MAX_SLIDES) return
   activeIndex.value = index
 }
 
-function addSlide() {
-  if (slides.value.length >= MAX_SLIDES) {
-    showMessage(`You can have at most ${MAX_SLIDES} slides.`, 'error')
-    return
-  }
-  slides.value.push(createHomeSlide())
-  activeIndex.value = slides.value.length - 1
-  message.value = ''
-}
-
-function removeSlide(slide: HomeSlide) {
-  if (slides.value.length <= MIN_SLIDES) {
-    showMessage(`You must keep at least ${MIN_SLIDES} slide.`, 'error')
-    return
-  }
-
+function clearSlot(slide: HomeSlide) {
   const index = slides.value.findIndex((s) => s.id === slide.id)
-  const label = slide.title.trim() || `Slide ${index + 1}`
+  const label = slide.title.trim() || `slot ${index + 1}`
 
-  ui.openModal('Remove slide?', `Remove "${label}" from the homepage slideshow?`, async () => {
-    removingId.value = slide.id
-    try {
-      // Deletes right away (a newly-added, never-saved slide simply has no
-      // matching row yet, so this is a harmless no-op for it).
-      await deleteHomeSlide(slide.id)
-
-      revokePreview(slide.id)
-      delete pendingFiles[slide.id]
-      slides.value = slides.value.filter((s) => s.id !== slide.id)
-      if (index !== -1) {
-        activeIndex.value = Math.min(index, slides.value.length - 1)
-      }
-      ui.addToast(`${label} removed from the slideshow.`, 'success')
-    } catch (e) {
-      ui.addToast(e instanceof Error ? e.message : 'Could not remove slide.', 'error')
-    } finally {
-      removingId.value = null
-    }
+  ui.openModal('Clear slide slot?', `Clear "${label}" from this slideshow slot?`, () => {
+    revokePreview(slide.id)
+    delete pendingFiles[slide.id]
+    slide.imageUrl = ''
+    slide.alt = ''
+    slide.eyebrow = ''
+    slide.title = ''
+    slide.description = ''
+    message.value = ''
+    ui.addToast(`Slide ${index + 1} cleared. Save changes to update the homepage.`, 'info')
   })
 }
 
@@ -153,20 +149,17 @@ async function uploadImage(slide: HomeSlide, file: File) {
 async function save() {
   if (saving.value) return
 
-  if (!slides.value.length) {
-    showMessage('Add at least one slide before saving.', 'error')
-    return
-  }
-  if (slides.value.some((s) => !s.title.trim())) {
-    showMessage('Every slide needs a title before saving.', 'error')
-    return
-  }
+  const publishableSlides = slides.value.filter(hasSlideImage).slice(0, MAX_SLIDES)
 
+  if (publishableSlides.length < MIN_SLIDES) {
+    showMessage('Upload at least one slideshow image before saving.', 'error')
+    return
+  }
   saving.value = true
   message.value = ''
 
   try {
-    for (const slide of slides.value) {
+    for (const slide of publishableSlides) {
       const file = pendingFiles[slide.id]
       if (file) {
         slide.imageUrl = await uploadImage(slide, file)
@@ -175,7 +168,7 @@ async function save() {
       }
     }
 
-    await saveHomeSlides(slides.value)
+    await saveHomeSlides(slides.value.filter((slide) => slide.imageUrl.trim()).slice(0, MAX_SLIDES))
 
     showMessage('Slideshow saved. The homepage is now updated.', 'success')
   } catch (e) {
@@ -183,6 +176,16 @@ async function save() {
   } finally {
     saving.value = false
   }
+}
+
+function normalizeSlideSlots(source: HomeSlide[]) {
+  const slots = source.slice(0, MAX_SLIDES).map((slide) => ({ ...slide }))
+
+  while (slots.length < MAX_SLIDES) {
+    slots.push(createHomeSlide())
+  }
+
+  return slots
 }
 </script>
 
@@ -198,20 +201,19 @@ async function save() {
               <p class="eyebrow">Home</p>
               <h1>Homepage Slideshow</h1>
               <p>
+                Manage up to {{ MAX_SLIDES }} homepage hero images. Empty slots stay visible here
+                as blank cards, but only slots with uploaded images are published after saving.
+              </p>
+              <p hidden>
                 Manage the rotating hero slideshow on the homepage — upload each slide's image,
                 edit the overlay text and buttons, reorder slides, or add a new one. Changes go
                 live as soon as you save. Keep between {{ MIN_SLIDES }} and {{ MAX_SLIDES }} slides.
               </p>
             </div>
-            <button
-              class="add-btn"
-              type="button"
-              :disabled="loading || slides.length >= MAX_SLIDES"
-              :title="slides.length >= MAX_SLIDES ? `You can have at most ${MAX_SLIDES} slides.` : ''"
-              @click="addSlide"
-            >
-              + Add slide
-            </button>
+            <div class="slot-meter" aria-live="polite">
+              <strong>{{ filledSlideCount }}</strong>
+              <span>/ {{ MAX_SLIDES }} image slots filled</span>
+            </div>
           </header>
 
           <p v-if="loading" class="loading-note">Loading current slideshow...</p>
@@ -265,12 +267,12 @@ async function save() {
                   <button
                     type="button"
                     class="remove-slide-btn"
-                    :disabled="slides.length <= MIN_SLIDES || removingId === activeSlide.id"
-                    :title="slides.length <= MIN_SLIDES ? `You must keep at least ${MIN_SLIDES} slide.` : ''"
-                    :aria-label="`Remove slide ${activeIndex + 1}`"
-                    @click="removeSlide(activeSlide)"
+                    :disabled="!slotHasContent(activeSlide)"
+                    :title="!slotHasContent(activeSlide) ? 'This slide slot is already empty.' : ''"
+                    :aria-label="`Clear slide ${activeIndex + 1}`"
+                    @click="clearSlot(activeSlide)"
                   >
-                    {{ removingId === activeSlide.id ? '⋯' : '×' }}
+                    ×
                   </button>
                 </div>
               </header>
@@ -293,6 +295,8 @@ async function save() {
                   <div class="image-actions">
                     <label class="upload-btn">
                       <input
+                        :id="`${activeSlide.id}-image-upload`"
+                        :name="`${activeSlide.id}-image-upload`"
                         type="file"
                         accept="image/*"
                         class="sr-only"
@@ -315,6 +319,7 @@ async function save() {
                     <input
                       :id="`${activeSlide.id}-alt`"
                       v-model="activeSlide.alt"
+                      :name="`${activeSlide.id}-alt`"
                       placeholder="Describe the photo for accessibility"
                     />
                   </div>
@@ -326,14 +331,16 @@ async function save() {
                     <input
                       :id="`${activeSlide.id}-eyebrow`"
                       v-model="activeSlide.eyebrow"
+                      :name="`${activeSlide.id}-eyebrow`"
                       placeholder="e.g. Education and Buddhist learning"
                     />
                   </div>
                   <div class="field">
-                    <label :for="`${activeSlide.id}-title`">Title</label>
+                    <label :for="`${activeSlide.id}-title`">Title (optional)</label>
                     <input
                       :id="`${activeSlide.id}-title`"
                       v-model="activeSlide.title"
+                      :name="`${activeSlide.id}-title`"
                       placeholder="e.g. Helping children learn with confidence."
                     />
                   </div>
@@ -342,6 +349,7 @@ async function save() {
                     <textarea
                       :id="`${activeSlide.id}-description`"
                       v-model="activeSlide.description"
+                      :name="`${activeSlide.id}-description`"
                       rows="4"
                       placeholder="One or two sentences shown under the title"
                     />
@@ -385,13 +393,7 @@ async function save() {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
   transition: padding-left 0.25s ease;
 }
 

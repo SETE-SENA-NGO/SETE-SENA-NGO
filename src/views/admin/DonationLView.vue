@@ -206,6 +206,8 @@ async function saveCard(method: DonationMethod, index: number) {
                   <div class="qr-actions">
                     <label class="upload-btn">
                       <input
+                        :id="`${activeMethod.id}-qr-upload`"
+                        :name="`${activeMethod.id}-qr-upload`"
                         type="file"
                         accept="image/*"
                         class="sr-only"
@@ -230,6 +232,7 @@ async function saveCard(method: DonationMethod, index: number) {
                     <input
                       :id="`${activeMethod.id}-bank`"
                       v-model="activeMethod.bank"
+                      :name="`${activeMethod.id}-bank`"
                       placeholder="e.g. Wing Bank"
                     />
                   </div>
@@ -238,6 +241,7 @@ async function saveCard(method: DonationMethod, index: number) {
                     <input
                       :id="`${activeMethod.id}-subtitle`"
                       v-model="activeMethod.subtitle"
+                      :name="`${activeMethod.id}-subtitle`"
                       placeholder="e.g. WING BANK - CAMBODIA"
                     />
                   </div>
@@ -247,6 +251,7 @@ async function saveCard(method: DonationMethod, index: number) {
                       <input
                         :id="`${activeMethod.id}-color`"
                         v-model="activeMethod.headerColor"
+                        :name="`${activeMethod.id}-color`"
                         type="color"
                       />
                       <span class="color-value">{{ activeMethod.headerColor }}</span>
@@ -257,6 +262,7 @@ async function saveCard(method: DonationMethod, index: number) {
                     <input
                       :id="`${activeMethod.id}-account-name`"
                       v-model="activeMethod.accountName"
+                      :name="`${activeMethod.id}-account-name`"
                     />
                   </div>
                   <div class="field">
@@ -264,11 +270,16 @@ async function saveCard(method: DonationMethod, index: number) {
                     <input
                       :id="`${activeMethod.id}-account-no`"
                       v-model="activeMethod.accountNo"
+                      :name="`${activeMethod.id}-account-no`"
                     />
                   </div>
                   <div class="field">
                     <label :for="`${activeMethod.id}-currency`">Currency</label>
-                    <input :id="`${activeMethod.id}-currency`" v-model="activeMethod.currency" />
+                    <input
+                      :id="`${activeMethod.id}-currency`"
+                      v-model="activeMethod.currency"
+                      :name="`${activeMethod.id}-currency`"
+                    />
                   </div>
                 </div>
               </div>
@@ -318,13 +329,7 @@ async function saveCard(method: DonationMethod, index: number) {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
   transition: padding-left 0.25s ease;
 }
 

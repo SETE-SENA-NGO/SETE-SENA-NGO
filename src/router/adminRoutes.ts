@@ -14,6 +14,7 @@ import ProgramsOverviewView from '@/views/admin/ProgramsOverviewView.vue'
 import DonationLView from '@/views/admin/DonationLView.vue'
 import SlideshowManagerView from '@/views/admin/SlideshowManagerView.vue'
 import GetinvolvedManagement from '@/views/admin/GetinvolvedManagement.vue'
+import ContactManagement from '@/views/admin/ContactManagement.vue'
 
 export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
@@ -32,6 +33,7 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/donate', component: DonationLView, meta: { requiresAuth: true } },
   { path: '/admin/slideshow', component: SlideshowManagerView, meta: { requiresAuth: true } },
   { path: '/admin/get-involved', component: GetinvolvedManagement, meta: { requiresAuth: true } },
+  { path: '/admin/contact', component: ContactManagement, meta: { requiresAuth: true } },
   { path: '/admin/editor/get-involved', redirect: '/admin/get-involved', meta: { requiresAuth: true } },
   // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
   { path: '/admin/editor/home-slideshow', component: PageEditorView, meta: { requiresAuth: true } },
