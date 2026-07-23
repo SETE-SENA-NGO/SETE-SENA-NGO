@@ -369,8 +369,8 @@ onBeforeUnmount(() => {
 /* ── Global ── */
 .timeline-page {
   min-height: 100vh;
-  background: var(--color-cream);
-  color: var(--color-ink);
+  background: #faf8f5;
+  color: #1e1a16;
 }
 
 .container {
@@ -385,8 +385,8 @@ onBeforeUnmount(() => {
 .hero-header {
   width: 100%;
   padding: 4rem 0 3rem;
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-border);
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .hero-container {
@@ -417,13 +417,13 @@ onBeforeUnmount(() => {
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: var(--primary-dark);
+  color: #1a3d2e;
 }
 
 .org-tagline {
   font-size: 0.75rem;
   letter-spacing: 0.1em;
-  color: var(--color-ink-soft);
+  color: #6a7a72;
   font-weight: 500;
 }
 
@@ -434,11 +434,11 @@ onBeforeUnmount(() => {
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.2em;
-  color: var(--primary-color);
-  background: var(--primary-light);
+  color: #11cf80;
+  background: rgba(45, 122, 90, 0.08);
   padding: 0.2rem 1rem 0.2rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+  border: 1px solid rgba(45, 122, 90, 0.1);
   width: fit-content;
   margin-left: 60px;
 }
@@ -447,7 +447,7 @@ onBeforeUnmount(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--primary-color);
+  background: #ef6a0b;
   display: inline-block;
 }
 
@@ -456,12 +456,12 @@ onBeforeUnmount(() => {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--primary-dark);
+  color: #1a3d2e;
   margin-left: 60px;
 }
 
 .hero-title .highlight {
-  color: var(--primary-dark);
+  color: #17712c;
   position: relative;
 }
 
@@ -480,7 +480,7 @@ onBeforeUnmount(() => {
 .hero-subtext {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: var(--color-ink-soft);
+  color: #5a524a;
   max-width: 520px;
   margin: 0;
   margin-left: 60px;
@@ -503,7 +503,7 @@ onBeforeUnmount(() => {
 .stat-number {
   font-size: 2.2rem;
   font-weight: 700;
-  color: var(--color-ink);
+  color: #092064;
   letter-spacing: -0.02em;
   line-height: 1;
 }
@@ -512,14 +512,14 @@ onBeforeUnmount(() => {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-ink-soft);
+  color: #014078;
   margin-top: 0.2rem;
 }
 
 .stat-divider {
   width: 1px;
   height: 2.8rem;
-  background: var(--color-border);
+  background: #57c47f;
 }
 
 /* Right column – image */
@@ -566,24 +566,24 @@ onBeforeUnmount(() => {
   position: absolute;
   bottom: 1.5rem;
   left: 1.5rem;
-  background: color-mix(in srgb, var(--color-white) 85%, transparent);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
   padding: 0.6rem 1.2rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-ink);
+  color: #72290f;
   letter-spacing: 0.02em;
   display: flex;
   flex-direction: column;
   line-height: 1.4;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .caption-line:first-child {
   font-weight: 400;
-  color: var(--color-ink-soft);
+  color: #6a7a72;
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -596,7 +596,7 @@ onBeforeUnmount(() => {
   width: 60%;
   height: 80%;
   border-radius: 50%;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(45, 122, 90, 0.06);
   pointer-events: none;
   z-index: 0;
   animation: ringFloat 12s ease-in-out infinite;
@@ -690,7 +690,7 @@ onBeforeUnmount(() => {
 /* ── Section Heading ── */
 .history-section {
   padding: 80px 0 60px;
-  background: var(--color-cream-soft);
+  background: #93f6cd39;
   position: relative;
 }
 
@@ -705,8 +705,8 @@ onBeforeUnmount(() => {
   letter-spacing: 0.3em;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--primary-color);
-  background: var(--primary-light);
+  color: #2d7a5a;
+  background: rgba(45, 122, 90, 0.08);
   padding: 0.3rem 1.4rem;
   border-radius: 999px;
   margin-bottom: 1rem;
@@ -715,7 +715,7 @@ onBeforeUnmount(() => {
 .section-heading h2 {
   font-size: clamp(1.8rem, 2.8vw, 3.2rem);
   font-weight: 700;
-  color: var(--primary-dark);
+  color: #15793b;
   margin: 0.5rem 0 1rem;
   letter-spacing: -0.02em;
 }
@@ -725,7 +725,7 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   font-size: 1.05rem;
   line-height: 1.8;
-  color: var(--color-ink-soft);
+  color: #5a524a;
 }
 
 /* ── Timeline ── */
@@ -801,10 +801,10 @@ onBeforeUnmount(() => {
 
 .timeline-card {
   width: 45%;
-  background: var(--color-white);
+  background: #ffffff;
   border-radius: 1.25rem;
   box-shadow: 0 8px 30px rgba(47, 36, 29, 0.06);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(47, 36, 29, 0.05);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease,

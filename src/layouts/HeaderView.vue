@@ -3,9 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import FlagUK from '@/components/icons/FlagUK.vue'
 import FlagKH from '@/components/icons/FlagKH.vue'
-import { useUiStore } from '@/stores/ui.store'
 import logoUrl from '@/assets/santi_sena_logo.png'
-const ui = useUiStore()
 
 type MenuItem = { title: string; desc: string; to: string }
 type Menu = { label: string; to?: string; items: MenuItem[] }
@@ -250,25 +248,6 @@ onUnmounted(() => {
       </nav>
 
       <div class="header-actions">
-        <!-- Dark mode toggle -->
-        <button
-          type="button"
-          class="dark-toggle"
-          :title="ui.publicDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-          :aria-label="ui.publicDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
-          @click="ui.togglePublicDarkMode()"
-        >
-          <!-- Sun icon (shown in dark mode) -->
-          <svg v-if="ui.publicDarkMode" class="dark-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5" />
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-          <!-- Moon icon (shown in light mode) -->
-          <svg v-else class="dark-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        </button>
-
         <div class="lang-switch" @mouseenter="activateLang" @mouseleave="deactivateLang">
           <button type="button" class="lang-trigger" @click.stop="activateLang">
             <component :is="flagIcons[currentLang.code]" aria-hidden="true" />
@@ -543,37 +522,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.85rem;
-}
-
-.dark-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  background: var(--color-cream-soft);
-  color: var(--color-ink);
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
-  flex-shrink: 0;
-}
-
-.dark-toggle:hover {
-  background: var(--primary-light);
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  transform: scale(1.08);
-}
-
-.dark-toggle-icon {
-  width: 1.1rem;
-  height: 1.1rem;
 }
 
 .lang-switch {
