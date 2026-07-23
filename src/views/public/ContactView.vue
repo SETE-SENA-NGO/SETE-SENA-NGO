@@ -69,6 +69,7 @@ const officesIntro = computed(() => pageContent.value.officesIntro)
 const formContent = computed(() => pageContent.value.form)
 const telegramContact = computed(() => pageContent.value.telegram)
 const visitContent = computed(() => pageContent.value.visit)
+const labels = computed(() => pageContent.value.labels)
 const visitNotes = computed(() => pageContent.value.visit.notes.filter(Boolean))
 const contactLogoImage = computed(() => formContent.value.logoImage.trim() || logoUrl)
 const messageMaxLength = computed(() => formContent.value.messageMaxLength || 600)
@@ -123,14 +124,30 @@ let contactFormMotionTimer: number | undefined
 
 const activeOfficeId = ref('all')
 const activeContactMethodId = ref<ContactMethodId>('email')
-const activeOffice = computed(
-  () => offices.value.find((office) => office.id === activeOfficeId.value) ?? offices.value[0],
+const activeOffice = computed<ResolvedContactOffice>(
+  () =>
+    offices.value.find((office) => office.id === activeOfficeId.value) ??
+    offices.value[0] ??
+    resolveOffice(fallbackContactContent.offices[0]!),
 )
-const activeContactMethod = computed(
+const activeContactMethod = computed<ContactMethod>(
   () =>
     contactMethods.value.find(
       (contactMethod) => contactMethod.id === activeContactMethodId.value,
-    ) ?? contactMethods.value[0],
+    ) ??
+    contactMethods.value[0] ?? {
+      id: 'email',
+      tab: formContent.value.emailTab,
+      type: formContent.value.emailType,
+      heading: formContent.value.emailHeading,
+      fieldLabel: formContent.value.emailFieldLabel,
+      inputType: 'email',
+      autocomplete: 'email',
+      placeholder: formContent.value.emailPlaceholder,
+      buttonLabel: formContent.value.emailButtonLabel,
+      sentLabel: formContent.value.emailSentLabel,
+      status: formContent.value.emailStatus,
+    },
 )
 const isTelegramMethod = computed(() => activeContactMethodId.value === 'telegram')
 const mapOfficeHotspots = computed(() =>
@@ -154,8 +171,9 @@ watch(
   offices,
   (nextOffices) => {
     if (!nextOffices.length) return
-    if (!nextOffices.some((office) => office.id === activeOfficeId.value)) {
-      activeOfficeId.value = nextOffices[0].id
+    const firstOffice = nextOffices[0]
+    if (firstOffice && !nextOffices.some((office) => office.id === activeOfficeId.value)) {
+      activeOfficeId.value = firstOffice.id
     }
   },
   { immediate: true },
@@ -164,6 +182,13 @@ watch(
 watch(activeLocale, () => {
   void loadCmsContent()
 })
+
+function resolveOffice(office: ContactOffice): ResolvedContactOffice {
+  return {
+    ...office,
+    mapImage: resolveMapImage(office),
+  }
+}
 
 function resolveMapImage(office: ContactOffice) {
   return office.mapImage.trim() || defaultMapImages[office.id] || cambodiaMap
@@ -266,23 +291,23 @@ onUnmounted(() => {
           <h3>{{ headquarters.name }}</h3>
           <dl class="details-list">
             <div>
-              <dt>Address</dt>
+              <dt>{{ labels.address }}</dt>
               <dd>{{ headquarters.address }}</dd>
             </div>
             <div>
-              <dt>Email</dt>
+              <dt>{{ labels.email }}</dt>
               <dd>
                 <a :href="`mailto:${headquarters.email}`">{{ headquarters.email }}</a>
               </dd>
             </div>
             <div>
-              <dt>Phone</dt>
+              <dt>{{ labels.phone }}</dt>
               <dd>
                 {{ headquarters.phone }}
               </dd>
             </div>
             <div>
-              <dt>Office hours</dt>
+              <dt>{{ labels.officeHours }}</dt>
               <dd>{{ headquarters.hours }}</dd>
             </div>
           </dl>
@@ -586,30 +611,30 @@ onUnmounted(() => {
 
             <dl class="details-list details-list--compact">
               <div>
-                <dt>Address</dt>
+                <dt>{{ labels.address }}</dt>
                 <dd>{{ activeOffice.address }}</dd>
               </div>
               <div>
-                <dt>Phone</dt>
+                <dt>{{ labels.phone }}</dt>
                 <dd>
                   {{ activeOffice.phone }}
                 </dd>
               </div>
               <div>
-                <dt>Email</dt>
+                <dt>{{ labels.email }}</dt>
                 <dd>
                   <a :href="`mailto:${activeOffice.email}`">{{ activeOffice.email }}</a>
                 </dd>
               </div>
               <div>
-                <dt>Contact</dt>
+                <dt>{{ labels.contact }}</dt>
                 <dd>{{ activeOffice.contact }}</dd>
               </div>
             </dl>
 
             <div class="office-actions">
               <a class="email-button email-button--primary" :href="`mailto:${activeOffice.email}`">
-                Email us
+                {{ labels.emailUs }}
               </a>
             </div>
           </div>

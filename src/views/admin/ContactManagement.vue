@@ -65,9 +65,6 @@ const headquartersPreview = computed(() =>
 const telegramPreview = computed(() =>
   resolveImageUrl(draft.telegram.qrImage, fallbackContactContent.telegram.qrImage),
 )
-const visitPreview = computed(() =>
-  resolveImageUrl(draft.visit.backgroundImage, fallbackContactContent.visit.backgroundImage),
-)
 
 onMounted(() => {
   void loadPage()
@@ -106,6 +103,7 @@ function replaceDraft(content: ContactPageContent) {
     primaryCta: { ...content.visit.primaryCta },
     secondaryCta: { ...content.visit.secondaryCta },
   }
+  draft.labels = { ...content.labels }
 }
 
 async function savePage() {
@@ -212,18 +210,10 @@ function moveOffice(index: number, direction: -1 | 1) {
   draft.offices[target] = current
 }
 
-function addVisitNote() {
-  draft.visit.notes.push('Add a visitor note.')
-}
-
-function removeVisitNote(index: number) {
-  draft.visit.notes.splice(index, 1)
-}
-
 function resetToDefaults() {
   ui.openModal(
     'Reset Contact content?',
-    'Restore the default contact details, offices, images and form copy?',
+    'Restore the default contact details, office info, Telegram QR and visitor guide?',
     () => {
       replaceDraft(cloneContactContent(fallbackContactContent))
       ui.addToast('Default Contact draft restored.', 'info')
@@ -255,6 +245,7 @@ function prepareForSave(content: ContactPageContent): ContactPageContent {
       secondaryCta: { ...content.visit.secondaryCta },
       backgroundImage: normalizeMediaUrl(content.visit.backgroundImage),
     },
+    labels: { ...content.labels },
   }
 }
 
@@ -279,11 +270,6 @@ function validateDraft() {
   if (invalidOfficeIndex >= 0) {
     return `Office ${invalidOfficeIndex + 1} needs a tab, title, email, and phone.`
   }
-
-  if (!draft.form.title.trim()) return 'Contact form heading is required.'
-  if (!draft.telegram.qrImage.trim()) return 'Telegram QR image is required.'
-  if (!draft.telegram.url.trim()) return 'Telegram URL is required.'
-  if (!draft.visit.notes.length) return 'Add at least one visit note.'
 
   return ''
 }
@@ -517,177 +503,38 @@ function resolveImageUrl(url: string, fallback: string) {
                     <span>Contact purpose</span>
                     <textarea v-model="office.contact" rows="2"></textarea>
                   </label>
-                  <label class="field">
-                    <span>Map image URL</span>
-                    <input v-model="office.mapImage" type="url" placeholder="Leave empty to use the built-in map" />
-                  </label>
-                  <label class="field">
-                    <span>Map label</span>
-                    <input v-model="office.mapLabel" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Pin left</span>
-                    <input v-model="office.pinLeft" type="text" placeholder="61.8%" />
-                  </label>
-                  <label class="field">
-                    <span>Pin top</span>
-                    <input v-model="office.pinTop" type="text" placeholder="81.4%" />
-                  </label>
                 </div>
               </article>
             </div>
           </section>
 
-          <section class="editor-panel" aria-labelledby="form-heading">
+          <section class="editor-panel" aria-labelledby="telegram-qr-heading">
             <div class="panel-header">
               <div>
-                <p class="panel-kicker">Message area</p>
-                <h2 id="form-heading">Form copy and Telegram</h2>
+                <p class="panel-kicker">Contact form</p>
+                <h2 id="telegram-qr-heading">Telegram QR code</h2>
               </div>
               <MessageSquare :size="20" aria-hidden="true" />
             </div>
 
-            <div class="form-telegram-grid">
-              <div class="panel-body form-grid">
-                <label class="field">
-                  <span>Form intro label</span>
-                  <input v-model="draft.form.introEyebrow" type="text" />
-                </label>
-                <label class="field">
-                  <span>Form heading</span>
-                  <input v-model="draft.form.title" type="text" />
-                </label>
-                <label class="field wide">
-                  <span>Form intro text</span>
-                  <textarea v-model="draft.form.body" rows="3"></textarea>
-                </label>
-                <label class="field">
-                  <span>Email tab</span>
-                  <input v-model="draft.form.emailTab" type="text" />
-                </label>
-                <label class="field">
-                  <span>Email form heading</span>
-                  <input v-model="draft.form.emailHeading" type="text" />
-                </label>
-                <label class="field">
-                  <span>Email placeholder</span>
-                  <input v-model="draft.form.emailPlaceholder" type="text" />
-                </label>
-                <label class="field">
-                  <span>Submit button</span>
-                  <input v-model="draft.form.emailButtonLabel" type="text" />
-                </label>
-                <label class="field wide">
-                  <span>Success message</span>
-                  <input v-model="draft.form.emailStatus" type="text" />
-                </label>
-              </div>
-
-              <div class="telegram-panel">
-                <figure class="image-preview qr-preview">
-                  <img :src="telegramPreview" alt="" />
-                </figure>
-                <div class="form-stack">
-                  <label class="field">
-                    <span>Telegram heading</span>
-                    <input v-model="draft.form.telegramHeading" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Telegram URL</span>
-                    <input v-model="draft.telegram.url" type="url" />
-                  </label>
-                  <label class="field">
-                    <span>QR image URL</span>
-                    <input v-model="draft.telegram.qrImage" type="url" :placeholder="imageHint" />
-                  </label>
-                  <label class="field">
-                    <span>Open button label</span>
-                    <input v-model="draft.telegram.openLabel" type="text" />
-                  </label>
-                  <label class="upload-box">
-                    <Upload :size="17" aria-hidden="true" />
-                    <span>{{ uploadingKey === 'telegram-qr' ? 'Uploading QR...' : 'Upload Telegram QR' }}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      :disabled="uploadingKey === 'telegram-qr'"
-                      @change="uploadImage($event, 'telegram-qr', (url) => (draft.telegram.qrImage = url))"
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="editor-panel" aria-labelledby="visit-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Visit banner</p>
-                <h2 id="visit-heading">Notes and bottom actions</h2>
-              </div>
-              <ImageIcon :size="20" aria-hidden="true" />
-            </div>
-
             <div class="image-editor-grid">
-              <figure class="image-preview banner-preview">
-                <img :src="visitPreview" alt="" />
+              <figure class="image-preview qr-preview">
+                <img :src="telegramPreview" alt="" />
               </figure>
+
               <div class="form-stack">
-                <div class="form-grid">
-                  <label class="field">
-                    <span>Small label</span>
-                    <input v-model="draft.visit.eyebrow" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Banner heading</span>
-                    <input v-model="draft.visit.title" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Primary action label</span>
-                    <input v-model="draft.visit.primaryCta.label" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Primary action link</span>
-                    <input v-model="draft.visit.primaryCta.to" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Secondary action label</span>
-                    <input v-model="draft.visit.secondaryCta.label" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Secondary action link</span>
-                    <input v-model="draft.visit.secondaryCta.to" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Background image URL</span>
-                    <input v-model="draft.visit.backgroundImage" type="url" :placeholder="imageHint" />
-                  </label>
-                </div>
-
-                <div class="notes-editor">
-                  <div class="notes-header">
-                    <strong>Visit notes</strong>
-                    <button type="button" class="btn btn-secondary btn-small" @click="addVisitNote">
-                      <Plus :size="14" aria-hidden="true" />
-                      <span>Add note</span>
-                    </button>
-                  </div>
-                  <div v-for="(note, index) in draft.visit.notes" :key="index" class="note-row">
-                    <input v-model="draft.visit.notes[index]" type="text" />
-                    <button type="button" class="icon-btn danger" aria-label="Remove note" @click="removeVisitNote(index)">
-                      <Trash2 :size="14" aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-
+                <label class="field">
+                  <span>Telegram QR image</span>
+                  <input v-model="draft.telegram.qrImage" type="url" :placeholder="imageHint" />
+                </label>
                 <label class="upload-box">
                   <Upload :size="17" aria-hidden="true" />
-                  <span>{{ uploadingKey === 'visit-banner' ? 'Uploading banner...' : 'Upload visit banner' }}</span>
+                  <span>{{ uploadingKey === 'telegram-qr' ? 'Uploading QR...' : 'Upload Telegram QR' }}</span>
                   <input
                     type="file"
                     accept="image/*"
-                    :disabled="uploadingKey === 'visit-banner'"
-                    @change="uploadImage($event, 'visit-banner', (url) => (draft.visit.backgroundImage = url))"
+                    :disabled="uploadingKey === 'telegram-qr'"
+                    @change="uploadImage($event, 'telegram-qr', (url) => (draft.telegram.qrImage = url))"
                   />
                 </label>
               </div>
@@ -914,17 +761,11 @@ function resolveImageUrl(url: string, fallback: string) {
   padding: 1rem;
 }
 
-.image-editor-grid,
-.form-telegram-grid {
+.image-editor-grid {
   display: grid;
   grid-template-columns: minmax(300px, 0.72fr) minmax(360px, 1.28fr);
   gap: 1.1rem;
   padding: 1.1rem;
-}
-
-.form-telegram-grid {
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
-  padding: 0;
 }
 
 .image-preview {
@@ -945,20 +786,22 @@ function resolveImageUrl(url: string, fallback: string) {
   object-fit: cover;
 }
 
-.hero-preview,
-.banner-preview {
+.hero-preview {
   aspect-ratio: 16 / 10;
 }
 
 .qr-preview {
-  width: min(100%, 260px);
   aspect-ratio: 1;
-  margin-inline: auto;
+  max-width: 280px;
+}
+
+.qr-preview img {
+  object-fit: contain;
+  padding: 0.7rem;
 }
 
 .form-stack,
-.offices-list,
-.notes-editor {
+.offices-list {
   display: grid;
   gap: 0.85rem;
 }
@@ -985,15 +828,13 @@ function resolveImageUrl(url: string, fallback: string) {
 }
 
 .field span,
-.upload-box span,
-.notes-header strong {
+.upload-box span {
   color: var(--admin-theme-contrast-soft);
 }
 
 .field input,
 .field textarea,
-.upload-box input,
-.note-row input {
+.upload-box input {
   width: 100%;
   border: 1px solid var(--admin-theme-border-strong);
   border-radius: 6px;
@@ -1012,8 +853,7 @@ function resolveImageUrl(url: string, fallback: string) {
 
 .field input:focus,
 .field textarea:focus,
-.upload-box input:focus,
-.note-row input:focus {
+.upload-box input:focus {
   border-color: var(--admin-theme-primary);
   outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
 }
@@ -1098,36 +938,6 @@ function resolveImageUrl(url: string, fallback: string) {
   padding: 0.9rem;
 }
 
-.telegram-panel {
-  display: grid;
-  align-content: start;
-  gap: 1rem;
-  border-left: 1px solid var(--admin-theme-border);
-  padding: 1rem;
-}
-
-.notes-editor {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 36%, var(--admin-theme-surface));
-  padding: 0.85rem;
-}
-
-.notes-header,
-.note-row {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.notes-header {
-  justify-content: space-between;
-}
-
-.note-row input {
-  flex: 1;
-}
-
 :global(.admin-dark) .btn-primary {
   color: #071311;
 }
@@ -1162,22 +972,10 @@ function resolveImageUrl(url: string, fallback: string) {
   }
 
   .image-editor-grid,
-  .form-telegram-grid,
   .form-grid,
   .intro-fields,
   .office-form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .telegram-panel {
-    border-left: 0;
-    border-top: 1px solid var(--admin-theme-border);
-  }
-
-  .notes-header,
-  .note-row {
-    align-items: stretch;
-    flex-direction: column;
   }
 }
 </style>

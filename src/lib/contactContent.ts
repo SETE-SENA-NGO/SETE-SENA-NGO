@@ -90,6 +90,15 @@ export type ContactVisitContent = {
   backgroundImage: string
 }
 
+export type ContactDetailLabels = {
+  address: string
+  email: string
+  phone: string
+  officeHours: string
+  contact: string
+  emailUs: string
+}
+
 export type ContactPageContent = {
   headquarters: ContactHeadquarters
   officesIntro: ContactOfficeIntro
@@ -97,6 +106,7 @@ export type ContactPageContent = {
   form: ContactFormContent
   telegram: TelegramContactContent
   visit: ContactVisitContent
+  labels: ContactDetailLabels
 }
 
 type LegacySection = {
@@ -240,6 +250,14 @@ export const fallbackContactContent: ContactPageContent = {
     secondaryCta: { label: 'Partnership', to: '/get-involved/partner' },
     backgroundImage: '/images/programs/hero-4.jpg',
   },
+  labels: {
+    address: 'Address',
+    email: 'Email',
+    phone: 'Phone',
+    officeHours: 'Office hours',
+    contact: 'Contact',
+    emailUs: 'Email us',
+  },
 }
 
 export function parseContactCmsBody(body: string): Partial<ContactPageContent> | null {
@@ -276,6 +294,7 @@ export function mergeContactContent(
       secondaryCta: mergeObject(base.visit.secondaryCta, override.visit?.secondaryCta),
       notes: mergeStringArray(override.visit?.notes, base.visit.notes),
     },
+    labels: mergeObject(base.labels, override.labels),
   }
 }
 
@@ -292,6 +311,7 @@ export function cloneContactContent(content: ContactPageContent): ContactPageCon
       primaryCta: { ...content.visit.primaryCta },
       secondaryCta: { ...content.visit.secondaryCta },
     },
+    labels: { ...content.labels },
   }
 }
 
