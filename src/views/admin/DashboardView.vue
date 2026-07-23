@@ -6,15 +6,27 @@ import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
+type PageRow = {
+  slug: string
+  title: string
+  body: string
+  updated_at: string | null
+}
+
 const loading = ref(false)
 const pageCount = ref(0)
 const savedCount = ref(0)
-const programCount = ref(0)
-const newsCount = ref(0)
-const partnerCount = ref(0)
-const userCount = ref(0)
 const latestUpdate = ref('')
 const ui = useUiStore()
+
+const monthlyVisitors = [
+  { month: 'Jan', visitors: 4200, views: 12800 },
+  { month: 'Feb', visitors: 5100, views: 14300 },
+  { month: 'Mar', visitors: 6800, views: 18100 },
+  { month: 'Apr', visitors: 6200, views: 17200 },
+  { month: 'May', visitors: 7900, views: 20900 },
+  { month: 'Jun', visitors: 8600, views: 23600 },
+]
 
 const quickActions = [
   {
@@ -24,16 +36,10 @@ const quickActions = [
     tone: 'blue',
   },
   {
-    label: 'Media URLs',
-    detail: 'Save public Google Drive images',
-    to: '/admin/media',
-    tone: 'green',
-  },
-  {
     label: 'New Program',
     detail: 'Open program content workflow',
     to: '/admin/modules/programs',
-    tone: 'blue',
+    tone: 'green',
   },
   {
     label: 'New News',
@@ -49,47 +55,39 @@ const quickActions = [
   },
 ]
 
-const contentInventory = computed(() => [
-  { label: 'Pages', items: pageCount.value },
-  { label: 'Programs', items: programCount.value },
-  { label: 'News', items: newsCount.value },
-  { label: 'Partners', items: partnerCount.value },
-  { label: 'Users', items: userCount.value },
-])
-
-const maxInventory = computed(() => {
-  return Math.max(1, ...contentInventory.value.map((item) => item.items))
+const maxVisitors = computed(() => {
+  return Math.max(1, ...monthlyVisitors.map((item) => item.visitors))
 })
 
 const dashboardStats = computed(() => [
   {
+    label: 'Total Visitors',
+    value: '42.8K',
+    tone: 'blue',
+  },
+  {
     label: 'Public Pages',
     value: String(pageCount.value),
-    tone: 'blue',
+    tone: 'green',
   },
   {
     label: 'Saved Pages',
     value: String(savedCount.value),
-    tone: 'green',
-  },
-  {
-    label: 'Programs',
-    value: String(programCount.value),
     tone: 'blue',
   },
   {
-    label: 'News Posts',
-    value: String(newsCount.value),
+    label: 'Content Modules',
+    value: '6',
     tone: 'orange',
   },
   {
-    label: 'Partners',
-    value: String(partnerCount.value),
+    label: 'Total Programs',
+    value: '4',
     tone: 'green',
   },
   {
-    label: 'Admin Users',
-    value: String(userCount.value),
+    label: 'Registered Users',
+    value: '8',
     tone: 'slate',
   },
 ])
@@ -101,22 +99,11 @@ onMounted(() => {
 async function loadPageStats() {
   loading.value = true
   try {
-    const [pagesResult, programs, news, partners, users] = await Promise.all([
-      supabase.from('pages').select('slug, updated_at'),
-      countRows('programs'),
-      countRows('news_posts'),
-      countRows('partners'),
-      countRows('profiles'),
-    ])
+    const { data, error } = await supabase.from('pages').select('slug, updated_at')
 
-    programCount.value = programs
-    newsCount.value = news
-    partnerCount.value = partners
-    userCount.value = users
+    if (error) throw error
 
-    if (pagesResult.error) throw pagesResult.error
-
-    const rows = (pagesResult.data ?? []) as { slug: string; updated_at: string | null }[]
+    const rows = (data ?? []) as { slug: string; updated_at: string | null }[]
     pageCount.value = rows.length
     savedCount.value = rows.filter((row) => row.updated_at).length
 
@@ -131,15 +118,6 @@ async function loadPageStats() {
   } finally {
     loading.value = false
   }
-}
-
-async function countRows(table: string) {
-  const { count, error } = await supabase.from(table).select('id', {
-    count: 'exact',
-    head: true,
-  })
-
-  return error ? 0 : (count ?? 0)
 }
 
 function formatDate(value: string) {
@@ -188,18 +166,18 @@ function barWidth(value: number, total: number) {
             <article class="dashboard-panel visitors-panel">
               <header>
                 <div>
-                  <p class="eyebrow">Inventory</p>
-                  <h2>Content inventory</h2>
+                  <p class="eyebrow">Analytics</p>
+                  <h2>Monthly visitors</h2>
                 </div>
-                <strong>{{ loading ? 'Syncing...' : 'Live CMS tables' }}</strong>
+                <strong>Last 6 months</strong>
               </header>
               <div class="visitor-chart">
-                <div v-for="item in contentInventory" :key="item.label" class="visitor-bar">
+                <div v-for="month in monthlyVisitors" :key="month.month" class="visitor-bar">
                   <span
-                    :style="{ height: barWidth(item.items, maxInventory) }"
-                    :aria-label="`${item.label}: ${item.items} items`"
+                    :style="{ height: barWidth(month.visitors, maxVisitors) }"
+                    :aria-label="`${month.month}: ${month.visitors} visitors`"
                   ></span>
-                  <small>{{ item.label }}</small>
+                  <small>{{ month.month }}</small>
                 </div>
               </div>
             </article>
@@ -253,11 +231,29 @@ function barWidth(value: number, total: number) {
 
 <style scoped>
 .admin-page {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-violet: var(--admin-theme-teal);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-green: var(--admin-theme-primary);
+  --admin-green-deep: var(--admin-theme-primary-deep);
+  --admin-shadow: var(--admin-theme-shadow);
+
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--admin-theme-bg);
-  color: var(--admin-theme-text);
+  background: var(--admin-bg);
+  color: var(--admin-text);
   font-family:
     'Inter',
     -apple-system,
@@ -268,17 +264,31 @@ function barWidth(value: number, total: number) {
   transition: padding-left 0.25s ease;
 }
 
+:global(.admin-dark .admin-page) {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-shadow: var(--admin-theme-shadow);
+}
+
 .admin-layout {
   display: flex;
   flex: 1;
-  background: var(--admin-theme-bg);
+  background: var(--admin-bg);
 }
 
 .main {
   flex: 1;
   width: 100%;
   padding: 1.5rem 2.25rem 2.5rem;
-  background: var(--admin-theme-bg);
+  background: var(--admin-bg);
 }
 
 .dashboard-overview {
@@ -288,7 +298,7 @@ function barWidth(value: number, total: number) {
 
 .eyebrow {
   margin: 0 0 0.5rem;
-  color: var(--admin-theme-primary-deep);
+  color: var(--admin-green-deep);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -303,14 +313,14 @@ p {
 
 h1 {
   margin-bottom: 0.45rem;
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: 2rem;
   line-height: 1.12;
 }
 
 h2 {
   margin-bottom: 0.35rem;
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -322,10 +332,10 @@ h2 {
   justify-content: space-between;
   gap: 1rem;
   padding: 1.6rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 16px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
   min-height: 190px;
 }
 
@@ -338,7 +348,7 @@ h2 {
 .overview-header p:not(.eyebrow) {
   max-width: 660px;
   margin-bottom: 0;
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   line-height: 1.65;
 }
 
@@ -353,16 +363,16 @@ h2 {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 999px;
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-muted);
+  background: var(--admin-surface-soft);
+  color: var(--admin-muted);
   padding: 0.42rem 0.7rem;
   font-weight: 800;
 }
 
 .overview-metrics strong {
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
 }
 
 .overview-actions {
@@ -402,27 +412,27 @@ h2 {
 }
 
 .button-primary {
-  border: 1px solid var(--admin-theme-primary);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
+  border: 1px solid var(--admin-green);
+  background: linear-gradient(180deg, var(--admin-green), var(--admin-green-deep));
   color: #ffffff;
   box-shadow: 0 12px 24px rgba(15, 125, 56, 0.28);
 }
 
 .button-primary:hover {
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  border-color: var(--admin-theme-primary-deep);
+  background: linear-gradient(180deg, var(--admin-green), var(--admin-green-deep));
+  border-color: var(--admin-green-deep);
 }
 
 .button-secondary {
-  border: 1px solid var(--admin-theme-border-strong);
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-contrast-soft);
+  border: 1px solid var(--admin-border-strong);
+  background: var(--admin-surface);
+  color: var(--admin-contrast-soft);
 }
 
 .button-secondary:hover {
-  border-color: var(--admin-theme-primary);
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-primary-deep);
+  border-color: var(--admin-green);
+  background: var(--admin-surface-soft);
+  color: var(--admin-green-deep);
   box-shadow: 0 8px 18px rgba(16, 88, 51, 0.1);
 }
 
@@ -439,10 +449,10 @@ h2 {
   align-content: start;
   gap: 0.5rem;
   padding: 1.25rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 16px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -451,7 +461,7 @@ h2 {
 
 .dashboard-card:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--card-accent) 40%, var(--admin-theme-border));
+  border-color: color-mix(in srgb, var(--card-accent) 40%, var(--admin-border));
   box-shadow: 0 20px 40px rgba(16, 88, 51, 0.12);
 }
 
@@ -472,8 +482,8 @@ h2 {
 
 .card-top small {
   border-radius: 999px;
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-muted);
+  background: var(--admin-surface-soft);
+  color: var(--admin-muted);
   padding: 0.18rem 0.42rem;
   font-size: 0.7rem;
   font-weight: 800;
@@ -500,12 +510,12 @@ h2 {
 }
 
 .dashboard-card span {
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-weight: 700;
 }
 
 .dashboard-card strong {
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: 2.1rem;
   font-weight: 800;
   line-height: 1;
@@ -513,25 +523,25 @@ h2 {
 
 .dashboard-card p {
   margin: 0;
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-size: 0.86rem;
   font-weight: 600;
   line-height: 1.55;
 }
 
 .card-blue {
-  --card-accent: var(--admin-theme-teal);
+  --card-accent: var(--admin-blue);
 }
 .card-green {
-  --card-accent: var(--admin-theme-primary);
+  --card-accent: var(--admin-green);
 }
 .card-orange,
 .card-gold {
-  --card-accent: var(--admin-theme-gold);
+  --card-accent: var(--admin-gold);
 }
 .card-red,
 .card-pink {
-  --card-accent: var(--admin-theme-danger);
+  --card-accent: var(--admin-pink);
 }
 .card-slate,
 .card-violet {
@@ -548,10 +558,10 @@ h2 {
 .dashboard-panel {
   min-height: 300px;
   padding: 1.3rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 16px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
 }
 
 .dashboard-panel header {
@@ -561,8 +571,8 @@ h2 {
   gap: 1rem;
   margin: -1.3rem -1.3rem 1.3rem;
   padding: 1.1rem 1.3rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, var(--admin-theme-surface-soft), transparent);
+  border-bottom: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, var(--admin-surface-soft), transparent);
 }
 
 .dashboard-panel h2,
@@ -571,7 +581,7 @@ h2 {
 }
 
 .dashboard-panel header strong {
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-size: 0.82rem;
   font-weight: 700;
   text-align: right;
@@ -603,7 +613,7 @@ h2 {
   min-height: 2rem;
   align-self: end;
   border-radius: 999px 999px 8px 8px;
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
+  background: linear-gradient(180deg, var(--admin-green), var(--admin-green-deep));
   box-shadow: 0 14px 24px rgba(15, 125, 56, 0.22);
   transition: transform 0.15s ease;
 }
@@ -613,7 +623,7 @@ h2 {
 }
 
 .visitor-bar small {
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-weight: 700;
 }
 
@@ -631,9 +641,9 @@ h2 {
   margin: auto 0;
   border-radius: 999px;
   background:
-    radial-gradient(circle at center, var(--admin-theme-surface) 0 53%, transparent 54%),
-    conic-gradient(var(--admin-theme-primary) var(--saved), var(--admin-theme-surface-soft) 0);
-  box-shadow: inset 0 0 0 10px var(--admin-theme-bg-deep);
+    radial-gradient(circle at center, var(--admin-surface) 0 53%, transparent 54%),
+    conic-gradient(var(--admin-green) var(--saved), var(--admin-surface-soft) 0);
+  box-shadow: inset 0 0 0 10px var(--admin-bg-deep);
 }
 
 .publish-chart strong,
@@ -643,14 +653,14 @@ h2 {
 
 .publish-chart strong {
   transform: translateY(-0.5rem);
-  color: var(--admin-theme-primary);
+  color: var(--admin-green);
   font-size: 2.1rem;
   font-weight: 800;
 }
 
 .publish-chart span {
   transform: translateY(1.2rem);
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-weight: 700;
 }
 
@@ -664,10 +674,10 @@ h2 {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.75rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 14px;
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-text);
+  background: var(--admin-surface-soft);
+  color: var(--admin-text);
   padding: 0.85rem;
   text-decoration: none;
   transition:
@@ -677,7 +687,7 @@ h2 {
 }
 
 .quick-action:hover {
-  border-color: color-mix(in srgb, var(--action-color) 45%, var(--admin-theme-border));
+  border-color: color-mix(in srgb, var(--action-color) 45%, var(--admin-border));
   box-shadow: 0 14px 26px rgba(16, 88, 51, 0.12);
   transform: translateY(-1px);
 }
@@ -703,26 +713,26 @@ h2 {
 }
 
 .action-blue {
-  --action-color: var(--admin-theme-teal);
+  --action-color: var(--admin-blue);
 }
 .action-green {
-  --action-color: var(--admin-theme-primary);
+  --action-color: var(--admin-green);
 }
 .action-orange {
-  --action-color: var(--admin-theme-gold);
+  --action-color: var(--admin-gold);
 }
 .action-slate {
   --action-color: #64748b;
 }
 
 .quick-action strong {
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-weight: 800;
 }
 
 .quick-action small {
   display: block;
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-size: 0.82rem;
   font-weight: 600;
 }

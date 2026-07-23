@@ -1,3 +1,0 @@
--- Media images are stored in Google Drive or another external host.
--- The website stores only image URLs in public.media_assets, so no Supabase
--- Storage bucket or upload limit is required.

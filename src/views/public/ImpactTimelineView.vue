@@ -1,9 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
-
-const heroTimelineImage = imageUrls.impact.hero
-const introImpactImage = imageUrls.impact.village
 
 // ─── Milestones data ──────────────────────────────────────────────
 const allMilestones = [
@@ -14,7 +10,7 @@ const allMilestones = [
       'New five-year strategy to deepen quality, diversify funding and invest in youth leadership.',
     detail:
       'The plan prioritises three pillars: (1) expanding community-led education programmes, (2) strengthening child protection systems, and (3) launching a dedicated youth innovation fund. Over 50 community dialogues were held to co‑design the strategy.',
-    image: imageUrls.maps.timeline2024,
+    image: new URL('@/assets/maps/2024.png', import.meta.url).href,
   },
   {
     year: '2022',
@@ -23,7 +19,7 @@ const allMilestones = [
       'Village forest guardians launch a rural enterprise from non-timber forest products.',
     detail:
       'With technical support from Santi Sena, 12 village cooperatives now sustainably harvest melaleuca leaves, producing essential oils sold locally and exported. The enterprise provides income for 200 families while preserving the forest.',
-    image: imageUrls.maps.timeline2022,
+    image: new URL('@/assets/maps/2022.png', import.meta.url).href,
   },
   {
     year: '2020',
@@ -31,7 +27,7 @@ const allMilestones = [
     description: 'Emergency food, hygiene and remote-learning kits reach more than 200 villages.',
     detail:
       'In partnership with local authorities, we distributed 3,500 food packs, 5,000 hygiene kits, and 2,000 radio‑based learning materials to keep children learning despite school closures.',
-    image: imageUrls.maps.timeline2019,
+    image: new URL('@/assets/maps/2019.png', import.meta.url).href,
   },
   {
     year: '2018',
@@ -39,7 +35,7 @@ const allMilestones = [
     description: 'CPNs become active across 43 communes with 24/7 referral pathways.',
     detail:
       'Each network includes trained volunteers, social workers, and local police. They have handled over 1,200 cases, ensuring vulnerable children receive immediate care and legal support.',
-    image: imageUrls.maps.timeline2018,
+    image: new URL('@/assets/maps/2018.png', import.meta.url).href,
   },
   {
     year: '2014',
@@ -48,7 +44,7 @@ const allMilestones = [
       'Kratie office opens. Programs extend to a third province and staff grows past 30 full-time.',
     detail:
       'The expansion to Kratie brought our integrated approach to another province, reaching an additional 80 villages. We also launched our first youth leadership camp that year.',
-    image: imageUrls.maps.timeline2014,
+    image: new URL('@/assets/maps/2014.png', import.meta.url).href,
   },
   {
     year: '2011',
@@ -56,7 +52,7 @@ const allMilestones = [
     description: 'Household biogas units begin replacing firewood in remote kitchens.',
     detail:
       'By 2015, we had installed over 400 biogas units, reducing deforestation and improving indoor air quality. The program also trains local technicians to maintain the systems.',
-    image: imageUrls.maps.timeline2011,
+    image: new URL('@/assets/maps/2011.png', import.meta.url).href,
   },
   {
     year: '2007',
@@ -64,7 +60,7 @@ const allMilestones = [
     description: 'Education and child protection programming reaches a second province.',
     detail:
       'We partnered with the provincial government to replicate the Svay Rieng model, focusing on school enrolment and community‑based child protection committees.',
-    image: imageUrls.maps.timeline2007,
+    image: new URL('@/assets/maps/2007.png', import.meta.url).href,
   },
   {
     year: '2003',
@@ -73,7 +69,7 @@ const allMilestones = [
       'First women-led savings circles launched in Svay Rieng; the model becomes a program backbone.',
     detail:
       'Today, over 500 savings groups exist, with more than 12,000 members. The groups provide micro‑loans and financial literacy training, empowering women to start small businesses.',
-    image: imageUrls.maps.timeline2003,
+    image: new URL('@/assets/maps/2003.png', import.meta.url).href,
   },
   {
     year: '1998',
@@ -81,7 +77,7 @@ const allMilestones = [
     description: 'Village committees take legal stewardship of 120 hectares of degraded forest.',
     detail:
       'The site has since become a model for community‑led reforestation, with over 50,000 trees planted and a thriving biodiversity corridor. It now serves as a learning hub for other villages.',
-    image: imageUrls.maps.timeline1998,
+    image: new URL('@/assets/maps/1998.png', import.meta.url).href,
   },
   {
     year: '1994',
@@ -90,7 +86,7 @@ const allMilestones = [
       'Buddhist monks and community elders establish the Peace Army after the war, focused on moral regeneration and rural recovery.',
     detail:
       'The founding team began with just five monks and a handful of volunteers. Their first project was rebuilding a primary school destroyed during the conflict, which became the spark for decades of community development.',
-    image: imageUrls.maps.timeline1994,
+    image: new URL('@/assets/maps/1994.png', import.meta.url).href,
   },
 ]
 
@@ -227,7 +223,7 @@ onBeforeUnmount(() => {
         <div class="hero-image-col">
           <div class="image-frame">
             <img
-              :src="heroTimelineImage"
+              src="https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=lvEwaw1VE28Q7kNvwF0oeBX&_nc_oc=AdoM-LuhRR9j2YGIxqYi2OJiGUP-ZSRIwiF5h86kvDtDqSOWZHzFau8Sp9m75Ckbn80&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=a1JVpq_FPUd9S2mq43fsuQ&_nc_ss=7b289&oh=00_AQDNWYKPBBXGQ50NyyHleSxn6D2Z25OJKoc40CtgNI3mFw&oe=6A7D5DD8"
               alt="Santi Sena project"
               class="hero-image"
             />
@@ -343,7 +339,7 @@ onBeforeUnmount(() => {
           <div class="intro-image-wrapper">
             <img
               class="intro-image"
-              :src="introImpactImage"
+              src="https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/518369856_1064716752452895_8342529662744533325_n.jpg?stp=dst-jpg_tt6&cstp=mx1280x960&ctp=s1280x960&_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_ohc=qyirV5WPo14Q7kNvwFLDk7z&_nc_oc=Adq2ZOKi6URgK9Zmzn4mRejk5lGoTt_PdbfzuoR5zZ8hhipOHjNaWowvVak5yxtQZr4&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=8ResXVthMO7ESrszlzqP1Q&_nc_ss=7b289&oh=00_AQDFOfRP_EizcGUb5Fi_BaCZCecWRUmmAZLHhpdKey1cZg&oe=6A63350B"
               alt="Santi Sena Cambodia"
             />
           </div>
@@ -373,8 +369,8 @@ onBeforeUnmount(() => {
 /* ── Global ── */
 .timeline-page {
   min-height: 100vh;
-  background: var(--color-cream);
-  color: var(--color-ink);
+  background: #faf8f5;
+  color: #1e1a16;
 }
 
 .container {
@@ -389,8 +385,8 @@ onBeforeUnmount(() => {
 .hero-header {
   width: 100%;
   padding: 4rem 0 3rem;
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-border);
+  background: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .hero-container {
@@ -421,13 +417,13 @@ onBeforeUnmount(() => {
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: var(--primary-dark);
+  color: #1a3d2e;
 }
 
 .org-tagline {
   font-size: 0.75rem;
   letter-spacing: 0.1em;
-  color: var(--color-ink-soft);
+  color: #6a7a72;
   font-weight: 500;
 }
 
@@ -438,11 +434,11 @@ onBeforeUnmount(() => {
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.2em;
-  color: var(--primary-color);
-  background: var(--primary-light);
+  color: #11cf80;
+  background: rgba(45, 122, 90, 0.08);
   padding: 0.2rem 1rem 0.2rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+  border: 1px solid rgba(45, 122, 90, 0.1);
   width: fit-content;
   margin-left: 60px;
 }
@@ -451,7 +447,7 @@ onBeforeUnmount(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--primary-color);
+  background: #ef6a0b;
   display: inline-block;
 }
 
@@ -460,12 +456,12 @@ onBeforeUnmount(() => {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--primary-dark);
+  color: #1a3d2e;
   margin-left: 60px;
 }
 
 .hero-title .highlight {
-  color: var(--primary-dark);
+  color: #17712c;
   position: relative;
 }
 
@@ -484,7 +480,7 @@ onBeforeUnmount(() => {
 .hero-subtext {
   font-size: 1.05rem;
   line-height: 1.7;
-  color: var(--color-ink-soft);
+  color: #5a524a;
   max-width: 520px;
   margin: 0;
   margin-left: 60px;
@@ -507,7 +503,7 @@ onBeforeUnmount(() => {
 .stat-number {
   font-size: 2.2rem;
   font-weight: 700;
-  color: var(--color-ink);
+  color: #092064;
   letter-spacing: -0.02em;
   line-height: 1;
 }
@@ -516,14 +512,14 @@ onBeforeUnmount(() => {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-ink-soft);
+  color: #014078;
   margin-top: 0.2rem;
 }
 
 .stat-divider {
   width: 1px;
   height: 2.8rem;
-  background: var(--color-border);
+  background: #57c47f;
 }
 
 /* Right column – image */
@@ -570,24 +566,24 @@ onBeforeUnmount(() => {
   position: absolute;
   bottom: 1.5rem;
   left: 1.5rem;
-  background: color-mix(in srgb, var(--color-white) 85%, transparent);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
   padding: 0.6rem 1.2rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-ink);
+  color: #72290f;
   letter-spacing: 0.02em;
   display: flex;
   flex-direction: column;
   line-height: 1.4;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .caption-line:first-child {
   font-weight: 400;
-  color: var(--color-ink-soft);
+  color: #6a7a72;
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -600,7 +596,7 @@ onBeforeUnmount(() => {
   width: 60%;
   height: 80%;
   border-radius: 50%;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(45, 122, 90, 0.06);
   pointer-events: none;
   z-index: 0;
   animation: ringFloat 12s ease-in-out infinite;
@@ -694,7 +690,7 @@ onBeforeUnmount(() => {
 /* ── Section Heading ── */
 .history-section {
   padding: 80px 0 60px;
-  background: var(--color-cream-soft);
+  background: #93f6cd39;
   position: relative;
 }
 
@@ -709,8 +705,8 @@ onBeforeUnmount(() => {
   letter-spacing: 0.3em;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--primary-color);
-  background: var(--primary-light);
+  color: #2d7a5a;
+  background: rgba(45, 122, 90, 0.08);
   padding: 0.3rem 1.4rem;
   border-radius: 999px;
   margin-bottom: 1rem;
@@ -719,7 +715,7 @@ onBeforeUnmount(() => {
 .section-heading h2 {
   font-size: clamp(1.8rem, 2.8vw, 3.2rem);
   font-weight: 700;
-  color: var(--primary-dark);
+  color: #15793b;
   margin: 0.5rem 0 1rem;
   letter-spacing: -0.02em;
 }
@@ -729,7 +725,7 @@ onBeforeUnmount(() => {
   margin: 0 auto;
   font-size: 1.05rem;
   line-height: 1.8;
-  color: var(--color-ink-soft);
+  color: #5a524a;
 }
 
 /* ── Timeline ── */
@@ -805,10 +801,10 @@ onBeforeUnmount(() => {
 
 .timeline-card {
   width: 45%;
-  background: var(--color-white);
+  background: #ffffff;
   border-radius: 1.25rem;
   box-shadow: 0 8px 30px rgba(47, 36, 29, 0.06);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(47, 36, 29, 0.05);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease,

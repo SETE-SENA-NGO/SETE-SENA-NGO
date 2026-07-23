@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
-
-const cambodiaMap = imageUrls.maps.cambodia
+import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue'
+import cambodiaMap from '@/assets/maps/cambodia.png'
 
 type StatItem = {
   value: string

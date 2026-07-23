@@ -7,10 +7,10 @@ import { useUiStore } from '@/stores/ui.store'
 const ui = useUiStore()
 
 const statsCards = [
-  { label: 'Environment', value: 'GOAL 01', desc: 'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.', color: 'emerald' },
-  { label: 'Education', value: 'GOAL 02', desc: 'Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six.', color: 'blue' },
-  { label: 'Livelihood', value: 'GOAL 03', desc: 'Saving-for-Change groups, women-led cooperatives, and rural enterprises that keep families out of debt.', color: 'amber' },
-  { label: 'Child Protection', value: 'GOAL 04', desc: 'Village-level Child Protection Networks, anti-trafficking outreach, and safe-migration training for youth.', color: 'violet' },
+  { label: 'Total Schools', value: '17', desc: 'Across rural Cambodia', color: 'blue' },
+  { label: 'Children Reached', value: '3,400+', desc: 'Receiving education', color: 'emerald' },
+  { label: 'Villages Served', value: '43', desc: 'In program areas', color: 'amber' },
+  { label: 'Teachers Supported', value: '120+', desc: 'Trained & equipped', color: 'violet' },
 ]
 
 const quickLinks = [
@@ -21,19 +21,19 @@ const quickLinks = [
 ]
 
 const programHighlights = [
-  { title: 'Environment', desc: 'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.', count: 'GOAL 01', color: 'emerald' },
-  { title: 'Education', desc: 'Pre-schools in remote hamlets, community libraries, and youth scholarships that keep children learning past grade six.', count: 'GOAL 02', color: 'blue' },
-  { title: 'Livelihood', desc: 'Saving-for-Change groups, women-led cooperatives, and rural enterprises that keep families out of debt.', count: 'GOAL 03', color: 'amber' },
-  { title: 'Child Protection', desc: 'Village-level Child Protection Networks, anti-trafficking outreach, and safe-migration training for youth.', count: 'GOAL 04', color: 'violet' },
-  { title: 'Strengthened governance and accountability', desc: 'Ensuring transparency and strong community governance across all programs.', count: 'Priority', color: 'slate' },
-  { title: 'Staff and volunteer development', desc: 'Building local capacity through training and continuous professional development.', count: 'Priority', color: 'emerald' },
+  { title: 'Community Pre-schools', desc: 'Early childhood education in remote villages', count: '17 centers', color: 'blue' },
+  { title: 'Mobile Libraries', desc: 'Books delivered to rural children', count: '12 units', color: 'emerald' },
+  { title: 'Scholarship Program', desc: 'Supporting children from poor families', count: '363 students', color: 'amber' },
+  { title: 'Buddhist Education', desc: 'Traditional learning through pagodas', count: '8 sites', color: 'violet' },
+  { title: 'Teacher Support', desc: 'Training and resources for educators', count: '45 teachers', color: 'slate' },
+  { title: 'Parent Engagement', desc: 'Connecting families with schools', count: '280 families', color: 'emerald' },
 ]
 
 const impactNumbers = [
-  { value: 'Income and funding diversification', label: 'Sustainable financial resilience' },
-  { value: 'Research and knowledge management', label: 'Evidence-based programming' },
-  { value: 'Public advocacy', label: 'Amplifying community voices' },
-  { value: 'Staff and volunteer development', label: 'Local capacity building' },
+  { value: '27,810', label: 'Seedlings distributed to schools' },
+  { value: '293', label: 'Villages in program areas' },
+  { value: '4,555', label: 'Families in saving groups' },
+  { value: '363', label: 'Children in pre-schools' },
 ]
 
 const infoPages = [
@@ -56,21 +56,21 @@ const infoPages = [
             <span></span><span></span><span></span><span></span>
           </div>
           <div class="banner-inner">
-              <div class="banner-breadcrumb">
-                <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
-                <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                <span class="bcrumb-label">Modules</span>
-                <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                <span class="bcrumb-current">Programs</span>
-              </div>
+            <div class="banner-breadcrumb">
+              <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
+              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="bcrumb-label">Programs</span>
+              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="bcrumb-current">Education</span>
+            </div>
             <div class="banner-content">
               <div class="banner-text">
                 <div class="banner-badge">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2 2 6 2s6-.9 6-2v-5"/></svg>
-                  Programs Overview
+                  Education Program
                 </div>
-                <h1 class="banner-title">Programs</h1>
-                <p class="banner-desc">Environment, Education, Livelihood and Child Protection — climate resilience, learning, and safe communities across Cambodia.</p>
+                <h1 class="banner-title">Education Dashboard</h1>
+                <p class="banner-desc">Manage education content, track schools, students, and impact across Cambodia.</p>
               </div>
               <div class="banner-actions">
                 <RouterLink class="btn btn-ghost" to="/admin/editor/programs-education">
@@ -108,7 +108,7 @@ const infoPages = [
               <div class="card-hdr">
                 <div class="card-hdr-left">
                   <span class="card-badge">Quick access</span>
-                  <h2 class="card-title">Program management</h2>
+                  <h2 class="card-title">Frequent actions</h2>
                 </div>
               </div>
               <div class="card-body">
@@ -135,7 +135,7 @@ const infoPages = [
               <div class="card-hdr">
                 <div class="card-hdr-left">
                   <span class="card-badge">Initiatives</span>
-                  <h2 class="card-title">Our programs</h2>
+                  <h2 class="card-title">Education programs</h2>
                 </div>
                 <RouterLink class="card-hdr-link" to="/admin/modules/programs">
                   View all

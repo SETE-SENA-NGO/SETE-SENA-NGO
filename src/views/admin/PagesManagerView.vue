@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ContentEditor from '@/components/admin/ContentEditor.vue'
@@ -66,6 +67,7 @@ function onSaved(page: PageContent) {
           <button type="button" @click="createPage">New page</button>
           <button type="button" @click="editGetInvolvedPage">Get involved JSON</button>
           <button type="button" @click="editPartnerPage">Partner page JSON</button>
+          <RouterLink to="/admin/vision-mission" class="toolbar-link">Vision & Mission</RouterLink>
         </div>
         <div class="grid">
           <ContentEditor :page="selectedPage" @saved="onSaved" />
@@ -81,8 +83,6 @@ function onSaved(page: PageContent) {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--admin-theme-bg);
-  color: var(--admin-theme-text);
 }
 .admin-layout {
   display: flex;
@@ -108,15 +108,30 @@ function onSaved(page: PageContent) {
   margin: 0 0 1rem;
 }
 .toolbar button {
-  border: 1px solid var(--admin-theme-border-strong);
+  border: 1px solid var(--border);
   border-radius: 0.45rem;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
+  background: var(--panel);
+  color: var(--text);
   cursor: pointer;
   padding: 0.55rem 0.8rem;
-  transition: background 0.15s ease;
 }
 .toolbar button:hover {
-  background: var(--admin-theme-surface-soft);
+  background: #27272a;
+}
+.toolbar-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+  text-decoration: none;
+  font: inherit;
+  font-size: inherit;
+}
+.toolbar-link:hover {
+  background: #27272a;
 }
 </style>

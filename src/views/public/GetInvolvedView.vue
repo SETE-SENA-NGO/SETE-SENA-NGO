@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { imageUrls } from '@/lib/imageUrls'
 import { useContentStore } from '@/stores/content.store'
 
 interface ActionLink {
@@ -64,7 +63,7 @@ const fallbackContent: GetInvolvedPageContent = {
     title: 'Support village peace.',
     description:
       'Since 1994, Santi Sena has worked with villages on peace, livelihoods, education, child protection and the environment.',
-    image: imageUrls.programs.hero2,
+    image: '/images/programs/hero-2.jpg',
     alt: 'Santi Sena staff and community members meeting in a village shelter',
     primaryCta: { label: 'Donate', to: '/get-involved/donate' },
     secondaryCta: { label: 'Partner with us', to: '/get-involved/partner' },
@@ -74,7 +73,7 @@ const fallbackContent: GetInvolvedPageContent = {
       label: 'Natural resources',
       title: 'Protect community forests',
       body: 'Support forestry committees, seedlings and climate adaptation.',
-      image: imageUrls.programs.environmentHero1,
+      image: '/images/programs/environment-hero1.jpg',
       alt: 'Community leaders receiving tree seedlings near a pagoda',
       to: '/programs/environment',
       cta: 'Environment',
@@ -83,7 +82,7 @@ const fallbackContent: GetInvolvedPageContent = {
       label: 'Livelihood',
       title: 'Strengthen savings and farming',
       body: 'Back savings groups, farming skills and rural enterprise.',
-      image: imageUrls.programs.livelihoodHero2,
+      image: '/images/programs/livelihood-hero2.jpg',
       alt: 'Women receiving livelihood support during a community event',
       to: '/programs/livelihood',
       cta: 'Livelihood',
@@ -92,7 +91,7 @@ const fallbackContent: GetInvolvedPageContent = {
       label: 'Education',
       title: 'Keep children learning',
       body: 'Support pre-schools, scholarships and mobile libraries.',
-      image: imageUrls.programs.education,
+      image: '/images/programs/education.jpg',
       alt: 'Students gathered for a Santi Sena education activity',
       to: '/programs/education',
       cta: 'Education',
@@ -101,7 +100,7 @@ const fallbackContent: GetInvolvedPageContent = {
       label: 'Protection',
       title: 'Make childhood safer',
       body: 'Help child protection networks and rights campaigns.',
-      image: imageUrls.programs.childProtection2,
+      image: '/images/programs/child-protection2.jpg',
       alt: 'Students participating in a community child protection activity',
       to: '/programs/child-protection',
       cta: 'Protection',

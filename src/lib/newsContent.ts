@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { imageUrls, resolveImageUrl } from '@/lib/imageUrls'
 
 export type NewsArticle = {
   id: string
@@ -62,10 +61,10 @@ export function mapNewsPost(row: NewsPostRow): NewsArticle {
     title: row.title,
     summary: row.excerpt ?? '',
     content: row.body ?? '',
-    image: resolveImageUrl(
-      getString(metadata, 'image_url') || getString(metadata, 'image_path'),
-      imageUrls.programs.hero1,
-    ),
+    image:
+      getString(metadata, 'image_url') ||
+      getString(metadata, 'image_path') ||
+      '/images/programs/hero-1.jpg',
     date,
     category,
     author: row.author_name ?? 'Santi Sena Communications Team',

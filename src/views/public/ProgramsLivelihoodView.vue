@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
+import Slideshow from '@/components/shared/Slideshow.vue'
+
+const slideItems = [
+  { image: '/images/programs/livelihood-hero1.jpg', caption: '' },
+  { image: '/images/programs/livelihood-hero2.jpg', caption: '' },
+  { image: '/images/programs/livelihood-hero3.jpg', caption: '' },
+  { image: '/images/programs/livelihood-hero3.jpg', caption: '' },
+]
 
 const stats = [
   {
@@ -31,8 +38,6 @@ const statIcons: Record<string, string> = {
   building: `<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/><path d="M10 21v-4h4v4"/>`,
 }
 
-const quoteBackground = `url(${imageUrls.programs.livelihoodHero3})`
-
 interface WorkItem {
   title: string
   text: string
@@ -43,32 +48,32 @@ const whatWeDo: [WorkItem, WorkItem, WorkItem, WorkItem, WorkItem, WorkItem] = [
   {
     title: 'Integrated Farming',
     text: 'Rice, fish, vegetables and livestock combined on one plot for year-round food and income.',
-    image: imageUrls.programs.livelihoodHero1,
+    image: '/images/programs/livelihood-hero1.jpg',
   },
   {
     title: 'Saving-for-Change',
     text: 'Self-help savings groups, primarily women-led, meeting weekly to pool and lend.',
-    image: imageUrls.programs.livelihoodHero2,
+    image: '/images/programs/livelihood-hero2.jpg',
   },
   {
     title: 'Cooperatives',
     text: 'Agricultural cooperatives for collective bargaining and shared equipment.',
-    image: imageUrls.programs.livelihoodHero3,
+    image: '/images/programs/livelihood-hero3.jpg',
   },
   {
     title: 'Rural Enterprise',
     text: 'Small enterprise development — melaleuca oil, honey and handicrafts.',
-    image: imageUrls.programs.livelihoodHero3,
+    image: '/images/programs/livelihood-hero3.jpg',
   },
   {
     title: 'Financial Literacy',
     text: 'Bookkeeping and micro-enterprise training for household budgeting.',
-    image: imageUrls.programs.livelihoodHero2,
+    image: '/images/programs/livelihood-hero2.jpg',
   },
   {
     title: 'Market Linkages',
     text: 'Connecting producers with provincial buyers and social enterprises.',
-    image: imageUrls.programs.livelihoodHero3,
+    image: '/images/programs/livelihood-hero3.jpg',
   },
 ]
 
@@ -78,22 +83,22 @@ const whyItMatters = [
   {
     text: 'Household income diversification reduces the risk of debt bondage and trafficking',
     icon: 'shield-halved',
-    image: imageUrls.programs.livelihoodHero1,
+    image: '/images/programs/livelihood-hero1.jpg',
   },
   {
     text: 'Women-led savings shift decision-making power inside the household',
     icon: 'key',
-    image: imageUrls.programs.livelihoodHero2,
+    image: '/images/programs/livelihood-hero2.jpg',
   },
   {
     text: 'Cooperatives break the isolation of the smallholder in the marketplace',
     icon: 'users',
-    image: imageUrls.programs.livelihoodHero3,
+    image: '/images/programs/livelihood-hero3.jpg',
   },
   {
     text: 'Local enterprise keeps young adults in the village, near their children',
     icon: 'house',
-    image: imageUrls.programs.livelihoodHero1,
+    image: '/images/programs/livelihood-hero1.jpg',
   },
 ]
 
@@ -305,7 +310,7 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- Our approach — full-bleed photo statement -->
-    <section class="quote-section" :style="{ '--quote-background': quoteBackground }">
+    <section class="quote-section">
       <div class="quote-overlay"></div>
       <div class="container quote-inner" ref="quoteInnerEl">
         <p class="section-eyebrow section-eyebrow--light text-center">Our method</p>
@@ -926,7 +931,7 @@ onBeforeUnmount(() => {
 .quote-section {
   position: relative;
   padding: 6.5rem 0;
-  background-image: var(--quote-background);
+  background-image: url('/images/programs/livelihood-hero3.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;

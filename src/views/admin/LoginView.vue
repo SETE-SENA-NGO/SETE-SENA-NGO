@@ -141,12 +141,15 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { imageUrls } from '@/lib/imageUrls'
+import leftBgLogo from '@/assets/santi_sena_logo.png'
+
+// Use the same “white seal” logo style as the public navbar.
+// The navbar uses the seal image with a white disc background.
+import publicLogo from '@/assets/santi_sena_icon.ico'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 
-const santiSenaLogo = imageUrls.logo
-const leftBgLogo = imageUrls.logo
+const santiSenaLogo = publicLogo
 
 const bgStyle = {
   backgroundImage: `url(${leftBgLogo})`,
@@ -188,8 +191,10 @@ const handleLogin = async () => {
     // If your app later adds a route guard, it can pass through redirect automatically.
     await router.push(redirectPath.value)
   } catch (err) {
-    const message = (err as Error)?.message ?? 'Login failed'
-    errorMessage.value = message
+    const message = (err as Error)?.message ?? ''
+    errorMessage.value = message.includes('admin access')
+      ? 'This account does not have permission to access the admin panel.'
+      : 'Email or password is incorrect.'
   } finally {
     loading.value = false
   }

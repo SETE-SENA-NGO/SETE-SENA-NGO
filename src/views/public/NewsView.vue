@@ -1,195 +1,11 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
-import { useAuthStore } from '@/stores/auth.store'
+import { fetchPublishedNews, type NewsArticle } from '@/lib/newsContent'
 import { supabase } from '@/lib/supabase'
-import { slugify, newsPostSelect, mapNewsPost, fetchPublishedNews, fetchPublishedNewsArticle, type NewsArticle, type NewsPostRow } from '@/lib/newsContent'
-import { normalizeMediaUrl } from '@/lib/media'
-import { useUiStore } from '@/stores/ui.store'
+import { useAuthStore } from '@/stores/auth.store'
 
-// ─── Auth & Admin state ───────────────────────────────────────────────
-const auth = useAuthStore()
-const ui = useUiStore()
-void auth.init()
-const isAdmin = computed(() => auth.isAdmin)
-
-const adminEditMode = ref(false)
-const editingCardId = ref<string | null>(null)
-const addFormOpen = ref(false)
-
-type EditFormData = {
-  title: string
-  image_url: string
-}
-
-const editFormData = ref<EditFormData>({
-  title: '',
-  image_url: '',
-})
-
-type AddFormData = {
-  title: string
-  image_url: string
-  category: string
-  excerpt: string
-}
-
-const addFormData = ref<AddFormData>({
-  title: '',
-  image_url: '',
-  category: 'Education',
-  excerpt: '',
-})
-
-const categories = ['Education', 'Environment', 'Child Protection', 'Livelihood', 'WASH']
-
-function openEditCard(article: NewsArticle) {
-  editingCardId.value = article.id
-  editFormData.value = {
-    title: article.title,
-    image_url: article.image,
-  }
-}
-
-function closeEditCard() {
-  editingCardId.value = null
-  editFormData.value = { title: '', image_url: '' }
-}
-
-async function saveCardEdit(article: NewsArticle) {
-  const title = editFormData.value.title.trim()
-  if (!title) {
-    ui.addToast('Title is required.', 'error')
-    return
-  }
-
-  try {
-    const imageUrl = normalizeMediaUrl(editFormData.value.image_url)
-    const savedAt = new Date().toISOString()
-    const slug = slugify(title)
-
-    const { data, error } = await supabase
-      .from('news_posts')
-      .update({
-        title,
-        slug,
-        updated_at: savedAt,
-        metadata: { image_url: imageUrl },
-      })
-      .eq('id', article.id)
-      .select(newsPostSelect)
-      .single()
-
-    if (error) throw error
-
-    const updated = mapNewsPost(data as NewsPostRow)
-    newsItems.value = newsItems.value.map((item) =>
-      item.id === article.id ? updated : item,
-    )
-    ui.addToast('Card updated.', 'success')
-    closeEditCard()
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Could not update card.'
-    ui.addToast(msg, 'error')
-  }
-}
-
-function openAddCard() {
-  addFormData.value = {
-    title: '',
-    image_url: '',
-    category: categories[0] ?? 'Education',
-    excerpt: '',
-  }
-  addFormOpen.value = true
-}
-
-function closeAddCard() {
-  addFormOpen.value = false
-  addFormData.value = { title: '', image_url: '', category: 'Education', excerpt: '' }
-}
-
-async function saveNewCard() {
-  const title = addFormData.value.title.trim()
-  if (!title) {
-    ui.addToast('Title is required.', 'error')
-    return
-  }
-
-  try {
-    const imageUrl = normalizeMediaUrl(addFormData.value.image_url)
-    const savedAt = new Date().toISOString()
-    const slug = slugify(title)
-
-    // Find or ensure category exists
-    const categorySlug = slugify(addFormData.value.category)
-    const { data: existingCat } = await supabase
-      .from('news_categories')
-      .select('id')
-      .eq('slug', categorySlug)
-      .maybeSingle()
-
-    let categoryId: string
-    if (existingCat?.id) {
-      categoryId = String(existingCat.id)
-    } else {
-      const { data: newCat, error: catError } = await supabase
-        .from('news_categories')
-        .insert({ slug: categorySlug, name: addFormData.value.category, is_visible: true })
-        .select('id')
-        .single()
-      if (catError) throw catError
-      categoryId = String(newCat.id)
-    }
-
-    const { data, error } = await supabase
-      .from('news_posts')
-      .insert({
-        title,
-        slug,
-        category_id: categoryId,
-        excerpt: addFormData.value.excerpt || null,
-        body: '',
-        status: 'published',
-        author_name: auth.user?.email || 'Admin',
-        published_at: savedAt,
-        updated_at: savedAt,
-        read_time: '3 min read',
-        metadata: { image_url: imageUrl },
-      })
-      .select(newsPostSelect)
-      .single()
-
-    if (error) throw error
-
-    const created = mapNewsPost(data as NewsPostRow)
-    newsItems.value = [created, ...newsItems.value]
-    ui.addToast('New card created.', 'success')
-    closeAddCard()
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Could not create card.'
-    ui.addToast(msg, 'error')
-  }
-}
-
-async function deleteNewsCard(article: NewsArticle) {
-  ui.openModal('Delete news card?', `Delete "${article.title}" from News?`, async () => {
-    try {
-      const { error } = await supabase.from('news_posts').delete().eq('id', article.id)
-      if (error) throw error
-
-      newsItems.value = newsItems.value.filter((item) => item.id !== article.id)
-      ui.addToast('Card deleted.', 'warning')
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Could not delete card.'
-      ui.addToast(msg, 'error')
-    }
-  })
-}
-
-// ─── Static news data
-// ─── Fallback sample data (shown when no published news from admin) ─
+// ─── Fallback sample data ───────────────────────────────────────────
 const fallbackArticles: NewsArticle[] = [
   {
     id: 'sample-1',
@@ -197,11 +13,11 @@ const fallbackArticles: NewsArticle[] = [
     title: 'New community pre‑school opens in Svay Rieng',
     summary: 'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
     content: '',
-    image: imageUrls.news.student,
+    image: 'src/assets/maps/student.png',
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
-    authorAvatar: imageUrls.logo,
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
     featured: true,
     readTime: '3 min read',
     views: 1247,
@@ -215,10 +31,11 @@ const fallbackArticles: NewsArticle[] = [
     title: 'Forest Guardians celebrate 500 hectares of protected land',
     summary: 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
     content: '',
-    image: imageUrls.news.wash,
+    image: 'src/assets/maps/wash.png',
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
     featured: false,
     readTime: '4 min read',
     views: 856,
@@ -232,10 +49,11 @@ const fallbackArticles: NewsArticle[] = [
     title: 'Youth leaders trained in child protection advocacy',
     summary: 'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
     content: '',
-    image: imageUrls.news.certificate,
+    image: 'src/assets/maps/certi.png',
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
     featured: false,
     readTime: '2 min read',
     views: 523,
@@ -249,10 +67,11 @@ const fallbackArticles: NewsArticle[] = [
     title: 'Saving‑for‑Change groups reach 10,000 members',
     summary: 'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
     content: '',
-    image: imageUrls.news.preschool,
+    image: 'src/assets/maps/pre-school.png',
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
     featured: false,
     readTime: '3 min read',
     views: 2134,
@@ -266,10 +85,11 @@ const fallbackArticles: NewsArticle[] = [
     title: 'New partnership to expand clean water access',
     summary: 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
     content: '',
-    image: imageUrls.news.water,
+    image: 'src/assets/maps/water.png',
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
+    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
     featured: false,
     readTime: '5 min read',
     views: 678,
@@ -281,6 +101,129 @@ const fallbackArticles: NewsArticle[] = [
 
 // ─── News data (loaded live from Supabase, fallback to samples) ─────
 const newsItems = ref<NewsArticle[]>(fallbackArticles)
+
+// ─── Auth & Admin state ─────────────────────────────────────────────
+const auth = useAuthStore()
+void auth.init()
+const isAdmin = computed(() => auth.isAdmin)
+const adminEditMode = ref(false)
+const editingCardId = ref<string | null>(null)
+const editFormData = ref({ title: '', image_url: '' })
+const addFormOpen = ref(false)
+const addFormData = ref({ title: '', category: 'Education', excerpt: '', image_url: '' })
+const categories = ref(['Education', 'Environment', 'Child Protection', 'Livelihood', 'WASH'])
+
+function openEditCard(article: NewsArticle) {
+  editingCardId.value = article.id
+  editFormData.value = { title: article.title, image_url: article.image }
+}
+
+function closeEditCard() {
+  editingCardId.value = null
+  editFormData.value = { title: '', image_url: '' }
+}
+
+function openAddCard() {
+  addFormOpen.value = true
+  addFormData.value = { title: '', category: 'Education', excerpt: '', image_url: '' }
+}
+
+function closeAddCard() {
+  addFormOpen.value = false
+}
+
+async function saveCardEdit(article: NewsArticle) {
+  if (!article || article.id.startsWith('sample-')) {
+    showToastNow('Cannot edit sample articles.')
+    closeEditCard()
+    return
+  }
+  try {
+    const savedAt = new Date().toISOString()
+    const { error } = await supabase
+      .from('news_posts')
+      .update({
+        title: editFormData.value.title,
+        metadata: { image_url: editFormData.value.image_url },
+        updated_at: savedAt,
+      })
+      .eq('id', article.id)
+    if (error) throw error
+    article.title = editFormData.value.title
+    article.image = editFormData.value.image_url
+    closeEditCard()
+    showToastNow('Card updated.')
+  } catch (e) {
+    showToastNow(e instanceof Error ? e.message : 'Could not save.')
+  }
+}
+
+async function deleteNewsCard(article: NewsArticle) {
+  if (!article || article.id.startsWith('sample-')) {
+    showToastNow('Cannot delete sample articles.')
+    closeEditCard()
+    return
+  }
+  try {
+    const { error } = await supabase.from('news_posts').delete().eq('id', article.id)
+    if (error) throw error
+    newsItems.value = newsItems.value.filter((a) => a.id !== article.id)
+    closeEditCard()
+    showToastNow('Card deleted.')
+  } catch (e) {
+    showToastNow(e instanceof Error ? e.message : 'Could not delete.')
+  }
+}
+
+async function saveNewCard() {
+  const title = addFormData.value.title.trim()
+  if (!title) {
+    showToastNow('Title is required.')
+    return
+  }
+  try {
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || `news-${Date.now()}`
+    const savedAt = new Date().toISOString()
+    const { data, error } = await supabase
+      .from('news_posts')
+      .insert({
+        title,
+        slug,
+        excerpt: addFormData.value.excerpt,
+        status: 'published',
+        metadata: { image_url: addFormData.value.image_url },
+        published_at: savedAt,
+        updated_at: savedAt,
+      })
+      .select('id, slug, title, excerpt, body, status, is_featured, author_name, read_time, published_at, updated_at, metadata, news_categories(name)')
+      .single()
+    if (error) throw error
+    if (data) {
+      const newArticle: NewsArticle = {
+        id: data.id,
+        slug: data.slug,
+        title: data.title,
+        summary: data.excerpt ?? '',
+        content: data.body ?? '',
+        image: (data.metadata as Record<string, unknown>)?.image_url as string || '/images/programs/hero-1.jpg',
+        date: data.published_at ?? savedAt,
+        category: 'News',
+        author: data.author_name ?? 'Santi Sena Communications Team',
+        readTime: data.read_time ?? '3 min read',
+        views: 0,
+        likes: 0,
+        featured: false,
+        trending: false,
+        tags: [],
+      }
+      newsItems.value = [newArticle, ...newsItems.value]
+    }
+    closeAddCard()
+    showToastNow('Card published.')
+  } catch (e) {
+    showToastNow(e instanceof Error ? e.message : 'Could not publish.')
+  }
+}
 
 // ─── State ──────────────────────────────────────────────────────────
 const savedArticles = ref<string[]>([])
@@ -437,9 +380,8 @@ const shareArticle = (title: string) => {
 }
 
 const subscribeNewsletter = () => {
-  const email = newsletterEmail.value.trim()
-  if (email) {
-    showToastNow(`Subscribed with ${email}!`)
+  if (newsletterEmail.value) {
+    alert(`Subscribed with ${newsletterEmail.value}!`)
     newsletterEmail.value = ''
   }
 }
@@ -862,6 +804,13 @@ const scrollToTop = () => {
 
 <style scoped>
 :root {
+  --color-cream: #faf8f5;
+  --color-border: #e8e3dc;
+  --color-ink: #1e1a16;
+  --color-ink-soft: #5a524a;
+  --primary-color: #2d7a5a;
+  --primary-dark: #1a3d2e;
+  --primary-light: #aad6c7;
   --gold: #c9a84c;
   --gold-light: #e8d5a3;
   --gold-glow: rgba(201, 168, 76, 0.15);
@@ -886,7 +835,7 @@ const scrollToTop = () => {
 
 /* ─── BALANCED HERO (shifted right) ────────────────────────── */
 .hero-static {
-  background: linear-gradient(135deg, var(--color-cream), var(--color-white));
+  background: linear-gradient(135deg, #f0f7f4, #ffffff);
   padding: 4rem 1.5rem 3rem;
   border-bottom: 1px solid var(--color-border);
   text-align: left;
@@ -1005,11 +954,11 @@ const scrollToTop = () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  background: var(--primary-light);
+  background: #dafff3;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(47, 36, 29, 0.04);
   text-decoration: none;
   color: inherit;
   transition: all var(--transition);
@@ -1182,8 +1131,6 @@ const scrollToTop = () => {
   padding: 0.5rem 1.5rem 0.5rem 1.8rem;
   border: none;
   border-radius: 999px;
-  background: var(--primary-color);
-  color: var(--color-white);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -1198,9 +1145,10 @@ const scrollToTop = () => {
 }
 
 .read-more-btn:hover {
-  background: var(--primary-dark);
-  box-shadow: 0 8px 24px rgba(74, 222, 128, 0.3);
+  background: rgb(6, 127, 61);
+  box-shadow: 0 8px 24px rgba(19, 237, 146, 0.3);
   transform: translateY(-2px);
+  color: white;
 }
 
 .read-more-btn:hover svg {
@@ -1220,6 +1168,8 @@ const scrollToTop = () => {
   cursor: pointer;
   transition: all var(--transition);
   font-family: inherit;
+  color: rgb(255, 255, 255);
+  background: #169c14;
   border-radius: 999px;
 }
 
@@ -1227,9 +1177,9 @@ const scrollToTop = () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--color-cream-soft);
-  border: 1px solid var(--color-border);
-  color: var(--color-ink);
+  background: rgb(154, 224, 199);
+  border: 1px solid transparent;
+  color: black;
   opacity: 0.6;
   transition: all var(--transition);
 }
@@ -1241,14 +1191,14 @@ const scrollToTop = () => {
 }
 
 .icon-btn.active {
-  color: #fb7185;
+  color: #ef4444;
   opacity: 1;
-  background: rgba(251, 113, 133, 0.1);
+  background: rgba(239, 68, 68, 0.06);
 }
 
 .icon-btn.active svg {
-  fill: #fb7185;
-  stroke: #fb7185;
+  fill: #ef4444;
+  stroke: #ef4444;
 }
 
 .icon-btn.small {
@@ -1319,12 +1269,13 @@ const scrollToTop = () => {
 
 /* ── Card: initially hidden, pops when scrolled into view ── */
 .news-card {
-  background: var(--color-cream);
+  background: #f9e8e8;
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-border);
   position: relative;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   opacity: 0;
@@ -1504,7 +1455,7 @@ const scrollToTop = () => {
   padding: 2rem 2.5rem;
   background: linear-gradient(135deg, var(--primary-dark), #0b623f);
   border-radius: 20px;
-  color: #ffffff;
+  color: #fff;
   box-shadow: 0 12px 48px rgba(26, 61, 46, 0.2);
   transform: scale(0.88);
   opacity: 0.5;
@@ -1536,7 +1487,7 @@ const scrollToTop = () => {
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0 0 0.15rem;
-  color: #ffffff;
+  color: white;
 }
 
 .newsletter-content p {
@@ -1555,8 +1506,8 @@ const scrollToTop = () => {
   padding: 0.5rem 1.2rem;
   border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background: rgb(224, 227, 226);
+  color: #050505;
   font-size: 0.85rem;
   min-width: 200px;
   transition: all var(--transition);
@@ -1564,20 +1515,20 @@ const scrollToTop = () => {
 }
 
 .newsletter-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(20, 16, 16, 0.975);
 }
 
 .newsletter-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(236, 221, 221, 0.897);
 }
 
 .newsletter-btn {
   padding: 0.5rem 1.8rem;
   border: none;
   border-radius: 999px;
-  background: #ffffff;
-  color: var(--primary-dark);
+  background: rgb(255, 255, 255);
+  color: rgb(19, 135, 73);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
@@ -1586,9 +1537,10 @@ const scrollToTop = () => {
 }
 
 .newsletter-btn:hover {
-  background: #ffffff;
+  background: rgb(255, 255, 255);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  color: rgb(8, 113, 17);
+  box-shadow: 0 8px 24px rgba(14, 14, 14, 0.25);
 }
 
 /* ── Bottom Actions ── */
@@ -1607,7 +1559,7 @@ const scrollToTop = () => {
   gap: 0.5rem;
   padding: 0.6rem 1.8rem;
   border-radius: 999px;
-  background: var(--color-cream-soft);
+  background: rgb(156, 254, 134);
   color: var(--color-ink-soft);
   font-weight: 600;
   text-decoration: none;
@@ -1636,7 +1588,7 @@ const scrollToTop = () => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--color-white);
+  background: #fff;
   border: 1px solid var(--color-border);
   color: var(--color-ink-soft);
   cursor: pointer;
@@ -1646,7 +1598,7 @@ const scrollToTop = () => {
 
 .scroll-top:hover {
   background: var(--primary-color);
-  color: #ffffff;
+  color: #fff;
   border-color: var(--primary-color);
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(45, 122, 90, 0.2);

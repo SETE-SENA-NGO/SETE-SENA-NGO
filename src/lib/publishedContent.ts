@@ -1,11 +1,8 @@
-import { resolveImageUrl } from '@/lib/imageUrls'
-
 export type EditableSection = {
   id: string
   label: string
   heading: string
   body: string
-  imageUrl?: string
   items: string
 }
 
@@ -17,7 +14,6 @@ export type PublishedPageContent = {
   eyebrow: string
   headline: string
   intro: string
-  heroImageUrl: string
   primaryAction: string
   secondaryAction: string
   sections: EditableSection[]
@@ -32,7 +28,6 @@ type StoredPageBody = {
   eyebrow: string
   headline: string
   intro: string
-  heroImageUrl?: string
   primaryAction: string
   secondaryAction: string
   sections: EditableSection[]
@@ -59,7 +54,6 @@ export function parsePublishedPage(row: PublishedPageRow): PublishedPageContent 
     eyebrow: body.eyebrow,
     headline: body.headline,
     intro: body.intro,
-    heroImageUrl: resolveImageUrl(body.heroImageUrl ?? '', ''),
     primaryAction: body.primaryAction,
     secondaryAction: body.secondaryAction,
     sections: body.sections,
@@ -94,7 +88,6 @@ function parseStoredBody(body: string): StoredPageBody | null {
       eyebrow: getString(parsed, 'eyebrow'),
       headline: getString(parsed, 'headline'),
       intro: getString(parsed, 'intro'),
-      heroImageUrl: getString(parsed, 'heroImageUrl'),
       primaryAction: getString(parsed, 'primaryAction'),
       secondaryAction: getString(parsed, 'secondaryAction'),
       sections: getSections(parsed.sections),
@@ -112,7 +105,6 @@ function getSections(value: unknown): EditableSection[] {
     label: getString(section, 'label') || 'Section',
     heading: getString(section, 'heading'),
     body: getString(section, 'body'),
-    imageUrl: resolveImageUrl(getString(section, 'imageUrl'), ''),
     items: getString(section, 'items'),
   }))
 }

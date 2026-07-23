@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
+import { ref, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
 
 interface ProgramGoal {
   number: string
@@ -25,7 +24,7 @@ const goals: ProgramGoal[] = [
     whyItMatters:
       'Southeastern Cambodia is one of the most climate-vulnerable regions in the country. Healthy forests and clean water are peacekeeping infrastructure.',
     quote: 'The forest belongs to the pagoda and the pagoda belongs to the village.',
-    image: imageUrls.programs.environment,
+    image: '/images/programs/environment.jpg',
   },
   {
     number: '02',
@@ -39,7 +38,7 @@ const goals: ProgramGoal[] = [
       'In the districts we work in, many hamlets are more than an hour is walk from the nearest school. Early learning centres change that.',
     quote:
       'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
-    image: imageUrls.programs.education,
+    image: '/images/programs/education.jpg',
   },
   {
     number: '03',
@@ -53,7 +52,7 @@ const goals: ProgramGoal[] = [
       'Cash predictability is what lets a family send their child to school this term instead of to a garment factory.',
     quote:
       'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
-    image: imageUrls.programs.livelihood,
+    image: '/images/programs/livelihood.jpg',
   },
   {
     number: '04',
@@ -66,7 +65,7 @@ const goals: ProgramGoal[] = [
     whyItMatters:
       'The border with Vietnam brings both opportunity and risk. Community-led safeguarding is the most durable defense.',
     quote: "The safest village is one where every adult knows every child's name.",
-    image: imageUrls.programs.childProtection,
+    image: '/images/programs/child-protection.jpg',
   },
 ]
 
@@ -278,7 +277,7 @@ onBeforeUnmount(() => {
   min-height: 560px;
   border-radius: 1.25rem;
   overflow: hidden;
-  background-color: var(--color-cream-soft); /* fallback while image loads */
+  background-color: #e5ddc8; /* fallback while image loads */
 
   /* scroll-reveal: card fades/rises in, image is clipped by overflow:hidden above */
   opacity: 0;
@@ -309,10 +308,10 @@ onBeforeUnmount(() => {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(6, 18, 13, 0.92) 0%,
-    rgba(6, 18, 13, 0.72) 38%,
-    rgba(6, 18, 13, 0.35) 68%,
-    rgba(6, 18, 13, 0) 100%
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
   );
 }
 
@@ -322,10 +321,10 @@ onBeforeUnmount(() => {
 .goal-card.reverse .goal-overlay {
   background: linear-gradient(
     270deg,
-    rgba(6, 18, 13, 0.92) 0%,
-    rgba(6, 18, 13, 0.72) 38%,
-    rgba(6, 18, 13, 0.35) 68%,
-    rgba(6, 18, 13, 0) 100%
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
   );
 }
 
@@ -501,9 +500,9 @@ onBeforeUnmount(() => {
 /* Card body */
 .priority-body {
   width: 100%;
-  background: var(--color-cream);
+  background: var(--color-white);
   border-radius: 18px;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(20, 129, 62, 0.1);
   padding: 1.85rem 1.1rem 1.5rem;
   box-shadow:
     0 4px 10px rgba(20, 129, 62, 0.06),
@@ -554,13 +553,13 @@ onBeforeUnmount(() => {
 .priority-label {
   margin: 0;
   font-weight: 400;
-  color: var(--color-ink-soft);
+  color: #6b7280;
   line-height: 1.45;
   font-size: 0.9rem;
   transition: color 0.3s ease;
 }
 .priority-card:hover .priority-label {
-  color: var(--color-ink-soft);
+  color: #6b7280;
 }
 
 @media (max-width: 860px) {

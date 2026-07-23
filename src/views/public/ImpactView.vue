@@ -1,10 +1,8 @@
 <script setup lang="ts">
+import heroImage from '@/assets/hero-impact.jpg'
+import heroForest from '@/assets/hero-impact-forest.jpg'
+import heroVillage from '@/assets/hero-impact-village.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
-import { imageUrls } from '@/lib/imageUrls'
-
-const heroImage = imageUrls.impact.hero
-const heroForest = imageUrls.impact.forest
-const heroVillage = imageUrls.impact.village
 
 const slideItems = [
   { image: heroImage, caption: '' },
@@ -259,7 +257,7 @@ h1 {
 }
 
 .stat-card {
-  background: var(--color-white);
+  background: #fffdfa;
   padding: 1.75rem;
 }
 
@@ -281,7 +279,7 @@ h1 {
   margin-top: 0.6rem;
   line-height: 1.6;
   font-size: 0.9rem;
-  color: var(--color-ink-soft);
+  color: rgba(31, 41, 55, 0.72);
 }
 
 .timeline-shell {
@@ -331,7 +329,7 @@ h1 {
 .timeline-description {
   margin-top: 0.5rem;
   line-height: 1.7;
-  color: var(--color-ink-soft);
+  color: rgba(31, 41, 55, 0.74);
 }
 
 .partners-heading {
@@ -349,7 +347,7 @@ h1 {
   margin: 1rem auto 0;
   max-width: 640px;
   line-height: 1.75;
-  color: var(--color-ink-soft);
+  color: rgba(31, 41, 55, 0.72);
 }
 
 .marquee-mask {

@@ -1,46 +1,51 @@
 # Supabase Setup
 
-Run this setup once per customer Supabase project.
-
-## Frontend Variables
-
-The Vue app needs these frontend-safe variables:
+The Vue app reads these frontend-safe variables from `.env`:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 ```
 
-Never expose the service role key through a `VITE_` variable.
+Do not put `SUPABASE_SECRET_KEY` in the frontend `.env`. This app only needs the publishable key.
 
 ## Apply Database Schema
+
+Open Supabase Dashboard, go to SQL Editor, and run these files in order:
+Fast path for a new or partially configured project:
+
+1. Open `supabase/complete_setup.sql`.
+2. Replace `replace-with-your-admin-email@example.org` with your real admin login email.
+3. Run the whole file in Supabase Dashboard > SQL Editor.
+
+That file creates the tables, seeds default content, promotes the admin profile, and reloads the REST
+schema cache.
+
+Manual path:
 
 Open Supabase Dashboard > SQL Editor and run these files in order:
 
 1. `supabase/migrations/0001_initial.sql`
 2. `supabase/migrations/0002_admin_editable_content_schema.sql`
-3. `supabase/migrations/0002_module_records.sql`
-4. `supabase/migrations/0003_admin_security.sql`
-5. `supabase/migrations/0004_media_free_tier_limits.sql`
-6. `supabase/seed.sql`
-
-After running the schema, refresh Supabase's REST schema cache:
-
-```sql
-select pg_notify('pgrst', 'reload schema');
-```
+3. `supabase/migrations/0003_media_free_tier_limits.sql`
+4. `supabase/migrations/0004_home_slides.sql`
+5. `supabase/seed.sql`
 
 ## Create Admin Login
 
-In Supabase Dashboard, go to Authentication > Users > Add user. Use a real site-admin email and a strong generated password.
+In Supabase Dashboard, go to Authentication > Users > Add user:
 
 ```text
-Email: customer-admin@example.org
-Password: strong unique password
+Email: your real admin email
+Password: a strong unique password
 ```
 
-Then edit `supabase/create_admin_profile.sql`:
+Then update `supabase/create_admin_profile.sql` with that email and run it to grant the Auth user
+admin access. Do not use public demo credentials for production.
 
+If `public.profiles` does not exist yet, run the migration files above first. The admin profile
+helper also creates the minimal profile table so login can work, but the website CMS still needs
+the full migrations and seed data.
 ```text
 replace-with-your-admin-email@example.org
 ```
@@ -72,4 +77,10 @@ If an admin page reports that a table cannot be found in the schema cache, rerun
 
 ```sql
 select pg_notify('pgrst', 'reload schema');
+```
+
+If only `public.news_posts` and `public.partners` are missing, run:
+
+```text
+supabase/fix_missing_news_partners.sql
 ```

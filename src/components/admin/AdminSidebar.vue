@@ -31,6 +31,7 @@ const loggingOut = ref(false)
 
 const workspaceLinks: NavItem[] = [
   { to: '/admin', label: 'Dashboard', icon: 'icon-dashboard' },
+  { to: '/admin/slideshow', label: 'Slideshow', icon: 'icon-media' },
   { to: '/admin/donate', label: 'Donation QR', icon: 'icon-media' },
 ]
 
@@ -40,19 +41,18 @@ const pageGroups: PageGroup[] = [
     slug: 'about',
     label: 'About',
     items: [
-      { slug: 'about-vision', label: 'Vision & Mission' },
+      { slug: 'about-vision', label: 'Vision & Mission', path: '/admin/vision-mission' },
       { slug: 'about-organization', label: 'Organization' },
     ],
   },
   {
     slug: 'programs',
     label: 'Programs',
-    path: '/admin/programs',
     items: [
-      { slug: 'programs-education', label: 'Education', path: '/admin/education' },
-      { slug: 'programs-environment', label: 'Environment', path: '/admin/environment' },
-      { slug: 'programs-livelihood', label: 'Livelihood', path: '/admin/livelihood' },
-      { slug: 'programs-child-protection', label: 'Child Protection', path: '/admin/child-protection' },
+      { slug: 'programs-education', label: 'Education', path: '/admin/editor/programs-education' },
+      { slug: 'programs-environment', label: 'Environment', path: '/admin/editor/programs-environment' },
+      { slug: 'programs-livelihood', label: 'Livelihood', path: '/admin/editor/programs-livelihood' },
+      { slug: 'programs-child-protection', label: 'Child Protection', path: '/admin/editor/programs-child-protection' },
     ],
   },
   {
@@ -67,6 +67,7 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'get-involved',
     label: 'Get Involved',
+    path: '/admin/get-involved',
     items: [
       { slug: 'get-involved-donate', label: 'Donate' },
       { slug: 'get-involved-volunteer', label: 'Volunteer' },
@@ -76,7 +77,6 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'news',
     label: 'News',
-    path: '/admin/news',
     items: [{ slug: 'news-detail', label: 'News Detail' }],
   },
   {
@@ -99,8 +99,7 @@ function isNavActive(item: NavItem) {
 }
 
 function isGroupActive(group: PageGroup) {
-  const groupPath = group.path ?? editorPath(group.slug)
-  if (isActive(groupPath)) return true
+  if (isActive(editorPath(group.slug))) return true
   return group.items.some((item) => isActive(item.path ?? editorPath(item.slug)))
 }
 
@@ -126,7 +125,7 @@ async function logout() {
   <div class="backdrop" v-show="ui.sidebarOpen" @click="ui.closeSidebar"></div>
   <aside :class="['admin-sidebar', { open: ui.sidebarOpen }]">
     <RouterLink class="brand" to="/admin" @click="ui.closeSidebarForNavigation">
-      <span class="brand-mark" aria-hidden="true">SS</span>
+      <img class="brand-mark" src="/favicon.ico" alt="SANTI SENA">
       <span class="brand-text">
         <strong>SANTI SENA</strong>
         <small>Admin Console</small>
@@ -145,8 +144,7 @@ async function logout() {
 
       <!-- Flat single pages -->
       <RouterLink v-for="group in pageGroups.filter((g) => !g.items.length)" :key="group.slug"
-        :to="group.path ?? editorPath(group.slug)"
-        :class="['link', { active: isActive(group.path ?? editorPath(group.slug)) }]"
+        :to="editorPath(group.slug)" :class="['link', { active: isActive(editorPath(group.slug)) }]"
         @click="ui.closeSidebarForNavigation">
         <span class="link-icon icon-pages" aria-hidden="true"></span>
         <span>{{ group.label }}</span>
@@ -157,9 +155,9 @@ async function logout() {
         :open="isGroupOpen(group)">
         <summary>
           <RouterLink
-            :to="group.path ?? editorPath(group.slug)"
+            :to="editorPath(group.slug)"
             class="link summary-link"
-            :class="{ active: isActive(group.path ?? editorPath(group.slug)) }"
+            :class="{ active: isActive(editorPath(group.slug)) }"
             @click.stop="ui.closeSidebarForNavigation"
           >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
@@ -288,17 +286,11 @@ async function logout() {
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--sb-brand-mark-bg);
-  color: var(--sb-brand-mark);
-  font-size: 0.78rem;
-  font-weight: 900;
+  width: 46px;
+  height: 46px;
+  display: block;
+  object-fit: contain;
   flex-shrink: 0;
-  box-shadow: 0 10px 20px rgba(15, 125, 56, 0.22);
 }
 
 .brand-text {
@@ -460,21 +452,6 @@ nav {
   border-left: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: skewX(-24deg);
-}
-
-.icon-news::before {
-  inset: 0.08rem;
-  border: 2px solid currentColor;
-  border-radius: 2px;
-}
-
-.icon-news::after {
-  left: 0.18rem;
-  right: 0.18rem;
-  top: 0.28rem;
-  height: 0.06rem;
-  background: currentColor;
-  box-shadow: 0 0.2rem 0 currentColor, 0 0.4rem 0 currentColor;
 }
 
 .icon-programs::before {

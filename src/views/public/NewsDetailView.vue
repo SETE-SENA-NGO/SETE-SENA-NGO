@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
-import { imageUrls } from '@/lib/imageUrls'
 import { fetchPublishedNews, fetchPublishedNewsArticle, type NewsArticle } from '@/lib/newsContent'
-import { useAuthStore } from '@/stores/auth.store'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/auth.store'
 
 const route = useRoute()
 const articleId = computed(() => {
@@ -18,15 +17,22 @@ const fallbackArticles: NewsArticle[] = [
     id: 'sample-1',
     slug: 'new-community-pre-school-opens-in-svay-rieng',
     title: 'New community pre‑school opens in Svay Rieng',
-    summary: 'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
-    content: '<p>The new pre‑school, located in the village of Thmor Kor, was built with funding from the Australian Embassy and local community contributions. It features two classrooms, a play area, and a kitchen for preparing nutritious meals.</p><p>Over 60 children are now enrolled, with three trained teachers providing early childhood education. The school also serves as a hub for parent education sessions on nutrition and child development.</p><p>"This school is a dream come true for our community," said village chief Sok Heng. "Our children now have a safe place to learn and grow."</p><p>The project is part of Santi Sena\'s broader education program that has established over 20 pre‑schools across three provinces.</p>',
-    image: imageUrls.news.student,
+    summary:
+      'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+    content: `
+      <p>The new pre‑school, located in the village of Thmor Kor, was built with funding from the Australian Embassy and local community contributions. It features two classrooms, a play area, and a kitchen for preparing nutritious meals.</p>
+      <p>Over 60 children are now enrolled, with three trained teachers providing early childhood education. The school also serves as a hub for parent education sessions on nutrition and child development.</p>
+      <p>"This school is a dream come true for our community," said village chief Sok Heng. "Our children now have a safe place to learn and grow."</p>
+      <p>The project is part of Santi Sena's broader education program that has established over 20 pre‑schools across three provinces.</p>
+    `,
+    image: '/src/assets/maps/student.png',
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
     authorBio: 'The Communications Team shares stories of impact from the field, highlighting the voices of communities and partners.',
     readTime: '3 min read',
-    authorAvatar: imageUrls.logo,
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
     views: 1247,
     likes: 89,
     tags: ['Education', 'Community', 'Early Childhood'],
@@ -37,15 +43,18 @@ const fallbackArticles: NewsArticle[] = [
     id: 'sample-2',
     slug: 'forest-guardians-celebrate-500-hectares',
     title: 'Forest Guardians celebrate 500 hectares of protected land',
-    summary: 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
-    content: '<p>After years of dedicated conservation efforts, the community forestry committees in Prey Veng have officially protected 500 hectares of forest. The area is now home to diverse wildlife and serves as a vital carbon sink.</p><p>The achievement was celebrated with a ceremony attended by provincial authorities and local villagers, who have worked tirelessly to replant trees and prevent illegal logging.</p>',
-    image: imageUrls.news.wash,
+    summary:
+      'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
+    content: `<p>After years of dedicated conservation efforts, the community forestry committees in Prey Veng have officially protected 500 hectares of forest. The area is now home to diverse wildlife and serves as a vital carbon sink.</p><p>The achievement was celebrated with a ceremony attended by provincial authorities and local villagers, who have worked tirelessly to replant trees and prevent illegal logging.</p>`,
+    image: '/src/assets/maps/wash.png',
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
-    authorBio: 'The Environment Team works with communities to protect natural resources and promote sustainable land use.',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
+    authorBio:
+      'The Environment Team works with communities to protect natural resources and promote sustainable land use.',
     readTime: '4 min read',
-    authorAvatar: imageUrls.logo,
     views: 856,
     likes: 64,
     tags: ['Environment', 'Conservation', 'Biodiversity'],
@@ -56,15 +65,18 @@ const fallbackArticles: NewsArticle[] = [
     id: 'sample-3',
     slug: 'youth-leaders-trained-in-child-protection-advocacy',
     title: 'Youth leaders trained in child protection advocacy',
-    summary: 'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
-    content: '<p>Forty young volunteers from 25 villages completed a three‑day training on child rights, protection mechanisms, and reporting procedures. The participants are now equipped to lead awareness sessions in their communities.</p><p>The training was facilitated by Santi Sena\'s Child Protection Unit and supported by UNICEF. It is part of a larger initiative to establish youth‑led child protection networks across the province.</p>',
-    image: imageUrls.news.certificate,
+    summary:
+      'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
+    content: `<p>Forty young volunteers from 25 villages completed a three‑day training on child rights, protection mechanisms, and reporting procedures. The participants are now equipped to lead awareness sessions in their communities.</p><p>The training was facilitated by Santi Sena's Child Protection Unit and supported by UNICEF. It is part of a larger initiative to establish youth‑led child protection networks across the province.</p>`,
+    image: '/src/assets/maps/certi.png',
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
-    authorBio: 'The Child Protection Unit works to safeguard children\'s rights and empower communities to prevent abuse and exploitation.',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
+    authorBio:
+      'The Child Protection Unit works to safeguard children’s rights and empower communities to prevent abuse and exploitation.',
     readTime: '2 min read',
-    authorAvatar: imageUrls.logo,
     views: 523,
     likes: 42,
     tags: ['Child Protection', 'Youth', 'Advocacy'],
@@ -75,15 +87,18 @@ const fallbackArticles: NewsArticle[] = [
     id: 'sample-4',
     slug: 'saving-for-change-groups-reach-10000-members',
     title: 'Saving‑for‑Change groups reach 10,000 members',
-    summary: 'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
-    content: '<p>The village savings program, which started with just 50 members in 2003, has now grown to 10,000 active participants across 293 villages. The groups provide a safe way for families to save, access small loans, and build financial resilience.</p><p>To celebrate, Santi Sena held a series of community events, highlighting success stories of members who have used loans to start small businesses or invest in education.</p>',
-    image: imageUrls.news.preschool,
+    summary:
+      'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
+    content: `<p>The village savings program, which started with just 50 members in 2003, has now grown to 10,000 active participants across 293 villages. The groups provide a safe way for families to save, access small loans, and build financial resilience.</p><p>To celebrate, Santi Sena held a series of community events, highlighting success stories of members who have used loans to start small businesses or invest in education.</p>`,
+    image: '/src/assets/maps/pre-school.png',
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
-    authorBio: 'The Livelihood Unit promotes economic empowerment through savings groups, skills training, and enterprise development.',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
+    authorBio:
+      'The Livelihood Unit promotes economic empowerment through savings groups, skills training, and enterprise development.',
     readTime: '3 min read',
-    authorAvatar: imageUrls.logo,
     views: 2134,
     likes: 156,
     tags: ['Livelihood', 'Savings', 'Financial Inclusion'],
@@ -94,15 +109,18 @@ const fallbackArticles: NewsArticle[] = [
     id: 'sample-5',
     slug: 'new-partnership-to-expand-clean-water-access',
     title: 'New partnership to expand clean water access',
-    summary: 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
-    content: '<p>Santi Sena has signed a memorandum of understanding with WaterAid to bring safe drinking water to 15 additional villages in Kratie province. The initiative includes the construction of boreholes, water purification systems, and community training on hygiene practices.</p><p>This partnership will directly benefit over 2,000 families and is expected to reduce waterborne diseases significantly.</p>',
-    image: imageUrls.news.water,
+    summary:
+      'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
+    content: `<p>Santi Sena has signed a memorandum of understanding with WaterAid to bring safe drinking water to 15 additional villages in Kratie province. The initiative includes the construction of boreholes, water purification systems, and community training on hygiene practices.</p><p>This partnership will directly benefit over 2,000 families and is expected to reduce waterborne diseases significantly.</p>`,
+    image: '/src/assets/maps/water.png',
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
-    authorBio: 'The WASH Team focuses on improving water, sanitation, and hygiene practices in underserved communities.',
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
+    authorBio:
+      'The WASH Team focuses on improving water, sanitation, and hygiene practices in underserved communities.',
     readTime: '5 min read',
-    authorAvatar: imageUrls.logo,
     views: 678,
     likes: 51,
     tags: ['WASH', 'Water', 'Health'],
