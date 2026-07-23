@@ -2,108 +2,285 @@
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { imageUrls } from '@/lib/imageUrls'
-import { fetchPublishedNews, type NewsArticle } from '@/lib/newsContent'
+import { useAuthStore } from '@/stores/auth.store'
+import { supabase } from '@/lib/supabase'
+import { slugify, newsPostSelect, mapNewsPost, fetchPublishedNews, fetchPublishedNewsArticle, type NewsArticle, type NewsPostRow } from '@/lib/newsContent'
+import { normalizeMediaUrl } from '@/lib/media'
+import { useUiStore } from '@/stores/ui.store'
 
-const newsCertificateImage = imageUrls.news.certificate
-const newsPreschoolImage = imageUrls.news.preschool
-const newsStudentImage = imageUrls.news.student
-const newsWashImage = imageUrls.news.wash
-const newsWaterImage = imageUrls.news.water
-const authorAvatarImage = imageUrls.logo
+// ─── Auth & Admin state ───────────────────────────────────────────────
+const auth = useAuthStore()
+const ui = useUiStore()
+void auth.init()
+const isAdmin = computed(() => auth.isAdmin)
 
-// ─── Dummy news data ────────────────────────────────────────────────
-const newsItems = ref<NewsArticle[]>([
+const adminEditMode = ref(false)
+const editingCardId = ref<string | null>(null)
+const addFormOpen = ref(false)
+
+type EditFormData = {
+  title: string
+  image_url: string
+}
+
+const editFormData = ref<EditFormData>({
+  title: '',
+  image_url: '',
+})
+
+type AddFormData = {
+  title: string
+  image_url: string
+  category: string
+  excerpt: string
+}
+
+const addFormData = ref<AddFormData>({
+  title: '',
+  image_url: '',
+  category: 'Education',
+  excerpt: '',
+})
+
+const categories = ['Education', 'Environment', 'Child Protection', 'Livelihood', 'WASH']
+
+function openEditCard(article: NewsArticle) {
+  editingCardId.value = article.id
+  editFormData.value = {
+    title: article.title,
+    image_url: article.image,
+  }
+}
+
+function closeEditCard() {
+  editingCardId.value = null
+  editFormData.value = { title: '', image_url: '' }
+}
+
+async function saveCardEdit(article: NewsArticle) {
+  const title = editFormData.value.title.trim()
+  if (!title) {
+    ui.addToast('Title is required.', 'error')
+    return
+  }
+
+  try {
+    const imageUrl = normalizeMediaUrl(editFormData.value.image_url)
+    const savedAt = new Date().toISOString()
+    const slug = slugify(title)
+
+    const { data, error } = await supabase
+      .from('news_posts')
+      .update({
+        title,
+        slug,
+        updated_at: savedAt,
+        metadata: { image_url: imageUrl },
+      })
+      .eq('id', article.id)
+      .select(newsPostSelect)
+      .single()
+
+    if (error) throw error
+
+    const updated = mapNewsPost(data as NewsPostRow)
+    newsItems.value = newsItems.value.map((item) =>
+      item.id === article.id ? updated : item,
+    )
+    ui.addToast('Card updated.', 'success')
+    closeEditCard()
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Could not update card.'
+    ui.addToast(msg, 'error')
+  }
+}
+
+function openAddCard() {
+  addFormData.value = {
+    title: '',
+    image_url: '',
+    category: categories[0] ?? 'Education',
+    excerpt: '',
+  }
+  addFormOpen.value = true
+}
+
+function closeAddCard() {
+  addFormOpen.value = false
+  addFormData.value = { title: '', image_url: '', category: 'Education', excerpt: '' }
+}
+
+async function saveNewCard() {
+  const title = addFormData.value.title.trim()
+  if (!title) {
+    ui.addToast('Title is required.', 'error')
+    return
+  }
+
+  try {
+    const imageUrl = normalizeMediaUrl(addFormData.value.image_url)
+    const savedAt = new Date().toISOString()
+    const slug = slugify(title)
+
+    // Find or ensure category exists
+    const categorySlug = slugify(addFormData.value.category)
+    const { data: existingCat } = await supabase
+      .from('news_categories')
+      .select('id')
+      .eq('slug', categorySlug)
+      .maybeSingle()
+
+    let categoryId: string
+    if (existingCat?.id) {
+      categoryId = String(existingCat.id)
+    } else {
+      const { data: newCat, error: catError } = await supabase
+        .from('news_categories')
+        .insert({ slug: categorySlug, name: addFormData.value.category, is_visible: true })
+        .select('id')
+        .single()
+      if (catError) throw catError
+      categoryId = String(newCat.id)
+    }
+
+    const { data, error } = await supabase
+      .from('news_posts')
+      .insert({
+        title,
+        slug,
+        category_id: categoryId,
+        excerpt: addFormData.value.excerpt || null,
+        body: '',
+        status: 'published',
+        author_name: auth.user?.email || 'Admin',
+        published_at: savedAt,
+        updated_at: savedAt,
+        read_time: '3 min read',
+        metadata: { image_url: imageUrl },
+      })
+      .select(newsPostSelect)
+      .single()
+
+    if (error) throw error
+
+    const created = mapNewsPost(data as NewsPostRow)
+    newsItems.value = [created, ...newsItems.value]
+    ui.addToast('New card created.', 'success')
+    closeAddCard()
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Could not create card.'
+    ui.addToast(msg, 'error')
+  }
+}
+
+async function deleteNewsCard(article: NewsArticle) {
+  ui.openModal('Delete news card?', `Delete "${article.title}" from News?`, async () => {
+    try {
+      const { error } = await supabase.from('news_posts').delete().eq('id', article.id)
+      if (error) throw error
+
+      newsItems.value = newsItems.value.filter((item) => item.id !== article.id)
+      ui.addToast('Card deleted.', 'warning')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Could not delete card.'
+      ui.addToast(msg, 'error')
+    }
+  })
+}
+
+// ─── Static news data
+// ─── Fallback sample data (shown when no published news from admin) ─
+const fallbackArticles: NewsArticle[] = [
   {
-    id: '1',
+    id: 'sample-1',
     slug: 'new-community-pre-school-opens-in-svay-rieng',
     title: 'New community pre‑school opens in Svay Rieng',
-    summary:
-      'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+    summary: 'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
     content: '',
-    image: newsStudentImage,
+    image: imageUrls.news.student,
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
-    authorAvatar: authorAvatarImage,
+    authorAvatar: imageUrls.logo,
     featured: true,
     readTime: '3 min read',
     views: 1247,
     likes: 89,
     trending: true,
+    tags: [],
   },
   {
-    id: '2',
+    id: 'sample-2',
     slug: 'forest-guardians-celebrate-500-hectares',
     title: 'Forest Guardians celebrate 500 hectares of protected land',
-    summary:
-      'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
+    summary: 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
     content: '',
-    image: newsWashImage,
+    image: imageUrls.news.wash,
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
-    authorAvatar: authorAvatarImage,
     featured: false,
     readTime: '4 min read',
     views: 856,
     likes: 64,
     trending: false,
+    tags: [],
   },
   {
-    id: '3',
+    id: 'sample-3',
     slug: 'youth-leaders-trained-in-child-protection-advocacy',
     title: 'Youth leaders trained in child protection advocacy',
-    summary:
-      'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
+    summary: 'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
     content: '',
-    image: newsCertificateImage,
+    image: imageUrls.news.certificate,
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
-    authorAvatar: authorAvatarImage,
     featured: false,
     readTime: '2 min read',
     views: 523,
     likes: 42,
     trending: false,
+    tags: [],
   },
   {
-    id: '4',
+    id: 'sample-4',
     slug: 'saving-for-change-groups-reach-10000-members',
     title: 'Saving‑for‑Change groups reach 10,000 members',
-    summary:
-      'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
+    summary: 'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
     content: '',
-    image: newsPreschoolImage,
+    image: imageUrls.news.preschool,
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
-    authorAvatar: authorAvatarImage,
     featured: false,
     readTime: '3 min read',
     views: 2134,
     likes: 156,
     trending: true,
+    tags: [],
   },
   {
-    id: '5',
+    id: 'sample-5',
     slug: 'new-partnership-to-expand-clean-water-access',
     title: 'New partnership to expand clean water access',
-    summary:
-      'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
+    summary: 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
     content: '',
-    image: newsWaterImage,
+    image: imageUrls.news.water,
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
-    authorAvatar: authorAvatarImage,
     featured: false,
     readTime: '5 min read',
     views: 678,
     likes: 51,
     trending: false,
+    tags: [],
   },
-])
+]
+
+// ─── News data (loaded live from Supabase, fallback to samples) ─────
+const newsItems = ref<NewsArticle[]>(fallbackArticles)
 
 // ─── State ──────────────────────────────────────────────────────────
 const savedArticles = ref<string[]>([])
@@ -111,8 +288,16 @@ const likedArticles = ref<string[]>([])
 const newsletterEmail = ref('')
 
 // Featured + regular articles
-const featuredArticle = computed(() => newsItems.value.find((item) => item.featured))
-const regularArticles = computed(() => newsItems.value.filter((item) => !item.featured))
+const featuredArticle = computed(() => {
+  const featured = newsItems.value.find((item) => item.featured)
+  return featured || newsItems.value[0] || null
+})
+const regularArticles = computed(() => {
+  if (featuredArticle.value && newsItems.value.length > 1) {
+    return newsItems.value.filter((item) => item.id !== featuredArticle.value!.id)
+  }
+  return newsItems.value
+})
 
 // ─── Scroll‑triggered animations ──────────────────────────────────
 const articleRefs = ref<HTMLElement[]>([])
@@ -173,10 +358,11 @@ onMounted(async () => {
   try {
     const publishedNews = await fetchPublishedNews()
     if (publishedNews.length) {
+      // Replace fallback data with live published news from admin
       newsItems.value = publishedNews
     }
   } catch {
-    // Keep the local fallback stories when Supabase is unavailable.
+    // Keep fallback sample data if Supabase is unavailable
   }
 
   await nextTick()
@@ -318,6 +504,65 @@ const scrollToTop = () => {
       </div>
     </header>
 
+    <!-- ─── ADMIN EDIT MODE TOOLBAR ───────────────────────────── -->
+    <div v-if="isAdmin" class="admin-edit-toolbar">
+      <div class="admin-edit-toolbar-inner">
+        <div class="admin-edit-toolbar-left">
+          <span class="admin-edit-badge">Admin</span>
+          <span class="admin-edit-divider"></span>
+          <span class="admin-edit-label">Edit news list</span>
+        </div>
+        <div class="admin-edit-toolbar-right">
+          <button
+            type="button"
+            class="admin-edit-toggle"
+            :class="{ active: adminEditMode }"
+            @click="adminEditMode = !adminEditMode"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            {{ adminEditMode ? 'Exit Edit Mode' : 'Edit Mode' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ADMIN ADD NEW CARD FORM ──────────────────────────── -->
+    <div v-if="isAdmin && addFormOpen" class="admin-add-form-overlay" @click.self="closeAddCard">
+      <div class="admin-add-form-card">
+        <div class="admin-add-form-header">
+          <h3>Add New News Card</h3>
+          <button type="button" class="admin-add-close" @click="closeAddCard">✕</button>
+        </div>
+        <form class="admin-add-form" @submit.prevent="saveNewCard">
+          <label>
+            <span>Title *</span>
+            <input v-model="addFormData.title" required placeholder="News title" />
+          </label>
+          <label>
+            <span>Category</span>
+            <select v-model="addFormData.category">
+              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Summary / Excerpt</span>
+            <textarea v-model="addFormData.excerpt" rows="2" placeholder="Short summary..."></textarea>
+          </label>
+          <label>
+            <span>Image URL (Google Drive)</span>
+            <input v-model="addFormData.image_url" placeholder="https://drive.google.com/file/d/.../view" />
+          </label>
+          <div class="admin-add-form-actions">
+            <button type="button" class="admin-add-btn-secondary" @click="closeAddCard">Cancel</button>
+            <button type="submit" class="admin-add-btn-primary">Publish Card</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- ─── MAIN CONTENT ───────────────────────────────────────── -->
     <div class="container">
       <!-- Featured Article -->
@@ -336,6 +581,17 @@ const scrollToTop = () => {
                   <polyline points="17 6 23 6 23 12" />
                 </svg>
                 Trending
+              </span>
+              <!-- Admin Edit Button on Featured Card -->
+              <span
+                v-if="isAdmin && adminEditMode"
+                class="admin-edit-card-btn"
+                @click.prevent="openEditCard(featuredArticle)"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
               </span>
             </div>
           </div>
@@ -428,12 +684,61 @@ const scrollToTop = () => {
         </RouterLink>
       </div>
 
+      <!-- ─── ADMIN: INLINE EDIT MODAL ───────────────────────── -->
+      <div
+        v-if="isAdmin && editingCardId"
+        class="admin-edit-modal-overlay"
+        @click.self="closeEditCard"
+      >
+        <div class="admin-edit-modal-card">
+          <div class="admin-edit-modal-header">
+            <h3>Edit News Card</h3>
+            <button type="button" class="admin-modal-close" @click="closeEditCard">✕</button>
+          </div>
+          <form class="admin-edit-modal-form" @submit.prevent="saveCardEdit(newsItems.find(a => a.id === editingCardId)!)">
+            <label>
+              <span>Title</span>
+              <input v-model="editFormData.title" required placeholder="News title" />
+            </label>
+            <label>
+              <span>Image URL</span>
+              <input v-model="editFormData.image_url" placeholder="https://drive.google.com/file/d/.../view" />
+              <small>Paste a Google Drive image URL (shared as "Anyone with the link")</small>
+            </label>
+            <div class="admin-edit-modal-actions">
+              <button type="button" class="admin-modal-btn-secondary" @click="closeEditCard">Cancel</button>
+              <button type="submit" class="admin-modal-btn-primary">Save Changes</button>
+              <button
+                type="button"
+                class="admin-modal-btn-danger"
+                @click="deleteNewsCard(newsItems.find(a => a.id === editingCardId)!)"
+              >
+                Delete Card
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- ─── ALL STORIES ─────────────────────────────────────── -->
       <div class="section-header">
         <div class="section-header-left">
           <h2 class="section-title">All Stories</h2>
           <span class="section-count">{{ regularArticles.length }} articles</span>
         </div>
+        <!-- Admin: Add Card Button -->
+        <button
+          v-if="isAdmin && adminEditMode"
+          type="button"
+          class="admin-add-card-btn"
+          @click="openAddCard"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add Card
+        </button>
       </div>
 
       <!-- News Grid -->
@@ -452,6 +757,17 @@ const scrollToTop = () => {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                     <polyline points="17 6 23 6 23 12" />
+                  </svg>
+                </span>
+                <!-- Admin Edit Button -->
+                <span
+                  v-if="isAdmin && adminEditMode"
+                  class="admin-edit-card-btn small"
+                  @click.prevent="openEditCard(item)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
                 </span>
               </div>
@@ -493,43 +809,6 @@ const scrollToTop = () => {
               </div>
             </div>
           </RouterLink>
-          <div class="card-actions">
-            <button
-              class="action-btn icon-btn small"
-              :class="{ active: isSaved(item.id) }"
-              @click.prevent="toggleSave(item.id)"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-              </svg>
-            </button>
-            <button
-              class="action-btn icon-btn small"
-              :class="{ active: isLiked(item.id) }"
-              @click.prevent="toggleLike(item.id)"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path
-                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                />
-              </svg>
-            </button>
-            <button class="action-btn icon-btn small" @click.prevent="shareArticle(item.title)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="18" cy="5" r="3" />
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="18" cy="19" r="3" />
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-              </svg>
-            </button>
-            <RouterLink :to="`/news/${item.id}`" class="action-btn icon-btn small read-link">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 12h14" />
-                <path d="M12 5l7 7-7 7" />
-              </svg>
-            </RouterLink>
-          </div>
         </article>
       </div>
 
@@ -616,7 +895,7 @@ const scrollToTop = () => {
 .hero-static-inner {
   max-width: 820px;
   margin: 0 auto;
-  padding: 0 1.5rem 0 clamp(2rem, 10vw, 8rem); /* 👈 shifts content right */
+  padding: 0 1.5rem 0 clamp(2rem, 10vw, 8rem);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1188,24 +1467,6 @@ const scrollToTop = () => {
   height: 12px;
 }
 
-.card-actions {
-  display: flex;
-  gap: 0.1rem;
-  padding: 0.25rem 1rem 0.75rem;
-  border-top: 1px solid var(--color-border);
-  background: rgba(250, 248, 245, 0.3);
-}
-
-.card-actions .icon-btn.small {
-  width: 28px;
-  height: 28px;
-}
-
-.card-actions .icon-btn.small svg {
-  width: 14px;
-  height: 14px;
-}
-
 /* ── No Results ── */
 .no-results {
   grid-column: 1 / -1;
@@ -1481,7 +1742,7 @@ const scrollToTop = () => {
     padding: 3rem 1.5rem 2rem;
   }
   .hero-static-inner {
-    padding-left: clamp(1rem, 4vw, 2rem); /* reduce indent on tablet */
+    padding-left: clamp(1rem, 4vw, 2rem);
   }
   .hero-static h1 {
     font-size: 2rem;
@@ -1558,7 +1819,7 @@ const scrollToTop = () => {
     gap: 0.5rem;
   }
   .hero-static-inner {
-    padding-left: 0.5rem; /* minimal indent on mobile */
+    padding-left: 0.5rem;
   }
   .hero-static h1 {
     font-size: 1.8rem;
@@ -1586,6 +1847,357 @@ const scrollToTop = () => {
   .hero-static .hero-badge {
     font-size: 0.5rem;
     padding: 0.3rem 1rem;
+  }
+}
+
+/* ── Admin Edit Mode Toolbar ── */
+.admin-edit-toolbar {
+  background: linear-gradient(135deg, #071311 0%, #0f2d25 100%);
+  border-bottom: 1px solid rgba(53, 208, 190, 0.22);
+  color: #f2fbf6;
+  font-size: 0.82rem;
+  position: relative;
+}
+
+.admin-edit-toolbar::after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(53, 208, 190, 0.35), transparent);
+  content: '';
+}
+
+.admin-edit-toolbar-inner {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0.45rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 40px;
+}
+
+.admin-edit-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.admin-edit-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.admin-edit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #74e0ae;
+  flex-shrink: 0;
+}
+
+.admin-edit-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.admin-edit-label {
+  color: #94a3b8;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-edit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(116, 224, 174, 0.25);
+  border-radius: 8px;
+  background: rgba(116, 224, 174, 0.08);
+  color: #b9ead5;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-edit-toggle:hover {
+  background: rgba(116, 224, 174, 0.18);
+  border-color: rgba(116, 224, 174, 0.45);
+  color: #f2fbf6;
+}
+
+.admin-edit-toggle.active {
+  background: rgba(116, 224, 174, 0.25);
+  border-color: rgba(116, 224, 174, 0.5);
+  color: #f2fbf6;
+}
+
+/* ── Admin Edit Card Button (on image overlay) ── */
+.admin-edit-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 0.4rem;
+}
+
+.admin-edit-card-btn:hover {
+  background: rgba(45, 122, 90, 0.85);
+  transform: scale(1.1);
+}
+
+.admin-edit-card-btn.small {
+  width: 28px;
+  height: 28px;
+}
+
+/* ── Admin Add Card Button (in section header) ── */
+.admin-add-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  border: 1.5px dashed var(--primary-color);
+  border-radius: 999px;
+  background: rgba(45, 122, 90, 0.06);
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-add-card-btn:hover {
+  background: var(--primary-color);
+  color: #fff;
+  border-style: solid;
+}
+
+.admin-add-card-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── Admin Edit Modal Overlay ── */
+.admin-edit-modal-overlay,
+.admin-add-form-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.admin-edit-modal-card,
+.admin-add-form-card {
+  width: min(480px, calc(100vw - 2rem));
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-cream);
+  padding: 1.5rem;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
+}
+
+.admin-edit-modal-header,
+.admin-add-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.admin-edit-modal-header h3,
+.admin-add-form-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0;
+}
+
+.admin-modal-close,
+.admin-add-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-cream);
+  color: var(--color-ink-soft);
+  font-size: 1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+}
+
+.admin-modal-close:hover,
+.admin-add-close:hover {
+  background: var(--color-border);
+  color: var(--color-ink);
+}
+
+.admin-edit-modal-form,
+.admin-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-edit-modal-form label,
+.admin-add-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.admin-edit-modal-form input,
+.admin-edit-modal-form textarea,
+.admin-edit-modal-form select,
+.admin-add-form input,
+.admin-add-form textarea,
+.admin-add-form select {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fff;
+  color: var(--color-ink);
+  transition: border-color 0.2s ease;
+}
+
+.admin-edit-modal-form input:focus,
+.admin-edit-modal-form textarea:focus,
+.admin-edit-modal-form select:focus,
+.admin-add-form input:focus,
+.admin-add-form textarea:focus,
+.admin-add-form select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.admin-edit-modal-form small,
+.admin-add-form small {
+  font-size: 0.72rem;
+  color: var(--color-ink-soft);
+  opacity: 0.7;
+}
+
+.admin-edit-modal-actions,
+.admin-add-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: flex-end;
+}
+
+.admin-modal-btn-secondary,
+.admin-add-btn-secondary {
+  padding: 0.55rem 1.2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--color-ink-soft);
+  font-weight: 600;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-modal-btn-secondary:hover,
+.admin-add-btn-secondary:hover {
+  background: var(--color-border);
+}
+
+.admin-modal-btn-primary,
+.admin-add-btn-primary {
+  padding: 0.55rem 1.2rem;
+  border: 1px solid var(--primary-color);
+  border-radius: 10px;
+  background: var(--primary-color);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-modal-btn-primary:hover,
+.admin-add-btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.admin-modal-btn-danger {
+  padding: 0.55rem 1.2rem;
+  border: 1px solid #dc2626;
+  border-radius: 10px;
+  background: transparent;
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: auto;
+}
+
+.admin-modal-btn-danger:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .admin-edit-toolbar-inner {
+    padding: 0.35rem 0.75rem;
+    min-height: 36px;
+  }
+  .admin-edit-label {
+    display: none;
+  }
+  .admin-edit-divider {
+    display: none;
+  }
+  .admin-edit-toggle {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  .admin-edit-modal-card,
+  .admin-add-form-card {
+    padding: 1.25rem;
   }
 }
 </style>

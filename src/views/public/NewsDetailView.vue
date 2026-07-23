@@ -2,14 +2,9 @@
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { imageUrls } from '@/lib/imageUrls'
-import { fetchPublishedNews, fetchPublishedNewsArticle } from '@/lib/newsContent'
-
-const newsCertificateImage = imageUrls.news.certificate
-const newsPreschoolImage = imageUrls.news.preschool
-const newsStudentImage = imageUrls.news.student
-const newsWashImage = imageUrls.news.wash
-const newsWaterImage = imageUrls.news.water
-const authorAvatarImage = imageUrls.logo
+import { fetchPublishedNews, fetchPublishedNewsArticle, type NewsArticle } from '@/lib/newsContent'
+import { useAuthStore } from '@/stores/auth.store'
+import { supabase } from '@/lib/supabase'
 
 const route = useRoute()
 const articleId = computed(() => {
@@ -17,127 +12,164 @@ const articleId = computed(() => {
   return typeof id === 'string' ? id : '1'
 })
 
-// ── Extended dummy data ──
-const articles = [
+// ─── Fallback sample data (shown when no published news from admin) ─
+const fallbackArticles: NewsArticle[] = [
   {
-    id: '1',
+    id: 'sample-1',
+    slug: 'new-community-pre-school-opens-in-svay-rieng',
     title: 'New community pre‑school opens in Svay Rieng',
-    summary:
-      'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
-    content: `
-      <p>The new pre‑school, located in the village of Thmor Kor, was built with funding from the Australian Embassy and local community contributions. It features two classrooms, a play area, and a kitchen for preparing nutritious meals.</p>
-      <p>Over 60 children are now enrolled, with three trained teachers providing early childhood education. The school also serves as a hub for parent education sessions on nutrition and child development.</p>
-      <p>"This school is a dream come true for our community," said village chief Sok Heng. "Our children now have a safe place to learn and grow."</p>
-      <p>The project is part of Santi Sena's broader education program that has established over 20 pre‑schools across three provinces.</p>
-    `,
-    image: newsStudentImage,
+    summary: 'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
+    content: '<p>The new pre‑school, located in the village of Thmor Kor, was built with funding from the Australian Embassy and local community contributions. It features two classrooms, a play area, and a kitchen for preparing nutritious meals.</p><p>Over 60 children are now enrolled, with three trained teachers providing early childhood education. The school also serves as a hub for parent education sessions on nutrition and child development.</p><p>"This school is a dream come true for our community," said village chief Sok Heng. "Our children now have a safe place to learn and grow."</p><p>The project is part of Santi Sena\'s broader education program that has established over 20 pre‑schools across three provinces.</p>',
+    image: imageUrls.news.student,
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
-    authorBio:
-      'The Communications Team shares stories of impact from the field, highlighting the voices of communities and partners.',
+    authorBio: 'The Communications Team shares stories of impact from the field, highlighting the voices of communities and partners.',
     readTime: '3 min read',
-    authorAvatar: authorAvatarImage,
+    authorAvatar: imageUrls.logo,
     views: 1247,
     likes: 89,
     tags: ['Education', 'Community', 'Early Childhood'],
+    featured: true,
+    trending: true,
   },
   {
-    id: '2',
+    id: 'sample-2',
+    slug: 'forest-guardians-celebrate-500-hectares',
     title: 'Forest Guardians celebrate 500 hectares of protected land',
-    summary:
-      'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
-    content: `<p>After years of dedicated conservation efforts, the community forestry committees in Prey Veng have officially protected 500 hectares of forest. The area is now home to diverse wildlife and serves as a vital carbon sink.</p><p>The achievement was celebrated with a ceremony attended by provincial authorities and local villagers, who have worked tirelessly to replant trees and prevent illegal logging.</p>`,
-    image: newsWashImage,
+    summary: 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
+    content: '<p>After years of dedicated conservation efforts, the community forestry committees in Prey Veng have officially protected 500 hectares of forest. The area is now home to diverse wildlife and serves as a vital carbon sink.</p><p>The achievement was celebrated with a ceremony attended by provincial authorities and local villagers, who have worked tirelessly to replant trees and prevent illegal logging.</p>',
+    image: imageUrls.news.wash,
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
-    authorAvatar: authorAvatarImage,
-    authorBio:
-      'The Environment Team works with communities to protect natural resources and promote sustainable land use.',
+    authorBio: 'The Environment Team works with communities to protect natural resources and promote sustainable land use.',
     readTime: '4 min read',
+    authorAvatar: imageUrls.logo,
     views: 856,
     likes: 64,
     tags: ['Environment', 'Conservation', 'Biodiversity'],
+    featured: false,
+    trending: false,
   },
   {
-    id: '3',
+    id: 'sample-3',
+    slug: 'youth-leaders-trained-in-child-protection-advocacy',
     title: 'Youth leaders trained in child protection advocacy',
-    summary:
-      'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
-    content: `<p>Forty young volunteers from 25 villages completed a three‑day training on child rights, protection mechanisms, and reporting procedures. The participants are now equipped to lead awareness sessions in their communities.</p><p>The training was facilitated by Santi Sena's Child Protection Unit and supported by UNICEF. It is part of a larger initiative to establish youth‑led child protection networks across the province.</p>`,
-    image: newsCertificateImage,
+    summary: 'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
+    content: '<p>Forty young volunteers from 25 villages completed a three‑day training on child rights, protection mechanisms, and reporting procedures. The participants are now equipped to lead awareness sessions in their communities.</p><p>The training was facilitated by Santi Sena\'s Child Protection Unit and supported by UNICEF. It is part of a larger initiative to establish youth‑led child protection networks across the province.</p>',
+    image: imageUrls.news.certificate,
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
-    authorAvatar: authorAvatarImage,
-    authorBio:
-      'The Child Protection Unit works to safeguard children’s rights and empower communities to prevent abuse and exploitation.',
+    authorBio: 'The Child Protection Unit works to safeguard children\'s rights and empower communities to prevent abuse and exploitation.',
     readTime: '2 min read',
+    authorAvatar: imageUrls.logo,
     views: 523,
     likes: 42,
     tags: ['Child Protection', 'Youth', 'Advocacy'],
+    featured: false,
+    trending: false,
   },
   {
-    id: '4',
+    id: 'sample-4',
+    slug: 'saving-for-change-groups-reach-10000-members',
     title: 'Saving‑for‑Change groups reach 10,000 members',
-    summary:
-      'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
-    content: `<p>The village savings program, which started with just 50 members in 2003, has now grown to 10,000 active participants across 293 villages. The groups provide a safe way for families to save, access small loans, and build financial resilience.</p><p>To celebrate, Santi Sena held a series of community events, highlighting success stories of members who have used loans to start small businesses or invest in education.</p>`,
-    image: newsPreschoolImage,
+    summary: 'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
+    content: '<p>The village savings program, which started with just 50 members in 2003, has now grown to 10,000 active participants across 293 villages. The groups provide a safe way for families to save, access small loans, and build financial resilience.</p><p>To celebrate, Santi Sena held a series of community events, highlighting success stories of members who have used loans to start small businesses or invest in education.</p>',
+    image: imageUrls.news.preschool,
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
-    authorAvatar: authorAvatarImage,
-    authorBio:
-      'The Livelihood Unit promotes economic empowerment through savings groups, skills training, and enterprise development.',
+    authorBio: 'The Livelihood Unit promotes economic empowerment through savings groups, skills training, and enterprise development.',
     readTime: '3 min read',
+    authorAvatar: imageUrls.logo,
     views: 2134,
     likes: 156,
     tags: ['Livelihood', 'Savings', 'Financial Inclusion'],
+    featured: false,
+    trending: true,
   },
   {
-    id: '5',
+    id: 'sample-5',
+    slug: 'new-partnership-to-expand-clean-water-access',
     title: 'New partnership to expand clean water access',
-    summary:
-      'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
-    content: `<p>Santi Sena has signed a memorandum of understanding with WaterAid to bring safe drinking water to 15 additional villages in Kratie province. The initiative includes the construction of boreholes, water purification systems, and community training on hygiene practices.</p><p>This partnership will directly benefit over 2,000 families and is expected to reduce waterborne diseases significantly.</p>`,
-    image: newsWaterImage,
+    summary: 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
+    content: '<p>Santi Sena has signed a memorandum of understanding with WaterAid to bring safe drinking water to 15 additional villages in Kratie province. The initiative includes the construction of boreholes, water purification systems, and community training on hygiene practices.</p><p>This partnership will directly benefit over 2,000 families and is expected to reduce waterborne diseases significantly.</p>',
+    image: imageUrls.news.water,
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
-    authorAvatar: authorAvatarImage,
-    authorBio:
-      'The WASH Team focuses on improving water, sanitation, and hygiene practices in underserved communities.',
+    authorBio: 'The WASH Team focuses on improving water, sanitation, and hygiene practices in underserved communities.',
     readTime: '5 min read',
+    authorAvatar: imageUrls.logo,
     views: 678,
     likes: 51,
     tags: ['WASH', 'Water', 'Health'],
+    featured: false,
+    trending: false,
   },
 ]
 
-type Article = {
-  id: string
-  title: string
-  summary: string
-  content: string
-  image: string
-  date: string
-  category: string
-  author: string
-  authorAvatar?: string
-  authorBio?: string
-  readTime: string
-  views: number
-  likes: number
-  tags?: string[]
+const article = ref<NewsArticle | null>(null)
+const allArticles = ref<NewsArticle[]>(fallbackArticles)
+
+// ─── Auth & Admin content editing ───────────────────────────────
+const auth = useAuthStore()
+void auth.init()
+const isAdmin = computed(() => auth.isAdmin)
+
+const editContentMode = ref(false)
+const editContentValue = ref('')
+let originalContent = ''
+
+function openContentEdit() {
+  if (!article.value) return
+  originalContent = article.value.content
+  editContentValue.value = article.value.content
+  editContentMode.value = true
 }
 
-const article = ref<Article | null>(null)
-const allArticles = ref<Article[]>(articles as Article[])
+function cancelContentEdit() {
+  editContentMode.value = false
+  editContentValue.value = ''
+  if (article.value) {
+    article.value.content = originalContent
+  }
+}
+
+async function saveContentEdit() {
+  if (!article.value || !article.value.id) return
+  if (article.value.id.startsWith('sample-')) {
+    // Can't save to sample/fallback articles
+    showAlertToast('Cannot edit sample articles. Only news from admin can be edited.')
+    editContentMode.value = false
+    return
+  }
+
+  try {
+    const savedAt = new Date().toISOString()
+    const { error } = await supabase
+      .from('news_posts')
+      .update({
+        body: editContentValue.value,
+        updated_at: savedAt,
+      })
+      .eq('id', article.value.id)
+
+    if (error) throw error
+
+    article.value.content = editContentValue.value
+    editContentMode.value = false
+    showAlertToast('Content saved successfully.')
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Could not save content.'
+    showAlertToast(msg)
+  }
+}
 
 onMounted(async () => {
-  const fallback = (articles as Article[]).find((a) => a.id === articleId.value) ?? null
+  const fallback = fallbackArticles.find((a) => a.id === articleId.value) ?? null
 
   try {
     const [loadedArticle, publishedNews] = await Promise.all([
@@ -261,6 +293,52 @@ const copyLink = () => {
       </div>
     </transition>
 
+    <!-- ─── ADMIN TOOLBAR ────────────────────────────────────── -->
+    <div v-if="isAdmin" class="admin-detail-toolbar">
+      <div class="admin-detail-toolbar-inner">
+        <div class="admin-detail-toolbar-left">
+          <span class="admin-detail-badge">Admin</span>
+          <span class="admin-detail-divider"></span>
+          <span class="admin-detail-label">Editing news content</span>
+        </div>
+        <div class="admin-detail-toolbar-right">
+          <button
+            v-if="!editContentMode"
+            type="button"
+            class="admin-detail-edit-btn"
+            @click="openContentEdit"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Edit Content
+          </button>
+          <template v-if="editContentMode">
+            <button
+              type="button"
+              class="admin-detail-cancel-btn"
+              @click="cancelContentEdit"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="admin-detail-save-btn"
+              @click="saveContentEdit"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Save Content
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── HEADER with wave image ─── -->
     <header class="detail-header" v-if="article">
       <div class="container">
@@ -341,7 +419,24 @@ const copyLink = () => {
         <div class="article-grid">
           <!-- Left: Main content -->
           <div class="detail-content">
-            <div class="content-body" v-html="article.content"></div>
+            <!-- Admin content editor: show textarea when editing -->
+            <div v-if="editContentMode" class="admin-content-editor">
+              <div class="admin-editor-header">
+                <span class="admin-editor-label">Editing content (HTML)</span>
+              </div>
+              <textarea
+                v-model="editContentValue"
+                class="admin-editor-textarea"
+                rows="12"
+                placeholder="Enter HTML content here..."
+              ></textarea>
+              <div class="admin-editor-preview">
+                <span class="admin-editor-label">Preview</span>
+                <div class="admin-editor-preview-body" v-html="editContentValue"></div>
+              </div>
+            </div>
+            <!-- Normal content display -->
+            <div v-else class="content-body" v-html="article.content"></div>
 
             <!-- Tags -->
             <div class="tags-section" v-if="article.tags && article.tags.length">
@@ -546,20 +641,14 @@ const copyLink = () => {
 </template>
 
 <style scoped>
-/* ── Variables ── */
 :root {
-  --color-cream: #faf8f5;
-  --color-border: #e8e3dc;
-  --color-ink: #1e1a16;
-  --color-ink-soft: #5a524a;
-  --primary-color: #2d7a5a;
-  --primary-dark: #1a3d2e;
-  --primary-light: #aad6c7;
   --gold: #c9a84c;
   --gold-light: #e8d5a3;
+  --gold-glow: rgba(201, 168, 76, 0.15);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 8px 32px rgba(30, 26, 22, 0.06);
   --shadow-lg: 0 16px 56px rgba(30, 26, 22, 0.1);
+  --shadow-xl: 0 24px 80px rgba(30, 26, 22, 0.14);
   --radius-md: 20px;
   --radius-lg: 28px;
   --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -634,7 +723,6 @@ const copyLink = () => {
   padding: 0.3rem 1.2rem;
   border-radius: 999px;
   margin-bottom: 0.75rem;
-
 }
 
 .header-title {
@@ -644,8 +732,6 @@ const copyLink = () => {
   margin: 0 0 0.5rem;
   letter-spacing: -0.02em;
   line-height: 1.1;
-
-
 }
 
 .header-summary {
@@ -703,30 +789,18 @@ const copyLink = () => {
   will-change: transform;
 }
 
-/* ── Wave animation ── */
 .image-wrapper.wave {
   animation: waveFloat 4s ease-in-out infinite;
 }
 
 @keyframes waveFloat {
-  0% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-8px) rotate(1.5deg);
-  }
-  50% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  75% {
-    transform: translateY(8px) rotate(-1.5deg);
-  }
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
+  0% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(1.5deg); }
+  50% { transform: translateY(0px) rotate(0deg); }
+  75% { transform: translateY(8px) rotate(-1.5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
 }
 
-/* ── Hover: deeper shadow, scale, and stronger wave ── */
 .image-wrapper.wave:hover {
   animation: waveFloatHover 1.6s ease-in-out infinite;
   box-shadow: 0 24px 64px rgba(11, 61, 46, 0.25);
@@ -734,21 +808,11 @@ const copyLink = () => {
 }
 
 @keyframes waveFloatHover {
-  0% {
-    transform: translateY(0px) rotate(0deg) scale(1.02);
-  }
-  25% {
-    transform: translateY(-12px) rotate(2.5deg) scale(1.04);
-  }
-  50% {
-    transform: translateY(0px) rotate(0deg) scale(1.02);
-  }
-  75% {
-    transform: translateY(12px) rotate(-2.5deg) scale(1.04);
-  }
-  100% {
-    transform: translateY(0px) rotate(0deg) scale(1.02);
-  }
+  0% { transform: translateY(0px) rotate(0deg) scale(1.02); }
+  25% { transform: translateY(-12px) rotate(2.5deg) scale(1.04); }
+  50% { transform: translateY(0px) rotate(0deg) scale(1.02); }
+  75% { transform: translateY(12px) rotate(-2.5deg) scale(1.04); }
+  100% { transform: translateY(0px) rotate(0deg) scale(1.02); }
 }
 
 .header-round-image {
@@ -851,7 +915,6 @@ const copyLink = () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
-
   opacity: 0;
   transform: translateY(20px) scale(0.97);
   transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
@@ -899,29 +962,12 @@ const copyLink = () => {
   height: 20px;
 }
 
-.share-btn.facebook {
-  background: #1877f2;
-  color: #fff;
-}
-.share-btn.twitter {
-  background: #1da1f2;
-  color: #fff;
-}
-.share-btn.linkedin {
-  background: #0a66c2;
-  color: #fff;
-}
-.share-btn.email {
-  background: #6c5ce7;
-  color: #fff;
-}
-.share-btn.copy {
-  background: var(--primary-color);
-  color: #fff;
-}
-.share-btn.copy:hover {
-  background: var(--primary-dark);
-}
+.share-btn.facebook { background: #1877f2; color: #fff; }
+.share-btn.twitter { background: #1da1f2; color: #fff; }
+.share-btn.linkedin { background: #0a66c2; color: #fff; }
+.share-btn.email { background: #6c5ce7; color: #fff; }
+.share-btn.copy { background: var(--primary-color); color: #fff; }
+.share-btn.copy:hover { background: var(--primary-dark); }
 
 /* ── Author Bio ── */
 .author-bio-card {
@@ -934,7 +980,6 @@ const copyLink = () => {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   border-radius: 20px;
-
   opacity: 0;
   transform: translateY(20px) scale(0.97);
   transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
@@ -989,7 +1034,6 @@ const copyLink = () => {
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
   border-radius: 20px;
-
   opacity: 0;
   transform: translateY(20px) scale(0.97);
   transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
@@ -1019,9 +1063,7 @@ const copyLink = () => {
   color: var(--color-ink-soft);
 }
 
-.stats-card .stat-row:last-child {
-  border-bottom: none;
-}
+.stats-card .stat-row:last-child { border-bottom: none; }
 
 .related-sidebar-item {
   display: flex;
@@ -1030,14 +1072,9 @@ const copyLink = () => {
   border-bottom: 1px solid var(--color-border);
   text-decoration: none;
   color: inherit;
-  transition: opacity 0.2s;
-
   opacity: 0;
   transform: translateY(12px);
-  transition:
-    opacity 0.4s ease,
-    transform 0.4s ease,
-    border-color 0.2s;
+  transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.2s;
 }
 
 .related-sidebar-item.card-visible {
@@ -1045,13 +1082,8 @@ const copyLink = () => {
   transform: translateY(0);
 }
 
-.related-sidebar-item:hover {
-  opacity: 0.7;
-}
-
-.related-sidebar-item:last-child {
-  border-bottom: none;
-}
+.related-sidebar-item:hover { opacity: 0.7; }
+.related-sidebar-item:last-child { border-bottom: none; }
 
 .related-sidebar-image {
   flex: 0 0 60px;
@@ -1066,9 +1098,7 @@ const copyLink = () => {
   object-fit: cover;
 }
 
-.related-sidebar-info {
-  flex: 1;
-}
+.related-sidebar-info { flex: 1; }
 
 .related-sidebar-category {
   font-size: 0.6rem;
@@ -1128,9 +1158,7 @@ const copyLink = () => {
   transition: background 0.2s;
 }
 
-.mini-btn:hover {
-  background: var(--primary-dark);
-}
+.mini-btn:hover { background: var(--primary-dark); }
 
 /* ── Footer Nav ── */
 .detail-footer-nav {
@@ -1153,9 +1181,7 @@ const copyLink = () => {
   transition: border-color 0.2s;
 }
 
-.footer-link:hover {
-  border-color: currentColor;
-}
+.footer-link:hover { border-color: currentColor; }
 
 .footer-link svg {
   width: 18px;
@@ -1209,9 +1235,7 @@ const copyLink = () => {
   color: var(--primary-color);
   font-weight: 600;
   text-decoration: none;
-  transition:
-    background 0.25s,
-    color 0.25s;
+  transition: background 0.25s, color 0.25s;
 }
 
 .btn--read:hover {
@@ -1259,9 +1283,7 @@ const copyLink = () => {
   font-size: 0.9rem;
 }
 
-.toast--success {
-  border-color: rgba(74, 222, 128, 0.35);
-}
+.toast--success { border-color: rgba(74, 222, 128, 0.35); }
 
 .toast-enter-active,
 .toast-leave-active {
@@ -1282,68 +1304,246 @@ const copyLink = () => {
 
 /* ── Responsive ── */
 @media (max-width: 992px) {
-  .article-grid {
-    grid-template-columns: 1fr;
-  }
-  .detail-sidebar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-  .header-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  .header-right {
-    order: -1;
-  }
-  .image-wrapper {
-    max-width: 200px;
-  }
+  .article-grid { grid-template-columns: 1fr; }
+  .detail-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .header-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .header-right { order: -1; }
+  .image-wrapper { max-width: 200px; }
 }
 
 @media (max-width: 768px) {
-  .detail-header {
-    padding: 2rem 0 1.5rem;
-  }
-  .header-title {
-    font-size: 1.8rem;
-  }
-  .header-meta {
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .detail-content {
-    padding: 1.25rem;
-  }
-  .detail-sidebar {
-    grid-template-columns: 1fr;
-  }
-  .author-bio-card {
-    flex-direction: column;
-    text-align: center;
-  }
-  .share-section {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .share-buttons {
-    justify-content: center;
-  }
-  .image-wrapper {
-    max-width: 150px;
-  }
+  .detail-header { padding: 2rem 0 1.5rem; }
+  .header-title { font-size: 1.8rem; }
+  .header-meta { flex-direction: column; gap: 0.4rem; }
+  .detail-content { padding: 1.25rem; }
+  .detail-sidebar { grid-template-columns: 1fr; }
+  .author-bio-card { flex-direction: column; text-align: center; }
+  .share-section { flex-direction: column; align-items: stretch; }
+  .share-buttons { justify-content: center; }
+  .image-wrapper { max-width: 150px; }
 }
 
 @media (max-width: 480px) {
-  .header-summary {
-    font-size: 0.95rem;
+  .header-summary { font-size: 0.95rem; }
+  .content-body { font-size: 0.95rem; }
+  .image-wrapper { max-width: 120px; }
+}
+
+/* ── Admin Detail Toolbar ── */
+.admin-detail-toolbar {
+  background: linear-gradient(135deg, #071311 0%, #0f2d25 100%);
+  border-bottom: 1px solid rgba(53, 208, 190, 0.22);
+  color: #f2fbf6;
+  font-size: 0.82rem;
+  position: relative;
+}
+
+.admin-detail-toolbar::after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(53, 208, 190, 0.35), transparent);
+  content: '';
+}
+
+.admin-detail-toolbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.45rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 40px;
+}
+
+.admin-detail-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.admin-detail-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.admin-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #74e0ae;
+  flex-shrink: 0;
+}
+
+.admin-detail-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.admin-detail-label {
+  color: #94a3b8;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-detail-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(116, 224, 174, 0.25);
+  border-radius: 8px;
+  background: rgba(116, 224, 174, 0.08);
+  color: #b9ead5;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-detail-edit-btn:hover {
+  background: rgba(116, 224, 174, 0.18);
+  border-color: rgba(116, 224, 174, 0.45);
+  color: #f2fbf6;
+}
+
+.admin-detail-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(116, 224, 174, 0.5);
+  border-radius: 8px;
+  background: rgba(116, 224, 174, 0.2);
+  color: #f2fbf6;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-detail-save-btn:hover {
+  background: rgba(116, 224, 174, 0.35);
+  border-color: rgba(116, 224, 174, 0.7);
+}
+
+.admin-detail-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  padding: 0.35rem 0.8rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-detail-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2fbf6;
+}
+
+/* ── Admin Content Editor (inside detail content) ── */
+.admin-content-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-editor-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.35rem;
+}
+
+.admin-editor-textarea {
+  width: 100%;
+  min-height: 280px;
+  padding: 1rem;
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  font-family: 'Courier New', Courier, monospace;
+  background: #f8fbf6;
+  color: var(--color-ink);
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.admin-editor-textarea:focus {
+  outline: none;
+  border-color: var(--primary-dark);
+  box-shadow: 0 0 0 3px rgba(45, 122, 90, 0.1);
+}
+
+.admin-editor-preview {
+  padding: 1rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.admin-editor-preview-body {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--color-ink);
+}
+
+.admin-editor-preview-body p {
+  margin: 0 0 1.2rem 0;
+}
+
+@media (max-width: 600px) {
+  .admin-detail-toolbar-inner {
+    padding: 0.35rem 0.75rem;
+    min-height: 36px;
   }
-  .content-body {
-    font-size: 0.95rem;
+  .admin-detail-label {
+    display: none;
   }
-  .image-wrapper {
-    max-width: 120px;
+  .admin-detail-divider {
+    display: none;
+  }
+  .admin-detail-edit-btn,
+  .admin-detail-save-btn,
+  .admin-detail-cancel-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
   }
 }
 </style>

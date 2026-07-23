@@ -8,8 +8,8 @@ export const adminRoutes: RouteRecordRaw[] = [
   // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
   { path: '/admin/editor/home-slideshow', component: () => import('@/views/admin/PageEditorView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/media', component: () => import('@/views/admin/MediaLibraryView.vue'), meta: { requiresAuth: true } },
-  // Redirect old /admin/news to the News page editor
-  { path: '/admin/news', redirect: '/admin/editor/news' },
+  // News manager with card/table-based UI
+  { path: '/admin/news', component: () => import('@/views/admin/NewsManagerView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/modules/:module', component: () => import('@/views/admin/AdminModuleView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/education', component: () => import('@/views/admin/EducationDashboardView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/environment', component: () => import('@/views/admin/EnvironmentDashboardView.vue'), meta: { requiresAuth: true } },
@@ -19,3 +19,5 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/settings', component: () => import('@/views/admin/SettingsView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/donate', component: () => import('@/views/admin/DonationLView.vue'), meta: { requiresAuth: true } },
 ]
+
+

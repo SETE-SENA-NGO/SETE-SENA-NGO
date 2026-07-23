@@ -1,22 +1,32 @@
-# Admin News Page Fix - Complete ✅
+# Admin Inline News Editing - Implementation Steps
 
-## Changes Made
+## Step 1: Edit `src/views/public/NewsView.vue`
+- [x] Plan approved
+- [x] Import `useAuthStore`, `supabase`, `slugify`, `newsPostSelect`, `normalizeMediaUrl`
+- [x] Add reactive state: `adminEditMode`, `editingCardId`, `addFormOpen`, `editFormData`
+- [x] Add computed `isAdmin` from auth store
+- [x] Add Admin Edit Mode toggle bar (visible when `isAdmin` is true)
+- [x] Add edit icon overlay on each card when in edit mode
+- [x] Add inline popover/modal for editing title & image URL
+- [x] Add "+ Add News Card" floating button and form
+- [x] Implement save logic for update (title + image_url) and create (new card)
+- [x] Add corresponding admin-specific CSS styles
 
-### 1. Route (`src/router/adminRoutes.ts`)
-- Added import for `NewsManagerView`
-- Added route `/admin/news` with `requiresAuth` meta
+## Step 2: Edit `src/views/public/NewsDetailView.vue`
+- [x] Import `useAuthStore`, `supabase`
+- [x] Add reactive state: `editMode`, `editContent`
+- [x] Add computed `isAdmin` from auth store
+- [x] Add "Edit Content" button when `isAdmin` is true
+- [x] Toggle content area into textarea editor with live preview
+- [x] Implement save logic (update body in Supabase)
+- [x] Add Cancel/Reset functionality
+- [x] Add corresponding admin-specific CSS styles
 
-### 2. Sidebar (`src/components/admin/AdminSidebar.vue`)
-- Added "News Manager" link under "Workspace" section
-- Added `.icon-news` CSS icon style (document with lines)
-
-### 3. News Manager View (`src/views/admin/NewsManagerView.vue`)
-Complete rewrite with:
-- **Route**: Now accessible at `/admin/news`
-- **Form**: Slide-in animation, image preview, monospace HTML textarea, character count placeholder
-- **Table**: Hover highlights, selected row styling, category tags, relative dates, compact thumbnails
-- **Bulk Actions**: Animated bar with publish/archive/delete options
-- **Pagination**: First/last page buttons, direct page input, record count display
-- **Empty State**: SVG icon with helpful message
-- **CSS**: Normalized font-weights to 700 max, responsive breakpoints, admin theme variables, smooth transitions
+## Step 3: Verify
+- [x] Build passes with 0 errors (vite build successful)
+- [ ] Test that admin toolbar only shows for authenticated admins
+- [ ] Test updating title and image on news list page
+- [ ] Test adding new news card on news list page
+- [ ] Test editing body content on news detail page
+- [ ] Verify fallback sample data still displays when no published news
 
