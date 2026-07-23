@@ -251,7 +251,7 @@ SELECT
   jsonb_build_object('seed', 'santi-sena-default'),
   now()
 FROM page_payload
-ON CONFLICT (slug) DO UPDATE
+ON CONFLICT (slug, locale) DO UPDATE
 SET
   route_path = EXCLUDED.route_path,
   nav_group = EXCLUDED.nav_group,
@@ -298,7 +298,7 @@ SELECT
   'published',
   now()
 FROM seed_sections s
-JOIN public.pages p ON p.slug = s.page_slug
+JOIN public.pages p ON p.slug = s.page_slug AND p.locale = 'en'
 ON CONFLICT (page_id, slug) DO UPDATE
 SET
   label = EXCLUDED.label,
@@ -316,7 +316,7 @@ WITH raw_items AS (
     item.ordinality::integer AS sort_order,
     trim(item.line) AS line
   FROM seed_sections s
-  JOIN public.pages p ON p.slug = s.page_slug
+  JOIN public.pages p ON p.slug = s.page_slug AND p.locale = 'en'
   JOIN public.page_sections ps ON ps.page_id = p.id AND ps.slug = s.section_slug
   CROSS JOIN LATERAL regexp_split_to_table(COALESCE(s.items, ''), E'\\n')
     WITH ORDINALITY AS item(line, ordinality)
@@ -413,7 +413,8 @@ FROM (
     ('livelihood', 'Livelihood', 'Livelihood & Economic Improvement', 'Integrated farming, savings groups, cooperatives and rural enterprises.', 'Strengthen household income so families can avoid harmful debt and stay resilient.', 'sprout', '#ca8a04', 3),
     ('child-protection', 'Child Protection', 'Child Protection', 'Anti-trafficking campaigns, child protection networks, peer educators and child rights advocacy.', 'Build village protection systems that keep children safe and in school.', 'shield', '#dc2626', 4)
 ) AS data(slug, title, pillar, summary, description, icon, color, sort_order)
-LEFT JOIN public.pages p ON p.slug = 'programs-' || data.slug
+LEFT JOIN public.pages p
+  ON p.slug = 'programs-' || data.slug AND p.locale = 'en'
 ON CONFLICT (slug) DO UPDATE
 SET
   page_id = EXCLUDED.page_id,
@@ -543,7 +544,7 @@ FROM (
     ('forests-protected', 'Forests Protected', '570+', 'hectares', 'Community forest areas supported through local committees.', 'leaf', 4),
     ('saving-groups', 'Saving Groups', '114', 'groups', 'Saving-for-Change groups strengthening household resilience.', 'wallet', 5)
 ) AS data(metric_key, label, value_text, unit, description, icon, sort_order)
-LEFT JOIN public.pages p ON p.slug = 'impact-numbers'
+LEFT JOIN public.pages p ON p.slug = 'impact-numbers' AND p.locale = 'en'
 ON CONFLICT (metric_key) DO UPDATE
 SET
   page_id = EXCLUDED.page_id,

@@ -4,6 +4,10 @@ export interface PageContent {
   title: string
   body: string
   locale?: string
+  route_path?: string | null
+  nav_group?: string | null
+  template?: string
+  status?: string
   updated_at: string
 }
 

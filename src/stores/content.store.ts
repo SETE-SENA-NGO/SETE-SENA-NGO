@@ -15,6 +15,10 @@ function pageKey(slug: string, locale: string | undefined) {
   return `${normalizeLocale(locale)}:${slug}`
 }
 
+function localStorageKey(slug: string, locale: string | undefined) {
+  return `${localPagePrefix}${pageKey(slug, locale)}`
+}
+
 export const useContentStore = defineStore('content', () => {
   const pages = ref<Record<string, PageContent>>({})
   const loading = ref(false)
@@ -72,7 +76,9 @@ export const useContentStore = defineStore('content', () => {
 
     if (pages.value[key]) return pages.value[key]
     if (schemaMissing.value) {
-      const localPage = readLocalPage(slug)
+      const localPage =
+        readLocalPage(slug, locale) ??
+        (locale !== 'en' ? readLocalPage(slug, 'en') : null)
       if (localPage)
         pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
       return localPage
@@ -91,7 +97,9 @@ export const useContentStore = defineStore('content', () => {
       loading.value = false
       if (isMissingPagesTable(error)) {
         setSchemaMissingState(true)
-        const localPage = readLocalPage(slug)
+        const localPage =
+          readLocalPage(slug, locale) ??
+          (locale !== 'en' ? readLocalPage(slug, 'en') : null)
         if (localPage)
           pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
         return localPage
@@ -125,13 +133,14 @@ export const useContentStore = defineStore('content', () => {
       updated_at: new Date().toISOString(),
     }
 
-    if (page.id) {
-      payload.id = page.id
-    }
+    if (page.route_path) payload.route_path = page.route_path
+    if (page.nav_group) payload.nav_group = page.nav_group
+    if (page.template) payload.template = page.template
+    if (page.status) payload.status = page.status
 
     const { data, error } = await supabase
       .from('pages')
-      .upsert(payload, { onConflict: 'slug' })
+      .upsert(payload, { onConflict: 'slug,locale' })
       .select('*')
       .single()
 
@@ -141,6 +150,11 @@ export const useContentStore = defineStore('content', () => {
         const localPage = saveLocalPage(page)
         pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
         return localPage
+      }
+      if (isMissingLocaleConflict(error)) {
+        throw new Error(
+          'Supabase pages must support one row per language. Run supabase/migrations/0005_page_locale_uniqueness.sql, then reload the Supabase schema cache.',
+        )
       }
       throw error
     }
@@ -165,8 +179,7 @@ export const useContentStore = defineStore('content', () => {
 })
 
 function getInitialSchemaMissing() {
-  if (typeof window === 'undefined') return false
-  return window.localStorage.getItem(missingSchemaKey) === 'true'
+  return false
 }
 
 function persistSchemaMissing(value: boolean) {
@@ -185,7 +198,7 @@ function saveLocalPage(page: PageContent): PageContent {
 
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(
-      `${localPagePrefix}${localPage.slug}`,
+      localStorageKey(localPage.slug, localPage.locale),
       JSON.stringify(localPage),
     )
   }
@@ -193,14 +206,23 @@ function saveLocalPage(page: PageContent): PageContent {
   return localPage
 }
 
-function readLocalPage(slug: string): PageContent | null {
+function readLocalPage(
+  slug: string,
+  locale: SupportedLocale = 'en',
+): PageContent | null {
   if (typeof window === 'undefined') return null
 
   try {
-    const raw = window.localStorage.getItem(`${localPagePrefix}${slug}`)
+    const raw =
+      window.localStorage.getItem(localStorageKey(slug, locale)) ??
+      (locale === 'en'
+        ? window.localStorage.getItem(`${localPagePrefix}${slug}`)
+        : null)
     if (!raw) return null
     const parsed = JSON.parse(raw) as unknown
-    return isPageContent(parsed) ? parsed : null
+    return isPageContent(parsed)
+      ? { ...parsed, locale: normalizeLocale(parsed.locale) }
+      : null
   } catch {
     return null
   }
@@ -214,8 +236,13 @@ function readLocalPages() {
     const key = window.localStorage.key(index)
     if (!key?.startsWith(localPagePrefix)) continue
 
-    const slug = key.slice(localPagePrefix.length)
-    const page = readLocalPage(slug)
+    const storedKey = key.slice(localPagePrefix.length)
+    const separatorIndex = storedKey.indexOf(':')
+    const locale =
+      separatorIndex >= 0 ? normalizeLocale(storedKey.slice(0, separatorIndex)) : 'en'
+    const slug =
+      separatorIndex >= 0 ? storedKey.slice(separatorIndex + 1) : storedKey
+    const page = readLocalPage(slug, locale)
     if (page) localPages[pageKey(page.slug, page.locale)] = page
   }
 
@@ -234,6 +261,18 @@ function isMissingPagesTable(error: unknown) {
   return (
     code === 'PGRST205' ||
     (body.includes('pages') && body.includes('schema cache'))
+  )
+}
+
+function isMissingLocaleConflict(error: unknown) {
+  if (!isRecord(error)) return false
+
+  const code = getString(error.code)
+  const message = getString(error.message).toLowerCase()
+
+  return (
+    code === '42P10' ||
+    (message.includes('on conflict') && message.includes('unique'))
   )
 }
 
