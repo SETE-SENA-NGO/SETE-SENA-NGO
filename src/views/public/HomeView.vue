@@ -75,17 +75,17 @@ useScrollReveal()
       <div class="hero-inner">
         <div :key="activeSlide?.image" class="hero-message">
           <p class="eyebrow eyebrow--light">
-            {{ activeSlide?.eyebrow ?? 'Buddhist NGO - Cambodia - Since 1994' }}
+            {{ activeSlide?.eyebrow || 'Buddhist NGO - Cambodia - Since 1994' }}
           </p>
           <h1 class="hero-title">
             {{
-              activeSlide?.title ??
+              activeSlide?.title ||
               'Walking with villages toward peace, sustainability and dignity.'
             }}
           </h1>
           <p class="hero-subtitle">
             {{
-              activeSlide?.description ??
+              activeSlide?.description ||
               'Santi Sena works alongside rural Cambodian communities in education, livelihoods, environment and child protection.'
             }}
           </p>
