@@ -8,7 +8,6 @@ const { t } = useI18n()
 const exploreLinks = [
   { labelKey: 'nav.about', to: '/about' },
   { labelKey: 'nav.programs', to: '/programs' },
-  { labelKey: 'nav.impact', to: '/impact' },
   { labelKey: 'nav.getInvolved', to: '/get-involved' },
   { labelKey: 'nav.contact', to: '/contact' },
 ]
