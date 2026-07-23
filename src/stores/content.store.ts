@@ -2,9 +2,18 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import type { PageContent } from '@/types/content'
+import type { SupportedLocale } from '@/i18n'
 
 const localPagePrefix = 'santi-sena-page-content:'
 const missingSchemaKey = 'santi-sena-pages-schema-missing'
+
+function normalizeLocale(locale: string | undefined): SupportedLocale {
+  return locale === 'kh' ? 'kh' : 'en'
+}
+
+function pageKey(slug: string, locale: string | undefined) {
+  return `${normalizeLocale(locale)}:${slug}`
+}
 
 export const useContentStore = defineStore('content', () => {
   const pages = ref<Record<string, PageContent>>({})
@@ -46,7 +55,7 @@ export const useContentStore = defineStore('content', () => {
     }
     pages.value = ((data ?? []) as PageContent[]).reduce(
       (acc, item) => {
-        acc[item.slug] = item
+        acc[pageKey(item.slug, item.locale)] = item
         return acc
       },
       {} as Record<string, PageContent>,
@@ -54,24 +63,37 @@ export const useContentStore = defineStore('content', () => {
     loading.value = false
   }
 
-  async function fetchBySlug(slug: string): Promise<PageContent | null> {
-    if (pages.value[slug]) return pages.value[slug]
+  async function fetchBySlug(
+    slug: string,
+    requestedLocale: SupportedLocale = 'en',
+  ): Promise<PageContent | null> {
+    const locale = normalizeLocale(requestedLocale)
+    const key = pageKey(slug, locale)
+
+    if (pages.value[key]) return pages.value[key]
     if (schemaMissing.value) {
       const localPage = readLocalPage(slug)
-      if (localPage) pages.value[slug] = localPage
+      if (localPage)
+        pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
       return localPage
     }
 
     loading.value = true
 
-    const { data, error } = await supabase.from('pages').select('*').eq('slug', slug).maybeSingle()
+    const { data, error } = await supabase
+      .from('pages')
+      .select('*')
+      .eq('slug', slug)
+      .eq('locale', locale)
+      .maybeSingle()
 
     if (error) {
       loading.value = false
       if (isMissingPagesTable(error)) {
         setSchemaMissingState(true)
         const localPage = readLocalPage(slug)
-        if (localPage) pages.value[slug] = localPage
+        if (localPage)
+          pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
         return localPage
       }
       throw error
@@ -79,10 +101,11 @@ export const useContentStore = defineStore('content', () => {
 
     if (!data) {
       loading.value = false
+      if (locale !== 'en') return fetchBySlug(slug, 'en')
       return null
     }
 
-    pages.value[slug] = data as PageContent
+    pages.value[key] = data as PageContent
     loading.value = false
     return data as PageContent
   }
@@ -90,7 +113,7 @@ export const useContentStore = defineStore('content', () => {
   async function upsert(page: PageContent) {
     if (schemaMissing.value) {
       const localPage = saveLocalPage(page)
-      pages.value[localPage.slug] = localPage
+      pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
       return localPage
     }
 
@@ -98,6 +121,7 @@ export const useContentStore = defineStore('content', () => {
       slug: page.slug.trim(),
       title: page.title.trim(),
       body: page.body,
+      locale: normalizeLocale(page.locale),
       updated_at: new Date().toISOString(),
     }
 
@@ -115,7 +139,7 @@ export const useContentStore = defineStore('content', () => {
       if (isMissingPagesTable(error)) {
         setSchemaMissingState(true)
         const localPage = saveLocalPage(page)
-        pages.value[localPage.slug] = localPage
+        pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
         return localPage
       }
       throw error
@@ -123,7 +147,7 @@ export const useContentStore = defineStore('content', () => {
     if (!data) throw new Error('Page save did not return a row')
 
     const savedPage = data as PageContent
-    pages.value[savedPage.slug] = savedPage
+    pages.value[pageKey(savedPage.slug, savedPage.locale)] = savedPage
     return savedPage
   }
 
@@ -155,11 +179,15 @@ function saveLocalPage(page: PageContent): PageContent {
   const localPage: PageContent = {
     ...page,
     id: page.id || `local-${page.slug}`,
+    locale: normalizeLocale(page.locale),
     updated_at: new Date().toISOString(),
   }
 
   if (typeof window !== 'undefined') {
-    window.localStorage.setItem(`${localPagePrefix}${localPage.slug}`, JSON.stringify(localPage))
+    window.localStorage.setItem(
+      `${localPagePrefix}${localPage.slug}`,
+      JSON.stringify(localPage),
+    )
   }
 
   return localPage
@@ -188,7 +216,7 @@ function readLocalPages() {
 
     const slug = key.slice(localPagePrefix.length)
     const page = readLocalPage(slug)
-    if (page) localPages[slug] = page
+    if (page) localPages[pageKey(page.slug, page.locale)] = page
   }
 
   return localPages
@@ -203,7 +231,10 @@ function isMissingPagesTable(error: unknown) {
   const hint = getString(error.hint).toLowerCase()
   const body = `${message} ${details} ${hint}`
 
-  return code === 'PGRST205' || (body.includes('pages') && body.includes('schema cache'))
+  return (
+    code === 'PGRST205' ||
+    (body.includes('pages') && body.includes('schema cache'))
+  )
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

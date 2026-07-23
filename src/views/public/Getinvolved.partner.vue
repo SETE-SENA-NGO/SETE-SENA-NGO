@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-
+import { useI18n } from 'vue-i18n'
+import { localizeContentValue } from '@/i18n/contentTranslations'
 import heroImpact from '@/assets/hero-impact.jpg'
 import heroImpactForest from '@/assets/hero-impact-forest.jpg'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
@@ -36,7 +37,12 @@ interface PartnerProject {
   image: string
 }
 
-type PartnerProjectIcon = 'environment' | 'climate' | 'wash' | 'education' | 'rights'
+type PartnerProjectIcon =
+  | 'environment'
+  | 'climate'
+  | 'wash'
+  | 'education'
+  | 'rights'
 
 interface PartnerOperatingModel {
   step: string
@@ -83,6 +89,8 @@ interface PartnerPageContent {
 }
 
 const PAGE_SLUG = 'get-involved-partner'
+const { locale } = useI18n()
+const activeLocale = computed(() => (locale.value === 'kh' ? 'kh' : 'en'))
 
 const fallbackContent: PartnerPageContent = {
   hero: {
@@ -189,19 +197,22 @@ const fallbackContent: PartnerPageContent = {
     },
     {
       title: 'Resource center and outreach library',
-      detail: 'Libraries connect children, youth and farmers to useful knowledge.',
+      detail:
+        'Libraries connect children, youth and farmers to useful knowledge.',
       action: 'Books, outreach and digital learning.',
       icon: 'global',
     },
     {
       title: 'Climate and WASH readiness',
-      detail: 'Villages need practical systems for water, hygiene and climate adaptation.',
+      detail:
+        'Villages need practical systems for water, hygiene and climate adaptation.',
       action: 'Technical design, training and resilient infrastructure.',
       icon: 'chart',
     },
     {
       title: 'Child rights and safe migration',
-      detail: 'Young people benefit when protection networks can respond early.',
+      detail:
+        'Young people benefit when protection networks can respond early.',
       action: 'Safeguarding systems, outreach and peer education.',
       icon: 'time',
     },
@@ -231,7 +242,8 @@ const fallbackContent: PartnerPageContent = {
   fundingHistory: [
     {
       name: 'Development donors',
-      detail: 'CIDSE Cambodia, OXFAM G.B., Pact Cambodia, U.S. Embassy and CRS.',
+      detail:
+        'CIDSE Cambodia, OXFAM G.B., Pact Cambodia, U.S. Embassy and CRS.',
     },
     {
       name: 'UN and multilateral support',
@@ -243,12 +255,14 @@ const fallbackContent: PartnerPageContent = {
     },
     {
       name: 'WASH and education partners',
-      detail: 'Global Sanitation Fund through Plan International Cambodia and Khyentse Foundation.',
+      detail:
+        'Global Sanitation Fund through Plan International Cambodia and Khyentse Foundation.',
     },
   ],
   cta: {
     eyebrow: 'Partner with us',
-    title: 'Bring funding, technical skill or learning capacity into a working field system.',
+    title:
+      'Bring funding, technical skill or learning capacity into a working field system.',
     body: 'Share your focus area and timeframe. The team can match it to current programs and community priorities.',
     primaryCta: { label: 'Contact partnerships team', to: '/contact' },
     secondaryCta: { label: 'Explore programs', to: '/programs' },
@@ -259,9 +273,12 @@ const fallbackContent: PartnerPageContent = {
 const contentStore = useContentStore()
 const cmsContent = ref<Partial<PartnerPageContent> | null>(null)
 
-const pageContent = computed<PartnerPageContent>(() =>
-  mergePartnerContent(fallbackContent, cmsContent.value),
-)
+const pageContent = computed<PartnerPageContent>(() => {
+  const merged = mergePartnerContent(fallbackContent, cmsContent.value)
+  return activeLocale.value === 'kh'
+    ? localizeContentValue(merged, activeLocale.value)
+    : merged
+})
 
 const portfolioStats = computed(() => [
   {
@@ -327,7 +344,9 @@ function mergePartnerContent(
     strategicThemes: Array.isArray(override.strategicThemes)
       ? override.strategicThemes
       : base.strategicThemes,
-    networks: Array.isArray(override.networks) ? override.networks : base.networks,
+    networks: Array.isArray(override.networks)
+      ? override.networks
+      : base.networks,
     fundingHistory: Array.isArray(override.fundingHistory)
       ? override.fundingHistory
       : base.fundingHistory,
@@ -344,29 +363,52 @@ function normalizeSlides(value: unknown, fallback: PartnerSlide[]) {
 
   const slides = value.filter(
     (slide): slide is PartnerSlide =>
-      isObject(slide) && typeof slide.image === 'string' && slide.image.trim().length > 0,
+      isObject(slide) &&
+      typeof slide.image === 'string' &&
+      slide.image.trim().length > 0,
   )
 
   return slides.length ? slides : fallback
 }
 
 function strategicIcon(theme: PartnerStrategicTheme, index: number) {
-  const icons = ['growth', 'strategy', 'time', 'investment', 'chart', 'global'] as const
+  const icons = [
+    'growth',
+    'strategy',
+    'time',
+    'investment',
+    'chart',
+    'global',
+  ] as const
   return theme.icon ?? icons[index % icons.length]
 }
 
-function projectIcon(project: PartnerProject, index: number): PartnerProjectIcon {
+function projectIcon(
+  project: PartnerProject,
+  index: number,
+): PartnerProjectIcon {
   const title = project.title.toLowerCase()
 
   if (title.includes('environment')) return 'environment'
   if (title.includes('climate') || title.includes('mekong')) return 'climate'
-  if (title.includes('food') || title.includes('sanitation') || title.includes('hygiene')) {
+  if (
+    title.includes('food') ||
+    title.includes('sanitation') ||
+    title.includes('hygiene')
+  ) {
     return 'wash'
   }
-  if (title.includes('education') || title.includes('buddhist')) return 'education'
+  if (title.includes('education') || title.includes('buddhist'))
+    return 'education'
   if (title.includes('right') || title.includes('planet')) return 'rights'
 
-  const icons = ['environment', 'climate', 'wash', 'education', 'rights'] as const
+  const icons = [
+    'environment',
+    'climate',
+    'wash',
+    'education',
+    'rights',
+  ] as const
   return icons[index % icons.length] ?? 'environment'
 }
 
@@ -395,7 +437,7 @@ function updateProjectNavState() {
 
 async function loadCmsContent() {
   try {
-    const page = await contentStore.fetchBySlug(PAGE_SLUG)
+    const page = await contentStore.fetchBySlug(PAGE_SLUG, activeLocale.value)
     if (!page) return
 
     const body = page.body.trim()
@@ -409,6 +451,10 @@ async function loadCmsContent() {
     cmsContent.value = null
   }
 }
+
+watch(activeLocale, () => {
+  void loadCmsContent()
+})
 
 function setDocumentMeta() {
   document.title = pageContent.value.hero.title
@@ -427,29 +473,40 @@ function setDocumentMeta() {
 }
 
 function revealStatic() {
-  document
-    .querySelectorAll<HTMLElement>('.pop-reveal')
-    .forEach((element) => {
-      element.classList.remove('pop-from-up', 'pop-from-down')
-      element.classList.add('is-visible')
-    })
+  document.querySelectorAll<HTMLElement>('.pop-reveal').forEach((element) => {
+    element.classList.remove('pop-from-up', 'pop-from-down')
+    element.classList.add('is-visible')
+  })
 }
 
 function initScrollReveal() {
   revealObserver?.disconnect()
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const prefersReducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
   if (!('IntersectionObserver' in window) || prefersReducedMotion) {
     revealStatic()
     return
   }
 
-  const elements = Array.from(document.querySelectorAll<HTMLElement>('.pop-reveal'))
-  const staggerGroups = new Map<HTMLElement, { index: number; step: number; max: number }>()
-  const registerStaggerGroup = (selector: string, step: number, max: number) => {
-    document.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
-      staggerGroups.set(element, { index, step, max })
-    })
+  const elements = Array.from(
+    document.querySelectorAll<HTMLElement>('.pop-reveal'),
+  )
+  const staggerGroups = new Map<
+    HTMLElement,
+    { index: number; step: number; max: number }
+  >()
+  const registerStaggerGroup = (
+    selector: string,
+    step: number,
+    max: number,
+  ) => {
+    document
+      .querySelectorAll<HTMLElement>(selector)
+      .forEach((element, index) => {
+        staggerGroups.set(element, { index, step, max })
+      })
   }
 
   registerStaggerGroup('.portfolio-stat-strip .portfolio-stat-item', 85, 260)
@@ -518,7 +575,11 @@ onUnmounted(() => {
 
 <template>
   <main class="partner-page">
-    <section id="portfolio" class="portfolio-section" aria-labelledby="portfolio-heading">
+    <section
+      id="portfolio"
+      class="portfolio-section"
+      aria-labelledby="portfolio-heading"
+    >
       <div class="portfolio-feature">
         <div class="portfolio-copy pop-reveal">
           <p class="portfolio-pill">
@@ -527,16 +588,23 @@ onUnmounted(() => {
           </p>
           <h2 id="portfolio-heading">Current portfolio.</h2>
           <p>
-            A quick view of active project themes, timeframes and funding partners moving through
-            the field system now.
+            A quick view of active project themes, timeframes and funding
+            partners moving through the field system now.
           </p>
 
           <div class="portfolio-actions">
-            <RouterLink to="/contact" class="button button-primary">Start a partnership</RouterLink>
-            <RouterLink to="#portfolio-projects" class="portfolio-link">See active work</RouterLink>
+            <RouterLink to="/contact" class="button button-primary"
+              >Start a partnership</RouterLink
+            >
+            <RouterLink to="#portfolio-projects" class="portfolio-link"
+              >See active work</RouterLink
+            >
           </div>
 
-          <div class="portfolio-stat-strip" aria-label="Partner page highlights">
+          <div
+            class="portfolio-stat-strip"
+            aria-label="Partner page highlights"
+          >
             <div
               v-for="stat in portfolioStats"
               :key="stat.label"
@@ -634,7 +702,9 @@ onUnmounted(() => {
                       viewBox="0 0 48 48"
                       aria-hidden="true"
                     >
-                      <path d="M24 6s11 12 11 22a11 11 0 0 1-22 0C13 18 24 6 24 6z" />
+                      <path
+                        d="M24 6s11 12 11 22a11 11 0 0 1-22 0C13 18 24 6 24 6z"
+                      />
                       <path d="M19 30a5 5 0 0 0 7 4" />
                       <path d="M7 40h34" />
                       <path d="M10 34c5-3 10-3 14 0s9 3 14 0" />
@@ -687,7 +757,9 @@ onUnmounted(() => {
         <div class="operating-copy pop-reveal">
           <p class="section-kicker">How partnership works</p>
           <h2 id="operating-heading">Clear field rhythm.</h2>
-          <p>Support moves through planning, reporting, monitoring and learning.</p>
+          <p>
+            Support moves through planning, reporting, monitoring and learning.
+          </p>
         </div>
 
         <ol class="operating-rail">
@@ -707,13 +779,16 @@ onUnmounted(() => {
       </div>
     </section>
 
-    <section class="strategy-section section-shell" aria-labelledby="strategy-heading">
+    <section
+      class="strategy-section section-shell"
+      aria-labelledby="strategy-heading"
+    >
       <div class="section-intro pop-reveal">
         <p class="section-kicker">Strategic partnership space</p>
         <h2 id="strategy-heading">Where partners can help next.</h2>
         <p>
-          Partners can strengthen the next cycle of village-led work through funding, learning,
-          technical systems and practical field support.
+          Partners can strengthen the next cycle of village-led work through
+          funding, learning, technical systems and practical field support.
         </p>
       </div>
 
@@ -723,7 +798,10 @@ onUnmounted(() => {
           :key="theme.title"
           class="strategy-card pop-reveal"
         >
-          <div class="strategy-icon" :class="`strategy-icon--${strategicIcon(theme, index)}`">
+          <div
+            class="strategy-icon"
+            :class="`strategy-icon--${strategicIcon(theme, index)}`"
+          >
             <svg
               v-if="strategicIcon(theme, index) === 'growth'"
               viewBox="0 0 48 48"
@@ -808,7 +886,10 @@ onUnmounted(() => {
         <div class="network-panel pop-reveal">
           <p class="section-kicker">Network layers</p>
           <h2 id="network-heading">Connected beyond the office.</h2>
-          <p>Civil society, faith and youth networks help learning reach villages.</p>
+          <p>
+            Civil society, faith and youth networks help learning reach
+            villages.
+          </p>
         </div>
 
         <div class="network-grid">
@@ -831,7 +912,8 @@ onUnmounted(() => {
           <p class="section-kicker">Funding history</p>
           <h2 id="funding-heading">A wider support base.</h2>
           <p>
-            Past supporters across development, multilateral, child-focused and education programs.
+            Past supporters across development, multilateral, child-focused and
+            education programs.
           </p>
         </div>
 
@@ -854,7 +936,9 @@ onUnmounted(() => {
                 <path d="M24 9c-5 5-7 10-7 15s2 10 7 15" />
               </svg>
               <svg v-else-if="index === 2" viewBox="0 0 48 48">
-                <path d="M24 39s-13-8-13-20a8 8 0 0 1 13-6 8 8 0 0 1 13 6c0 12-13 20-13 20z" />
+                <path
+                  d="M24 39s-13-8-13-20a8 8 0 0 1 13-6 8 8 0 0 1 13 6c0 12-13 20-13 20z"
+                />
                 <path d="M18 23h12" />
                 <path d="M24 17v12" />
               </svg>
@@ -873,16 +957,27 @@ onUnmounted(() => {
     </section>
 
     <section class="cta-section" aria-label="Partnership contact">
-      <img :src="pageContent.cta.image" alt="" aria-hidden="true" loading="lazy" />
+      <img
+        :src="pageContent.cta.image"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+      />
       <div class="cta-content pop-reveal">
         <p class="eyebrow">{{ pageContent.cta.eyebrow }}</p>
         <h2>{{ pageContent.cta.title }}</h2>
         <p>{{ pageContent.cta.body }}</p>
         <div class="hero-actions">
-          <RouterLink :to="pageContent.cta.primaryCta.to" class="button button-primary">
+          <RouterLink
+            :to="pageContent.cta.primaryCta.to"
+            class="button button-primary"
+          >
             {{ pageContent.cta.primaryCta.label }}
           </RouterLink>
-          <RouterLink :to="pageContent.cta.secondaryCta.to" class="button button-ghost">
+          <RouterLink
+            :to="pageContent.cta.secondaryCta.to"
+            class="button button-ghost"
+          >
             {{ pageContent.cta.secondaryCta.label }}
           </RouterLink>
         </div>
@@ -907,7 +1002,12 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(6, 18, 13, 0.86), rgba(6, 18, 13, 0.58) 46%, rgba(6, 18, 13, 0.16)),
+    linear-gradient(
+      90deg,
+      rgba(6, 18, 13, 0.86),
+      rgba(6, 18, 13, 0.58) 46%,
+      rgba(6, 18, 13, 0.16)
+    ),
     linear-gradient(0deg, rgba(6, 18, 13, 0.32), transparent 42%);
 }
 
@@ -1063,7 +1163,8 @@ onUnmounted(() => {
   overflow: hidden;
   padding: clamp(4rem, 8vw, 6.5rem) 0 0;
   background:
-    linear-gradient(90deg, rgba(23, 118, 104, 0.07) 1px, transparent 1px) 0 0 / 33.333% 100%,
+    linear-gradient(90deg, rgba(23, 118, 104, 0.07) 1px, transparent 1px) 0 0 /
+      33.333% 100%,
     linear-gradient(180deg, #f9fdfb 0%, #eef9f6 100%);
 }
 
@@ -1096,7 +1197,8 @@ onUnmounted(() => {
   letter-spacing: 0.12em;
   line-height: 1;
   text-transform: uppercase;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--primary-color) 12%, transparent);
+  box-shadow: 0 8px 18px
+    color-mix(in srgb, var(--primary-color) 12%, transparent);
 }
 
 .portfolio-pill span {
@@ -1135,12 +1237,14 @@ onUnmounted(() => {
 .portfolio-actions .button-primary {
   background: var(--primary-color);
   color: var(--color-white);
-  box-shadow: 0 16px 28px color-mix(in srgb, var(--primary-color) 24%, transparent);
+  box-shadow: 0 16px 28px
+    color-mix(in srgb, var(--primary-color) 24%, transparent);
 }
 
 .portfolio-actions .button-primary:hover {
   background: var(--primary-dark);
-  box-shadow: 0 20px 34px color-mix(in srgb, var(--primary-dark) 28%, transparent);
+  box-shadow: 0 20px 34px
+    color-mix(in srgb, var(--primary-dark) 28%, transparent);
 }
 
 .portfolio-link {
@@ -1190,7 +1294,8 @@ onUnmounted(() => {
 }
 
 .portfolio-stat-item + .portfolio-stat-item {
-  border-left: 1px solid color-mix(in srgb, var(--primary-color) 16%, transparent);
+  border-left: 1px solid
+    color-mix(in srgb, var(--primary-color) 16%, transparent);
 }
 
 .portfolio-stat-item strong {
@@ -1336,8 +1441,16 @@ onUnmounted(() => {
 .project-showcase {
   margin-top: clamp(4rem, 7vw, 6rem);
   background:
-    radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.16), transparent 26rem),
-    linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 46%, #6fb6c7), #6aaebd);
+    radial-gradient(
+      circle at 16% 12%,
+      rgba(255, 255, 255, 0.16),
+      transparent 26rem
+    ),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary-color) 46%, #6fb6c7),
+      #6aaebd
+    );
   padding: clamp(4rem, 7vw, 5.8rem) 0;
 }
 
@@ -1410,7 +1523,8 @@ onUnmounted(() => {
 }
 
 .project-card.is-visible {
-  animation: projectCardFloat 6.4s ease-in-out var(--project-float-delay, 0ms) infinite;
+  animation: projectCardFloat 6.4s ease-in-out var(--project-float-delay, 0ms)
+    infinite;
   will-change: translate;
 }
 
@@ -1553,7 +1667,8 @@ onUnmounted(() => {
   border-color: var(--primary-color);
   background: var(--primary-color);
   color: var(--color-white);
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--primary-color) 34%, transparent);
+  box-shadow: 0 10px 22px
+    color-mix(in srgb, var(--primary-color) 34%, transparent);
 }
 
 .project-card__icon {
@@ -1579,7 +1694,8 @@ onUnmounted(() => {
   border-color: var(--primary-color);
   background: var(--color-white);
   color: var(--primary-color);
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--primary-color) 24%, transparent);
+  box-shadow: 0 10px 22px
+    color-mix(in srgb, var(--primary-color) 24%, transparent);
 }
 
 .project-card__icon svg {
@@ -1711,12 +1827,19 @@ onUnmounted(() => {
   align-items: start;
   min-height: 132px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--primary-color) 18%, var(--color-border));
+  border: 1px solid
+    color-mix(in srgb, var(--primary-color) 18%, var(--color-border));
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9)), var(--color-white);
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(255, 255, 255, 0.9)
+    ),
+    var(--color-white);
   padding: 1.2rem clamp(1.2rem, 2.4vw, 1.55rem);
-  box-shadow: 0 18px 42px color-mix(in srgb, var(--primary-dark) 8%, transparent);
+  box-shadow: 0 18px 42px
+    color-mix(in srgb, var(--primary-dark) 8%, transparent);
   transition:
     background 0.48s ease,
     border-color 0.48s ease,
@@ -1738,12 +1861,11 @@ onUnmounted(() => {
   position: absolute;
   z-index: 0;
   inset: 0;
-  background:
-    linear-gradient(
-      120deg,
-      color-mix(in srgb, var(--primary-light) 34%, transparent),
-      transparent 54%
-    );
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--primary-light) 34%, transparent),
+    transparent 54%
+  );
   content: '';
   opacity: 0;
   pointer-events: none;
@@ -1754,11 +1876,16 @@ onUnmounted(() => {
 }
 
 .operating-item:hover {
-  border-color: color-mix(in srgb, var(--primary-color) 42%, var(--color-border));
+  border-color: color-mix(
+    in srgb,
+    var(--primary-color) 42%,
+    var(--color-border)
+  );
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 253, 249, 0.96)),
     var(--color-white);
-  box-shadow: 0 24px 54px color-mix(in srgb, var(--primary-dark) 12%, transparent);
+  box-shadow: 0 24px 54px
+    color-mix(in srgb, var(--primary-dark) 12%, transparent);
 }
 
 .operating-item:hover::before,
@@ -1787,9 +1914,14 @@ onUnmounted(() => {
   justify-content: center;
   border-radius: 8px;
   border: 5px solid color-mix(in srgb, var(--primary-light) 78%, #ffffff);
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-dark)
+  );
   color: #fffaf0;
-  box-shadow: 0 16px 30px color-mix(in srgb, var(--primary-color) 24%, transparent);
+  box-shadow: 0 16px 30px
+    color-mix(in srgb, var(--primary-color) 24%, transparent);
   font-size: 0.98rem;
   font-weight: 900;
   letter-spacing: 0;
@@ -1799,7 +1931,8 @@ onUnmounted(() => {
 }
 
 .operating-item:hover .operating-step {
-  box-shadow: 0 20px 36px color-mix(in srgb, var(--primary-color) 28%, transparent);
+  box-shadow: 0 20px 36px
+    color-mix(in srgb, var(--primary-color) 28%, transparent);
   transform: translateY(-2px) scale(1.025);
 }
 
@@ -1966,7 +2099,8 @@ onUnmounted(() => {
   border-color: color-mix(in srgb, var(--primary-color) 28%, transparent);
   background: var(--primary-color);
   color: var(--color-white);
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--primary-color) 22%, transparent);
+  box-shadow: 0 12px 24px
+    color-mix(in srgb, var(--primary-color) 22%, transparent);
   transform: translateY(-2px) scale(1.025);
 }
 
@@ -2045,7 +2179,11 @@ onUnmounted(() => {
 }
 
 .network-card:hover {
-  border-color: color-mix(in srgb, var(--primary-light) 38%, rgba(255, 250, 240, 0.16));
+  border-color: color-mix(
+    in srgb,
+    var(--primary-light) 38%,
+    rgba(255, 250, 240, 0.16)
+  );
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 20px 38px rgba(0, 0, 0, 0.16);
 }
@@ -2068,7 +2206,11 @@ onUnmounted(() => {
 }
 
 .network-card:hover span {
-  border-color: color-mix(in srgb, var(--primary-light) 46%, rgba(255, 250, 240, 0.14));
+  border-color: color-mix(
+    in srgb,
+    var(--primary-light) 46%,
+    rgba(255, 250, 240, 0.14)
+  );
   background: rgba(255, 255, 255, 0.14);
   color: #fffaf0;
 }
@@ -2152,7 +2294,8 @@ onUnmounted(() => {
   color: var(--color-ink);
   padding: 1.25rem 1.15rem 1.25rem;
   text-align: left;
-  box-shadow: 0 18px 34px color-mix(in srgb, var(--primary-dark) 8%, transparent);
+  box-shadow: 0 18px 34px
+    color-mix(in srgb, var(--primary-dark) 8%, transparent);
   transition:
     background 0.46s ease,
     border-color 0.46s ease,
@@ -2176,7 +2319,8 @@ onUnmounted(() => {
 .funding-item:hover {
   border-color: color-mix(in srgb, var(--primary-color) 32%, #dce8e0);
   background: color-mix(in srgb, var(--primary-light) 10%, #ffffff);
-  box-shadow: 0 22px 46px color-mix(in srgb, var(--primary-dark) 14%, transparent);
+  box-shadow: 0 22px 46px
+    color-mix(in srgb, var(--primary-dark) 14%, transparent);
 }
 
 .funding-item:hover::after {
@@ -2192,7 +2336,8 @@ onUnmounted(() => {
   border-radius: 8px;
   background: var(--primary-color);
   color: var(--color-white);
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--primary-color) 28%, transparent);
+  box-shadow: 0 12px 24px
+    color-mix(in srgb, var(--primary-color) 28%, transparent);
 }
 
 .funding-icon svg {
@@ -2246,7 +2391,12 @@ onUnmounted(() => {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, rgba(6, 18, 13, 0.9), rgba(6, 18, 13, 0.62) 55%, rgba(6, 18, 13, 0.3)),
+    linear-gradient(
+      90deg,
+      rgba(6, 18, 13, 0.9),
+      rgba(6, 18, 13, 0.62) 55%,
+      rgba(6, 18, 13, 0.3)
+    ),
     linear-gradient(0deg, rgba(6, 18, 13, 0.3), transparent);
   content: '';
 }
@@ -2505,8 +2655,10 @@ onUnmounted(() => {
   }
 
   .portfolio-stat-item + .portfolio-stat-item {
-    border-top: 1px solid color-mix(in srgb, var(--primary-color) 16%, transparent);
-    border-left: 1px solid color-mix(in srgb, var(--primary-color) 16%, transparent);
+    border-top: 1px solid
+      color-mix(in srgb, var(--primary-color) 16%, transparent);
+    border-left: 1px solid
+      color-mix(in srgb, var(--primary-color) 16%, transparent);
   }
 
   .portfolio-visual {

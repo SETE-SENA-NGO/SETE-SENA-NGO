@@ -1,87 +1,110 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, RouterLink, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
 type PageItem = {
   slug: string
-  label: string
+  labelKey: string
   path?: string
 }
 
 type NavItem = {
   to: string
-  label: string
+  labelKey: string
   icon: string
 }
 
 type PageGroup = {
   slug: string
-  label: string
+  labelKey: string
   items: PageItem[]
   path?: string
 }
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const ui = useUiStore()
 const auth = useAuthStore()
 const loggingOut = ref(false)
 
 const workspaceLinks: NavItem[] = [
-  { to: '/admin', label: 'Dashboard', icon: 'icon-dashboard' },
-  { to: '/admin/slideshow', label: 'Slideshow', icon: 'icon-media' },
-  { to: '/admin/donate', label: 'Donation QR', icon: 'icon-media' },
+  { to: '/admin', labelKey: 'admin.sidebar.dashboard', icon: 'icon-dashboard' },
+  {
+    to: '/admin/donate',
+    labelKey: 'admin.sidebar.donationQr',
+    icon: 'icon-media',
+  },
 ]
 
 const pageGroups: PageGroup[] = [
-  { slug: 'home', label: 'Home', items: [] },
+  { slug: 'home', labelKey: 'admin.sidebar.home', items: [] },
   {
     slug: 'about',
-    label: 'About',
+    labelKey: 'admin.sidebar.about',
     items: [
-      { slug: 'about-vision', label: 'Vision & Mission' },
-      { slug: 'about-organization', label: 'Organization' },
+      { slug: 'about-vision', labelKey: 'admin.sidebar.visionMission' },
+      { slug: 'about-organization', labelKey: 'admin.sidebar.organization' },
     ],
   },
   {
     slug: 'programs',
-    label: 'Programs',
+    labelKey: 'admin.sidebar.programs',
+    path: '/admin/programs',
     items: [
-      { slug: 'programs-education', label: 'Education', path: '/admin/editor/programs-education' },
-      { slug: 'programs-environment', label: 'Environment', path: '/admin/editor/programs-environment' },
-      { slug: 'programs-livelihood', label: 'Livelihood', path: '/admin/editor/programs-livelihood' },
-      { slug: 'programs-child-protection', label: 'Child Protection', path: '/admin/editor/programs-child-protection' },
+      {
+        slug: 'programs-education',
+        labelKey: 'admin.sidebar.education',
+        path: '/admin/education',
+      },
+      {
+        slug: 'programs-environment',
+        labelKey: 'admin.sidebar.environment',
+        path: '/admin/environment',
+      },
+      {
+        slug: 'programs-livelihood',
+        labelKey: 'admin.sidebar.livelihood',
+        path: '/admin/livelihood',
+      },
+      {
+        slug: 'programs-child-protection',
+        labelKey: 'admin.sidebar.childProtection',
+        path: '/admin/child-protection',
+      },
     ],
   },
   {
     slug: 'impact',
-    label: 'Impact',
+    labelKey: 'admin.sidebar.impact',
     items: [
-      { slug: 'impact-numbers', label: 'Numbers' },
-      { slug: 'impact-timeline', label: 'Timeline' },
-      { slug: 'impact-partners', label: 'Partners' },
+      { slug: 'impact-numbers', labelKey: 'admin.sidebar.numbers' },
+      { slug: 'impact-timeline', labelKey: 'admin.sidebar.timeline' },
+      { slug: 'impact-partners', labelKey: 'admin.sidebar.partners' },
     ],
   },
   {
     slug: 'get-involved',
-    label: 'Get Involved',
+    labelKey: 'admin.sidebar.getInvolved',
     path: '/admin/get-involved',
     items: [
-      { slug: 'get-involved-donate', label: 'Donate' },
-      { slug: 'get-involved-volunteer', label: 'Volunteer' },
-      { slug: 'get-involved-partner', label: 'Partner' },
+      { slug: 'get-involved-donate', labelKey: 'admin.sidebar.donate' },
+      { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer' },
+      { slug: 'get-involved-partner', labelKey: 'admin.sidebar.partner' },
     ],
   },
   {
     slug: 'news',
-    label: 'News',
-    items: [{ slug: 'news-detail', label: 'News Detail' }],
+    labelKey: 'admin.sidebar.news',
+    path: '/admin/news',
+    items: [{ slug: 'news-detail', labelKey: 'admin.sidebar.newsDetail' }],
   },
   {
     slug: 'contact',
-    label: 'Contact',
+    labelKey: 'admin.sidebar.contact',
     items: [],
   },
 ]
@@ -99,8 +122,11 @@ function isNavActive(item: NavItem) {
 }
 
 function isGroupActive(group: PageGroup) {
-  if (isActive(editorPath(group.slug))) return true
-  return group.items.some((item) => isActive(item.path ?? editorPath(item.slug)))
+  const groupPath = group.path ?? editorPath(group.slug)
+  if (isActive(groupPath)) return true
+  return group.items.some((item) =>
+    isActive(item.path ?? editorPath(item.slug)),
+  )
 }
 
 function isGroupOpen(group: PageGroup) {
@@ -125,34 +151,50 @@ async function logout() {
   <div class="backdrop" v-show="ui.sidebarOpen" @click="ui.closeSidebar"></div>
   <aside :class="['admin-sidebar', { open: ui.sidebarOpen }]">
     <RouterLink class="brand" to="/admin" @click="ui.closeSidebarForNavigation">
-      <img class="brand-mark" src="/favicon.ico" alt="SANTI SENA">
+      <img class="brand-mark" src="/favicon.ico" alt="SANTI SENA" />
       <span class="brand-text">
         <strong>SANTI SENA</strong>
-        <small>Admin Console</small>
+        <small>{{ t('admin.sidebar.console') }}</small>
       </span>
     </RouterLink>
 
     <nav aria-label="Admin navigation">
-      <p class="nav-heading">Workspace</p>
-      <RouterLink v-for="item in workspaceLinks" :key="item.to" :to="item.to"
-        :class="['link', { active: isNavActive(item) }]" @click="ui.closeSidebarForNavigation">
+      <p class="nav-heading">{{ t('admin.sidebar.workspace') }}</p>
+      <RouterLink
+        v-for="item in workspaceLinks"
+        :key="item.to"
+        :to="item.to"
+        :class="['link', { active: isNavActive(item) }]"
+        @click="ui.closeSidebarForNavigation"
+      >
         <span :class="['link-icon', item.icon]" aria-hidden="true"></span>
-        <span>{{ item.label }}</span>
+        <span>{{ t(item.labelKey) }}</span>
       </RouterLink>
 
-      <p class="nav-heading">Website Pages</p>
+      <p class="nav-heading">{{ t('admin.sidebar.websitePages') }}</p>
 
       <!-- Flat single pages -->
-      <RouterLink v-for="group in pageGroups.filter((g) => !g.items.length)" :key="group.slug"
-        :to="editorPath(group.slug)" :class="['link', { active: isActive(editorPath(group.slug)) }]"
-        @click="ui.closeSidebarForNavigation">
+      <RouterLink
+        v-for="group in pageGroups.filter((g) => !g.items.length)"
+        :key="group.slug"
+        :to="group.path ?? editorPath(group.slug)"
+        :class="[
+          'link',
+          { active: isActive(group.path ?? editorPath(group.slug)) },
+        ]"
+        @click="ui.closeSidebarForNavigation"
+      >
         <span class="link-icon icon-pages" aria-hidden="true"></span>
-        <span>{{ group.label }}</span>
+        <span>{{ t(group.labelKey) }}</span>
       </RouterLink>
 
       <!-- Expandable groups with sub-pages -->
-      <details v-for="group in pageGroups.filter((g) => g.items.length)" :key="group.slug" class="nav-group"
-        :open="isGroupOpen(group)">
+      <details
+        v-for="group in pageGroups.filter((g) => g.items.length)"
+        :key="group.slug"
+        class="nav-group"
+        :open="isGroupOpen(group)"
+      >
         <summary>
           <RouterLink
             :to="editorPath(group.slug)"
@@ -161,31 +203,56 @@ async function logout() {
             @click.stop="ui.closeSidebarForNavigation"
           >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
-            <span>{{ group.label }}</span>
+            <span>{{ t(group.labelKey) }}</span>
           </RouterLink>
         </summary>
         <div class="submenu">
-          <RouterLink v-for="item in group.items" :key="item.slug" :to="item.path ?? editorPath(item.slug)"
-            :class="['sub-link', { active: isActive(item.path ?? editorPath(item.slug)) }]"
-            @click="ui.closeSidebarForNavigation">
-            {{ item.label }}
+          <RouterLink
+            v-for="item in group.items"
+            :key="item.slug"
+            :to="item.path ?? editorPath(item.slug)"
+            :class="[
+              'sub-link',
+              { active: isActive(item.path ?? editorPath(item.slug)) },
+            ]"
+            @click="ui.closeSidebarForNavigation"
+          >
+            {{ t(item.labelKey) }}
           </RouterLink>
         </div>
       </details>
     </nav>
 
     <div class="bottom">
-      <RouterLink :class="['link', 'settings-link', { active: isActive('/admin/settings') }]" to="/admin/settings"
-        @click="ui.closeSidebarForNavigation">
+      <RouterLink
+        :class="[
+          'link',
+          'settings-link',
+          { active: isActive('/admin/settings') },
+        ]"
+        to="/admin/settings"
+        @click="ui.closeSidebarForNavigation"
+      >
         <span class="link-icon icon-settings" aria-hidden="true"></span>
-        <span>Settings</span>
+        <span>{{ t('admin.sidebar.settings') }}</span>
       </RouterLink>
       <div class="bottom-divider" aria-hidden="true"></div>
-      <button class="link logout-link" type="button" :disabled="loggingOut" @click="logout">
+      <button
+        class="link logout-link"
+        type="button"
+        :disabled="loggingOut"
+        @click="logout"
+      >
         <span class="link-icon icon-logout" aria-hidden="true"></span>
         <span class="logout-copy">
-          <strong>{{ loggingOut ? 'Signing out...' : 'Logout' }}</strong>
-          <small>End admin session</small>
+          <strong>
+            {{
+              loggingOut
+                ? t('admin.sidebar.signingOut')
+                : t('admin.sidebar.logout')
+            }}
+          </strong>
+          <small>{{ t('admin.sidebar.endSession') }}</small>
         </span>
       </button>
     </div>
@@ -201,11 +268,19 @@ async function logout() {
   --sb-text-strong: var(--admin-theme-contrast);
   --sb-muted: var(--admin-theme-muted);
   --sb-accent: var(--admin-theme-primary);
-  --sb-accent-soft: color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
+  --sb-accent-soft: color-mix(
+    in srgb,
+    var(--admin-theme-primary) 14%,
+    transparent
+  );
   --sb-active-text: var(--admin-theme-primary-deep);
   --sb-hover-bg: #ffffff;
   --sb-brand: var(--admin-theme-primary-deep);
-  --sb-brand-mark-bg: color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
+  --sb-brand-mark-bg: color-mix(
+    in srgb,
+    var(--admin-theme-primary) 14%,
+    transparent
+  );
   --sb-brand-mark: var(--admin-theme-primary-deep);
   --sb-teal: var(--admin-theme-teal);
   --sb-teal-soft: color-mix(in srgb, var(--admin-theme-teal) 15%, transparent);
@@ -243,11 +318,19 @@ async function logout() {
   --sb-text-strong: var(--admin-theme-contrast);
   --sb-muted: var(--admin-theme-muted);
   --sb-accent: var(--admin-theme-primary);
-  --sb-accent-soft: color-mix(in srgb, var(--admin-theme-primary) 24%, transparent);
+  --sb-accent-soft: color-mix(
+    in srgb,
+    var(--admin-theme-primary) 24%,
+    transparent
+  );
   --sb-active-text: var(--admin-theme-contrast);
   --sb-hover-bg: var(--admin-theme-surface-soft);
   --sb-brand: var(--admin-theme-primary-deep);
-  --sb-brand-mark-bg: color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
+  --sb-brand-mark-bg: color-mix(
+    in srgb,
+    var(--admin-theme-primary) 18%,
+    transparent
+  );
   --sb-brand-mark: var(--admin-theme-primary-deep);
   --sb-teal: var(--admin-theme-teal);
   --sb-teal-soft: color-mix(in srgb, var(--admin-theme-teal) 18%, transparent);
@@ -348,7 +431,7 @@ nav {
   opacity: 0.85;
 }
 
-.link>span:last-child {
+.link > span:last-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -452,6 +535,23 @@ nav {
   border-left: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: skewX(-24deg);
+}
+
+.icon-news::before {
+  inset: 0.08rem;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.icon-news::after {
+  left: 0.18rem;
+  right: 0.18rem;
+  top: 0.28rem;
+  height: 0.06rem;
+  background: currentColor;
+  box-shadow:
+    0 0.2rem 0 currentColor,
+    0 0.4rem 0 currentColor;
 }
 
 .icon-programs::before {
@@ -635,7 +735,12 @@ nav {
 .bottom-divider {
   height: 1px;
   margin: 0.25rem 0.5rem;
-  background: linear-gradient(90deg, transparent, var(--sb-divider), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sb-divider),
+    transparent
+  );
 }
 
 .settings-link {

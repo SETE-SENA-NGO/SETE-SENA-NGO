@@ -3,6 +3,7 @@ export interface PageContent {
   slug: string
   title: string
   body: string
+  locale?: string
   updated_at: string
 }
 
