@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { SupportedLocale } from '@/i18n'
 import acledaLogo from '@/assets/acleda-logo.png'
 import {
   defaultDonationMethods,
@@ -10,6 +12,10 @@ import { subscribeToTableChanges } from '@/lib/realtime'
 
 type Tab = 'qr'
 const activeTab = ref<Tab>('qr')
+const { locale } = useI18n()
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
 
 interface PayMethod {
   key: string
@@ -57,7 +63,28 @@ function badgeFor(bank: string) {
   )
 }
 
-function toPayMethod(method: DonationMethod): PayMethod {
+function paymentSteps(bank: string, pageLocale: SupportedLocale) {
+  if (pageLocale === 'kh') {
+    return [
+      `បើកកម្មវិធីទូរស័ព្ទ ${bank}`,
+      'ចុច QR Payment ឬ Scan',
+      'ស្កេនកូដ QR ខាងលើ',
+      'បញ្ជាក់ចំនួនទឹកប្រាក់ និងការទូទាត់',
+    ]
+  }
+
+  return [
+    `Open the ${bank} mobile app`,
+    'Tap QR Payment or Scan',
+    'Scan the QR code above',
+    'Confirm amount & payment',
+  ]
+}
+
+function toPayMethod(
+  method: DonationMethod,
+  pageLocale: SupportedLocale,
+): PayMethod {
   return {
     key: method.id,
     bank: method.bank,
@@ -67,12 +94,7 @@ function toPayMethod(method: DonationMethod): PayMethod {
     accountName: method.accountName,
     accountNo: method.accountNo,
     currency: method.currency,
-    steps: [
-      `Open the ${method.bank} mobile app`,
-      'Tap QR Payment or Scan',
-      'Scan the QR code above',
-      'Confirm amount & payment',
-    ],
+    steps: paymentSteps(method.bank, pageLocale),
     headerColor: method.headerColor,
     badgeColor: method.headerColor,
     badgeTextColor: '#ffffff',
@@ -106,8 +128,10 @@ onUnmounted(() => {
 })
 
 const methods = computed<PayMethod[]>(() => {
-  const source = savedMethods.value.length ? savedMethods.value : defaultDonationMethods()
-  return source.map(toPayMethod)
+  const source = savedMethods.value.length
+    ? savedMethods.value
+    : defaultDonationMethods()
+  return source.map((method) => toPayMethod(method, activeLocale.value))
 })
 </script>
 

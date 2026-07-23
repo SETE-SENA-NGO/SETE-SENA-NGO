@@ -292,16 +292,16 @@ onUnmounted(() => {
               class="map-frame"
               :class="{
                 'map-frame--interactive': activeOffice.id === 'all',
-                'map-frame--night': ui.publicDarkMode,
+                'map-frame--night': ui.darkMode,
               }"
             >
               <div
                 class="map-image-shell"
-                :class="{ 'map-image-shell--night': ui.publicDarkMode }"
+                :class="{ 'map-image-shell--night': ui.darkMode }"
               >
                 <img
                   class="contact-map-image"
-                  :class="{ 'contact-map-image--night': ui.publicDarkMode }"
+                  :class="{ 'contact-map-image--night': ui.darkMode }"
                   :src="activeOffice.mapImage"
                   alt=""
                 />

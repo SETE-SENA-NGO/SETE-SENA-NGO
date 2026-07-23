@@ -30,6 +30,7 @@ const { t } = useI18n()
 const ui = useUiStore()
 const auth = useAuthStore()
 const loggingOut = ref(false)
+const openGroups = ref(new Set<string>())
 
 const workspaceLinks: NavItem[] = [
   { to: '/admin', labelKey: 'admin.sidebar.dashboard', icon: 'icon-dashboard' },
@@ -130,7 +131,23 @@ function isGroupActive(group: PageGroup) {
 }
 
 function isGroupOpen(group: PageGroup) {
-  return isGroupActive(group)
+  return isGroupActive(group) || openGroups.value.has(group.slug)
+}
+
+function toggleGroup(group: PageGroup) {
+  const nextGroups = new Set(openGroups.value)
+
+  if (nextGroups.has(group.slug)) {
+    nextGroups.delete(group.slug)
+  } else {
+    nextGroups.add(group.slug)
+  }
+
+  openGroups.value = nextGroups
+}
+
+function submenuId(group: PageGroup) {
+  return `admin-sidebar-${group.slug}-submenu`
 }
 
 async function logout() {
@@ -189,24 +206,38 @@ async function logout() {
       </RouterLink>
 
       <!-- Expandable groups with sub-pages -->
-      <details
+      <div
         v-for="group in pageGroups.filter((g) => g.items.length)"
         :key="group.slug"
         class="nav-group"
-        :open="isGroupOpen(group)"
+        :class="{ open: isGroupOpen(group) }"
       >
-        <summary>
+        <div class="nav-group-row">
           <RouterLink
-            :to="editorPath(group.slug)"
+            :to="group.path ?? editorPath(group.slug)"
             class="link summary-link"
-            :class="{ active: isActive(editorPath(group.slug)) }"
-            @click.stop="ui.closeSidebarForNavigation"
+            :class="{ active: isActive(group.path ?? editorPath(group.slug)) }"
+            @click="ui.closeSidebarForNavigation"
           >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
             <span>{{ t(group.labelKey) }}</span>
           </RouterLink>
-        </summary>
-        <div class="submenu">
+          <button
+            class="group-toggle"
+            type="button"
+            :aria-controls="submenuId(group)"
+            :aria-expanded="isGroupOpen(group)"
+            :aria-label="`${isGroupOpen(group) ? 'Collapse' : 'Expand'} ${t(group.labelKey)}`"
+            @click="toggleGroup(group)"
+          >
+            <span class="toggle-chevron" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div
+          v-show="isGroupOpen(group)"
+          :id="submenuId(group)"
+          class="submenu"
+        >
           <RouterLink
             v-for="item in group.items"
             :key="item.slug"
@@ -220,7 +251,7 @@ async function logout() {
             {{ t(item.labelKey) }}
           </RouterLink>
         </div>
-      </details>
+      </div>
     </nav>
 
     <div class="bottom">
@@ -648,32 +679,46 @@ nav {
   margin-bottom: 0;
 }
 
-.nav-group summary {
+.nav-group-row {
   display: flex;
   align-items: center;
-  list-style: none;
+  gap: 0.15rem;
+}
+
+.group-toggle {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--sb-muted);
   cursor: pointer;
-  padding: 0;
-  gap: 0;
-}
-
-.nav-group summary::-webkit-details-marker {
-  display: none;
-}
-
-.nav-group summary::after {
-  width: 0.42rem;
-  height: 0.42rem;
-  margin: 0 0.6rem 0 auto;
-  border-right: 2px solid var(--sb-muted);
-  border-bottom: 2px solid var(--sb-muted);
-  transform: rotate(-45deg);
-  transition: transform 0.18s ease;
-  content: '';
   flex-shrink: 0;
 }
 
-.nav-group[open] summary::after {
+.group-toggle:hover,
+.group-toggle:focus-visible {
+  background: var(--sb-hover-bg);
+  color: var(--sb-text-strong);
+  outline: none;
+}
+
+.group-toggle:focus-visible {
+  box-shadow: 0 0 0 2px var(--sb-accent-soft);
+}
+
+.toggle-chevron {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.18s ease;
+}
+
+.nav-group.open .toggle-chevron {
   transform: rotate(45deg);
 }
 

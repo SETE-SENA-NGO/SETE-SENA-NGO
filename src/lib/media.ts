@@ -16,6 +16,24 @@ export function imageUploadHelpText() {
   return 'JPG, PNG, WebP or GIF up to 5MB.'
 }
 
+export function normalizeMediaUrl(value: string) {
+  const url = value.trim()
+  if (!url) return ''
+
+  try {
+    const parsed = new URL(url)
+    if (parsed.hostname === 'drive.google.com') {
+      const pathMatch = parsed.pathname.match(/\/file\/d\/([^/?#]+)/)
+      const id = pathMatch?.[1] || parsed.searchParams.get('id')
+      if (id) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1600`
+    }
+  } catch {
+    return url
+  }
+
+  return url
+}
+
 export function safeStorageFileName(fileName: string) {
   return fileName
     .replace(/[^\w.\- ]+/g, '-')

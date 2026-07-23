@@ -944,7 +944,7 @@ function setupPopReveal() {
 }
 
 .quote-mark {
-  font-family: Georgia, serif;
+  font-family: var(--font-family-base);
   font-weight: 900;
   line-height: 0.7;
 }

@@ -463,7 +463,7 @@ function actionRoute(index: number) {
   max-width: 820px;
   margin: 0;
   color: #ffffff;
-  font-family: var(--font-serif, Georgia, serif);
+  font-family: var(--font-family-base);
   font-size: clamp(2.7rem, 7vw, 5.8rem);
   font-weight: 800;
   line-height: 0.98;
@@ -524,7 +524,7 @@ function actionRoute(index: number) {
 .managed-section h2 {
   margin: 0;
   color: #16302a;
-  font-family: var(--font-serif, Georgia, serif);
+  font-family: var(--font-family-base);
   font-size: clamp(1.7rem, 4vw, 2.7rem);
   font-weight: 800;
   line-height: 1.1;

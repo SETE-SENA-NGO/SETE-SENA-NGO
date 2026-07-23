@@ -6,6 +6,11 @@ import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import type { SupportedLocale } from '@/i18n'
 import { supabase } from '@/lib/supabase'
+import {
+  explainPageSaveError,
+  savePageByLocale,
+  type PageLocalePayload,
+} from '@/lib/pagePersistence'
 import { useUiStore } from '@/stores/ui.store'
 
 type EditableSection = {
@@ -1205,7 +1210,7 @@ async function loadPages() {
 
 async function persistPage(page: PageDraft): Promise<PageDraft> {
   const savedAt = new Date().toISOString()
-  const payload = {
+  const payload: PageLocalePayload = {
     slug: page.slug,
     title: page.title.trim() || page.headline.trim() || page.slug,
     body: serializeBody(page),
@@ -1228,13 +1233,12 @@ async function persistPage(page: PageDraft): Promise<PageDraft> {
     updated_at: savedAt,
   }
 
-  const { data, error } = await supabase
-    .from('pages')
-    .upsert(payload, { onConflict: 'slug,locale' })
-    .select('slug, title, body, locale, updated_at')
-    .single()
+  const { data, error } = await savePageByLocale<PageRow>(
+    payload,
+    'slug, title, body, locale, updated_at',
+  )
 
-  if (error) throw error
+  if (error) throw explainPageSaveError(error)
 
   return data ? mergeRow(page, data as PageRow) : { ...clonePage(page), updatedAt: savedAt }
 }
@@ -1845,13 +1849,7 @@ function formatDate(value: string) {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
   transition: padding-left 0.25s ease;
 }
 

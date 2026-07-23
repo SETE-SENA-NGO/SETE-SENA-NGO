@@ -62,7 +62,7 @@ export const publicRoutes = [
   managedPage('/about/organization', 'about-organization', OrganizationView),
 
   // Programs
-  managedPage('/programs', 'programs', ProgramsView, { name: 'programs' }),
+  { path: '/programs', component: ProgramsView, name: 'programs' },
   managedPage('/programs/environment', 'programs-environment', ProgramEnviromentView),
   managedPage('/programs/education', 'programs-education', EducationView),
   managedPage('/programs/livelihood', 'programs-livelihood', ProgramsLivelihoodView, {
@@ -74,10 +74,10 @@ export const publicRoutes = [
   managedPage('/services', 'services'),
 
   // Impact
-  managedPage('/impact', 'impact', ImpactView),
-  managedPage('/impact/numbers', 'impact-numbers', ImpactNumbersView),
-  managedPage('/impact/partners', 'impact-partners', ImpactPartnersView),
-  managedPage('/impact/timeline', 'impact-timeline', ImpactTimelineView),
+  { path: '/impact', component: ImpactView },
+  { path: '/impact/numbers', component: ImpactNumbersView },
+  { path: '/impact/partners', component: ImpactPartnersView },
+  { path: '/impact/timeline', component: ImpactTimelineView },
 
   // Get Involved
   managedPage('/get-involved', 'get-involved', GetInvolvedView),

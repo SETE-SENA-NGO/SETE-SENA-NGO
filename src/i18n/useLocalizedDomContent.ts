@@ -22,8 +22,23 @@ const TRANSLATABLE_SELECTOR = [
   'dt',
   'dd',
   'label',
+  'legend',
   'blockquote',
   'figcaption',
+  'summary',
+  'th',
+  'td',
+  "[class*='title']",
+  "[class*='heading']",
+  "[class*='headline']",
+  "[class*='subtitle']",
+  "[class*='label']",
+  "[class*='eyebrow']",
+  "[class*='kicker']",
+  "[class*='name']",
+  "[class*='role']",
+  "[class*='caption']",
+  "[class*='badge']",
 ].join(',')
 
 const TRANSLATABLE_ATTRIBUTES = [
@@ -34,10 +49,13 @@ const TRANSLATABLE_ATTRIBUTES = [
 ] as const
 
 const originalTextNodes = new WeakMap<Text, string>()
+const translatedTextNodeValues = new WeakMap<Text, string>()
 const translatedTextNodes = new Set<Text>()
 const originalElements = new WeakMap<Element, string>()
+const translatedElementValues = new WeakMap<Element, string>()
 const translatedElements = new Set<Element>()
 const originalAttributes = new WeakMap<Element, Map<string, string>>()
+const translatedAttributes = new WeakMap<Element, Map<string, string>>()
 const translatedAttributeElements = new Set<Element>()
 
 let observer: MutationObserver | null = null
@@ -59,8 +77,11 @@ function isSkippableElement(element: Element | null) {
         'script',
         'style',
         'svg',
+        '.material-icons',
+        '.material-icons-outlined',
         'input',
         'textarea',
+        '[aria-hidden="true"]',
         '[contenteditable="true"]',
         '[data-no-localize]',
       ].join(','),
@@ -96,14 +117,76 @@ function storeOriginalAttribute(
   }
 }
 
+function storeTranslatedAttribute(
+  element: Element,
+  attributeName: string,
+  value: string,
+) {
+  const map = translatedAttributes.get(element) ?? new Map<string, string>()
+  map.set(attributeName, value)
+  translatedAttributes.set(element, map)
+}
+
+function canReplaceGroupedElement(element: Element) {
+  if (!element.children.length) return false
+  if (['A', 'BUTTON'].includes(element.tagName)) return false
+
+  return !element.querySelector(
+    [
+      'a',
+      'button',
+      'svg',
+      'img',
+      'picture',
+      'video',
+      'canvas',
+      'input',
+      'textarea',
+      'select',
+      'option',
+      '[contenteditable="true"]',
+      '[data-no-localize]',
+    ].join(','),
+  )
+}
+
+function getElementTranslationKey(element: Element) {
+  const parts: string[] = []
+
+  function collectText(node: Node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      parts.push(node.nodeValue ?? '')
+      return
+    }
+
+    if (!(node instanceof Element)) return
+
+    if (node.tagName === 'BR') {
+      parts.push(' ')
+      return
+    }
+
+    node.childNodes.forEach(collectText)
+  }
+
+  collectText(element)
+  return normalizeTranslationKey(parts.join(''))
+}
+
 function restore(root: Element) {
   applying = true
 
   for (const element of translatedElements) {
     if (!element.isConnected || !root.contains(element)) continue
     const originalHtml = originalElements.get(element)
+    const translatedText = translatedElementValues.get(element)
     if (originalHtml !== undefined) {
-      element.innerHTML = originalHtml
+      if (!translatedText || element.textContent === translatedText) {
+        element.innerHTML = originalHtml
+      }
+
+      originalElements.delete(element)
+      translatedElementValues.delete(element)
     }
   }
 
@@ -111,17 +194,29 @@ function restore(root: Element) {
     if (!textNode.isConnected || !root.contains(textNode.parentElement))
       continue
     const originalText = originalTextNodes.get(textNode)
+    const translatedText = translatedTextNodeValues.get(textNode)
     if (originalText !== undefined) {
-      textNode.nodeValue = originalText
+      if (!translatedText || textNode.nodeValue === translatedText) {
+        textNode.nodeValue = originalText
+      }
+
+      originalTextNodes.delete(textNode)
+      translatedTextNodeValues.delete(textNode)
     }
   }
 
   for (const element of translatedAttributeElements) {
     if (!element.isConnected || !root.contains(element)) continue
     const attributes = originalAttributes.get(element)
+    const translatedAttributeMap = translatedAttributes.get(element)
     attributes?.forEach((value, name) => {
-      element.setAttribute(name, value)
+      const translatedValue = translatedAttributeMap?.get(name)
+      if (!translatedValue || element.getAttribute(name) === translatedValue) {
+        element.setAttribute(name, value)
+      }
     })
+    originalAttributes.delete(element)
+    translatedAttributes.delete(element)
   }
 
   translatedElements.clear()
@@ -136,13 +231,15 @@ function translateElementText(root: Element, locale: SupportedLocale) {
   elements.forEach((element) => {
     if (isSkippableElement(element)) return
     if (!element.textContent) return
-    if (element.children.length > 0) return
+    if (element.children.length > 0 && !canReplaceGroupedElement(element))
+      return
 
-    const key = normalizeTranslationKey(element.textContent)
+    const key = getElementTranslationKey(element)
     const translated = translateContentText(key, locale)
     if (translated === key) return
 
     originalElements.set(element, element.innerHTML)
+    translatedElementValues.set(element, translated)
     translatedElements.add(element)
     element.textContent = translated
   })
@@ -169,6 +266,7 @@ function translateTextNodes(root: Element, locale: SupportedLocale) {
     if (translated === originalText) return
 
     originalTextNodes.set(textNode, originalText)
+    translatedTextNodeValues.set(textNode, translated)
     translatedTextNodes.add(textNode)
     textNode.nodeValue = translated
   })
@@ -186,6 +284,7 @@ function translateAttributes(root: Element, locale: SupportedLocale) {
       if (translated === value) return
 
       storeOriginalAttribute(element, attributeName, value)
+      storeTranslatedAttribute(element, attributeName, translated)
       translatedAttributeElements.add(element)
       element.setAttribute(attributeName, translated)
     })

@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
+import {
+  explainPageSaveError,
+  savePageByLocale,
+  type PageLocalePayload,
+} from '@/lib/pagePersistence'
 import type { PageContent } from '@/types/content'
 import type { SupportedLocale } from '@/i18n'
 
@@ -8,7 +13,8 @@ const localPagePrefix = 'santi-sena-page-content:'
 const cachedPagePrefix = 'santi-sena-page-cache:'
 const previousPagePrefix = 'santi-sena-page-previous:'
 const missingSchemaKey = 'santi-sena-pages-schema-missing'
-const cacheTtlMs = 7 * 24 * 60 * 60 * 1000
+const pageCacheTtlMs = 7 * 24 * 60 * 60 * 1000
+const previousPageCacheTtlMs = 60 * 1000
 
 interface CachedPageRecord {
   page: PageContent
@@ -251,7 +257,7 @@ export const useContentStore = defineStore('content', () => {
       return localPage
     }
 
-    const payload: Partial<PageContent> = {
+    const payload: PageLocalePayload = {
       slug,
       title: page.title.trim(),
       body: page.body,
@@ -264,11 +270,7 @@ export const useContentStore = defineStore('content', () => {
     if (page.template) payload.template = page.template
     if (page.status) payload.status = page.status
 
-    const { data, error } = await supabase
-      .from('pages')
-      .upsert(payload, { onConflict: 'slug,locale' })
-      .select('*')
-      .single()
+    const { data, error } = await savePageByLocale<PageContent>(payload)
 
     if (error) {
       if (isMissingPagesTable(error)) {
@@ -279,12 +281,7 @@ export const useContentStore = defineStore('content', () => {
         pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
         return localPage
       }
-      if (isMissingLocaleConflict(error)) {
-        throw new Error(
-          'Supabase pages must support one row per language. Run supabase/migrations/0007_page_locale_uniqueness.sql, then reload the Supabase schema cache.',
-        )
-      }
-      throw error
+      throw explainPageSaveError(error)
     }
     if (!data) throw new Error('Page save did not return a row')
 
@@ -369,11 +366,15 @@ function readStoredFallbackPage(
 }
 
 function cachePage(page: PageContent) {
-  saveTimedPage(cachedStorageKey(page.slug, page.locale), page)
+  saveTimedPage(cachedStorageKey(page.slug, page.locale), page, pageCacheTtlMs)
 }
 
 function cachePreviousPage(page: PageContent) {
-  saveTimedPage(previousStorageKey(page.slug, page.locale), page)
+  saveTimedPage(
+    previousStorageKey(page.slug, page.locale),
+    page,
+    previousPageCacheTtlMs,
+  )
 }
 
 function rememberPreviousPageIfChanged(
@@ -385,14 +386,14 @@ function rememberPreviousPageIfChanged(
     cachePreviousPage(previousPage)
 }
 
-function saveTimedPage(storageKey: string, page: PageContent) {
+function saveTimedPage(storageKey: string, page: PageContent, ttlMs: number) {
   if (typeof window === 'undefined') return
 
   const now = Date.now()
   const record: CachedPageRecord = {
     page: normalizePageContent(page),
     cachedAt: now,
-    expiresAt: now + cacheTtlMs,
+    expiresAt: now + ttlMs,
   }
 
   try {
@@ -558,18 +559,6 @@ function isMissingPagesTable(error: unknown) {
   return (
     code === 'PGRST205' ||
     (body.includes('pages') && body.includes('schema cache'))
-  )
-}
-
-function isMissingLocaleConflict(error: unknown) {
-  if (!isRecord(error)) return false
-
-  const code = getString(error.code)
-  const message = getString(error.message).toLowerCase()
-
-  return (
-    code === '42P10' ||
-    (message.includes('on conflict') && message.includes('unique'))
   )
 }
 

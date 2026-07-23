@@ -250,13 +250,7 @@ function goToSite() {
   color: var(--hdr-text);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
 }
 
 .admin-header-inner {
