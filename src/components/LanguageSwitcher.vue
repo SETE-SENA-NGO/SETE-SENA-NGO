@@ -135,7 +135,7 @@ onUnmounted(() => {
 
 .language-trigger :deep(.flag-icon),
 .language-option :deep(.flag-icon) {
-  width: 1.15rem;
+  width: 1.25rem;
   height: 0.8rem;
   border-radius: 2px;
   flex-shrink: 0;
