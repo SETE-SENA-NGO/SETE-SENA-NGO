@@ -29,6 +29,9 @@ export default defineConfig(({ mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
+    optimizeDeps: {
+      include: ['vue-i18n'],
+    },
   }
 })
 
