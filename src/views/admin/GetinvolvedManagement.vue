@@ -4,12 +4,12 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import type { SupportedLocale } from '@/i18n'
 import { imageUploadHelpText, normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
 import type { PageContent } from '@/types/content'
+import type { SupportedLocale } from '@/i18n'
 
 type ActionLink = {
   label: string

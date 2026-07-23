@@ -278,143 +278,58 @@ function actionRoute(index: number) {
 </script>
 
 <template>
-  <!-- ===== HOME PAGE WITH SLIDESHOW ===== -->
-  <main
-    v-if="content && isHome && homeSlides.length"
-    class="managed-page managed-page-home"
-  >
-    <Slideshow
-      :slides="homeSlides"
-      :interval-ms="4000"
-      v-slot="{ activeSlide }"
-    >
-      <div class="hero-overlay" />
-      <div class="hero-inner">
-        <div :key="activeSlide?.image" class="hero-message">
-          <p class="eyebrow eyebrow--light">
-            {{
-              activeSlide?.eyebrow ||
-              content?.eyebrow ||
-              'Buddhist NGO - Cambodia - Since 1994'
-            }}
-          </p>
-          <h1 class="hero-title">
-            {{
-              activeSlide?.title ||
-              content?.headline ||
-              'Walking with villages toward peace, sustainability and dignity.'
-            }}
-          </h1>
-          <p class="hero-subtitle">
-            {{
-              activeSlide?.description ||
-              content?.intro ||
-              'Santi Sena works alongside rural Cambodian communities in education, livelihoods, environment and child protection.'
-            }}
-          </p>
-          <div class="hero-actions">
+  <component
+    v-if="fallbackComponent"
+    :is="fallbackComponent"
+    :content="content"
+  />
+
+  <template v-else>
+    <main v-if="loaded && content" class="managed-page">
+      <section class="managed-hero">
+        <div class="managed-hero-inner">
+          <p class="managed-eyebrow">{{ content.eyebrow || content.group }}</p>
+          <h1>{{ content.headline || content.title }}</h1>
+          <p class="managed-intro">{{ content.intro }}</p>
+          <div class="managed-actions">
             <RouterLink
-              :to="activeSlide?.primaryTo || '/qr-donate'"
-              class="btn btn--primary"
+              v-if="content.primaryAction"
+              class="managed-button managed-button-primary"
+              :to="actionRoute(0)"
             >
-              {{ activeSlide?.primaryLabel || 'Support Us' }}
+              {{ content.primaryAction }}
             </RouterLink>
             <RouterLink
-              :to="activeSlide?.secondaryTo || '/about'"
-              class="btn btn--outline"
+              v-if="content.secondaryAction"
+              class="managed-button managed-button-secondary"
+              :to="actionRoute(1)"
             >
-              {{ activeSlide?.secondaryLabel || 'Stand with us' }}
+              {{ content.secondaryAction }}
             </RouterLink>
           </div>
         </div>
-      </div>
-    </Slideshow>
+      </section>
 
-    <!-- Home content sections below slideshow -->
-    <section
-      class="managed-sections home-sections-below"
-      aria-label="Page content"
-    >
-      <article
-        v-for="section in homeContentSections"
-        :key="section.id"
-        class="managed-section"
-      >
-        <p class="managed-section-label">{{ section.label }}</p>
-        <h2>{{ section.heading }}</h2>
-        <p v-if="section.body" class="managed-section-body">
-          {{ section.body }}
-        </p>
-        <div v-if="sectionItems(section).length" class="managed-item-grid">
-          <div
-            v-for="item in sectionItems(section)"
-            :key="item.title"
-            class="managed-item"
-          >
-            <strong>{{ item.title }}</strong>
-            <p v-if="item.detail">{{ item.detail }}</p>
+      <section class="managed-sections" aria-label="Page content">
+        <article v-for="section in content.sections" :key="section.id" class="managed-section">
+          <p class="managed-section-label">{{ section.label }}</p>
+          <h2>{{ section.heading }}</h2>
+          <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
+
+          <div v-if="sectionItems(section).length" class="managed-item-grid">
+            <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
+              <strong>{{ item.title }}</strong>
+              <p v-if="item.detail">{{ item.detail }}</p>
+            </div>
           </div>
-        </div>
-      </article>
-    </section>
-  </main>
+        </article>
+      </section>
+    </main>
 
-  <!-- ===== STANDARD PAGE (non-home) ===== -->
-  <main v-else-if="content" class="managed-page">
-    <section class="managed-hero">
-      <div class="managed-hero-inner">
-        <p class="managed-eyebrow">{{ content.eyebrow || content.group }}</p>
-        <h1>{{ content.headline || content.title }}</h1>
-        <p class="managed-intro">{{ content.intro }}</p>
-        <div class="managed-actions">
-          <RouterLink
-            v-if="content.primaryAction"
-            class="managed-button managed-button-primary"
-            :to="actionRoute(0)"
-          >
-            {{ content.primaryAction }}
-          </RouterLink>
-          <RouterLink
-            v-if="content.secondaryAction"
-            class="managed-button managed-button-secondary"
-            :to="actionRoute(1)"
-          >
-            {{ content.secondaryAction }}
-          </RouterLink>
-        </div>
-      </div>
-    </section>
-
-    <section class="managed-sections" aria-label="Page content">
-      <article
-        v-for="section in content.sections"
-        :key="section.id"
-        class="managed-section"
-      >
-        <p class="managed-section-label">{{ section.label }}</p>
-        <h2>{{ section.heading }}</h2>
-        <p v-if="section.body" class="managed-section-body">
-          {{ section.body }}
-        </p>
-        <div v-if="sectionItems(section).length" class="managed-item-grid">
-          <div
-            v-for="item in sectionItems(section)"
-            :key="item.title"
-            class="managed-item"
-          >
-            <strong>{{ item.title }}</strong>
-            <p v-if="item.detail">{{ item.detail }}</p>
-          </div>
-        </div>
-      </article>
-    </section>
-  </main>
-
-  <component v-else-if="loaded && fallbackComponent" :is="fallbackComponent" />
-
-  <main v-else class="managed-loading" aria-live="polite">
-    <p>{{ statusMessage }}</p>
-  </main>
+    <main v-else class="managed-loading" aria-live="polite">
+      <p>{{ statusMessage }}</p>
+    </main>
+  </template>
 </template>
 
 <style scoped>

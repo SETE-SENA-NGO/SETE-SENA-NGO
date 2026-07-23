@@ -87,6 +87,7 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'impact',
     labelKey: 'admin.sidebar.impact',
+    path: '/admin/editor/impact-numbers',
     items: [
       { slug: 'impact-numbers', labelKey: 'admin.sidebar.numbers' },
       { slug: 'impact-timeline', labelKey: 'admin.sidebar.timeline' },
@@ -223,8 +224,8 @@ async function logout() {
           <RouterLink
             :to="group.path ?? editorPath(group.slug)"
             class="link summary-link"
-            :class="{ active: isActive(group.path ?? editorPath(group.slug)) }"
-            @click="ui.closeSidebarForNavigation"
+            :class="{ active: group.items.length === 0 ? isActive(group.path ?? editorPath(group.slug)) : (group.path ? isActive(group.path) && !group.items.some((item) => isActive(item.path ?? editorPath(item.slug))) : false) }"
+            @click.stop="ui.closeSidebarForNavigation"
           >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
             <span>{{ t(group.labelKey) }}</span>

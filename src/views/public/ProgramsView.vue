@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, type ComponentPublicInstance } from 'vue'
 
 interface ProgramGoal {
   number: string
@@ -12,7 +12,7 @@ interface ProgramGoal {
   image: string
 }
 
-const goals: ProgramGoal[] = [
+const defaultGoals: ProgramGoal[] = [
   {
     number: '01',
     tag: 'GOAL 01',
@@ -69,7 +69,7 @@ const goals: ProgramGoal[] = [
   },
 ]
 
-const priorities = [
+const defaultPriorities = [
   {
     title: 'Strengthened governance and accountability',
     icon: 'shield',
@@ -133,6 +133,64 @@ onMounted(() => {
 onBeforeUnmount(() => {
   observer?.disconnect()
 })
+
+const props = defineProps<{
+  content?: {
+    headline?: string
+    intro?: string
+    sections?: Array<{
+      id: string
+      heading: string
+      body: string
+      items: string
+    }>
+  } | null
+}>()
+
+const goals = computed<ProgramGoal[]>(() => {
+  const section = props.content?.sections?.find(s => s.id === 'programs-goals')
+  if (!section || !section.items) return defaultGoals
+
+  const parsed = section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      title: parts[0] || '',
+      intro: parts[1] || ''
+    }
+  })
+
+  return defaultGoals.map((goal) => {
+    const match = parsed.find(p => p.title.toLowerCase() === goal.title.toLowerCase())
+    if (match) {
+      return {
+        ...goal,
+        intro: match.intro
+      }
+    }
+    return goal
+  })
+})
+
+const prioritiesHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'programs-priorities')
+  return {
+    heading: section?.heading || 'How we keep the tree alive'
+  }
+})
+
+const priorities = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'programs-priorities')
+  if (!section || !section.items) return defaultPriorities
+
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const title = line.trim()
+    const match = defaultPriorities.find(p => p.title.toLowerCase() === title.toLowerCase())
+    return {
+      title,
+      icon: match?.icon || 'shield'
+    }
+  })
+})
 </script>
 
 <template>
@@ -175,7 +233,7 @@ onBeforeUnmount(() => {
       <p class="eyebrow center">
         <span class="line" /> OPERATIONAL PRIORITIES <span class="line" />
       </p>
-      <h2 class="center">How we keep the tree alive</h2>
+      <h2 class="center">{{ prioritiesHeader.heading }}</h2>
 
       <div ref="priorityWaveRef" class="priorities-grid">
         <div

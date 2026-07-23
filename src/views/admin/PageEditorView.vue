@@ -12,6 +12,7 @@ import {
   type PageLocalePayload,
 } from '@/lib/pagePersistence'
 import { useUiStore } from '@/stores/ui.store'
+import { useMediaStore } from '@/stores/media.store'
 
 type EditableSection = {
   id: string
@@ -19,6 +20,7 @@ type EditableSection = {
   heading: string
   body: string
   items: string
+  image?: string
 }
 
 type PageDraft = {
@@ -505,7 +507,7 @@ const defaultPages: PageDraft[] = [
         heading: 'Impact numbers',
         body: 'Main impact counters on the Impact page.',
         items:
-          '293 | Villages served\n570+ | Hectares of forest\n120+ | Full-time staff\n15+ | International partners\n32 | Years of service\n4 | Strategic pillars',
+          '293 | Villages served | Across 43 communes in southeastern Cambodia.\n570+ | Hectares of forest | Managed through community forestry and nurseries.\n120+ | Full-time staff | Experts in management, agriculture and rural development.\n15+ | International partners | Including UNDP, ADB and Oxfam.\n32 | Years of service | Founded in 1994; still walking beside villages.\n4 | Strategic pillars | Environment, education, livelihoods and child protection.',
       },
       {
         id: 'impact-timeline',
@@ -513,7 +515,7 @@ const defaultPages: PageDraft[] = [
         heading: 'A journey rooted in patience.',
         body: 'Milestones shown on the Impact page.',
         items:
-          '1994 | Founding\n2002 | First community forestry\n2008 | Saving-for-Change\n2014 | 20-year horizon\n2024 | Today',
+          '1994 | Founding | Santi Sena is established to support rural communities with practical development programs.\n2002 | First community forestry | The organisation expands its work around forest stewardship and local ownership.\n2008 | Saving-for-Change | Household savings groups begin to strengthen financial resilience and local entrepreneurship.\n2014 | 20-year horizon | Programs deepen across education, livelihoods and environmental protection.\n2024 | Today | The organisation continues to support resilient, community-led change at scale.',
       },
       {
         id: 'impact-partners',
@@ -539,18 +541,35 @@ const defaultPages: PageDraft[] = [
     sections: [
       {
         id: 'numbers-overview',
-        label: 'Overview',
-        heading: 'Overview numbers',
-        body: 'Top-level statistics and labels for the public numbers page.',
+        label: 'Overview Map Stats',
+        heading: 'Our Areas of Operation',
+        body: 'Since 1994, our programs have maintained a continuous field presence, working closely with rural communities across three provinces to create sustainable impact.',
         items:
-          'Villages reached\nCommunes served\nHouseholds supported\nChildren reached\nForests protected',
+          '293 | Villages | Across 43 communes in three provinces.\n43 | Communes | Svay Rieng, Prey Veng and Kratie.\n3 | Provinces | Continuous field presence since 1994.',
       },
       {
-        id: 'numbers-method',
-        label: 'How we count',
-        heading: 'How we count',
-        body: 'Plain-language notes explaining impact measurement.',
-        items: 'Field reports\nPartner verification\nCommunity records\nAnnual review',
+        id: 'numbers-card-environment',
+        label: 'Environment Flip Card',
+        heading: 'Environment',
+        body: 'Community-led conservation that protects biodiversity and builds climate resilience.',
+        items:
+          '570+ | Hectares | Community forest protected and restored.\n50k+ | Saplings | Grown yearly in village nurseries.\n300+ | Biogas units | Installed in rural kitchens.',
+      },
+      {
+        id: 'numbers-card-education',
+        label: 'Education Flip Card',
+        heading: 'Education',
+        body: 'Early childhood education and lifelong learning opportunities for every child.',
+        items:
+          '120+ | Pre-school children | Enrolled each year.\n8 | Mobile libraries | Reaching remote villages.\n60+ | Annual scholarships | For the poorest students.',
+      },
+      {
+        id: 'numbers-card-livelihoods',
+        label: 'Livelihoods Flip Card',
+        heading: 'Livelihoods & Child Protection',
+        body: 'Economic empowerment and child safeguarding go hand in hand.',
+        items:
+          '2,400+ | SfC members | Saving and lending together.\n12 | Cooperatives | Rice, vegetables and enterprise.\n600+ | Peer educators | Trained in child rights.',
       },
     ],
     updatedAt: '',
@@ -567,12 +586,19 @@ const defaultPages: PageDraft[] = [
     secondaryAction: '',
     sections: [
       {
+        id: 'timeline-stats',
+        label: 'Hero Reach Stats',
+        heading: 'Key Reach Numbers',
+        body: 'The key reach numbers shown at the top of the Timeline page.',
+        items: '293 | Villages\n43 | Communes\n3 | Provinces',
+      },
+      {
         id: 'timeline-events',
-        label: 'Events',
+        label: 'Timeline Events',
         heading: 'Progress built through patient partnership.',
-        body: 'Timeline event titles and dates.',
+        body: 'Timeline milestones showing thirty years of growth.',
         items:
-          '1994 | Founded in Svay Rieng\n2002 | First community forestry site\n2008 | Saving-for-Change begins\n2014 | 20th anniversary and Kratie office opens\n2020 | COVID-19 response\n2024 | 30-year strategic plan',
+          '2024 | 30-Year Strategic Plan | New five-year strategy to deepen quality, diversify funding and invest in youth leadership. | The plan prioritises three pillars: (1) expanding community-led education programmes, (2) strengthening child protection systems, and (3) launching a dedicated youth innovation fund. Over 50 community dialogues were held to co‑design the strategy.\n2022 | Melaleuca Oil Enterprise | Village forest guardians launch a rural enterprise from non-timber forest products. | With technical support from Santi Sena, 12 village cooperatives now sustainably harvest melaleuca leaves, producing essential oils sold locally and exported. The enterprise provides income for 200 families while preserving the forest.\n2020 | COVID-19 Response | Emergency food, hygiene and remote-learning kits reach more than 200 villages. | In partnership with local authorities, we distributed 3,500 food packs, 5,000 hygiene kits, and 2,000 radio‑based learning materials to keep children learning despite school closures.\n2018 | Child Protection Networks | CPNs become active across 43 communes with 24/7 referral pathways. | Each network includes trained volunteers, social workers, and local police. They have handled over 1,200 cases, ensuring vulnerable children receive immediate care and legal support.\n2014 | 20th Anniversary | Kratie office opens. Programs extend to a third province and staff grows past 30 full-time. | The expansion to Kratie brought our integrated approach to another province, reaching an additional 80 villages. We also launched our first youth leadership camp that year.\n2011 | Biogas program launched | Household biogas units begin replacing firewood in remote kitchens. | By 2015, we had installed over 400 biogas units, reducing deforestation and improving indoor air quality. The program also trains local technicians to maintain the systems.\n2007 | Expansion to Prey Veng | Education and child protection programming reaches a second province. | We partnered with the provincial government to replicate the Svay Rieng model, focusing on school enrolment and community‑based child protection committees.\n2003 | Saving-for-Change begins | First women-led savings circles launched in Svay Rieng; the model becomes a program backbone. | Today, over 500 savings groups exist, with more than 12,000 members. The groups provide micro‑loans and financial literacy training, empowering women to start small businesses.\n1998 | First community forestry site | Village committees take legal stewardship of 120 hectares of degraded forest. | The site has since become a model for community‑led reforestation, with over 50,000 trees planted and a thriving biodiversity corridor. It now serves as a learning hub for other villages.\n1994 | Founded in Svay Rieng | Buddhist monks and community elders establish the Peace Army after the war, focused on moral regeneration and rural recovery. | The founding team began with just five monks and a handful of volunteers. Their first project was rebuilding a primary school destroyed during the conflict, which became the spark for decades of community development.',
       },
     ],
     updatedAt: '',
@@ -591,34 +617,34 @@ const defaultPages: PageDraft[] = [
     sections: [
       {
         id: 'partners-supporters',
-        label: 'Supporters',
+        label: 'Supporters logos',
         heading: 'Partners & Supporters',
-        body: 'International donors and supporters shown on the partners page.',
-        items: 'UNDP\nADB\nOxfam\nWorld Vision\nSave the Children\nActionAid\nCare',
+        body: 'These organizations and institutions make our work possible through funding, technical expertise, and shared commitment to sustainable development.',
+        items: 'UNDP\nAsian Development Bank\nOxfam\nBread for the World\nMisereor\nEuropean Union\nUSAID / Winrock\nDiakonia\nHeinrich Böll Stiftung\nCaritas',
       },
       {
         id: 'partners-government',
-        label: 'Government',
+        label: 'Government Relations',
         heading: 'Government Coordination',
-        body: 'Government partners and line ministries.',
+        body: 'We work hand-in-hand with national and provincial government bodies to align our programs with Cambodia\'s development priorities.',
         items:
-          'Ministry of Interior\nMinistry of Environment\nMinistry of Women and Affairs\nMinistry of Education, Youth and Sport\nProvincial Departments',
+          'Ministry of Interior | Policy, registration, and governance. | building\nMinistry of Environment | Community forestry, nursery support, and conservation. | tree\nMinistry of Women\'s Affairs | Child protection, gender equity, and safe migration. | users\nMinistry of Education, Youth and Sport | Pre-schools, mobile libraries, and youth learning. | book\nProvincial Departments | Field-level coordination in Svay Rieng, Prey Veng, and Kratie. | map-pin',
       },
       {
         id: 'partners-local',
-        label: 'Local partners',
+        label: 'Local partners list',
         heading: 'Local Partners',
-        body: 'Local institutions that make field work possible.',
+        body: 'Sustainable change is built from the ground up. These local institutions and networks are the backbone of every program we run.',
         items:
-          'Pagoda and Monastic Networks\nCommune Councils and Child Protection\nNGO Forum and Working Groups\nAcademic Partnerships\nSocial Enterprises',
+          '01 | Pagoda & Monastic Networks | Buddhist monks act as community guides and project facilitators.\n02 | Commune Councils & Child Rights | Local authorities coordinate child protection networks in 43 communes.\n03 | NGO Forum & Working Groups | Collaborative platforms for advocacy and knowledge sharing at the national level.',
       },
       {
         id: 'partners-why',
-        label: 'Why partners stay',
+        label: 'Why partners stay list',
         heading: 'Why Partners Stay',
-        body: 'Reasons shown as cards on the public page.',
+        body: 'Long-term partnerships don\'t happen by chance. Here\'s what keeps our partners committed year after year.',
         items:
-          '30 years of unbroken presence\nAudited financial systems\nDeep community trust\nProven ability to scale',
+          '30 Years of Presence | Founded in 1994, our deep roots in villages ensure long-term stability. | building\nAudited Financial Systems | External annual audits guarantee complete transparency and stewardship of funds. | bar-chart\nDeep Community Trust | Decades of relationship-building mean villages lead their own growth. | handshake\nProven Ability to Scale | A structures network of field offices lets us scale programs efficiently. | rocket',
       },
     ],
     updatedAt: '',
@@ -941,12 +967,67 @@ const defaultPages: PageDraft[] = [
     ],
     updatedAt: '',
   },
+  {
+    slug: 'news',
+    route: '/news',
+    group: 'News',
+    title: 'News',
+    eyebrow: 'News & Updates',
+    headline: 'Announcements, stories and updates from the field.',
+    intro: 'Keep up to date with Santi Sena\'s work in community development, environment and education.',
+    primaryAction: '',
+    secondaryAction: '',
+    sections: [],
+    updatedAt: '',
+  },
+  {
+    slug: 'news-detail',
+    route: '/news/:slug',
+    group: 'News',
+    title: 'News Detail',
+    eyebrow: 'Article',
+    headline: 'News Article Title Placeholder',
+    intro: 'News Article Introduction Summary Placeholder',
+    primaryAction: '',
+    secondaryAction: '',
+    sections: [],
+    updatedAt: '',
+  },
 ]
 
 const route = useRoute()
 const router = useRouter()
 const { locale } = useI18n()
+
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
+const activeLocaleName = computed(() =>
+  activeLocale.value === 'kh' ? 'Khmer' : 'English',
+)
+
 const ui = useUiStore()
+const mediaStore = useMediaStore()
+
+const uploadingCell = ref<{ sectionId: string; rowIndex: number; colIndex: number } | null>(null)
+
+async function handleImageCellUpload(event: Event, section: EditableSection, rowIndex: number, colIndex: number) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  uploadingCell.value = { sectionId: section.id, rowIndex, colIndex }
+  try {
+    const label = `${activePage.value.title} - ${section.label || 'block'} row ${rowIndex + 1} image`
+    const uploaded = await mediaStore.uploadToGoogleDrive(file, label)
+    updateItemValue(section, rowIndex, colIndex, uploaded.url)
+    ui.addToast('Image uploaded successfully to Google Drive.', 'success')
+  } catch (err) {
+    console.error('Image cell upload error:', err)
+    ui.addToast(err instanceof Error ? err.message : 'Could not upload image.', 'error')
+  } finally {
+    uploadingCell.value = null
+  }
+}
 
 const drafts = ref<PageDraft[]>(defaultPages.map(clonePage))
 const loading = ref(false)
@@ -956,12 +1037,114 @@ const savedSnapshot = ref<Record<string, string>>({})
 const previewVisible = ref(true)
 const activeSectionIndex = ref<number | null>(null)
 
-const activeLocale = computed<SupportedLocale>(() =>
-  locale.value === 'kh' ? 'kh' : 'en',
-)
-const activeLocaleName = computed(() =>
-  activeLocale.value === 'kh' ? 'Khmer' : 'English',
-)
+// ─── Visual Table Editor Helpers ─────────────────────────────────
+const showRawItems = ref<Record<string, boolean>>({})
+
+function toggleRawItems(sectionId: string) {
+  showRawItems.value[sectionId] = !showRawItems.value[sectionId]
+}
+
+function parseItemsToRows(itemsStr: string): string[][] {
+  if (!itemsStr) return [[]]
+  return itemsStr.split('\n').map(line => line.split('|').map(s => s.trim()))
+}
+
+function rowsToItemsStr(rows: string[][]): string {
+  return rows.map(cols => cols.join(' | ')).join('\n')
+}
+
+function updateItemValue(section: EditableSection, rowIndex: number, colIndex: number, value: string) {
+  const rows = parseItemsToRows(section.items)
+  const row = rows[rowIndex]
+  if (!row) return
+  
+  // Make sure row has enough columns
+  while (row.length <= colIndex) {
+    row.push('')
+  }
+  
+  // Clean pipes to avoid breaking structure
+  row[colIndex] = value.replace(/\|/g, '').trim()
+  section.items = rowsToItemsStr(rows)
+}
+
+function addRow(section: EditableSection, numCols: number) {
+  const rows = section.items ? parseItemsToRows(section.items) : []
+  rows.push(Array(numCols).fill(''))
+  section.items = rowsToItemsStr(rows)
+}
+
+function deleteRow(section: EditableSection, rowIndex: number) {
+  const rows = parseItemsToRows(section.items)
+  rows.splice(rowIndex, 1)
+  section.items = rowsToItemsStr(rows)
+}
+
+function moveRow(section: EditableSection, rowIndex: number, direction: -1 | 1) {
+  const rows = parseItemsToRows(section.items)
+  const targetIndex = rowIndex + direction
+  const temp = rows[rowIndex]
+  const target = rows[targetIndex]
+  if (!temp || !target) return
+  rows[rowIndex] = target
+  rows[targetIndex] = temp
+  section.items = rowsToItemsStr(rows)
+}
+
+function getSectionColCount(section: EditableSection): number {
+  const headers = getColumnHeaders(section.id, 99)
+  const firstHeader = headers[0]
+  if (headers && headers.length > 0 && firstHeader && !firstHeader.startsWith('Column ')) {
+    return headers.length
+  }
+  const rows = parseItemsToRows(section.items)
+  let maxCols = 1
+  for (const row of rows) {
+    if (row.length > maxCols) maxCols = row.length
+  }
+  return Math.max(1, maxCols)
+}
+
+function getColumnHeaders(sectionId: string, maxCols: number): string[] {
+  const headersMap: Record<string, string[]> = {
+    'impact-stats': ['Value', 'Label', 'Description'],
+    'timeline-stats': ['Number / Value', 'Label'],
+    'timeline-events': ['Year', 'Title', 'Short Description', 'Detailed Info', 'Image URL (optional)'],
+    'numbers-overview': ['Value', 'Label', 'Description'],
+    'numbers-card-environment': ['Value', 'Label', 'Description'],
+    'numbers-card-education': ['Value', 'Label', 'Description'],
+    'numbers-card-livelihoods': ['Value', 'Label', 'Description'],
+    'partners-supporters': ['Partner Name', 'Logo Image URL (optional)'],
+    'partners-government': ['Ministry / Department', 'Description', 'Icon Name (building/tree/users/book/map-pin)'],
+    'partners-local': ['Number / ID', 'Title', 'Description'],
+    'partners-why': ['Title / Highlight', 'Description', 'Icon Name (building/bar-chart/handshake/rocket)'],
+    'donate-support': ['Stat / Title', 'Description'],
+    'donate-areas': ['Program Area'],
+    'donate-contact': ['Contact Info'],
+    'volunteer-pathways': ['Pathway Description'],
+    'volunteer-skills': ['Skill Name'],
+    'volunteer-steps': ['Step Title'],
+    'partner-practice': ['Practice Title'],
+    'partner-areas': ['Area Name'],
+    'partner-commitments': ['Commitment Details'],
+    'contact-offices': ['Office Type', 'Contact Info / Address'],
+    'contact-form': ['Field Label'],
+    'head-office-contact': ['Type', 'Contact Details'],
+    'head-office-travel': ['Travel Note'],
+    'head-office-guidance': ['Visitor Guidance'],
+    'field-offices-list': ['Office Name', 'Location', 'Email', 'Phone / Extra'],
+    'field-offices-visits': ['Visits Guidance'],
+    'field-offices-hours': ['Hours Details'],
+    'qr-methods': ['Bank Name', 'Bank Subtitle', 'Account Name', 'Account Number', 'Currencies'],
+    'qr-notice': ['Notice Text'],
+  }
+  
+  const headers = headersMap[sectionId]
+  if (headers) return headers.slice(0, maxCols)
+  
+  return Array.from({ length: maxCols }, (_, i) => `Column ${i + 1}`)
+}
+
 
 const requestedSlug = computed(() => {
   const slug = route.params.slug
@@ -992,6 +1175,8 @@ const sectionCountLabel = computed(() => {
   const count = activePage.value.sections.length
   return `${count} block${count !== 1 ? 's' : ''}`
 })
+
+const isImpactPage = computed(() => activePage.value.group === 'Impact')
 
 onMounted(() => {
   void loadPages()
@@ -1030,6 +1215,7 @@ function cloneSection(section?: Partial<EditableSection>): EditableSection {
     heading: section?.heading || '',
     body: section?.body || '',
     items: section?.items || '',
+    image: section?.image || '',
   }
 }
 
@@ -1122,6 +1308,7 @@ function getSections(value: unknown): EditableSection[] {
       heading: getString(section, 'heading'),
       body: getString(section, 'body'),
       items: getString(section, 'items'),
+      image: getString(section, 'image'),
     }),
   )
 }
@@ -1359,7 +1546,7 @@ function formatDate(value: string) {
 </script>
 
 <template>
-  <div :class="['editor-page', { 'sidebar-open': ui.sidebarOpen }]">
+  <div :class="['editor-page', { 'sidebar-open': ui.sidebarOpen, 'impact-admin-page': isImpactPage }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -1379,9 +1566,313 @@ function formatDate(value: string) {
           </div>
         </Transition>
 
+        <!-- ============================================
+             IMPACT PAGES: Clean Get-Involved-style layout
+             ============================================ -->
+        <template v-if="isImpactPage">
+          <!-- Manager Hero Bar -->
+          <header class="impact-hero-bar">
+            <div class="impact-hero-title">
+              <p class="impact-eyebrow">{{ activePage.group }}</p>
+              <h1>{{ activePage.title }}</h1>
+              <div class="impact-meta" aria-label="Editable sections">
+                <span>{{ sectionCountLabel }}</span>
+                <span>{{ activePage.route }}</span>
+              </div>
+            </div>
+            <div class="impact-hero-actions">
+              <RouterLink class="btn btn-secondary" :to="activePage.route">View page</RouterLink>
+              <button type="button" class="btn btn-ghost" @click="resetCurrentToDefault">Reset draft</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="savingSlug === activePage.slug || loading"
+                @click="saveCurrentPage"
+              >
+                <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                {{ savingSlug === activePage.slug ? 'Saving...' : 'Save changes' }}
+              </button>
+            </div>
+          </header>
+
+          <!-- Content Grid -->
+          <div class="impact-content-grid">
+            <!-- Page Identity Panel -->
+            <section class="impact-panel" aria-labelledby="impact-identity-heading">
+              <div class="impact-panel-header">
+                <div>
+                  <p class="impact-kicker">Page setup</p>
+                  <h2 id="impact-identity-heading">Page identity</h2>
+                </div>
+                <span v-if="!activePageDirty" class="impact-saved-pill">Saved</span>
+                <span v-else class="impact-unsaved-pill">Unsaved</span>
+              </div>
+              <div class="impact-panel-body">
+                <div class="impact-form-grid">
+                  <label class="impact-field">
+                    <span>Admin title</span>
+                    <input v-model="activePage.title" type="text" placeholder="Page title" />
+                  </label>
+                  <label class="impact-field">
+                    <span>Slug</span>
+                    <input :value="activePage.slug" type="text" disabled />
+                  </label>
+                  <label class="impact-field">
+                    <span>Route</span>
+                    <input :value="activePage.route" type="text" disabled />
+                  </label>
+                  <label class="impact-field">
+                    <span>Eyebrow</span>
+                    <input v-model="activePage.eyebrow" type="text" placeholder="Section eyebrow text" />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <!-- Hero Content Panel -->
+            <section class="impact-panel" aria-labelledby="impact-hero-heading">
+              <div class="impact-panel-header">
+                <div>
+                  <p class="impact-kicker">Hero section</p>
+                  <h2 id="impact-hero-heading">Main page copy</h2>
+                </div>
+              </div>
+              <div class="impact-panel-body">
+                <label class="impact-field impact-field-wide">
+                  <span>Hero headline</span>
+                  <textarea v-model="activePage.headline" rows="2" placeholder="The main headline for this page"></textarea>
+                </label>
+                <label class="impact-field impact-field-wide">
+                  <span>Intro copy</span>
+                  <textarea v-model="activePage.intro" rows="3" placeholder="Introduction paragraph for the page"></textarea>
+                </label>
+                <div class="impact-form-grid">
+                  <label class="impact-field">
+                    <span>Primary action</span>
+                    <input v-model="activePage.primaryAction" type="text" placeholder="e.g. Support Us" />
+                  </label>
+                  <label class="impact-field">
+                    <span>Secondary action</span>
+                    <input v-model="activePage.secondaryAction" type="text" placeholder="e.g. Learn More" />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <!-- Content Blocks Panel -->
+            <section class="impact-panel impact-sections-panel" aria-labelledby="impact-blocks-heading">
+              <div class="impact-panel-header">
+                <div>
+                  <p class="impact-kicker">Content blocks</p>
+                  <h2 id="impact-blocks-heading">{{ sectionCountLabel }}</h2>
+                </div>
+                <button type="button" class="btn btn-secondary" @click="addSection">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add block
+                </button>
+              </div>
+
+              <div class="impact-blocks-list">
+                <article
+                  v-for="(section, index) in activePage.sections"
+                  :key="section.id"
+                  class="impact-block-editor"
+                >
+                  <header class="impact-block-header">
+                    <div class="impact-block-heading">
+                      <span class="impact-block-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <div>
+                        <h3>{{ section.label || 'Untitled block' }}</h3>
+                        <p>{{ section.heading || 'No heading' }}</p>
+                      </div>
+                    </div>
+                    <div class="impact-block-actions">
+                      <button type="button" class="impact-icon-btn" :disabled="index === 0" @click="moveSection(index, -1)" title="Move up">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                      </button>
+                      <button type="button" class="impact-icon-btn" :disabled="index === activePage.sections.length - 1" @click="moveSection(index, 1)" title="Move down">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                      <button type="button" class="impact-icon-btn" @click="duplicateSection(index)" title="Duplicate">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      </button>
+                      <button type="button" class="impact-icon-btn danger" @click="removeSection(index)" title="Remove">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                  </header>
+
+                  <div class="impact-block-body">
+                    <div class="impact-form-grid">
+                      <label class="impact-field">
+                        <span>Block label</span>
+                        <input v-model="section.label" type="text" placeholder="e.g. Mission, Stats" />
+                      </label>
+                      <label class="impact-field">
+                        <span>Heading</span>
+                        <input v-model="section.heading" type="text" placeholder="Section heading" />
+                      </label>
+                    </div>
+
+                    <label class="impact-field impact-field-wide">
+                      <span>Body</span>
+                      <textarea v-model="section.body" rows="3" placeholder="Descriptive body text"></textarea>
+                    </label>
+
+                    <!-- Structured Table Editor -->
+                    <div class="impact-items-section">
+                      <div class="impact-items-header">
+                        <span class="impact-items-label">
+                          Items
+                          <span class="impact-items-hint" v-if="!showRawItems[section.id]">
+                            Fill in the fields below. Row order maps to public order.
+                          </span>
+                          <span class="impact-items-hint" v-else>
+                            Edit raw list. Use <code>|</code> to separate columns.
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          class="impact-toggle-btn"
+                          @click="toggleRawItems(section.id)"
+                        >
+                          {{ showRawItems[section.id] ? 'Visual Table' : 'Raw Text' }}
+                        </button>
+                      </div>
+
+                      <!-- Raw Textarea -->
+                      <textarea
+                        v-if="showRawItems[section.id]"
+                        v-model="section.items"
+                        rows="8"
+                        class="impact-raw-textarea"
+                        placeholder="Item 1&#10;Item 2&#10;Title | Description"
+                      ></textarea>
+
+                      <!-- Visual Table -->
+                      <div v-else class="impact-table-wrapper">
+                        <table class="impact-table">
+                          <thead>
+                            <tr>
+                              <th class="col-drag"></th>
+                              <th
+                                v-for="(header, hIdx) in getColumnHeaders(section.id, getSectionColCount(section))"
+                                :key="hIdx"
+                              >
+                                {{ header }}
+                              </th>
+                              <th class="col-actions"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(row, rIdx) in parseItemsToRows(section.items)" :key="rIdx">
+                              <td class="col-drag">
+                                <div class="impact-row-arrows">
+                                  <button
+                                    type="button"
+                                    class="impact-arrow-btn"
+                                    :disabled="rIdx === 0"
+                                    @click="moveRow(section, rIdx, -1)"
+                                    title="Move row up"
+                                  >▲</button>
+                                  <button
+                                    type="button"
+                                    class="impact-arrow-btn"
+                                    :disabled="rIdx === parseItemsToRows(section.items).length - 1"
+                                    @click="moveRow(section, rIdx, 1)"
+                                    title="Move row down"
+                                  >▼</button>
+                                </div>
+                              </td>
+                              <td
+                                v-for="cIdx in getSectionColCount(section)"
+                                :key="cIdx - 1"
+                              >
+                                <!-- Image/Logo column visual picker + upload -->
+                                <div 
+                                  v-if="getColumnHeaders(section.id, getSectionColCount(section))[cIdx - 1]?.toLowerCase().includes('image') || getColumnHeaders(section.id, getSectionColCount(section))[cIdx - 1]?.toLowerCase().includes('logo')" 
+                                  class="impact-image-cell-group"
+                                >
+                                  <div class="impact-cell-image-thumb" :title="row[cIdx - 1] ? 'View full image' : 'No image'">
+                                    <img 
+                                      v-if="row[cIdx - 1]" 
+                                      :src="row[cIdx - 1]" 
+                                      alt="" 
+                                      @error="($event.target as HTMLImageElement).style.display = 'none'"
+                                    />
+                                    <svg v-else class="thumb-placeholder" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    :value="row[cIdx - 1] || ''"
+                                    @input="updateItemValue(section, rIdx, cIdx - 1, ($event.target as HTMLInputElement).value)"
+                                    placeholder="Paste URL or upload..."
+                                  />
+                                  <label class="cell-upload-btn" :class="{ loading: uploadingCell?.sectionId === section.id && uploadingCell?.rowIndex === rIdx && uploadingCell?.colIndex === cIdx - 1 }">
+                                    <svg v-if="uploadingCell?.sectionId === section.id && uploadingCell?.rowIndex === rIdx && uploadingCell?.colIndex === cIdx - 1" class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                                    <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <input 
+                                      type="file" 
+                                      accept="image/*" 
+                                      style="display: none" 
+                                      :disabled="uploadingCell?.sectionId === section.id && uploadingCell?.rowIndex === rIdx && uploadingCell?.colIndex === cIdx - 1" 
+                                      @change="handleImageCellUpload($event, section, rIdx, cIdx - 1)"
+                                    />
+                                  </label>
+                                </div>
+
+                                <!-- Default text input column -->
+                                <input
+                                  v-else
+                                  type="text"
+                                  :value="row[cIdx - 1] || ''"
+                                  @input="updateItemValue(section, rIdx, cIdx - 1, ($event.target as HTMLInputElement).value)"
+                                  placeholder="Enter value..."
+                                />
+                              </td>
+                              <td class="col-actions">
+                                <button
+                                  type="button"
+                                  class="impact-delete-row-btn"
+                                  @click="deleteRow(section, rIdx)"
+                                  title="Delete row"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                </button>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <button
+                          type="button"
+                          class="btn btn-secondary impact-add-row-btn"
+                          @click="addRow(section, getSectionColCount(section))"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          Add Row
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+
+                <div v-if="!activePage.sections.length" class="impact-empty-blocks">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  <p>No content blocks yet</p>
+                  <button class="btn btn-secondary" type="button" @click="addSection">Add your first block</button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </template>
+
+        <!-- ============================================
+             GENERIC PAGES: Existing layout (non-Impact)
+             ============================================ -->
+        <template v-else>
         <div class="editor-container">
           <!-- Editor Column -->
-          <section class="editor-column" aria-label="Page editor">
+          <section :class="['editor-column']" aria-label="Page editor">
             <!-- Page Header -->
             <header class="editor-header">
               <div class="header-left">
@@ -1682,18 +2173,21 @@ function formatDate(value: string) {
                               <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="3" placeholder="Descriptive body text"></textarea>
                             </label>
 
-                            <label class="field field-block">
-                              <span class="field-label">
-                                Items
-                                <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
-                              </span>
-                              <textarea
-                                v-model="section.items"
-                                :name="`section-${section.id}-items`"
-                                rows="4"
-                                placeholder="Item 1&#10;Item 2&#10;Title | Description"
-                              ></textarea>
-                            </label>
+                            <div class="items-editor-container">
+                              <!-- Other Pages: Default Raw Textarea -->
+                              <label class="field field-block" style="margin-top: 0;">
+                                <span class="field-label">
+                                  Items
+                                  <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
+                                </span>
+                                <textarea
+                                  v-model="section.items"
+                                  :name="`section-${section.id}-items`"
+                                  rows="4"
+                                  placeholder="Item 1&#10;Item 2&#10;Title | Description"
+                                ></textarea>
+                              </label>
+                            </div>
                           </div>
                         </div>
                       </details>
@@ -1780,7 +2274,7 @@ function formatDate(value: string) {
                           <span>{{ item.split('|').slice(1).join('|').trim() }}</span>
                         </div>
                         <div v-else class="preview-item-simple">
-                          <span class="preview-bullet"></span>
+                          <span class="previewBullet"></span>
                           <span>{{ item }}</span>
                         </div>
                       </template>
@@ -1806,6 +2300,7 @@ function formatDate(value: string) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
+        </template>
       </main>
     </div>
   </div>
@@ -1966,7 +2461,11 @@ function formatDate(value: string) {
 .editor-column {
   flex: 1;
   min-width: 0;
-  max-width: 860px;
+  max-width: 1200px;
+}
+
+.editor-column.full-width {
+  max-width: 100%;
 }
 
 /* ==============================
@@ -2345,16 +2844,16 @@ function formatDate(value: string) {
 }
 
 .form-card {
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+  border: 1px solid var(--admin-theme-border, var(--admin-border));
+  border-radius: 8px;
+  background: var(--admin-theme-surface, var(--admin-surface));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .form-card:hover {
-  box-shadow: var(--admin-shadow-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .card-header {
@@ -2363,8 +2862,8 @@ function formatDate(value: string) {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 1.1rem;
-  border-bottom: 1px solid var(--admin-border);
-  background: var(--admin-surface-soft);
+  border-bottom: 1px solid var(--admin-theme-border, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 44%, var(--admin-theme-surface, #ffffff));
 }
 
 .card-header-left {
@@ -2379,40 +2878,40 @@ function formatDate(value: string) {
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 9px;
+  border-radius: 8px;
   flex-shrink: 0;
 }
 
 .card-icon-blue {
-  background: var(--admin-blue-soft);
-  color: var(--admin-blue);
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
 }
 
 .card-icon-violet {
-  background: var(--admin-violet-soft);
-  color: var(--admin-violet);
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
 }
 
 .card-icon-amber {
-  background: var(--admin-amber-soft);
-  color: var(--admin-amber);
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
 }
 
 .card-eyebrow {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--admin-muted);
+  letter-spacing: 0.05em;
+  color: var(--admin-theme-primary-deep, #047857);
   margin-bottom: 0.05rem;
 }
 
 .card-title {
   margin: 0;
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
+  font-size: 0.94rem;
+  font-weight: 900;
+  color: var(--admin-theme-contrast, var(--admin-contrast));
 }
 
 .card-body {
@@ -2420,18 +2919,20 @@ function formatDate(value: string) {
 }
 
 .status-pill {
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 28%, transparent);
   border-radius: 999px;
-  background: var(--admin-green-soft);
-  color: #166534;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.7rem;
-  font-weight: 900;
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 11%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .status-pill.dirty {
-  background: var(--admin-amber-soft);
+  border-color: color-mix(in srgb, var(--admin-theme-amber, #d97706) 35%, transparent);
+  background: color-mix(in srgb, var(--admin-theme-amber, #d97706) 12%, transparent);
   color: #92400e;
 }
 
@@ -2460,13 +2961,13 @@ function formatDate(value: string) {
 .field-label {
   font-size: 0.78rem;
   font-weight: 800;
-  color: var(--admin-contrast-soft);
+  color: var(--admin-theme-contrast-soft, var(--admin-contrast-soft));
   letter-spacing: 0.01em;
 }
 
 .field-hint {
   font-weight: 600;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted, var(--admin-muted));
   font-size: 0.72rem;
 }
 
@@ -2479,14 +2980,15 @@ function formatDate(value: string) {
 
 input, textarea {
   width: 100%;
-  border: 1.5px solid var(--admin-border-strong);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  color: var(--admin-text);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft, #475569) 30%, var(--admin-theme-border, #cbd5e1));
+  border-radius: 6px;
+  background: var(--admin-theme-surface, var(--admin-surface));
+  color: var(--admin-theme-contrast, var(--admin-text));
   padding: 0.62rem 0.78rem;
   font-size: 0.88rem;
   line-height: 1.5;
   font-family: inherit;
+  font-weight: 600;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -2496,14 +2998,14 @@ textarea {
 }
 
 input:focus, textarea:focus {
-  border-color: var(--admin-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--admin-theme-primary, var(--admin-blue));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary, #10b981) 15%, transparent);
   outline: none;
 }
 
 input:disabled {
-  background: var(--admin-bg-deep);
-  color: var(--admin-muted);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 60%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-muted, var(--admin-muted));
   cursor: not-allowed;
 }
 
@@ -2524,32 +3026,35 @@ input::placeholder, textarea::placeholder {
 
 .sections-list {
   display: grid;
-  gap: 0.6rem;
-  padding: 0.75rem;
+  gap: 0.75rem;
+  padding: 0.9rem;
 }
 
 .section-block {
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  background: var(--admin-surface);
+  border: 1px solid var(--admin-theme-border, var(--admin-border));
+  border-radius: 8px;
+  background: var(--admin-theme-surface, var(--admin-surface));
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .section-block:hover {
-  border-color: var(--admin-border-strong);
+  border-color: color-mix(in srgb, var(--admin-theme-primary, #10b981) 40%, var(--admin-theme-border, #cbd5e1));
 }
 
 .section-active {
-  border-color: var(--admin-blue) !important;
-  box-shadow: 0 0 0 1px var(--admin-blue), var(--admin-shadow-md);
+  border-color: var(--admin-theme-primary, #10b981) !important;
+  box-shadow: 0 0 0 1px var(--admin-theme-primary, #10b981), 0 4px 12px rgba(16, 185, 129, 0.1);
 }
 
 .section-summary {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.75rem;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 32%, var(--admin-theme-surface, #ffffff));
+  border-bottom: 1px solid var(--admin-theme-border, var(--admin-border));
   cursor: pointer;
   list-style: none;
   transition: background 0.15s;
@@ -2576,7 +3081,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .section-summary:hover {
-  background: var(--admin-surface-soft);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 60%, var(--admin-theme-surface, #ffffff));
 }
 
 .summary-drag {
@@ -2591,22 +3096,34 @@ input::placeholder, textarea::placeholder {
 .summary-content {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.7rem;
   min-width: 0;
   flex: 1;
 }
 
 .summary-index {
-  width: 22px;
-  height: 22px;
+  width: 2rem;
+  height: 2rem;
   display: grid;
   place-items: center;
   border-radius: 6px;
-  background: var(--admin-bg);
-  color: var(--admin-muted);
-  font-size: 0.68rem;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 24%, var(--admin-theme-border, #cbd5e1));
+  background: var(--admin-theme-surface, #ffffff);
+  color: var(--admin-theme-primary-deep, #047857);
+  font-size: 0.74rem;
   font-weight: 900;
   flex-shrink: 0;
+}
+
+.summary-badge {
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 11%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .summary-text {
@@ -3137,6 +3654,870 @@ input::placeholder, textarea::placeholder {
 @media (min-width: 1101px) {
   .preview-toggle-btn {
     display: none;
+  }
+}
+
+/* ==============================
+   ITEMS VISUAL TABLE EDITOR
+   ============================== */
+.items-editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.items-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.toggle-raw-btn {
+  font-size: 0.74rem;
+  padding: 0.28rem 0.6rem;
+  min-height: auto;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
+  font-weight: 800;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 30%, transparent);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.toggle-raw-btn:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 22%, transparent);
+  transform: translateY(-1px);
+}
+
+.table-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.editor-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--admin-theme-border, var(--admin-border));
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.88rem;
+  background: var(--admin-theme-surface, var(--admin-surface));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.editor-table th,
+.editor-table td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--admin-theme-border, var(--admin-border));
+  text-align: left;
+}
+
+.editor-table th {
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 44%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-contrast-soft, var(--admin-contrast-soft));
+  font-weight: 800;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.editor-table td {
+  vertical-align: middle;
+}
+
+.col-drag {
+  width: 48px;
+  padding: 0.35rem !important;
+  text-align: center;
+}
+
+.col-actions {
+  width: 44px;
+  text-align: center;
+  padding: 0.35rem !important;
+}
+
+.row-arrows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.btn-arrow {
+  width: 24px;
+  height: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  background: color-mix(in srgb, var(--admin-theme-surface, #ffffff) 86%, var(--admin-theme-contrast, #0f172a) 14%);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft, #475569) 35%, var(--admin-theme-border, #cbd5e1));
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--admin-theme-contrast, var(--admin-contrast));
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.btn-arrow:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-primary-deep, #047857);
+  border-color: var(--admin-theme-primary, #10b981);
+}
+
+.btn-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.editor-table input[type="text"] {
+  width: 100%;
+  padding: 0.48rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft, #475569) 30%, var(--admin-theme-border, #cbd5e1));
+  border-radius: 6px;
+  background: var(--admin-theme-surface, var(--admin-surface));
+  color: var(--admin-theme-contrast, var(--admin-text));
+  font-size: 0.86rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.editor-table input[type="text"]:focus {
+  outline: none;
+  border-color: var(--admin-theme-primary, var(--admin-blue));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary, #10b981) 16%, transparent);
+}
+
+.btn-delete-row {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-danger, #dc2626) 40%, var(--admin-theme-border, #cbd5e1));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--admin-theme-danger, #dc2626) 8%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-danger, #dc2626);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-delete-row:hover {
+  background: var(--admin-theme-danger, #dc2626);
+  color: #ffffff;
+  border-color: var(--admin-theme-danger, #dc2626);
+}
+
+.add-row-btn {
+  align-self: flex-start;
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 0.5rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 45%, var(--admin-theme-border, #cbd5e1));
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 10%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-primary-deep, #047857);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.add-row-btn:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 20%, var(--admin-theme-surface, #ffffff));
+  border-color: var(--admin-theme-primary, #10b981);
+  transform: translateY(-1px);
+}
+
+/* ==============================
+   IMPACT PAGES: GET-INVOLVED STYLE
+   ============================== */
+
+.editor-page.impact-admin-page {
+  font-family: var(--font-family-base), 'Poppins', 'Noto Sans Khmer', sans-serif;
+  background: var(--admin-theme-bg);
+  color: var(--admin-theme-text);
+}
+
+.impact-admin-page .main {
+  padding: 1.25rem;
+}
+
+/* Hero Bar */
+.impact-hero-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
+  padding: 1rem 1.1rem;
+  margin-bottom: 0;
+}
+
+.impact-hero-bar h1,
+.impact-hero-bar p,
+.impact-panel h2,
+.impact-panel p {
+  margin: 0;
+}
+
+.impact-hero-bar h1 {
+  color: var(--admin-theme-contrast);
+  font-size: 1.32rem;
+  line-height: 1.2;
+}
+
+.impact-hero-title {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.impact-eyebrow,
+.impact-kicker {
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.impact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.impact-meta span {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 999px;
+  background: var(--admin-theme-surface-soft);
+  color: var(--admin-theme-muted);
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.impact-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Button overrides to match get-involved */
+.impact-admin-page .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.impact-admin-page .btn:hover {
+  transform: translateY(-1px);
+}
+
+.impact-admin-page .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.impact-admin-page .btn-primary {
+  border-color: var(--admin-theme-primary-deep);
+  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
+  color: #ffffff;
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
+}
+
+.impact-admin-page .btn-secondary,
+.impact-admin-page .btn-ghost {
+  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
+  color: var(--admin-theme-contrast);
+}
+
+.impact-admin-page .btn-ghost {
+  background: var(--admin-theme-surface);
+}
+
+.impact-admin-page .btn-secondary:hover,
+.impact-admin-page .btn-ghost:hover {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+}
+
+/* Content Grid */
+.impact-content-grid {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+/* Panels */
+.impact-panel {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.impact-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--admin-theme-border);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface));
+  padding: 0.85rem 1rem;
+}
+
+.impact-panel-header h2 {
+  color: var(--admin-theme-contrast);
+  font-size: 1rem;
+}
+
+.impact-saved-pill {
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 11%, transparent);
+  color: var(--admin-theme-primary-deep);
+  padding: 0.22rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.impact-unsaved-pill {
+  border: 1px solid color-mix(in srgb, var(--admin-theme-gold) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--admin-theme-gold) 11%, transparent);
+  color: var(--admin-theme-gold);
+  padding: 0.22rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.impact-panel-body {
+  padding: 1.1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* Form Elements */
+.impact-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+
+.impact-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--admin-theme-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.impact-field span {
+  color: var(--admin-theme-contrast-soft);
+}
+
+.impact-field input,
+.impact-field textarea {
+  width: 100%;
+  border: 1px solid var(--admin-theme-border-strong);
+  border-radius: 6px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 0.75rem;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.impact-field input:focus,
+.impact-field textarea:focus {
+  outline: none;
+  border-color: var(--admin-theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
+}
+
+.impact-field input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--admin-theme-bg-deep);
+}
+
+.impact-field-wide {
+  grid-column: 1 / -1;
+}
+
+.impact-field textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+
+/* Block Editors */
+.impact-blocks-list {
+  display: grid;
+  gap: 0.95rem;
+  padding: 1rem;
+  background: var(--admin-theme-surface-soft);
+  border-radius: 8px;
+  border: 1px solid var(--admin-theme-border);
+}
+
+.impact-block-editor {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  overflow: hidden;
+}
+
+.impact-block-editor:last-child {
+  border-bottom: 1px solid var(--admin-theme-border);
+}
+
+.impact-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.85rem;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
+  border-bottom: 1px solid var(--admin-theme-border);
+}
+
+.impact-block-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.impact-block-number {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.74rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.impact-block-heading h3 {
+  margin: 0;
+  color: var(--admin-theme-contrast);
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+
+.impact-block-heading p {
+  color: var(--admin-theme-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.impact-block-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.impact-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
+  color: var(--admin-theme-contrast);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.impact-icon-btn:hover:not(:disabled) {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+  transform: translateY(-1px);
+}
+
+.impact-icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.impact-icon-btn.danger {
+  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
+  color: var(--admin-theme-danger);
+}
+
+.impact-icon-btn.danger:hover:not(:disabled) {
+  border-color: var(--admin-theme-danger);
+  background: var(--admin-theme-danger);
+  color: #ffffff;
+}
+
+.impact-block-body {
+  padding: 1.1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* Items Section */
+.impact-items-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.impact-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.impact-items-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--admin-theme-contrast-soft);
+}
+
+.impact-items-hint {
+  display: block;
+  font-weight: 600;
+  color: var(--admin-theme-muted);
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.impact-items-hint code {
+  background: var(--admin-theme-surface-soft);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+
+.impact-toggle-btn {
+  border: 1px solid var(--admin-theme-border-strong);
+  border-radius: 6px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-muted);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.impact-toggle-btn:hover {
+  border-color: var(--admin-theme-primary);
+  color: var(--admin-theme-primary-deep);
+  background: color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface));
+}
+
+.impact-raw-textarea {
+  width: 100%;
+  border: 1px solid var(--admin-theme-border-strong);
+  border-radius: 6px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.65rem 0.75rem;
+  resize: vertical;
+  min-height: 120px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.impact-raw-textarea:focus {
+  outline: none;
+  border-color: var(--admin-theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
+}
+
+/* Table */
+.impact-table-wrapper {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.impact-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.85rem;
+}
+
+.impact-table thead {
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface));
+}
+
+.impact-table th {
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--admin-theme-muted);
+  border-bottom: 1px solid var(--admin-theme-border);
+}
+
+.impact-table td {
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--admin-theme-border);
+}
+
+.impact-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.impact-table tbody tr:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary) 3%, transparent);
+}
+
+.impact-table td input {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-theme-text);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.impact-table td input:hover {
+  border-color: var(--admin-theme-border);
+  background: var(--admin-theme-surface);
+}
+
+.impact-table td input:focus {
+  outline: none;
+  border-color: var(--admin-theme-primary);
+  background: var(--admin-theme-surface);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+}
+
+.impact-image-cell-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.impact-image-cell-group input {
+  flex: 1;
+  min-width: 0;
+}
+
+.impact-cell-image-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-theme-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--admin-theme-bg);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.impact-cell-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.impact-cell-image-thumb .thumb-placeholder {
+  color: var(--admin-theme-muted);
+  opacity: 0.6;
+}
+
+.cell-upload-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-theme-border-strong);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.cell-upload-btn:hover:not(.loading) {
+  border-color: var(--admin-theme-primary);
+  color: var(--admin-theme-primary-deep);
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
+  transform: translateY(-1px);
+}
+
+.cell-upload-btn.loading {
+  cursor: not-allowed;
+  opacity: 0.55;
+  border-color: var(--admin-theme-border);
+}
+
+
+.impact-table .col-drag {
+  width: 36px;
+  text-align: center;
+}
+
+.impact-table .col-actions {
+  width: 36px;
+  text-align: center;
+}
+
+.impact-row-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.impact-arrow-btn {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--admin-theme-muted);
+  cursor: pointer;
+  font-size: 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.impact-arrow-btn:hover:not(:disabled) {
+  color: var(--admin-theme-primary-deep);
+}
+
+.impact-arrow-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.impact-delete-row-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-theme-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.impact-delete-row-btn:hover {
+  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
+  color: var(--admin-theme-danger);
+}
+
+.impact-add-row-btn {
+  justify-self: start;
+  font-size: 0.78rem;
+  min-height: 32px;
+  padding: 0.35rem 0.75rem;
+}
+
+/* Empty State */
+.impact-empty-blocks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1rem;
+  color: var(--admin-theme-muted);
+  text-align: center;
+}
+
+.impact-empty-blocks p {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Dark Mode overrides */
+:global(.admin-dark) .impact-saved-pill {
+  color: var(--admin-theme-primary-deep);
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--admin-theme-primary) 11%, transparent);
+}
+
+:global(.admin-dark) .impact-unsaved-pill {
+  color: var(--admin-theme-gold);
+  border-color: color-mix(in srgb, var(--admin-theme-gold) 28%, transparent);
+  background: color-mix(in srgb, var(--admin-theme-gold) 11%, transparent);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .impact-hero-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .impact-hero-actions {
+    justify-content: flex-end;
+  }
+
+  .impact-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-block-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .impact-block-actions {
+    justify-content: flex-end;
   }
 }
 </style>
