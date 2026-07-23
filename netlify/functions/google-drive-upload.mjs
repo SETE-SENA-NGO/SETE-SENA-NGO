@@ -410,11 +410,7 @@ async function uploadDriveFile({ accessToken, file, fileName, folderId, mimeType
 
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.id) {
-    const message = driveErrorMessage(data, 'Could not upload image to Google Drive.')
-    throw httpError(message, 502, {
-      step: 'google-drive-upload',
-      googleMessage: message,
-    })
+    throw httpError(data?.error?.message || 'Could not upload image to Google Drive.', 502)
   }
 
   return data
@@ -452,10 +448,7 @@ async function makeDriveFilePublic(accessToken, fileId) {
   }
 }
 
-async function saveMediaAsset(
-  config,
-  { userId, authorization, fileName, publicUrl, mimeType, size, driveFile },
-) {
+async function saveMediaAsset(config, { userId, authorization, fileName, publicUrl, mimeType, size, driveFile }) {
   const response = await fetch(
     `${config.url}/rest/v1/media_assets?on_conflict=bucket,path&select=id,bucket,path,public_url,file_name,mime_type,file_size,created_at`,
     {
@@ -494,75 +487,6 @@ async function saveMediaAsset(
 
   return Array.isArray(data) ? data[0] : data
 }
-
-async function getMediaAsset(config, { id, authorization }) {
-  const response = await fetch(
-    `${config.url}/rest/v1/media_assets?id=eq.${encodeURIComponent(
-      id,
-    )}&select=id,bucket,path,public_url,file_name,metadata&limit=1`,
-    {
-      method: 'GET',
-      headers: userHeaders(config, authorization),
-    },
-  )
-
-  const data = await response.json().catch(() => null)
-  if (!response.ok) {
-    throw httpError(data?.message || 'Could not read media asset from Supabase.', 502, {
-      step: 'media-assets-read',
-      supabaseStatus: response.status,
-      supabaseMessage: responseDataMessage(data, response.statusText),
-    })
-  }
-
-  return Array.isArray(data) ? data[0] ?? null : data
-}
-
-async function deleteMediaAsset(config, { id, authorization }) {
-  const response = await fetch(
-    `${config.url}/rest/v1/media_assets?id=eq.${encodeURIComponent(id)}`,
-    {
-      method: 'DELETE',
-      headers: {
-        ...userHeaders(config, authorization),
-        prefer: 'return=minimal',
-      },
-    },
-  )
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => null)
-    throw httpError(data?.message || 'Could not delete media asset from Supabase.', 502, {
-      step: 'media-assets-delete',
-      supabaseStatus: response.status,
-      supabaseMessage: responseDataMessage(data, response.statusText),
-    })
-  }
-}
-
-async function deleteDriveFile(accessToken, fileId) {
-  const response = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(
-      fileId,
-    )}?supportsAllDrives=true`,
-    {
-      method: 'DELETE',
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
-    },
-  )
-
-  if (response.ok || response.status === 404) return
-
-  const data = await response.json().catch(() => null)
-  const message = driveErrorMessage(data, 'Could not delete image from Google Drive.')
-  throw httpError(message, 502, {
-    step: 'google-drive-delete',
-    googleMessage: message,
-  })
-}
-
 async function ensureMediaAssetsReady(config, authorization) {
   const response = await fetch(`${config.url}/rest/v1/media_assets?select=id&limit=1`, {
     method: 'GET',

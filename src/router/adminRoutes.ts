@@ -20,7 +20,7 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
   { path: '/admin', component: DashboardView, meta: { requiresAuth: true } },
   { path: '/admin/pages', component: PagesManagerView, meta: { requiresAuth: true } },
-  { path: '/admin/editor/contact', redirect: '/admin/contact', meta: { requiresAuth: true } },
+  { path: '/admin/editor/impact', redirect: '/admin/editor/impact-numbers', meta: { requiresAuth: true } },
   { path: '/admin/editor/:slug', component: PageEditorView, meta: { requiresAuth: true } },
   { path: '/admin/media', component: MediaLibraryView, meta: { requiresAuth: true } },
   { path: '/admin/modules/:module', component: AdminModuleView, meta: { requiresAuth: true } },

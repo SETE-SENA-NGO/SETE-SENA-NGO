@@ -1,5 +1,20 @@
 <template>
   <div class="environment-page">
+    <!-- Hero Section -->
+    <section class="hero" style="position: relative; min-height: 70vh; overflow: hidden; display: flex; align-items: center;">
+      <div style="position: absolute; inset: 0; z-index: 0;">
+        <img src="/images/programs/environment.jpg" alt="Environment" style="width: 100%; height: 100%; object-fit: cover;" />
+      </div>
+      <div class="hero-overlay" style="z-index: 1;"></div>
+      <div class="hero-content" style="z-index: 2;">
+        <span class="badge">Environment Program</span>
+        <h1>Protecting the land that sustains villages.</h1>
+        <p class="hero-subtitle">
+          Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.
+        </p>
+      </div>
+    </section>
+
     <!-- Program Overview Section -->
     <section class="section overview-section">
       <div class="container">
@@ -351,6 +366,7 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
   font-family: inherit;
   color: var(--color-ink);
   background: var(--color-cream);
+  background-image: radial-gradient(ellipse at top center, rgba(27, 163, 79, 0.08) 0%, transparent 70%);
 }
 
 .container {
@@ -430,12 +446,13 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
   position: absolute;
   inset: 0;
   background: linear-gradient(
-    90deg,
-    rgba(6, 18, 13, 0.82) 0%,
-    rgba(6, 18, 13, 0.5) 42%,
-    rgba(6, 18, 13, 0.18) 72%,
-    transparent 100%
-  );
+      90deg,
+      rgba(6, 18, 13, 0.82) 0%,
+      rgba(6, 18, 13, 0.5) 42%,
+      rgba(6, 18, 13, 0.18) 72%,
+      transparent 100%
+    ),
+    radial-gradient(circle at 75% 30%, rgba(27, 163, 79, 0.3) 0%, transparent 60%);
 }
 
 .hero-content {
@@ -602,7 +619,7 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
 /* — entry animation — */
 .initiative-item {
   position: relative;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   overflow: hidden;
   height: 400px;
   cursor: pointer;
@@ -615,7 +632,7 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
     transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1) var(--delay, 0ms),
     box-shadow 0.4s ease;
 
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .initiative-item.initiative-visible {
@@ -625,8 +642,8 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
 
 /* — hover lift — */
 .initiative-item:hover {
-  transform: translateY(-8px) scale(1.01);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(27, 163, 79, 0.22);
 }
 
 .initiative-image {
@@ -645,7 +662,7 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
 
 @media (hover: hover) {
   .initiative-item:hover .initiative-image img {
-    transform: scale(1.08);
+    transform: scale(1.06);
   }
 }
 
@@ -654,9 +671,10 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(20, 129, 62, 0.28) 0%,
-    rgba(20, 129, 62, 0.5) 50%,
-    rgba(20, 129, 62, 0.88) 100%
+    rgba(27, 163, 79, 0.05) 0%,
+    rgba(27, 163, 79, 0.4) 45%,
+    rgba(27, 163, 79, 0.95) 80%,
+    var(--primary-dark) 100%
   );
   transition: background 0.4s ease;
 }
@@ -665,9 +683,10 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
   .initiative-item:hover .initiative-overlay {
     background: linear-gradient(
       to bottom,
-      rgba(20, 129, 62, 0.38) 0%,
-      rgba(20, 129, 62, 0.62) 50%,
-      rgba(20, 129, 62, 0.92) 100%
+      rgba(27, 163, 79, 0.15) 0%,
+      rgba(27, 163, 79, 0.5) 45%,
+      rgba(27, 163, 79, 0.98) 80%,
+      var(--primary-dark) 100%
     );
   }
 }
