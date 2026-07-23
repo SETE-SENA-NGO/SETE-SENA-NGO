@@ -58,8 +58,8 @@ export const publicRoutes = [
 
   // About
   managedPage('/about', 'about', AboutView),
-  managedPage('/about/vision', 'about-vision', AboutVisionView),
-  managedPage('/about/organization', 'about-organization', OrganizationView),
+  { path: '/about/vision', component: AboutVisionView },
+  { path: '/about/organization', component: OrganizationView },
 
   // Programs
   { path: '/programs', component: ProgramsView, name: 'programs' },
