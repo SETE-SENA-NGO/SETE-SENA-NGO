@@ -236,9 +236,7 @@ onUnmounted(() => {
             <div>
               <dt>Phone</dt>
               <dd>
-                <a :href="`tel:${headquarters.phone.replace(/[^+\d]/g, '')}`">
-                  {{ headquarters.phone }}
-                </a>
+                {{ headquarters.phone }}
               </dd>
             </div>
             <div>
@@ -553,9 +551,7 @@ onUnmounted(() => {
               <div>
                 <dt>Phone</dt>
                 <dd>
-                  <a :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
-                    {{ activeOffice.phone }}
-                  </a>
+                  {{ activeOffice.phone }}
                 </dd>
               </div>
               <div>
@@ -573,9 +569,6 @@ onUnmounted(() => {
             <div class="office-actions">
               <a class="email-button email-button--primary" :href="`mailto:${activeOffice.email}`">
                 Email us
-              </a>
-              <a class="email-button" :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
-                Call office
               </a>
             </div>
           </div>
