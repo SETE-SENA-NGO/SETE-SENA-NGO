@@ -2,11 +2,14 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import { useUiStore } from '@/stores/ui.store'
 import cambodiaMap from '@/assets/maps/Cambodia Map.png'
 import locationIcon from '@/assets/maps/location_icon.png'
 import preyVengMap from '@/assets/maps/Prey_Veng.png'
 import svayRiengMap from '@/assets/maps/Svay_Rieng.png'
 import logoUrl from '@/assets/santi_sena_icon.ico'
+
+const ui = useUiStore()
 
 const headquarters = {
   name: 'Our headquarters in Svay Rieng',
@@ -233,9 +236,7 @@ onUnmounted(() => {
             <div>
               <dt>Phone</dt>
               <dd>
-                <a :href="`tel:${headquarters.phone.replace(/[^+\d]/g, '')}`">
-                  {{ headquarters.phone }}
-                </a>
+                {{ headquarters.phone }}
               </dd>
             </div>
             <div>
@@ -289,10 +290,21 @@ onUnmounted(() => {
             <div
               :key="activeOffice.id"
               class="map-frame"
-              :class="{ 'map-frame--interactive': activeOffice.id === 'all' }"
+              :class="{
+                'map-frame--interactive': activeOffice.id === 'all',
+                'map-frame--night': ui.publicDarkMode,
+              }"
             >
-              <div class="map-image-shell">
-                <img class="contact-map-image" :src="activeOffice.mapImage" alt="" />
+              <div
+                class="map-image-shell"
+                :class="{ 'map-image-shell--night': ui.publicDarkMode }"
+              >
+                <img
+                  class="contact-map-image"
+                  :class="{ 'contact-map-image--night': ui.publicDarkMode }"
+                  :src="activeOffice.mapImage"
+                  alt=""
+                />
                 <img
                   v-if="activeOffice.id !== 'all'"
                   class="map-location-pin"
@@ -539,9 +551,7 @@ onUnmounted(() => {
               <div>
                 <dt>Phone</dt>
                 <dd>
-                  <a :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
-                    {{ activeOffice.phone }}
-                  </a>
+                  {{ activeOffice.phone }}
                 </dd>
               </div>
               <div>
@@ -559,9 +569,6 @@ onUnmounted(() => {
             <div class="office-actions">
               <a class="email-button email-button--primary" :href="`mailto:${activeOffice.email}`">
                 Email us
-              </a>
-              <a class="email-button" :href="`tel:${activeOffice.phone.replace(/[^+\d]/g, '')}`">
-                Call office
               </a>
             </div>
           </div>
@@ -1078,6 +1085,28 @@ onUnmounted(() => {
   aspect-ratio: 1448 / 1086;
 }
 
+.map-frame--night {
+  overflow: visible;
+  background: transparent;
+}
+
+.map-image-shell--night {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: min(100%, 479px);
+  padding: clamp(0.55rem, 1.4vw, 0.85rem);
+  border: 1px solid rgba(74, 222, 128, 0.32);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(74, 222, 128, 0.2), rgba(20, 54, 42, 0.96) 62%),
+    rgba(20, 54, 42, 0.95);
+  box-shadow:
+    0 24px 58px rgba(74, 222, 128, 0.3),
+    inset 0 1px 0 rgba(189, 255, 213, 0.24);
+}
+
   .map-slide-enter-active,
   .map-slide-leave-active {
     transition:
@@ -1102,6 +1131,12 @@ onUnmounted(() => {
   object-fit: contain;
   object-position: center;
   filter: none;
+}
+
+.contact-map-image--night {
+  border-radius: 15px;
+  background: #fff;
+  clip-path: none;
 }
 
 .map-location-pin {
@@ -1961,9 +1996,9 @@ onUnmounted(() => {
   background:
     linear-gradient(
       90deg,
-      rgba(4, 48, 29, 0.94) 0%,
-      rgba(4, 48, 29, 0.9) 52%,
-      rgba(4, 48, 29, 0.76) 100%
+      rgba(18, 19, 18, 0.92) 0%,
+      rgba(18, 19, 18, 0.86) 52%,
+      rgba(18, 19, 18, 0.7) 100%
     ),
     url('/images/programs/hero-4.jpg') center / cover no-repeat;
   color: #fffaf2;
@@ -1975,7 +2010,7 @@ onUnmounted(() => {
 }
 
 .visit-section .section-kicker--light {
-  color: #bff6c6;
+  color: #e6e3dc;
 }
 
 .visit-section h2 {
@@ -2009,7 +2044,7 @@ onUnmounted(() => {
   height: 0.48rem;
   border: 2px solid rgba(255, 250, 242, 0.86);
   border-radius: 999px;
-  background: #bff6c6;
+  background: #d8d4ca;
   content: '';
 }
 
@@ -2020,7 +2055,7 @@ onUnmounted(() => {
 
 .visit-button--primary {
   background: var(--color-white);
-  color: #073f27;
+  color: #1d1f1d;
   box-shadow: none;
 }
 
@@ -2030,8 +2065,8 @@ onUnmounted(() => {
 }
 
 .visit-button--primary:hover {
-  background: #bff6c6;
-  color: #073f27;
+  background: #e6e3dc;
+  color: #1d1f1d;
 }
 
 .visit-button--ghost:hover {

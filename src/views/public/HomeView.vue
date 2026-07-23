@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import { defaultHomeSlides, fetchHomeSlides, type HomeSlide } from '@/lib/slidesSettings'
 import environmentImg from '@/assets/home-image/environtment.jpg'
 import educationImg from '@/assets/home-image/education.jpg'
 import livelihoodImg from '@/assets/home-image/livelihood.jpg'
@@ -21,71 +23,33 @@ interface NgoSlide {
   eyebrow: string
   title: string
   description: string
-  primaryLabel: string
-  primaryTo: string
-  secondaryLabel: string
-  secondaryTo: string
   position?: string
 }
 
-const slideItems: NgoSlide[] = [
-  {
-    image: '/images/programs/education-hero.jpg',
+function toNgoSlide(slide: HomeSlide): NgoSlide {
+  return {
+    image: slide.imageUrl,
     caption: '',
-    alt: 'Children learning with Santi Sena education support',
-    eyebrow: 'Education and Buddhist learning',
-    title: 'Helping children learn with confidence.',
-    description:
-      'Santi Sena supports schools, mobile libraries, scholarships and Buddhist education so children can keep learning close to home.',
-    primaryLabel: 'Support education',
-    primaryTo: '/qr-donate',
-    secondaryLabel: 'Explore programs',
-    secondaryTo: '/programs',
+    alt: slide.alt,
+    eyebrow: slide.eyebrow,
+    title: slide.title,
+    description: slide.description,
     position: 'center',
-  },
-  {
-    image: '/images/programs/environment.jpg',
-    caption: '',
-    alt: 'Community environmental activity in rural Cambodia',
-    eyebrow: 'Environment and climate action',
-    title: 'Protecting the land that sustains villages.',
-    description:
-      'Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.',
-    primaryLabel: 'Support the work',
-    primaryTo: '/qr-donate',
-    secondaryLabel: 'Environment program',
-    secondaryTo: '/programs/environment',
-    position: 'center',
-  },
-  {
-    image: '/images/programs/livelihood-hero2.jpg',
-    caption: '',
-    alt: 'Rural livelihood activity with community members',
-    eyebrow: 'Livelihoods and family resilience',
-    title: 'Growing practical income and food security.',
-    description:
-      'Savings groups, home gardens, cooperatives and farmer support help rural families build steadier livelihoods.',
-    primaryLabel: 'Get involved',
-    primaryTo: '/get-involved',
-    secondaryLabel: 'Livelihood program',
-    secondaryTo: '/programs/livelihood',
-    position: 'center',
-  },
-  {
-    image: '/images/programs/child-protection1.jpg',
-    caption: '',
-    alt: 'Children and community members participating in a protection activity',
-    eyebrow: 'Child protection and dignity',
-    title: 'Safeguarding children through local action.',
-    description:
-      'Child rights campaigns, youth peer groups and community networks help children grow in safer, more caring communities.',
-    primaryLabel: 'Stand with us',
-    primaryTo: '/get-involved',
-    secondaryLabel: 'Protection program',
-    secondaryTo: '/programs/child-protection',
-    position: 'center',
-  },
-]
+  }
+}
+
+// Managed from the admin Slideshow screen — starts from the built-in
+// defaults and swaps in the saved slides once they load.
+const slideItems = ref<NgoSlide[]>(defaultHomeSlides().map(toNgoSlide))
+
+onMounted(async () => {
+  try {
+    const saved = await fetchHomeSlides()
+    if (saved.length) slideItems.value = saved.map(toNgoSlide)
+  } catch {
+    // Keep the default slides if the saved slideshow can't be loaded.
+  }
+})
 
 useScrollReveal()
 </script>
@@ -112,12 +76,8 @@ useScrollReveal()
             }}
           </p>
           <div class="hero-actions">
-            <RouterLink :to="activeSlide?.primaryTo ?? '/qr-donate'" class="btn btn--primary">
-              {{ activeSlide?.primaryLabel ?? 'Support Us' }}
-            </RouterLink>
-            <RouterLink :to="activeSlide?.secondaryTo ?? '/about'" class="btn btn--outline">
-              {{ activeSlide?.secondaryLabel ?? 'Stand with us' }}
-            </RouterLink>
+            <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
+            <RouterLink to="/about" class="btn btn--outline">Stand with us</RouterLink>
           </div>
         </div>
       </div>
