@@ -4,13 +4,66 @@ import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
+import { useMediaStore } from '@/stores/media.store'
 import { supabase } from '@/lib/supabase'
 
 const ui = useUiStore()
+const media = useMediaStore()
 
 const loading = ref(false)
 const saving = ref(false)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
+
+// ── Image upload — reuses the same Google Drive upload flow as the
+// Media Library page (media.store.ts → uploadToGoogleDrive → Netlify
+// function /api/google-drive-upload). No separate storage bucket needed.
+const uploadingIndex = ref<number | null>(null)
+const dragIndex = ref<number | null>(null)
+const uploadError = ref<string | null>(null)
+
+async function uploadGoalImage(file: File, index: number) {
+  if (!file.type.startsWith('image/')) {
+    uploadError.value = 'Please choose an image file.'
+    return
+  }
+  uploadingIndex.value = index
+  uploadError.value = null
+  try {
+    const displayName = `${goals[index].title || 'Program goal'} image`
+    const item = await media.uploadToGoogleDrive(file, displayName)
+    goals[index].image = item.url
+    notice.value = {
+      type: 'success',
+      message: 'Image uploaded to Google Drive. Click "Save & view page" to publish it.',
+    }
+  } catch (e: unknown) {
+    console.error('uploadGoalImage error:', e)
+    uploadError.value = e instanceof Error ? e.message : 'Image upload failed.'
+  } finally {
+    uploadingIndex.value = null
+  }
+}
+
+function onFileInputChange(e: Event, index: number) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (file) uploadGoalImage(file, index)
+  input.value = ''
+}
+
+function onImageDrop(e: DragEvent, index: number) {
+  dragIndex.value = null
+  const file = e.dataTransfer?.files?.[0]
+  if (file) uploadGoalImage(file, index)
+}
+
+function onImageDragOver(index: number) {
+  dragIndex.value = index
+}
+
+function onImageDragLeave(index: number) {
+  if (dragIndex.value === index) dragIndex.value = null
+}
 
 // Public route this admin page edits.
 const publicPageUrl = computed(() => `${window.location.origin}/programs`)
@@ -25,7 +78,7 @@ const form = reactive({
 })
 
 // ── Goal cards — mirrors the fields ProgramView.vue renders on the
-// public site: tag, title, intro, whatWeDo, whyItMatters, quote ──
+// public site: tag, title, intro, whatWeDo, whyItMatters, quote, image ──
 interface GoalForm {
   tag: string
   title: string
@@ -33,6 +86,7 @@ interface GoalForm {
   whatWeDo: string
   whyItMatters: string
   quote: string
+  image: string
   color: 'emerald' | 'blue' | 'amber' | 'violet'
 }
 
@@ -47,6 +101,7 @@ const goals = reactive<GoalForm[]>([
     whyItMatters:
       'Southeastern Cambodia is one of the most climate-vulnerable regions in the country. Healthy forests and clean water are peacekeeping infrastructure.',
     quote: 'The forest belongs to the pagoda and the pagoda belongs to the village.',
+    image: '',
     color: 'emerald',
   },
   {
@@ -59,6 +114,7 @@ const goals = reactive<GoalForm[]>([
     whyItMatters:
       "In the districts we work in, many hamlets are more than an hour's walk from the nearest school. Early learning centres change that.",
     quote: 'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
+    image: '',
     color: 'blue',
   },
   {
@@ -71,6 +127,7 @@ const goals = reactive<GoalForm[]>([
     whyItMatters:
       'Cash predictability is what lets a family send their child to school this term instead of to a garment factory.',
     quote: 'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
+    image: '',
     color: 'amber',
   },
   {
@@ -83,6 +140,7 @@ const goals = reactive<GoalForm[]>([
     whyItMatters:
       'The border with Vietnam brings both opportunity and risk. Community-led safeguarding is the most durable defense.',
     quote: "The safest village is one where every adult knows every child's name.",
+    image: '',
     color: 'violet',
   },
 ])
@@ -219,7 +277,7 @@ async function savePage() {
           id: 'programs-goals',
           label: 'Program goals',
           heading: 'Four strategic goals',
-          body: 'Full goal cards shown on the public Programs page — title, intro, what we do, why it matters, quote.',
+          body: 'Full goal cards shown on the public Programs page — title, intro, what we do, why it matters, quote, image.',
           items: goalsItems,
         },
         {
@@ -415,7 +473,7 @@ onMounted(() => {
                 <button v-if="goalsEditing" class="card-hdr-link" type="button" @click="toggleGoals">Done</button>
               </div>
               <div class="card-body">
-                <!-- compact view — now mirrors the public page: intro, what we do,
+                <!-- compact view — mirrors the public page: image, intro, what we do,
                      why it matters, and quote all show at a glance -->
                 <div v-if="!goalsEditing" class="highlights-grid">
                   <div v-for="goal in goals" :key="goal.title" class="hcard" :class="'hcard-' + goal.color">
@@ -426,6 +484,7 @@ onMounted(() => {
                       <span class="hcard-count">{{ goal.tag }}</span>
                     </div>
                     <div class="hcard-body">
+                      <img v-if="goal.image" :src="goal.image" class="hcard-thumb" alt="" />
                       <strong>{{ goal.title }}</strong>
                       <small>{{ goal.intro }}</small>
 
@@ -444,9 +503,9 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <!-- full editable form: title, intro, what we do, why it matters, quote -->
+                <!-- full editable form: title, intro, what we do, why it matters, quote, image -->
                 <div v-else class="goal-edit-list">
-                  <div v-for="goal in goals" :key="goal.title" class="goal-edit-block" :class="'hcard-' + goal.color">
+                  <div v-for="(goal, index) in goals" :key="goal.title" class="goal-edit-block" :class="'hcard-' + goal.color">
                     <div class="goal-edit-hdr">
                       <span class="hcard-icon">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
@@ -459,6 +518,41 @@ onMounted(() => {
                         <span class="field-label">Title</span>
                         <input v-model="goal.title" type="text" placeholder="Goal title" />
                       </label>
+
+                      <label class="field">
+                        <span class="field-label">Image</span>
+                        <div
+                          class="image-upload-box"
+                          :class="{ 'has-image': goal.image, 'is-dragging': dragIndex === index }"
+                          @dragover.prevent="onImageDragOver(index)"
+                          @dragleave.prevent="onImageDragLeave(index)"
+                          @drop.prevent="onImageDrop($event, index)"
+                        >
+                          <img v-if="goal.image" :src="goal.image" class="image-upload-preview" alt="" />
+
+                          <div class="image-upload-inner">
+                            <svg v-if="!goal.image" class="image-upload-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                            <strong>{{ goal.image ? 'Replace Image' : 'Edit Image' }}</strong>
+                            <small>{{ uploadingIndex === index ? 'Uploading…' : 'Choose a file or drag & drop' }}</small>
+
+                            <input
+                              :id="'goal-image-input-' + index"
+                              type="file"
+                              accept="image/*"
+                              class="image-upload-input"
+                              :disabled="uploadingIndex === index"
+                              @change="onFileInputChange($event, index)"
+                            />
+                            <label :for="'goal-image-input-' + index" class="image-upload-btn" :class="{ disabled: uploadingIndex === index }">
+                              <svg v-if="uploadingIndex !== index" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
+                              <svg v-else class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                              {{ uploadingIndex === index ? 'Uploading' : 'Upload' }}
+                            </label>
+                          </div>
+                        </div>
+                        <p v-if="uploadError && uploadingIndex === null" class="image-upload-error">{{ uploadError }}</p>
+                      </label>
+
                       <label class="field">
                         <span class="field-label">Intro (shown on the card)</span>
                         <textarea v-model="goal.intro" rows="2" placeholder="Short summary shown on the compact card."></textarea>
@@ -557,18 +651,25 @@ onMounted(() => {
    class lives on <html> (which never gets the attribute) the
    rule can never match. Wrapping both sides in one :global()
    call keeps the whole selector unscoped, exactly like the
-   Education page does. ── */
+   Education page does.
+
+   GREEN ACCENT: --blue / --blue-soft / --blue-glow are set to
+   green here (not blue) so every element that uses the blue
+   accent — badges, breadcrumb link, "Quick access"/"Initiatives"
+   labels, "Edit cards" link, icons — turns green in dark mode,
+   matching the Education dashboard. Light mode keeps its
+   original blue further up in this file. ── */
 :global(.admin-dark .edu-dash) {
   --bg: #080c1a;
-  --surface: #101826;
-  --border: #1c2642;
-  --border-s: #263252;
+  --surface: #0d1f17;
+  --border: #1c3327;
+  --border-s: #274434;
   --text: #c8d2e6;
   --contrast: #eaf0f8;
   --muted: #7a8aaa;
-  --blue: #3b82f6;
-  --blue-glow: rgba(59,130,246,0.2);
-  --blue-soft: #172244;
+  --blue: #10b981;
+  --blue-glow: rgba(16,185,129,0.2);
+  --blue-soft: #142a22;
   --emerald: #10b981;
   --emerald-soft: #142a22;
   --amber: #f59e0b;
@@ -577,7 +678,7 @@ onMounted(() => {
   --violet-soft: #1c1640;
   --slate: #8896b0;
   --slate-soft: #121a2e;
-  --btn-primary-bg: #3b82f6;
+  --btn-primary-bg: #10b981;
   --btn-primary-text: #ffffff;
 }
 
@@ -749,7 +850,17 @@ onMounted(() => {
 .hcard-body strong { color: var(--contrast); font-size: 0.8rem; font-weight: 800; }
 .hcard-body small { color: var(--muted); font-size: 0.7rem; font-weight: 600; line-height: 1.4; }
 
-/* ─── NEW: expanded detail blocks inside the compact goal card
+/* thumbnail shown above the title in the compact goal card */
+.hcard-thumb {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.4rem;
+  border: 1px solid var(--border);
+}
+
+/* ─── expanded detail blocks inside the compact goal card
        (what we do / why it matters / quote) — mirrors the public
        Programs page content so admins can preview it at a glance ─── */
 .hcard-detail {
@@ -783,7 +894,7 @@ onMounted(() => {
   line-height: 1.5;
 }
 
-/* ─── GOAL EDIT LIST (full editable form: title, intro, what we do, why it matters, quote) ─── */
+/* ─── GOAL EDIT LIST (full editable form: title, image, intro, what we do, why it matters, quote) ─── */
 .goal-edit-list { display: grid; gap: 1rem; }
 .goal-edit-block {
   border: 1px solid var(--border); border-radius: var(--radius-lg);
@@ -792,6 +903,74 @@ onMounted(() => {
 .goal-edit-hdr {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 0.75rem;
+}
+
+/* ─── IMAGE UPLOAD BOX (goal editor) ─── */
+.image-upload-box {
+  position: relative;
+  border: 1.5px dashed var(--border-s);
+  border-radius: var(--radius-lg);
+  background: var(--slate-soft);
+  padding: 1.5rem 1rem;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.image-upload-box.is-dragging {
+  border-color: var(--emerald);
+  background: var(--emerald-soft);
+}
+.image-upload-box.has-image {
+  padding: 0.75rem;
+  justify-items: stretch;
+}
+.image-upload-preview {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.image-upload-inner {
+  display: grid;
+  gap: 0.3rem;
+  justify-items: center;
+}
+.image-upload-icon {
+  width: 40px; height: 40px;
+  padding: 9px;
+  border-radius: var(--radius-md);
+  background: var(--emerald-soft);
+  color: var(--emerald);
+}
+.image-upload-inner strong { font-size: 0.85rem; font-weight: 800; color: var(--contrast); }
+.image-upload-inner small { font-size: 0.76rem; color: var(--muted); font-weight: 600; margin-bottom: 0.15rem; }
+.image-upload-input {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+.image-upload-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  background: var(--emerald);
+  color: #fff;
+  font-size: 0.8rem; font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.image-upload-btn:hover { opacity: 0.9; }
+.image-upload-btn.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
+.image-upload-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #dc2626;
 }
 
 /* ─── PRIORITY VIEW LIST (compact, "How we keep the tree alive") ─── */

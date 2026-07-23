@@ -138,6 +138,10 @@ async function loadFromSupabase() {
               whatWeDo: typeof src?.whatWeDo === 'string' ? src.whatWeDo : g.whatWeDo,
               whyItMatters: typeof src?.whyItMatters === 'string' ? src.whyItMatters : g.whyItMatters,
               quote: typeof src?.quote === 'string' ? src.quote : g.quote,
+              // Only override the bundled default image once the admin has actually
+              // pasted a URL — an empty string from a freshly-added goal should
+              // still fall back to the shipped image instead of rendering broken.
+              image: typeof src?.image === 'string' && src.image ? src.image : g.image,
             }
           })
         }
