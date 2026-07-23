@@ -58,6 +58,7 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'impact',
     label: 'Impact',
+    path: '/admin/editor/impact-numbers',
     items: [
       { slug: 'impact-numbers', label: 'Numbers' },
       { slug: 'impact-timeline', label: 'Timeline' },
@@ -99,7 +100,7 @@ function isNavActive(item: NavItem) {
 }
 
 function isGroupActive(group: PageGroup) {
-  if (isActive(editorPath(group.slug))) return true
+  if (isActive(group.path ?? editorPath(group.slug))) return true
   return group.items.some((item) => isActive(item.path ?? editorPath(item.slug)))
 }
 
@@ -155,9 +156,9 @@ async function logout() {
         :open="isGroupOpen(group)">
         <summary>
           <RouterLink
-            :to="editorPath(group.slug)"
+            :to="group.path ?? editorPath(group.slug)"
             class="link summary-link"
-            :class="{ active: isActive(editorPath(group.slug)) }"
+            :class="{ active: group.items.length === 0 ? isActive(group.path ?? editorPath(group.slug)) : (group.path ? isActive(group.path) && !group.items.some((item) => isActive(item.path ?? editorPath(item.slug))) : false) }"
             @click.stop="ui.closeSidebarForNavigation"
           >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
