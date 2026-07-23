@@ -95,7 +95,7 @@ export const useMediaStore = defineStore('media', () => {
     progress.value = 10
     error.value = null
 
-    const path = `website-images/${Date.now()}_${safeStorageFileName(file.name)}`
+    const path = `website-images/${uniqueUploadToken()}_${safeStorageFileName(file.name) || 'image'}`
 
     try {
       const { data: uploaded, error: uploadError } = await supabase.storage
@@ -134,7 +134,7 @@ export const useMediaStore = defineStore('media', () => {
       error.value = e instanceof Error ? e.message : 'Upload failed'
       throw e
     } finally {
-      saving.value = false
+      uploading.value = false
     }
   }
 
@@ -323,6 +323,14 @@ function mediaDatabaseErrorMessage(error: unknown, fallback: string) {
   }
 
   return message
+}
+
+function uniqueUploadToken() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

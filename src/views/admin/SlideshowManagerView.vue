@@ -293,6 +293,8 @@ async function save() {
                   <div class="image-actions">
                     <label class="upload-btn">
                       <input
+                        :id="`${activeSlide.id}-image-upload`"
+                        :name="`${activeSlide.id}-image-upload`"
                         type="file"
                         accept="image/*"
                         class="sr-only"
@@ -315,6 +317,7 @@ async function save() {
                     <input
                       :id="`${activeSlide.id}-alt`"
                       v-model="activeSlide.alt"
+                      :name="`${activeSlide.id}-alt`"
                       placeholder="Describe the photo for accessibility"
                     />
                   </div>
@@ -326,6 +329,7 @@ async function save() {
                     <input
                       :id="`${activeSlide.id}-eyebrow`"
                       v-model="activeSlide.eyebrow"
+                      :name="`${activeSlide.id}-eyebrow`"
                       placeholder="e.g. Education and Buddhist learning"
                     />
                   </div>
@@ -334,6 +338,7 @@ async function save() {
                     <input
                       :id="`${activeSlide.id}-title`"
                       v-model="activeSlide.title"
+                      :name="`${activeSlide.id}-title`"
                       placeholder="e.g. Helping children learn with confidence."
                     />
                   </div>
@@ -342,6 +347,7 @@ async function save() {
                     <textarea
                       :id="`${activeSlide.id}-description`"
                       v-model="activeSlide.description"
+                      :name="`${activeSlide.id}-description`"
                       rows="4"
                       placeholder="One or two sentences shown under the title"
                     />

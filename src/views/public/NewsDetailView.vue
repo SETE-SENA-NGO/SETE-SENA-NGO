@@ -506,7 +506,9 @@ const copyLink = () => {
               <p>Get the latest updates delivered to your inbox.</p>
               <div class="newsletter-mini-form">
                 <input
+                  id="news-detail-newsletter-email"
                   type="email"
+                  name="news-detail-newsletter-email"
                   placeholder="Your email"
                   class="mini-input"
                 />

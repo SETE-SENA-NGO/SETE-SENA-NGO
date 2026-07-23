@@ -148,7 +148,9 @@ async function confirmDelete(item: { id: string; name: string }) {
         </header>
 
         <input
+          id="media-library-upload"
           ref="fileInput"
+          name="media-library-upload"
           type="file"
           multiple
           accept="image/jpeg,image/png,image/webp,image/gif"

@@ -521,12 +521,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
                 <div class="field-row">
                   <label class="field">
                     <span>Hero image URL</span>
-                    <input v-model="draft.hero.image" type="url" :placeholder="imageHint" />
+                    <input
+                      id="get-involved-hero-image"
+                      v-model="draft.hero.image"
+                      name="get-involved-hero-image"
+                      type="url"
+                      :placeholder="imageHint"
+                    />
                   </label>
                 </div>
                 <label class="upload-field upload-box">
                   <span>{{ uploadingHero ? 'Uploading image...' : 'Upload replacement image' }}</span>
-                  <input type="file" accept="image/*" :disabled="uploadingHero" @change="uploadHeroImage" />
+                  <input
+                    id="get-involved-hero-upload"
+                    name="get-involved-hero-upload"
+                    type="file"
+                    accept="image/*"
+                    :disabled="uploadingHero"
+                    @change="uploadHeroImage"
+                  />
                 </label>
               </div>
             </div>
@@ -579,12 +592,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
                   <div class="card-image-controls image-control-panel">
                     <label class="field">
                       <span>Image URL</span>
-                      <input v-model="card.image" type="url" :placeholder="imageHint" />
+                      <input
+                        :id="`get-involved-card-${index}-image`"
+                        v-model="card.image"
+                        :name="`get-involved-card-${index}-image`"
+                        type="url"
+                        :placeholder="imageHint"
+                      />
                     </label>
                     <label class="upload-field upload-box">
                       <span>{{ uploadingCardIndex === index ? 'Uploading image...' : 'Upload card image' }}</span>
                       <input
                         type="file"
+                        :name="`get-involved-card-${index}-upload`"
                         accept="image/*"
                         :disabled="uploadingCardIndex === index"
                         @change="uploadCardImage($event, index)"
@@ -596,15 +616,30 @@ function isRecord(value: unknown): value is Record<string, unknown> {
                 <div class="card-form-grid">
                   <label class="field">
                     <span>Label</span>
-                    <input v-model="card.label" type="text" />
+                    <input
+                      :id="`get-involved-card-${index}-label`"
+                      v-model="card.label"
+                      :name="`get-involved-card-${index}-label`"
+                      type="text"
+                    />
                   </label>
                   <label class="field">
                     <span>Title</span>
-                    <input v-model="card.title" type="text" />
+                    <input
+                      :id="`get-involved-card-${index}-title`"
+                      v-model="card.title"
+                      :name="`get-involved-card-${index}-title`"
+                      type="text"
+                    />
                   </label>
                   <label class="field wide">
                     <span>Description</span>
-                    <textarea v-model="card.body" rows="3"></textarea>
+                    <textarea
+                      :id="`get-involved-card-${index}-body`"
+                      v-model="card.body"
+                      :name="`get-involved-card-${index}-body`"
+                      rows="3"
+                    ></textarea>
                   </label>
                 </div>
               </article>

@@ -651,7 +651,9 @@ onUnmounted(() => {
               </span>
               <span class="field-control">
                 <input
+                  id="contact-name"
                   v-model="name"
+                  name="contact-name"
                   required
                   autocomplete="name"
                   type="text"
@@ -668,7 +670,9 @@ onUnmounted(() => {
               <span class="field-control">
                 <input
                   :key="activeContactMethod.id"
+                  :id="`contact-${activeContactMethod.id}`"
                   v-model="contactDetail"
+                  :name="`contact-${activeContactMethod.id}`"
                   required
                   :autocomplete="activeContactMethod.autocomplete"
                   :type="activeContactMethod.inputType"
@@ -685,7 +689,9 @@ onUnmounted(() => {
             </span>
             <span class="field-control">
               <input
+                id="contact-subject"
                 v-model="subject"
+                name="contact-subject"
                 autocomplete="off"
                 type="text"
                 placeholder="What would you like to discuss?"
@@ -700,7 +706,9 @@ onUnmounted(() => {
             </span>
             <span class="field-control">
               <textarea
+                id="contact-message"
                 v-model="message"
+                name="contact-message"
                 required
                 rows="5"
                 :maxlength="messageMaxLength"

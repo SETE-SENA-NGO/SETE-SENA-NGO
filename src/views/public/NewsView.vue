@@ -570,8 +570,10 @@ const scrollToTop = () => {
           </div>
           <div class="newsletter-form">
             <input
+              id="newsletter-email"
               type="email"
               v-model="newsletterEmail"
+              name="newsletter-email"
               placeholder="Enter your email"
               class="newsletter-input"
             />

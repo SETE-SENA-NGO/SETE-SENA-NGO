@@ -33,15 +33,15 @@ async function onSubmit() {
     </div>
     <label>
       Slug
-      <input v-model="draft.slug" required />
+      <input id="content-editor-slug" v-model="draft.slug" name="content-editor-slug" required />
     </label>
     <label>
       Title
-      <input v-model="draft.title" required />
+      <input id="content-editor-title" v-model="draft.title" name="content-editor-title" required />
     </label>
     <label>
       Body
-      <textarea v-model="draft.body" rows="12" />
+      <textarea id="content-editor-body" v-model="draft.body" name="content-editor-body" rows="12" />
     </label>
     <button type="submit" class="primary">Save</button>
   </form>

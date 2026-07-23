@@ -70,7 +70,14 @@
               <label for="email">Email</label>
               <div class="input-wrapper">
                 <span class="material-icons-outlined input-icon"></span>
-                <input id="email" v-model="email" type="email" placeholder="Enter your email" required />
+                <input
+                  id="email"
+                  v-model="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  required
+                />
               </div>
             </div>
 
@@ -82,6 +89,7 @@
     <input
       id="password"
       v-model="password"
+      name="password"
       :type="showPassword ? 'text' : 'password'"
       placeholder="Enter your password"
       required
@@ -114,7 +122,7 @@
             <!-- Options -->
             <div class="form-options">
               <label class="remember-me">
-                <input type="checkbox" v-model="remember" />
+                <input id="remember-me" v-model="remember" name="remember-me" type="checkbox" />
                 <span>Remember Me</span>
               </label>
               <button type="button" class="forgot-link" :disabled="loading" @click="handlePasswordReset">
