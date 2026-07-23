@@ -36,8 +36,38 @@ const pathway = [
 ]
 
 /* ─── Dynamic data from DB ─────────────────────── */
+const FALLBACK_TEAM_CARDS = [
+  {
+    role: 'Program Director',
+    desc: 'Oversees child protection programs, advocacy, and partnerships across provinces.',
+    icon: 'compass',
+  },
+  {
+    role: 'Field Coordinators',
+    desc: 'Manage child protection networks, peer education and safe migration training in target villages.',
+    icon: 'map',
+  },
+  {
+    role: 'Safeguarding Trainers',
+    desc: 'Deliver training for teachers, monks and volunteers on child rights and case referral.',
+    icon: 'heart',
+  },
+  {
+    role: 'Monitoring & Evaluation',
+    desc: 'Track case outcomes, network coverage and community impact across provinces.',
+    icon: 'chart',
+  },
+]
+
 const dynamicStats = ref<Array<{ number: string; label: string; description: string; icon: string; image: string }>>(FALLBACK_STATS)
 const whatWeDoItems = ref<WorkItem[]>(FALLBACK_WHAT_WE_DO)
+const teamCards = ref(FALLBACK_TEAM_CARDS)
+const introText = ref(
+  'Cross-border migration, poverty and family separation put rural Cambodian children at risk of unsafe labour and trafficking. Santi Sena works with villages, schools and pagodas to build the safety net closest to the child — before anything goes wrong.'
+)
+const approachText = ref(
+  'Every network is anchored by the people children already trust — mothers, monks, teachers, commune council members. We train, coach and connect them to formal referral pathways so a case identified in a village at dawn reaches the provincial social affairs office by dusk.'
+)
 
 // Generic scroll-reveal: every ref below gets an `in-view` class added the
 // first time it enters the viewport, then is unobserved. One shared observer
@@ -132,13 +162,111 @@ function applyPageBody(body: string) {
         }))
       }
     }
+
+    // Team — from 'child-protection-team' section items
+    const teamSection = sections.find((s) => s.id === 'child-protection-team')
+    if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
+      const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        teamCards.value = lines.map(line => {
+          const parts = line.split('|').map((p: string) => p.trim())
+          return {
+            role: parts[0] || '',
+            icon: parts[1] || 'chart',
+            desc: parts[2] || parts[0] || '',
+          }
+        })
+      }
+    }
   } catch {
     // Invalid JSON — keep fallbacks
   }
 }
 
+/* ─── Load from programs table metadata ───────── */
+function applyProgramMetadata(meta: Record<string, unknown>) {
+  // Hero intro
+  if (typeof meta.intro === 'string' && meta.intro.trim()) {
+    introText.value = meta.intro.trim()
+  }
+
+  // Stats band
+  if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+    dynamicStats.value = meta.statsBand.map((s: Record<string, unknown>, i: number) => ({
+      number: String(s.number ?? ''),
+      label: String(s.label ?? ''),
+      description: String(s.description ?? ''),
+      icon: labelToIcon(String(s.label ?? '')),
+      image: FALLBACK_STATS[i % FALLBACK_STATS.length]?.image || imageUrls.programs.childProtection,
+    }))
+  }
+
+  // Sections
+  if (Array.isArray(meta.sections)) {
+    const sections = meta.sections as Array<Record<string, unknown>>
+
+    // What we do — from 'child-protection-work' section items
+    const workSection = sections.find((s) => s.id === 'child-protection-work')
+    if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
+      const lines = workSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        whatWeDoItems.value = lines.map((title: string, i: number) => ({
+          title,
+          text: (typeof workSection.body === 'string' ? workSection.body : '') || FALLBACK_WHAT_WE_DO[i]?.text || '',
+          image: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.childProtection,
+          color: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.color || '#0a7d5c',
+        }))
+      }
+    }
+
+    // Approach — from 'child-protection-approach' section body
+    const approachSection = sections.find((s) => s.id === 'child-protection-approach')
+    if (approachSection && typeof approachSection.body === 'string' && approachSection.body.trim()) {
+      approachText.value = approachSection.body.trim()
+    }
+
+    // Team — from 'child-protection-team' section items
+    const teamSection = sections.find((s) => s.id === 'child-protection-team')
+    if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
+      const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        teamCards.value = lines.map(line => {
+          const parts = line.split('|').map((p: string) => p.trim())
+          return {
+            role: parts[0] || '',
+            icon: parts[1] || 'chart',
+            desc: parts[2] || parts[0] || '',
+          }
+        })
+      }
+    }
+  }
+}
+
+async function loadFromProgramsTable() {
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('metadata')
+      .eq('slug', 'programs-child-protection')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[CPView] Programs load failed:', error.message)
+      return
+    }
+
+    if (data && data.metadata) {
+      applyProgramMetadata(data.metadata as Record<string, unknown>)
+    }
+  } catch (e) {
+    console.warn('[CPView] Programs load crashed:', e)
+  }
+}
+
 /* ─── Load from pages table ───────────────────── */
 async function loadFromDb() {
+  // Optional legacy `pages` body applies first as a base layer.
   try {
     const { data, error } = await supabase
       .from('pages')
@@ -148,22 +276,22 @@ async function loadFromDb() {
 
     if (error) {
       console.warn('[CPView] DB load failed:', error.message)
-      return
+    } else if (data && data.body) {
+      applyPageBody(data.body as string)
     }
-
-    if (!data || !data.body) {
-      console.warn('[CPView] No page data found, using fallbacks')
-      return
-    }
-
-    applyPageBody(data.body as string)
   } catch (e) {
     console.warn('[CPView] DB load crashed:', e)
   }
+
+  // The programs table metadata (edited from the admin Child Protection
+  // dashboard) is always applied last, so admin edits are the source of
+  // truth for this page — matching the Education program flow.
+  await loadFromProgramsTable()
 }
 
 /* ─── Real-time subscription ───────────────────── */
 let realtimeChannelCP: ReturnType<typeof supabase.channel> | null = null
+let realtimeProgramsChannel: ReturnType<typeof supabase.channel> | null = null
 
 function setupRealtime() {
   realtimeChannelCP = supabase
@@ -181,6 +309,28 @@ function setupRealtime() {
           const row = payload.new as Record<string, unknown>
           if (typeof row.body === 'string') {
             applyPageBody(row.body)
+          }
+        }
+      },
+    )
+    .subscribe()
+
+  // Also subscribe to programs table changes
+  realtimeProgramsChannel = supabase
+    .channel('cp-programs-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'programs',
+        filter: 'slug=eq.programs-child-protection',
+      },
+      (payload) => {
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (row.metadata) {
+            applyProgramMetadata(row.metadata as Record<string, unknown>)
           }
         }
       },
@@ -227,6 +377,10 @@ onBeforeUnmount(() => {
     supabase.removeChannel(realtimeChannelCP)
     realtimeChannelCP = null
   }
+  if (realtimeProgramsChannel) {
+    supabase.removeChannel(realtimeProgramsChannel)
+    realtimeProgramsChannel = null
+  }
 })
 </script>
 
@@ -267,10 +421,7 @@ onBeforeUnmount(() => {
       <div class="container" ref="introEl">
         <div class="intro-rule" aria-hidden="true"></div>
         <p class="intro-text text-center">
-          Cross-border migration, poverty and family separation put rural Cambodian
-          children at risk of unsafe labour and trafficking. Santi Sena works with
-          villages, schools and pagodas to build the safety net closest to the child
-          — before anything goes wrong.
+          {{ introText }}
         </p>
       </div>
     </section>
@@ -300,12 +451,7 @@ onBeforeUnmount(() => {
       <div class="container">
         <p class="section-eyebrow text-center">Our method</p>
         <h2 class="section-title text-center">Our approach</h2>
-        <p class="approach-text text-center">
-          Every network is anchored by the people children already trust — mothers,
-          monks, teachers, commune council members. We train, coach and connect them
-          to formal referral pathways so a case identified in a village at dawn
-          reaches the provincial social affairs office by dusk.
-        </p>
+        <p class="approach-text text-center">{{ approachText }}</p>
 
         <ol class="pathway" ref="pathwayEl">
           <svg class="pathway-wave" viewBox="0 0 100 220" preserveAspectRatio="none">
@@ -336,6 +482,39 @@ onBeforeUnmount(() => {
             <p class="pathway-text">{{ node.text }}</p>
           </li>
         </ol>
+      </div>
+    </section>
+
+    <!-- Team / Organizational Structure -->
+    <section class="section-cream">
+      <div class="container">
+        <p class="section-eyebrow text-center">Organizational Structure</p>
+        <h2 class="section-title text-center">Who delivers child protection on the ground</h2>
+
+        <div class="team-grid">
+          <div v-for="(member, index) in teamCards" :key="member.role" class="team-card" :style="{ transitionDelay: `${index * 0.08}s` }">
+            <div class="team-icon-wrap">
+              <svg v-if="member.icon === 'compass'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+                <path d="M16 8l-3 5-5 3 3-5 5-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              <svg v-else-if="member.icon === 'map'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6" />
+              </svg>
+              <svg v-else-if="member.icon === 'heart'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21l-1.5-1.4C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1A5.7 5.7 0 0116.5 3C19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.1L12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 20v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.6" />
+                <path d="M18 8l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3 class="team-role">{{ member.role }}</h3>
+            <p class="team-desc">{{ member.desc }}</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -891,6 +1070,73 @@ onBeforeUnmount(() => {
 }
 
 .cta-row { display: flex; }
+
+/* ===== Team / Organizational Structure ===== */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.team-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(22, 52, 42, 0.06);
+  box-shadow: 0 8px 24px -12px rgba(22, 52, 42, 0.12);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  text-align: center;
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 40px -16px rgba(22, 52, 42, 0.22);
+  border-color: var(--primary-color);
+}
+
+.team-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.team-card:hover .team-icon-wrap {
+  background: var(--primary-color);
+  color: #ffffff;
+  transform: scale(1.1) rotate(-4deg);
+}
+
+.team-icon-wrap svg { width: 24px; height: 24px; }
+
+.team-role {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0 0 0.6rem;
+  line-height: 1.3;
+}
+
+.team-desc {
+  color: var(--color-ink-soft, #555);
+  line-height: 1.6;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .team-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .team-grid { grid-template-columns: 1fr; }
+}
 
 /* ===== Buttons ===== */
 .btn-primary {

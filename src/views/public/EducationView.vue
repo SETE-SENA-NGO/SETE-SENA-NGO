@@ -4,10 +4,10 @@ import { RouterLink } from 'vue-router'
 import { imageUrls } from '@/lib/imageUrls'
 import { supabase } from '@/lib/supabase'
 
-const childIntroImage = imageUrls.education.intro
-const childReadingImage = imageUrls.education.reading
-const childStudyImage = imageUrls.education.study
-const childTeacherImage = imageUrls.education.teacher
+const childIntroImage = ref(imageUrls.education.intro)
+const childReadingImage = ref(imageUrls.education.reading)
+const childStudyImage = ref(imageUrls.education.study)
+const childTeacherImage = ref(imageUrls.education.teacher)
 
 /* ─── Static fallback data ──────────────────────── */
 const FALLBACK_STATS = [
@@ -102,6 +102,20 @@ function applyMetadata(meta: Record<string, unknown>) {
     heroDesc.value = meta.intro.trim()
   }
 
+  // Images from metadata
+  if (typeof meta.introImageUrl === 'string' && meta.introImageUrl.trim()) {
+    childIntroImage.value = meta.introImageUrl.trim()
+  }
+  if (typeof meta.readingImageUrl === 'string' && meta.readingImageUrl.trim()) {
+    childReadingImage.value = meta.readingImageUrl.trim()
+  }
+  if (typeof meta.teacherImageUrl === 'string' && meta.teacherImageUrl.trim()) {
+    childTeacherImage.value = meta.teacherImageUrl.trim()
+  }
+  if (typeof meta.studyImageUrl === 'string' && meta.studyImageUrl.trim()) {
+    childStudyImage.value = meta.studyImageUrl.trim()
+  }
+
   // Stats band
   if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
     dynamicStats.value = meta.statsBand.map((s: Record<string, unknown>) => ({
@@ -143,6 +157,26 @@ function applyMetadata(meta: Record<string, unknown>) {
         .filter(Boolean)
       if (parsed.length > 0) {
         whyItems.value = parsed
+      }
+    }
+
+    // Team / Organizational Structure — from 'education-team' section items
+    // Items format: role | icon | description  (one per line, icon optional)
+    const teamSection = sections.find((s) => s.id === 'education-team')
+    if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
+      const parsed = teamSection.items
+        .split('\n')
+        .map((l: string) => l.trim())
+        .filter(Boolean)
+      if (parsed.length > 0) {
+        teamCards.value = parsed.map(line => {
+          const parts = line.split('|').map((p: string) => p.trim())
+          return {
+            role: parts[0] || '',
+            icon: parts[1] || 'chart',
+            desc: parts[2] || parts[0] || '',
+          }
+        })
       }
     }
   }
@@ -333,8 +367,8 @@ onBeforeUnmount(() => {
           </div>
           <div :ref="(el) => setRevealRef(el, 1)" class="reveal intro-image-wrap">
             <div class="intro-image-frame">
-              <img :src="childIntroImage" alt="Young children learning in a Cambodian pre-school classroom"
-                loading="lazy" decoding="async" />
+          <img :src="childIntroImage" alt="Young children learning in a Cambodian pre-school classroom"
+            loading="lazy" decoding="async" />
             </div>
             <div class="intro-image-accent">
               <span class="accent-number">30+</span>
@@ -367,12 +401,12 @@ onBeforeUnmount(() => {
           <div :ref="(el) => setRevealRef(el, 3)" class="reveal col-image">
             <div class="photo-duo">
               <div class="col-image-frame photo-back">
-                <img :src="childReadingImage" alt="Children reading books at a community school" loading="lazy"
-                  decoding="async" />
+              <img :src="childReadingImage" alt="Children reading books at a community school" loading="lazy"
+                decoding="async" />
               </div>
               <div class="col-image-frame photo-front">
-                <img :src="childTeacherImage" alt="Teacher helping child with learning activity" loading="lazy"
-                  decoding="async" />
+              <img :src="childTeacherImage" alt="Teacher helping child with learning activity" loading="lazy"
+                decoding="async" />
               </div>
             </div>
           </div>

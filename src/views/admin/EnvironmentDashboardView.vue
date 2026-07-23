@@ -1,269 +1,548 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import { useUiStore } from '@/stores/ui.store'
 import { supabase } from '@/lib/supabase'
+import { useUiStore } from '@/stores/ui.store'
+import { useAuthStore } from '@/stores/auth.store'
 
 const ui = useUiStore()
+const auth = useAuthStore()
 
 /* ─── Tabs ─────────────────────────────────────── */
-type TabId = 'overview' | 'program' | 'metrics' | 'partners' | 'content'
+type TabId = 'overview' | 'hero' | 'sections' | 'initiatives' | 'process' | 'gallery' | 'partners' | 'cta'
 const activeTab = ref<TabId>('overview')
 
 const tabs: { id: TabId; label: string; icon: string }[] = [
   { id: 'overview', label: 'Overview', icon: 'grid' },
-  { id: 'program', label: 'Program Info', icon: 'file' },
-  { id: 'metrics', label: 'Impact Metrics', icon: 'bar-chart' },
-  { id: 'partners', label: 'Partners', icon: 'users' },
-  { id: 'content', label: 'Page Content', icon: 'layout' },
+  { id: 'hero', label: 'Hero & Stats', icon: 'file' },
+  { id: 'sections', label: 'Page Sections', icon: 'layout' },
+  { id: 'initiatives', label: 'Initiatives', icon: 'layers' },
+  { id: 'process', label: 'Process', icon: 'check' },
+  { id: 'gallery', label: 'Gallery', icon: 'image' },
+  { id: 'partners', label: 'Our Support', icon: 'heart' },
+  { id: 'cta', label: 'CTA & Quote', icon: 'message' },
 ]
 
-/* ─── Toast notifications ──────────────────────── */
-type ToastType = 'success' | 'error' | 'info'
-interface Toast { message: string; type: ToastType; id: number }
+/* ─── Quick Links (Overview tab) ────────────────── */
+interface QuickLink {
+  title: string
+  desc: string
+  to: string
+  tabId?: TabId
+  color: string
+}
+
+const quickLinks: QuickLink[] = [
+  { title: 'Edit Hero & Stats', desc: 'Headline, intro & stats band', to: '#', tabId: 'hero', color: 'emerald' },
+  { title: 'Edit Page Sections', desc: 'What we do, approach & why', to: '#', tabId: 'sections', color: 'blue' },
+  { title: 'Edit Initiatives', desc: 'Key initiative cards with images', to: '#', tabId: 'initiatives', color: 'amber' },
+  { title: 'Edit Process & Gallery', desc: 'Process steps & field gallery', to: '#', tabId: 'process', color: 'violet' },
+  { title: 'Edit Our Support', desc: 'Partner organizations & supporters', to: '#', tabId: 'partners', color: 'blue' },
+  { title: 'Edit CTA & Quote', desc: 'Call to action & testimonial', to: '#', tabId: 'cta', color: 'emerald' },
+  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
+  { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'violet' },
+]
+
+/* ─── Toast ─────────────────────────────────────── */
+interface Toast { message: string; type: 'success' | 'error' | 'info'; id: number }
 const toasts = ref<Toast[]>([])
 let toastId = 0
 
-function addToast(message: string, type: ToastType = 'info') {
+function addToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
   const id = ++toastId
   toasts.value.push({ message, type, id })
   setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, 3000)
 }
 
-/* ─── PROGRAM INFO ─────────────────────────────── */
-const program = ref({ title: '', summary: '', description: '', pillar: '' })
-const programLoading = ref(false)
-const programSaving = ref(false)
-
-async function loadProgram() {
-  programLoading.value = true
-  try {
-    const { data } = await supabase
-      .from('programs')
-      .select('title, summary, description, pillar')
-      .eq('slug', 'programs-environment')
-      .maybeSingle()
-    if (data) program.value = { title: data.title || '', summary: data.summary || '', description: data.description || '', pillar: data.pillar || '' }
-  } catch (e: unknown) { console.warn('load program:', e instanceof Error ? e.message : e) }
-  finally { programLoading.value = false }
+/* ─── Page Content Types ────────────────────────── */
+interface EditableSection {
+  id: string
+  label: string
+  heading: string
+  body: string
+  items: string
 }
 
-async function saveProgram() {
-  programSaving.value = true
-  try {
-    const { error } = await supabase
-      .from('programs')
-      .upsert({
-        slug: 'programs-environment',
-        title: program.value.title,
-        pillar: program.value.pillar || 'Environment',
-        summary: program.value.summary,
-        description: program.value.description,
-        status: 'published',
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'slug' })
-    if (error) throw error
-    addToast('Program info saved!', 'success')
-  } catch (e: unknown) {
-    addToast(e instanceof Error ? e.message : 'Failed to save program', 'error')
-  } finally { programSaving.value = false }
+interface PageDraft {
+  slug: string
+  route: string
+  group: string
+  title: string
+  eyebrow: string
+  headline: string
+  intro: string
+  heroImageUrl: string
+  primaryAction: string
+  secondaryAction: string
+  sections: EditableSection[]
+  updatedAt: string
 }
 
-/* ─── IMPACT METRICS ───────────────────────────── */
-interface Metric { id?: string; label: string; value_text: string; unit: string; icon: string; sort_order: number; metric_key?: string }
-const metrics = ref<Metric[]>([])
-const metricsLoading = ref(false)
-const editingMetric = ref<Metric | null>(null)
-const showMetricForm = ref(false)
-const metricForm = reactive<Metric>({ label: '', value_text: '', unit: '', icon: 'tree', sort_order: 0 })
-
-async function loadMetrics() {
-  metricsLoading.value = true
-  try {
-    const { data } = await supabase
-      .from('impact_metrics')
-      .select('id, metric_key, label, value_text, unit, icon, sort_order')
-      .eq('is_visible', true)
-      .order('sort_order', { ascending: true })
-    metrics.value = (data ?? []) as Metric[]
-  } catch (e: unknown) { console.warn('load metrics:', e instanceof Error ? e.message : e) }
-  finally { metricsLoading.value = false }
-}
-
-function openMetricForm(m?: Metric) {
-  if (m) {
-    editingMetric.value = m
-    Object.assign(metricForm, { label: m.label, value_text: m.value_text, unit: m.unit || '', icon: m.icon || 'tree', sort_order: m.sort_order })
-  } else {
-    editingMetric.value = null
-    Object.assign(metricForm, { label: '', value_text: '', unit: '', icon: 'tree', sort_order: metrics.value.length + 1 })
+/* ─── Default Environment Page ──────────────────── */
+function createDefaultEnvironmentPage(): PageDraft {
+  return {
+    slug: 'programs-environment',
+    route: '/programs/environment',
+    group: 'Programs',
+    title: 'Environment',
+    eyebrow: 'Environment',
+    headline: 'Protecting the land that sustains villages.',
+    intro: 'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.',
+    heroImageUrl: '',
+    primaryAction: '',
+    secondaryAction: '',
+    sections: [
+      {
+        id: 'environment-work',
+        label: 'What we do',
+        heading: 'What we do',
+        body: 'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.',
+        items: 'Community forestry agreements\nBiogas digester installation\nRainwater harvesting systems\nWASH facilities in schools and clinics\nTree nursery support and reforestation',
+      },
+      {
+        id: 'environment-approach',
+        label: 'Approach',
+        heading: 'Our approach',
+        body: 'Our approach combines scientific expertise with community participation to create lasting environmental change. We work alongside villages to restore forests, install renewable energy, and build climate resilience that families can see and sustain.',
+        items: '',
+      },
+      {
+        id: 'environment-team',
+        label: 'Organizational Structure',
+        heading: 'Who delivers environment programs on the ground',
+        body: 'Our dedicated team works across provinces protecting forests, building climate resilience and restoring ecosystems.',
+        items: 'Program Director | compass | Oversees environmental programs, conservation initiatives, and partnerships across provinces.\nField Coordinators | map | Manage community forestry, biogas, and WASH projects in target villages.\nConservation Trainers | heart | Deliver climate-smart agriculture, reforestation and environmental education.\nWASH Officers | chart | Implement clean water, sanitation and rainwater harvesting solutions.',
+      },
+      {
+        id: 'environment-why',
+        label: 'Why it matters',
+        heading: 'Why it matters',
+        body: 'Southeastern Cambodia is one of the most climate-vulnerable regions in the country. Healthy forests and clean water are peacekeeping infrastructure.',
+        items: 'Deforestation leaves communities exposed to floods and droughts\nClean water access prevents disease and keeps children in school\nRenewable energy reduces dependence on charcoal and firewood\nCommunity forests protect biodiversity for future generations',
+      },
+    ],
+    updatedAt: '',
   }
-  showMetricForm.value = true
 }
 
-async function saveMetric() {
-  if (!metricForm.label || !metricForm.value_text) { addToast('Label and value are required', 'error'); return }
-  try {
-    const key = editingMetric.value?.metric_key || `env-${metricForm.label.toLowerCase().replace(/\s+/g, '-')}`
-    const payload = {
-      metric_key: key,
-      label: metricForm.label,
-      value_text: metricForm.value_text,
-      unit: metricForm.unit || null,
-      icon: metricForm.icon || 'globe',
-      sort_order: metricForm.sort_order,
-      is_visible: true,
-    }
-    const { error } = editingMetric.value
-      ? await supabase.from('impact_metrics').update(payload).eq('id', editingMetric.value.id)
-      : await supabase.from('impact_metrics').upsert(payload, { onConflict: 'metric_key' })
-    if (error) throw error
-    addToast(editingMetric.value ? 'Metric updated!' : 'Metric created!', 'success')
-    showMetricForm.value = false
-    await loadMetrics()
-  } catch (e: unknown) { addToast(e instanceof Error ? e.message : 'Failed to save metric', 'error') }
+/* ─── Content Section Interfaces ────────────────── */
+interface InitiativeItem {
+  title: string
+  text: string
+  img: string
+  tag: string
 }
 
-async function deleteMetric(m: Metric) {
-  if (!m.id) return
-  if (!confirm(`Delete "${m.label}"?`)) return
-  try {
-    const { error } = await supabase.from('impact_metrics').delete().eq('id', m.id)
-    if (error) throw error
-    addToast('Metric deleted', 'info')
-    await loadMetrics()
-  } catch (e: unknown) { addToast(e instanceof Error ? e.message : 'Failed to delete', 'error') }
+interface ProcessStep {
+  number: string
+  title: string
+  icon: string
+  text: string
 }
 
-/* ─── PARTNERS ─────────────────────────────────── */
-interface Partner { id?: string; name: string; partner_type: string; description: string; sort_order: number }
-const partners = ref<Partner[]>([])
-const partnersLoading = ref(false)
-const editingPartner = ref<Partner | null>(null)
-const showPartnerForm = ref(false)
-const partnerForm = reactive<Partner>({ name: '', partner_type: 'International Partner', description: '', sort_order: 0 })
-
-async function loadPartners() {
-  partnersLoading.value = true
-  try {
-    const { data } = await supabase
-      .from('partners')
-      .select('id, name, partner_type, description, sort_order')
-      .eq('is_visible', true)
-      .order('sort_order', { ascending: true })
-    partners.value = (data ?? []) as Partner[]
-  } catch (e: unknown) { console.warn('load partners:', e instanceof Error ? e.message : e) }
-  finally { partnersLoading.value = false }
+interface GalleryImage {
+  src: string
+  caption: string
+  span: string
 }
 
-function openPartnerForm(p?: Partner) {
-  if (p) {
-    editingPartner.value = p
-    Object.assign(partnerForm, { name: p.name, partner_type: p.partner_type, description: p.description || '', sort_order: p.sort_order })
-  } else {
-    editingPartner.value = null
-    Object.assign(partnerForm, { name: '', partner_type: 'International Partner', description: '', sort_order: partners.value.length + 1 })
-  }
-  showPartnerForm.value = true
+interface CTAContent {
+  label: string
+  heading: string
+  description: string
+  primaryBtnText: string
+  primaryBtnUrl: string
+  secondaryBtnText: string
+  secondaryBtnUrl: string
 }
 
-async function savePartner() {
-  if (!partnerForm.name) { addToast('Partner name is required', 'error'); return }
-  try {
-    const payload = {
-      name: partnerForm.name,
-      partner_type: partnerForm.partner_type,
-      description: partnerForm.description || null,
-      sort_order: partnerForm.sort_order,
-      is_visible: true,
-    }
-    const { error } = editingPartner.value
-      ? await supabase.from('partners').update(payload).eq('id', editingPartner.value.id)
-      : await supabase.from('partners').upsert(payload, { onConflict: 'name,partner_type' })
-    if (error) throw error
-    addToast(editingPartner.value ? 'Partner updated!' : 'Partner added!', 'success')
-    showPartnerForm.value = false
-    await loadPartners()
-  } catch (e: unknown) { addToast(e instanceof Error ? e.message : 'Failed to save partner', 'error') }
+interface QuoteContent {
+  text: string
+  cite: string
 }
 
-async function deletePartner(p: Partner) {
-  if (!p.id) return
-  if (!confirm(`Remove "${p.name}"?`)) return
-  try {
-    const { error } = await supabase.from('partners').delete().eq('id', p.id)
-    if (error) throw error
-    addToast('Partner removed', 'info')
-    await loadPartners()
-  } catch (e: unknown) { addToast(e instanceof Error ? e.message : 'Failed to delete', 'error') }
+interface PartnerItem {
+  name: string
+  type: string
+  description: string
 }
 
-/* ─── PAGE CONTENT (from managed pages) ────────── */
-interface PageSection { id: string; label: string; heading: string; items: { title: string; body: string }[] }
-const pageSections = ref<PageSection[]>([])
-const pageContentLoading = ref(false)
-
-async function loadPageContent() {
-  pageContentLoading.value = true
-  try {
-    const { data } = await supabase
-      .from('page_sections')
-      .select('id, slug, label, heading, body, sort_order')
-      .in('slug', ['conservation', 'sustainability', 'community-engagement', 'initiatives'])
-      .eq('status', 'published')
-      .order('sort_order', { ascending: true })
-
-    if (data) {
-      pageSections.value = await Promise.all((data as { id: string; label: string; heading: string | null; body: string | null; sort_order: number }[]).map(async (s) => {
-        const { data: items } = await supabase
-          .from('section_items')
-          .select('title, body')
-          .eq('section_id', s.id)
-          .order('sort_order', { ascending: true })
-        return {
-          id: s.id,
-          label: s.label,
-          heading: s.heading || '',
-          items: (items ?? []).map((i: { title: string; body: string | null }) => ({ title: i.title, body: i.body || '' })),
-        }
-      }))
-    }
-  } catch (e: unknown) { console.warn('load sections:', e instanceof Error ? e.message : e) }
-  finally { pageContentLoading.value = false }
+/* ─── Stats Band ────────────────────────────────── */
+interface StatItem {
+  number: string
+  label: string
+  description: string
 }
 
-/* ─── OVERVIEW STATS (from Supabase) ───────────── */
-interface QuickStat { label: string; value: string; desc: string; icon: string }
-const overviewStats = ref<QuickStat[]>([
-  { label: 'Forest Area', value: '571 ha', desc: 'Protected & restored', icon: 'tree' },
-  { label: 'Villages Served', value: '18', desc: 'In program areas', icon: 'map' },
-  { label: 'Program Records', value: '0', desc: 'Total in system', icon: 'database' },
-  { label: 'Partners', value: '0', desc: 'Active partners', icon: 'users' },
+const statsBand = ref<StatItem[]>([
+  { number: '571', label: 'HECTARES PROTECTED', description: 'Community forest agreements and restored land.' },
+  { number: '18', label: 'VILLAGES SERVED', description: 'With biogas, water access and climate adaptation.' },
+  { number: '2,500+', label: 'HOUSEHOLDS REACHED', description: 'With clean water and renewable energy solutions.' },
 ])
 
-async function loadOverviewStats() {
+/* ─── New Content Refs ───────────────────────────── */
+const initiatives = ref<InitiativeItem[]>([
+  { title: 'Reforestation Projects', text: 'Planting native tree species to restore degraded forests. We\'ve planted over 500,000 trees across 12 communities.', img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80', tag: 'Conservation' },
+  { title: 'Environmental Education', text: 'Developing curriculum and training programs for schools to build environmental literacy from an early age.', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80', tag: 'Education' },
+  { title: 'Renewable Energy Access', text: 'Installing solar panels and clean energy solutions in rural communities, reducing dependence on fossil fuels.', img: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80', tag: 'Energy' },
+  { title: 'Water Conservation', text: 'Implementing rainwater harvesting, watershed management, and water purification systems.', img: 'https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80', tag: 'Water' },
+  { title: 'Sustainable Agriculture', text: 'Training farmers in organic farming, crop rotation, and agroforestry techniques.', img: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80', tag: 'Agriculture' },
+  { title: 'Climate Research & Advocacy', text: 'Conducting climate impact assessments and advocating for policy changes.', img: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80', tag: 'Research' },
+])
+
+const processSteps = ref<ProcessStep[]>([
+  { number: '01', title: 'Assessment', icon: 'search', text: 'We conduct comprehensive environmental assessments to understand local ecosystems and identify priorities.' },
+  { number: '02', title: 'Planning', icon: 'map', text: 'Working with community leaders, we develop tailored action plans that balance conservation with needs.' },
+  { number: '03', title: 'Implementation', icon: 'play', text: 'We execute projects with active community participation, ensuring local ownership.' },
+  { number: '04', title: 'Monitoring', icon: 'check', text: 'Continuous monitoring helps us measure impact and adapt strategies for greater effectiveness.' },
+])
+
+const galleryImages = ref<GalleryImage[]>([
+  { src: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600&q=75', caption: 'Reforestation in rural Cambodia', span: '2' },
+  { src: 'https://images.unsplash.com/photo-1470071459604-4b118ecb0e7e?w=400&q=75', caption: 'Forest canopy restoration', span: '1' },
+  { src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=75', caption: 'Community tree nursery', span: '1' },
+  { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&q=75', caption: 'Eco-tourism initiatives', span: '1' },
+  { src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=75', caption: 'Nature conservation areas', span: '2' },
+])
+
+const ctaContent = ref<CTAContent>({
+  label: 'Take Action',
+  heading: 'Join the Environmental Movement',
+  description: 'Whether you want to volunteer, partner with us, or support our conservation efforts, your contribution helps create a sustainable future for all.',
+  primaryBtnText: 'Get Involved',
+  primaryBtnUrl: '/get-involved',
+  secondaryBtnText: 'Support Us',
+  secondaryBtnUrl: '/get-involved/donate',
+})
+
+const quoteContent = ref<QuoteContent>({
+  text: 'We do not inherit the earth from our ancestors; we borrow it from our children. Our environmental program is a pledge to protect that inheritance and ensure future generations inherit a planet that is healthy, vibrant, and full of possibility.',
+  cite: '— SETE SENA Environmental Team',
+})
+
+/* ─── Our Support (Partners) ────────────────────── */
+const partners = ref<PartnerItem[]>([
+  { name: 'UN Environment', type: 'International Partner', description: '' },
+  { name: 'Green Cambodia', type: 'Local NGO', description: '' },
+  { name: 'Eco Foundation', type: 'Funding Partner', description: '' },
+  { name: 'Wildlife Alliance', type: 'Conservation Partner', description: '' },
+  { name: 'Solar Future', type: 'Technology Partner', description: '' },
+  { name: 'Rainforest Trust', type: 'Global Supporter', description: '' },
+])
+
+/* ─── State ─────────────────────────────────────── */
+const loading = ref(false)
+const saving = ref(false)
+const page = ref<PageDraft>(createDefaultEnvironmentPage())
+const savedSnapshot = ref('')
+const storageMode = ref<'supabase' | 'local'>('supabase')
+const STORAGE_KEY = 'env-dashboard-page'
+
+/* ─── LocalStorage fallback ────────────────────── */
+function loadFromLocalStorage(): void {
   try {
-    const { count: programCount } = await supabase.from('programs').select('*', { count: 'exact', head: true }).eq('status', 'published')
-    const { count: partnerCount } = await supabase.from('partners').select('*', { count: 'exact', head: true }).eq('is_visible', true)
-    const programStat = overviewStats.value[2]
-    const partnerStat = overviewStats.value[3]
-    if (programCount !== null && programStat) programStat.value = String(programCount)
-    if (partnerCount !== null && partnerStat) partnerStat.value = String(partnerCount)
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const saved = JSON.parse(raw) as Record<string, unknown>
+      const defaults = createDefaultEnvironmentPage()
+      page.value = {
+        ...defaults,
+        eyebrow: (saved.eyebrow as string) || defaults.eyebrow,
+        headline: (saved.headline as string) || defaults.headline,
+        intro: (saved.intro as string) || defaults.intro,
+        heroImageUrl: (saved.heroImageUrl as string) || '',
+        primaryAction: (saved.primaryAction as string) || '',
+        secondaryAction: (saved.secondaryAction as string) || '',
+        sections: saved.sections && Array.isArray(saved.sections)
+          ? mergeSectionsWithDefaults(saved.sections as EditableSection[], defaults)
+          : defaults.sections,
+        updatedAt: (saved.updatedAt as string) || '',
+      }
+      if (saved.statsBand && Array.isArray(saved.statsBand) && saved.statsBand.length > 0) {
+        statsBand.value = saved.statsBand as StatItem[]
+      }
+      if (saved.initiatives && Array.isArray(saved.initiatives)) {
+        initiatives.value = saved.initiatives as InitiativeItem[]
+      }
+      if (saved.processSteps && Array.isArray(saved.processSteps)) {
+        processSteps.value = saved.processSteps as ProcessStep[]
+      }
+      if (saved.galleryImages && Array.isArray(saved.galleryImages)) {
+        galleryImages.value = saved.galleryImages as GalleryImage[]
+      }
+      if (saved.ctaContent && typeof saved.ctaContent === 'object') {
+        ctaContent.value = { ...ctaContent.value, ...saved.ctaContent as Partial<CTAContent> }
+      }
+      if (saved.quoteContent && typeof saved.quoteContent === 'object') {
+        quoteContent.value = { ...quoteContent.value, ...saved.quoteContent as Partial<QuoteContent> }
+      }
+      if (saved.partners && Array.isArray(saved.partners)) {
+        partners.value = saved.partners as PartnerItem[]
+      }
+    }
   } catch { /* ignore */ }
+}
+
+/* ─── Merge DB sections with defaults to fill empty fields ── */
+function mergeSectionsWithDefaults(dbSections: EditableSection[], defaults: PageDraft): EditableSection[] {
+  // Build result in the CORRECT order (matching defaults), using DB data when available
+  const dbMap = new Map<string, EditableSection>()
+  for (const s of dbSections) dbMap.set(s.id, s)
+
+  return defaults.sections.map(defSec => {
+    const dbSec = dbMap.get(defSec.id)
+    if (!dbSec) return { ...defSec } // missing from DB — use default
+    return {
+      id: dbSec.id,
+      label: dbSec.label?.trim() ? dbSec.label : defSec.label,
+      heading: dbSec.heading?.trim() ? dbSec.heading : defSec.heading,
+      body: dbSec.body?.trim() ? dbSec.body : defSec.body,
+      items: dbSec.items?.trim() ? dbSec.items : defSec.items,
+    }
+  })
+}
+
+function saveToLocalStorage(): void {
+  try {
+    const p = page.value
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      eyebrow: p.eyebrow,
+      headline: p.headline,
+      intro: p.intro,
+      heroImageUrl: p.heroImageUrl,
+      primaryAction: p.primaryAction,
+      secondaryAction: p.secondaryAction,
+      sections: p.sections,
+      statsBand: statsBand.value,
+      initiatives: initiatives.value,
+      processSteps: processSteps.value,
+      galleryImages: galleryImages.value,
+      ctaContent: ctaContent.value,
+      quoteContent: quoteContent.value,
+      partners: partners.value,
+      updatedAt: new Date().toISOString(),
+    }))
+  } catch { /* ignore */ }
+}
+
+/* ─── Helpers ───────────────────────────────────── */
+function snapshotData(): string {
+  return JSON.stringify({
+    eyebrow: page.value.eyebrow,
+    headline: page.value.headline,
+    intro: page.value.intro,
+    heroImageUrl: page.value.heroImageUrl,
+    primaryAction: page.value.primaryAction,
+    secondaryAction: page.value.secondaryAction,
+    sections: page.value.sections.map(s => ({ ...s })),
+    statsBand: statsBand.value.map(s => ({ ...s })),
+    initiatives: initiatives.value.map(s => ({ ...s })),
+    processSteps: processSteps.value.map(s => ({ ...s })),
+    galleryImages: galleryImages.value.map(s => ({ ...s })),
+    ctaContent: { ...ctaContent.value },
+    quoteContent: { ...quoteContent.value },
+    partners: partners.value.map(s => ({ ...s })),
+  })
+}
+
+const isDirty = computed(() => savedSnapshot.value !== snapshotData())
+
+/* ─── Load from programs table (metadata JSONB) ── */
+async function loadPageContent() {
+  loading.value = true
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('title, summary, description, metadata, updated_at')
+      .eq('slug', 'programs-environment')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('Supabase load failed, falling back to localStorage:', error.message)
+      loadFromLocalStorage()
+      storageMode.value = 'local'
+      savedSnapshot.value = snapshotData()
+      loading.value = false
+      return
+    }
+
+    if (data) {
+      const defaults = createDefaultEnvironmentPage()
+      const meta = data.metadata as Record<string, unknown> | null
+
+      page.value = {
+        ...defaults,
+        title: data.title || defaults.title,
+        eyebrow: (meta?.eyebrow as string) || defaults.eyebrow,
+        headline: (meta?.headline as string) || defaults.headline,
+        intro: data.summary || (meta?.intro as string) || defaults.intro,
+        heroImageUrl: (meta?.heroImageUrl as string) || '',
+        primaryAction: (meta?.primaryAction as string) || '',
+        secondaryAction: (meta?.secondaryAction as string) || '',
+        sections: meta?.sections && Array.isArray(meta.sections)
+          ? mergeSectionsWithDefaults(meta.sections as EditableSection[], defaults)
+          : defaults.sections,
+        updatedAt: data.updated_at || '',
+      }
+
+      if (meta?.statsBand && Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+        statsBand.value = meta.statsBand as StatItem[]
+      }
+      if (meta?.initiatives && Array.isArray(meta.initiatives)) {
+        initiatives.value = meta.initiatives as InitiativeItem[]
+      }
+      if (meta?.processSteps && Array.isArray(meta.processSteps)) {
+        processSteps.value = meta.processSteps as ProcessStep[]
+      }
+      if (meta?.galleryImages && Array.isArray(meta.galleryImages)) {
+        galleryImages.value = meta.galleryImages as GalleryImage[]
+      }
+      if (meta?.ctaContent && typeof meta.ctaContent === 'object') {
+        ctaContent.value = { ...ctaContent.value, ...meta.ctaContent as Partial<CTAContent> }
+      }
+      if (meta?.quoteContent && typeof meta.quoteContent === 'object') {
+        quoteContent.value = { ...quoteContent.value, ...meta.quoteContent as Partial<QuoteContent> }
+      }
+      if (meta?.partners && Array.isArray(meta.partners)) {
+        partners.value = meta.partners as PartnerItem[]
+      }
+
+      storageMode.value = 'supabase'
+      saveToLocalStorage()
+    } else {
+      loadFromLocalStorage()
+      storageMode.value = 'local'
+    }
+
+    savedSnapshot.value = snapshotData()
+  } catch (e: unknown) {
+    console.warn('Load crashed, falling back to localStorage:', e)
+    loadFromLocalStorage()
+    storageMode.value = 'local'
+    savedSnapshot.value = snapshotData()
+  } finally {
+    loading.value = false
+  }
+}
+
+/* ─── Save to programs table ────────────────────── */
+async function savePageContent() {
+  saving.value = true
+  try {
+    const now = new Date().toISOString()
+    const p = page.value
+
+    const payload = {
+      slug: p.slug,
+      title: p.title.trim() || p.headline.trim() || p.slug,
+      pillar: 'Environment',
+      summary: p.intro || '',
+      description: p.intro || '',
+      status: 'published',
+      metadata: {
+        eyebrow: p.eyebrow,
+        headline: p.headline,
+        intro: p.intro,
+        heroImageUrl: p.heroImageUrl,
+        primaryAction: p.primaryAction,
+        secondaryAction: p.secondaryAction,
+        sections: p.sections.map(s => ({
+          id: s.id,
+          label: s.label,
+          heading: s.heading,
+          body: s.body,
+          items: s.items,
+        })),
+        statsBand: statsBand.value,
+        initiatives: initiatives.value,
+        processSteps: processSteps.value,
+        galleryImages: galleryImages.value,
+        ctaContent: ctaContent.value,
+        quoteContent: quoteContent.value,
+        partners: partners.value,
+      },
+      updated_at: now,
+    }
+
+    saveToLocalStorage()
+
+    // Try upsert first
+    let { error } = await supabase
+      .from('programs')
+      .upsert(payload, { onConflict: 'slug' })
+
+    // If upsert fails with RLS, try insert first then update separately
+    if (error && error.message?.includes('row-level security')) {
+      console.warn('Upsert blocked by RLS, trying insert/update separately...')
+      
+      const { error: insertError } = await supabase
+        .from('programs')
+        .insert(payload)
+      
+      if (insertError && insertError.message?.includes('duplicate key')) {
+        // Row exists — try update instead
+        const { error: updateError } = await supabase
+          .from('programs')
+          .update(payload)
+          .eq('slug', p.slug)
+        
+        if (updateError) {
+          error = updateError
+        } else {
+          error = null // success!
+        }
+      } else if (insertError) {
+        error = insertError
+      } else {
+        error = null // insert succeeded!
+      }
+    }
+
+    if (error) {
+      console.warn('Supabase save failed:', error)
+      addToast(`DB write blocked: ${error.message}`, 'error')
+      saveToLocalStorage()
+      storageMode.value = 'local'
+      savedSnapshot.value = snapshotData()
+      saving.value = false
+      return
+    }
+
+    storageMode.value = 'supabase'
+    savedSnapshot.value = snapshotData()
+    addToast(`${p.title} page saved!`, 'success')
+  } catch (e: unknown) {
+    console.error('Save crashed:', e)
+    addToast('Saved to browser (database error)', 'info')
+    storageMode.value = 'local'
+    savedSnapshot.value = snapshotData()
+  } finally {
+    saving.value = false
+  }
+}
+
+/* ─── Section helpers ───────────────────────────── */
+function parsedItemsForSection(section: EditableSection): string[] {
+  return section.items
+    ? section.items.split('\n').map(l => l.trim()).filter(Boolean)
+    : []
 }
 
 /* ─── Init ──────────────────────────────────────── */
 onMounted(async () => {
-  await Promise.all([
-    loadProgram(),
-    loadMetrics(),
-    loadPartners(),
-    loadPageContent(),
-    loadOverviewStats(),
-  ])
+  await auth.init()
+  await loadPageContent()
 })
+
+/* ─── Helper: format date ───────────────────────── */
+function formatDate(value: string) {
+  if (!value) return 'Not saved yet'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Not saved yet'
+  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+}
 </script>
 
 <template>
@@ -278,7 +557,7 @@ onMounted(async () => {
             <div v-for="t in toasts" :key="t.id" :class="['toast', `toast-${t.type}`]">
               <svg v-if="t.type === 'success'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               <svg v-else-if="t.type === 'error'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
               <span>{{ t.message }}</span>
             </div>
           </TransitionGroup>
@@ -298,36 +577,74 @@ onMounted(async () => {
             </div>
             <div class="banner-content">
               <div class="banner-text">
-                <div class="banner-badge env-badge">
+                <div class="banner-badge">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
                   Environment Program
+                  <span v-if="storageMode === 'local'" class="banner-badge local-badge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Local only
+                  </span>
+                  <span v-else class="banner-badge cloud-badge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+                    Database
+                  </span>
                 </div>
                 <h1 class="banner-title">Environment Dashboard</h1>
-                <p class="banner-desc">Manage all environment program data — content, metrics, partners, and page sections.</p>
+                <p class="banner-desc">Edit your environment page content — hero, stats, and page sections — then save to publish.</p>
               </div>
               <div class="banner-actions">
-                <RouterLink class="btn btn-ghost" to="/admin/editor/programs-environment">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit Page
-                </RouterLink>
-                <RouterLink class="btn btn-primary env-primary" to="/programs/environment">
+                <button class="btn btn-primary" :disabled="saving || loading" @click="savePageContent">
+                  <svg v-if="saving" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  {{ saving ? 'Saving...' : 'Save All Changes' }}
+                </button>
+                <RouterLink class="btn btn-ghost" to="/programs/environment">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   View Page
                 </RouterLink>
               </div>
             </div>
+
+            <!-- Quick stats bar -->
             <div class="banner-stats">
-              <div v-for="stat in overviewStats" :key="stat.label" class="bstat">
+              <div class="bstat bstat-emerald">
                 <div class="bstat-icon">
-                  <svg v-if="stat.icon === 'tree'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22v-8"/><path d="M12 2C8 2 4 6 4 10c0 3 2 5.5 4 7l4-3 4 3c2-1.5 4-4 4-7 0-4-4-8-8-8z"/></svg>
-                  <svg v-else-if="stat.icon === 'map'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-                  <svg v-else-if="stat.icon === 'database'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                  <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22v-8"/><path d="M12 2C8 2 4 6 4 10c0 3 2 5.5 4 7l4-3 4 3c2-1.5 4-4 4-7 0-4-4-8-8-8z"/></svg>
                 </div>
                 <div class="bstat-info">
-                  <strong>{{ stat.value }}</strong>
-                  <small>{{ stat.label }}</small>
-                  <span class="bstat-desc">{{ stat.desc }}</span>
+                  <strong>{{ statsBand[0]?.number || '0' }}</strong>
+                  <small>Hectares protected</small>
+                  <span class="bstat-desc">Forest & restored land</span>
+                </div>
+              </div>
+              <div class="bstat bstat-blue">
+                <div class="bstat-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                </div>
+                <div class="bstat-info">
+                  <strong>{{ statsBand[1]?.number || '0' }}</strong>
+                  <small>Villages served</small>
+                  <span class="bstat-desc">With climate adaptation</span>
+                </div>
+              </div>
+              <div class="bstat bstat-amber">
+                <div class="bstat-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="bstat-info">
+                  <strong>{{ statsBand[2]?.number || '0' }}</strong>
+                  <small>Households reached</small>
+                  <span class="bstat-desc">With clean water & energy</span>
+                </div>
+              </div>
+              <div class="bstat bstat-violet">
+                <div class="bstat-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="bstat-info">
+                  <strong>{{ isDirty ? 'Unsaved' : 'Saved' }}</strong>
+                  <small>Status</small>
+                  <span class="bstat-desc">{{ formatDate(page.updatedAt) }}</span>
                 </div>
               </div>
             </div>
@@ -339,27 +656,23 @@ onMounted(async () => {
           <button v-for="tab in tabs" :key="tab.id" :class="['tab-btn', { active: activeTab === tab.id }]" @click="activeTab = tab.id">
             <svg v-if="tab.icon === 'grid'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             <svg v-else-if="tab.icon === 'file'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <svg v-else-if="tab.icon === 'bar-chart'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            <svg v-else-if="tab.icon === 'users'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
             {{ tab.label }}
           </button>
+          <span class="tab-spacer"></span>
+          <span v-if="isDirty" class="tab-dirty">Unsaved changes</span>
         </nav>
 
         <!-- ================ TAB: OVERVIEW ================ -->
         <section v-if="activeTab === 'overview'" class="tab-content">
           <div class="quick-links-grid">
-            <RouterLink v-for="link in [
-              { title: 'Edit Page Content', desc: 'Hero text, headline, intro', to: '/admin/editor/programs-environment', color: 'emerald' },
-              { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'blue' },
-              { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
-              { title: 'Impact Stories', desc: 'Publish success stories', to: '/admin/modules/impact-stories', color: 'violet' },
-            ]" :key="link.title" :to="link.to" class="link-card" :class="'link-' + link.color">
+            <RouterLink v-for="link in quickLinks" :key="link.title" :to="link.to || '/admin'" class="link-card" :class="'link-' + link.color"
+              @click.prevent="link.tabId ? activeTab = link.tabId : undefined">
               <div class="link-icon">
                 <svg v-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>
-                <svg v-else-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                <svg v-else-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
               </div>
               <div class="link-text"><strong>{{ link.title }}</strong><small>{{ link.desc }}</small></div>
               <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
@@ -368,216 +681,414 @@ onMounted(async () => {
 
           <div class="overview-cards">
             <div class="overview-card-item">
-              <span class="oc-label">Program Info</span>
-              <p v-if="program.summary" class="oc-text">{{ program.summary.slice(0, 120) }}...</p>
-              <p v-else class="oc-text muted">No program info saved yet.</p>
-              <button class="oc-action" @click="activeTab = 'program'">Edit →</button>
+              <span class="oc-label">Hero & Header</span>
+              <p class="oc-text"><strong>Headline:</strong> {{ page.headline.slice(0, 60) }}{{ page.headline.length > 60 ? '...' : '' }}</p>
+              <p class="oc-text"><strong>Eyebrow:</strong> {{ page.eyebrow || 'Not set' }}</p>
+              <button class="oc-action" @click="activeTab = 'hero'">Edit →</button>
             </div>
             <div class="overview-card-item">
-              <span class="oc-label">Impact Metrics</span>
-              <p class="oc-text">{{ metrics.length }} metrics configured</p>
-              <button class="oc-action" @click="activeTab = 'metrics'">Manage →</button>
-            </div>
-            <div class="overview-card-item">
-              <span class="oc-label">Partners</span>
-              <p class="oc-text">{{ partners.length }} partners listed</p>
-              <button class="oc-action" @click="activeTab = 'partners'">Manage →</button>
+              <span class="oc-label">Stats Band</span>
+              <p class="oc-text">{{ statsBand.length }} stats configured: {{ statsBand.map(s => s.number).join(', ') }}</p>
+              <button class="oc-action" @click="activeTab = 'hero'">Edit →</button>
             </div>
             <div class="overview-card-item">
               <span class="oc-label">Page Sections</span>
-              <p class="oc-text">{{ pageSections.length }} content sections</p>
-              <button class="oc-action" @click="activeTab = 'content'">View →</button>
+              <p class="oc-text">{{ page.sections.length }} content sections: {{ page.sections.map(s => s.label).join(', ') }}</p>
+              <button class="oc-action" @click="activeTab = 'sections'">Edit →</button>
+            </div>
+            <div class="overview-card-item">
+              <span class="oc-label">Our Support</span>
+              <p class="oc-text">{{ partners.length }} partners configured: {{ partners.map(p => p.name).join(', ') }}</p>
+              <button class="oc-action" @click="activeTab = 'partners'">Edit →</button>
+            </div>
+            <div class="overview-card-item">
+              <span class="oc-label">Last Saved</span>
+              <p class="oc-text">{{ formatDate(page.updatedAt) }}</p>
+              <button class="oc-action" :disabled="saving || loading" @click="savePageContent">Save now →</button>
             </div>
           </div>
         </section>
 
-        <!-- ================ TAB: PROGRAM INFO ================ -->
-        <section v-if="activeTab === 'program'" class="tab-content">
+        <!-- ================ TAB: HERO & STATS ================ -->
+        <section v-if="activeTab === 'hero'" class="tab-content">
+          <div v-if="loading" class="loading-text">Loading content...</div>
+          <template v-else>
           <div class="section-card">
             <div class="sc-header">
-              <h2>Environment Program Details</h2>
-              <p>Edit the program info shown on the public environment page. These values feed into the hero section.</p>
+              <h2>Hero & Header Content</h2>
+              <p>Edit the main header shown at the top of the public Environment page. These fields control the page title, subtitle, and introductory paragraph.</p>
             </div>
             <div class="sc-body">
-              <label class="field">
-                <span class="field-label">Program Title</span>
-                <input v-model="program.title" placeholder="Environment Program" />
-              </label>
-              <label class="field field-block">
-                <span class="field-label">Summary (hero subtitle)</span>
-                <textarea v-model="program.summary" rows="3" placeholder="Brief summary shown below the hero title"></textarea>
-              </label>
-              <label class="field field-block">
-                <span class="field-label">Full Description</span>
-                <textarea v-model="program.description" rows="6" placeholder="Detailed description of the environment program"></textarea>
-              </label>
-              <label class="field">
-                <span class="field-label">Pillar</span>
-                <input v-model="program.pillar" placeholder="Environment" />
-              </label>
-              <div class="form-actions">
-                <button class="btn btn-primary" :disabled="programSaving" @click="saveProgram">
-                  <svg v-if="programSaving" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
-                  {{ programSaving ? 'Saving...' : 'Save Program Info' }}
-                </button>
+              <div class="form-row">
+                <label class="field">
+                  <span class="field-label">Eyebrow / Badge</span>
+                  <input v-model="page.eyebrow" placeholder="e.g. Environment" />
+                  <span class="field-hint">Small label above the main headline</span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Hero Image URL</span>
+                  <input v-model="page.heroImageUrl" placeholder="https://..." />
+                  <span class="field-hint">URL for the hero background image</span>
+                </label>
               </div>
+              <label class="field field-block">
+                <span class="field-label">Headline (main title)</span>
+                <input v-model="page.headline" placeholder="Protecting the land that sustains villages." />
+              </label>
+              <label class="field field-block">
+                <span class="field-label">Intro / Description</span>
+                <textarea v-model="page.intro" rows="3" placeholder="Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time."></textarea>
+              </label>
             </div>
           </div>
-        </section>
 
-        <!-- ================ TAB: IMPACT METRICS ================ -->
-        <section v-if="activeTab === 'metrics'" class="tab-content">
-          <div class="section-card">
-            <div class="sc-header sc-header-row">
-              <div>
-                <h2>Impact Metrics</h2>
-                <p>Manage the statistics shown on the environment page's impact section.</p>
-              </div>
-              <button class="btn btn-primary" @click="openMetricForm()">+ Add Metric</button>
+          <div class="section-card" style="margin-top: 1.25rem;">
+            <div class="sc-header">
+              <h2>Stats Band</h2>
+              <p>Configure the three statistics that appear below the hero section on the public Environment page. Each stat has a number, label, and description.</p>
             </div>
             <div class="sc-body">
-              <div v-if="showMetricForm" class="inline-form">
-                <h4>{{ editingMetric ? 'Edit Metric' : 'New Metric' }}</h4>
-                <div class="form-row">
-                  <label class="field"><span class="field-label">Label</span><input v-model="metricForm.label" placeholder="e.g. Trees Planted" /></label>
-                  <label class="field"><span class="field-label">Value</span><input v-model="metricForm.value_text" placeholder="e.g. 500" /></label>
+              <div v-for="(stat, index) in statsBand" :key="index" class="stat-editor">
+                <div class="stat-editor-hdr">
+                  <span class="stat-editor-num">Stat {{ index + 1 }}</span>
+                  <button class="btn-icon" @click="statsBand.splice(index, 1)" title="Remove stat">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
                 </div>
                 <div class="form-row">
-                  <label class="field"><span class="field-label">Unit</span><input v-model="metricForm.unit" placeholder="e.g. K+, ha" /></label>
                   <label class="field">
-                    <span class="field-label">Icon</span>
-                    <select v-model="metricForm.icon">
-                      <option value="tree">Tree</option>
-                      <option value="community">Community</option>
-                      <option value="globe">Globe</option>
-                      <option value="people">People</option>
-                      <option value="map">Map</option>
-                    </select>
+                    <span class="field-label">Number</span>
+                    <input v-model="stat.number" placeholder="e.g. 571" />
                   </label>
-                  <label class="field"><span class="field-label">Order</span><input v-model.number="metricForm.sort_order" type="number" min="1" /></label>
-                </div>
-                <div class="form-actions">
-                  <button class="btn btn-primary" @click="saveMetric">{{ editingMetric ? 'Update' : 'Create' }}</button>
-                  <button class="btn btn-ghost" @click="showMetricForm = false">Cancel</button>
-                </div>
-              </div>
-
-              <div v-if="metricsLoading" class="loading-text">Loading metrics...</div>
-              <div v-else-if="metrics.length === 0" class="empty-state">No metrics yet. Add your first one!</div>
-              <div v-else class="data-table-wrap">
-                <table class="data-table">
-                  <thead><tr><th>Order</th><th>Icon</th><th>Label</th><th>Value</th><th>Unit</th><th>Actions</th></tr></thead>
-                  <tbody>
-                    <tr v-for="m in metrics" :key="m.id">
-                      <td>{{ m.sort_order }}</td>
-                      <td><span class="metric-icon">{{ m.icon }}</span></td>
-                      <td><strong>{{ m.label }}</strong></td>
-                      <td>{{ m.value_text }}</td>
-                      <td>{{ m.unit || '—' }}</td>
-                      <td class="actions-cell">
-                        <button class="btn-sm" @click="openMetricForm(m)">Edit</button>
-                        <button class="btn-sm btn-sm-danger" @click="deleteMetric(m)">Delete</button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ================ TAB: PARTNERS ================ -->
-        <section v-if="activeTab === 'partners'" class="tab-content">
-          <div class="section-card">
-            <div class="sc-header sc-header-row">
-              <div>
-                <h2>Partners</h2>
-                <p>Manage partner organizations displayed on the environment page.</p>
-              </div>
-              <button class="btn btn-primary" @click="openPartnerForm()">+ Add Partner</button>
-            </div>
-            <div class="sc-body">
-              <div v-if="showPartnerForm" class="inline-form">
-                <h4>{{ editingPartner ? 'Edit Partner' : 'New Partner' }}</h4>
-                <div class="form-row">
-                  <label class="field"><span class="field-label">Name</span><input v-model="partnerForm.name" placeholder="Organization name" /></label>
                   <label class="field">
-                    <span class="field-label">Type</span>
-                    <select v-model="partnerForm.partner_type">
-                      <option value="International Partner">International Partner</option>
-                      <option value="Local NGO">Local NGO</option>
-                      <option value="Funding Partner">Funding Partner</option>
-                      <option value="Conservation Partner">Conservation Partner</option>
-                      <option value="Technology Partner">Technology Partner</option>
-                      <option value="Global Supporter">Global Supporter</option>
-                    </select>
+                    <span class="field-label">Label</span>
+                    <input v-model="stat.label" placeholder="e.g. HECTARES PROTECTED" />
                   </label>
                 </div>
                 <label class="field field-block">
                   <span class="field-label">Description</span>
-                  <textarea v-model="partnerForm.description" rows="2" placeholder="Brief description"></textarea>
+                  <input v-model="stat.description" placeholder="Brief description of this statistic" />
                 </label>
-                <div class="form-actions">
-                  <button class="btn btn-primary" @click="savePartner">{{ editingPartner ? 'Update' : 'Add' }}</button>
-                  <button class="btn btn-ghost" @click="showPartnerForm = false">Cancel</button>
+              </div>
+              <button class="btn btn-ghost add-stat-btn" @click="statsBand.push({ number: '', label: '', description: '' })">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Stat
+              </button>
+            </div>
+          </div>
+        </template>
+        </section>
+
+        <!-- ================ TAB: PAGE SECTIONS ================ -->
+        <section v-if="activeTab === 'sections'" class="tab-content">
+          <div class="section-card">
+            <div class="sc-header">
+              <h2>Page Content Sections</h2>
+              <p>Edit the main content blocks of the Environment page — What We Do, Our Approach, and Why It Matters. Each section has a heading, body text, and optional list items.</p>
+            </div>
+            <div class="sc-body">
+              <div v-if="loading" class="loading-text">Loading sections...</div>
+              <div v-else class="sections-list">
+                <div v-for="(section, index) in page.sections" :key="section.id" class="section-edit-card">
+                  <details :open="index === 0">
+                    <summary class="sec-summary">
+                      <div class="sec-summary-left">
+                        <span class="sec-badge">{{ section.label }}</span>
+                        <span class="sec-heading-preview">{{ section.heading || 'No heading' }}</span>
+                      </div>
+                      <svg class="sec-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                    </summary>
+                    <div class="sec-body">
+                      <label class="field field-block">
+                        <span class="field-label">Heading</span>
+                        <input v-model="section.heading" :placeholder="'Heading for ' + section.label" />
+                      </label>
+                      <label class="field field-block">
+                        <span class="field-label">Body / Description</span>
+                        <textarea v-model="section.body" rows="3" :placeholder="'Description for ' + section.label"></textarea>
+                      </label>
+                      <label class="field field-block">
+                        <span class="field-label">Bullet items <span class="field-hint">(one per line)</span></span>
+                        <textarea
+                          v-model="section.items"
+                          rows="5"
+                          placeholder="Community forestry agreements&#10;Biogas digester installation&#10;Rainwater harvesting systems"
+                        ></textarea>
+                      </label>
+                      <div v-if="section.items" class="item-preview">
+                        <span class="field-label">Preview ({{ parsedItemsForSection(section).length }} items)</span>
+                        <div class="item-chips">
+                          <span v-for="item in parsedItemsForSection(section)" :key="item" class="item-chip">{{ item }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div v-if="partnersLoading" class="loading-text">Loading partners...</div>
-              <div v-else-if="partners.length === 0" class="empty-state">No partners yet. Add your first one!</div>
-              <div v-else class="data-table-wrap">
-                <table class="data-table">
-                  <thead><tr><th>Order</th><th>Name</th><th>Type</th><th>Description</th><th>Actions</th></tr></thead>
-                  <tbody>
-                    <tr v-for="p in partners" :key="p.id">
-                      <td>{{ p.sort_order }}</td>
-                      <td><strong>{{ p.name }}</strong></td>
-                      <td><span class="type-badge">{{ p.partner_type }}</span></td>
-                      <td class="desc-cell">{{ p.description || '—' }}</td>
-                      <td class="actions-cell">
-                        <button class="btn-sm" @click="openPartnerForm(p)">Edit</button>
-                        <button class="btn-sm btn-sm-danger" @click="deletePartner(p)">Delete</button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+          <div class="section-card" style="margin-top: 1.25rem;">
+            <div class="sc-header">
+              <h2>Related Actions</h2>
+            </div>
+            <div class="sc-body">
+              <div class="side-actions">
+                <RouterLink class="side-btn" to="/admin/media">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  Media Library — Upload images for the Environment page
+                </RouterLink>
+                <RouterLink class="side-btn" to="/admin/modules/programs">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  Program Records — Manage environment data entries
+                </RouterLink>
+                <RouterLink class="side-btn" to="/programs/environment">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  View Live Page — See your changes on the public site
+                </RouterLink>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- ================ TAB: PAGE CONTENT ================ -->
-        <section v-if="activeTab === 'content'" class="tab-content">
+        <!-- ================ TAB: INITIATIVES ================ -->
+        <section v-if="activeTab === 'initiatives'" class="tab-content">
           <div class="section-card">
             <div class="sc-header">
-              <h2>Page Content Sections</h2>
-              <p>Content blocks from the page_sections table. Edit text content that appears below the hero on the environment page.</p>
+              <h2>Key Initiatives</h2>
+              <p>Edit the <strong>6 initiative cards</strong> shown on the public Environment page. Each card has a title, description, image URL, and tag label.</p>
             </div>
             <div class="sc-body">
-              <div v-if="pageContentLoading" class="loading-text">Loading sections...</div>
-              <div v-else-if="pageSections.length === 0" class="empty-state">
-                No page sections found. Run the seed SQL to populate them, or edit via the
-                <RouterLink to="/admin/editor/programs-environment">Page Editor</RouterLink>.
-              </div>
-              <div v-else class="sections-list">
-                <div v-for="sec in pageSections" :key="sec.id" class="section-card-mini">
-                  <div class="scm-header">
-                    <span class="scm-label">{{ sec.label }}</span>
-                    <h4>{{ sec.heading }}</h4>
+              <div v-if="loading" class="loading-text">Loading initiatives...</div>
+              <template v-else>
+                <div v-for="(item, index) in initiatives" :key="index" class="sub-editor-card">
+                  <div class="sub-editor-hdr">
+                    <span class="sub-num">Initiative {{ index + 1 }}</span>
+                    <button class="btn-icon" @click="initiatives.splice(index, 1)" title="Remove initiative">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
                   </div>
-                  <div v-if="sec.items.length > 0" class="scm-items">
-                    <div v-for="item in sec.items" :key="item.title" class="scm-item">
-                      <strong>{{ item.title }}</strong>
-                      <p v-if="item.body">{{ item.body }}</p>
+                  <div class="form-row">
+                    <label class="field">
+                      <span class="field-label">Title</span>
+                      <input v-model="item.title" placeholder="e.g. Reforestation Projects" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Tag</span>
+                      <input v-model="item.tag" placeholder="e.g. Conservation" />
+                    </label>
+                  </div>
+                  <label class="field field-block">
+                    <span class="field-label">Description</span>
+                    <textarea v-model="item.text" rows="2" placeholder="Brief description..."></textarea>
+                  </label>
+                  <label class="field field-block">
+                    <span class="field-label">Image URL</span>
+                    <input v-model="item.img" placeholder="https://images.unsplash.com/..." />
+                    <div v-if="item.img" class="field-img-preview">
+                      <img :src="item.img" :alt="item.title" class="img-thumb" />
                     </div>
-                  </div>
-                  <div v-else class="scm-empty">No items in this section</div>
+                  </label>
                 </div>
+                <button class="btn btn-ghost add-stat-btn" @click="initiatives.push({ title: '', text: '', img: '', tag: '' })">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Initiative
+                </button>
+              </template>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================ TAB: PROCESS ================ -->
+        <section v-if="activeTab === 'process'" class="tab-content">
+          <div class="section-card">
+            <div class="sc-header">
+              <h2>Process Steps</h2>
+              <p>Edit the <strong>4-step process</strong> shown under "How We Work". Each step has a number, icon, title, and description.</p>
+            </div>
+            <div class="sc-body">
+              <div v-if="loading" class="loading-text">Loading process steps...</div>
+              <template v-else>
+                <div v-for="(step, index) in processSteps" :key="index" class="sub-editor-card">
+                  <div class="sub-editor-hdr">
+                    <span class="sub-num">Step {{ step.number || index + 1 }}</span>
+                    <button class="btn-icon" @click="processSteps.splice(index, 1)" title="Remove step">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <div class="form-row">
+                    <label class="field">
+                      <span class="field-label">Number</span>
+                      <input v-model="step.number" placeholder="e.g. 01" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Title</span>
+                      <input v-model="step.title" placeholder="e.g. Assessment" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Icon</span>
+                      <select v-model="step.icon">
+                        <option value="search">Search / Magnifier</option>
+                        <option value="map">Map / Pin</option>
+                        <option value="play">Play / Action</option>
+                        <option value="check">Check / Done</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label class="field field-block">
+                    <span class="field-label">Description</span>
+                    <textarea v-model="step.text" rows="2" placeholder="Step description..."></textarea>
+                  </label>
+                </div>
+                <button class="btn btn-ghost add-stat-btn" @click="processSteps.push({ number: '', title: '', icon: 'search', text: '' })">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Step
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <div class="section-card" style="margin-top: 1.25rem;">
+            <div class="sc-header">
+              <h2>Field Gallery</h2>
+              <p>Edit the gallery images shown on the public page. Each image has a URL, caption, and span (1 or 2 columns).</p>
+            </div>
+            <div class="sc-body">
+              <div v-for="(img, index) in galleryImages" :key="index" class="sub-editor-card">
+                <div class="sub-editor-hdr">
+                  <span class="sub-num">Image {{ index + 1 }}</span>
+                  <button class="btn-icon" @click="galleryImages.splice(index, 1)" title="Remove image">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+                <div class="form-row">
+                  <label class="field">
+                    <span class="field-label">Caption</span>
+                    <input v-model="img.caption" placeholder="e.g. Reforestation in rural Cambodia" />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Span</span>
+                    <select v-model="img.span">
+                      <option value="1">1 column</option>
+                      <option value="2">2 columns (wider)</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="field field-block">
+                  <span class="field-label">Image URL</span>
+                  <input v-model="img.src" placeholder="https://images.unsplash.com/..." />
+                  <div v-if="img.src" class="field-img-preview">
+                    <img :src="img.src" :alt="img.caption" class="img-thumb" />
+                  </div>
+                </label>
               </div>
-              <div class="form-actions" style="margin-top: 1rem;">
-                <RouterLink class="btn btn-primary" to="/admin/editor/programs-environment">
-                  Edit Full Page Content →
-                </RouterLink>
+              <button class="btn btn-ghost add-stat-btn" @click="galleryImages.push({ src: '', caption: '', span: '1' })">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Image
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================ TAB: OUR SUPPORT (PARTNERS) ================ -->
+        <section v-if="activeTab === 'partners'" class="tab-content">
+          <div class="section-card">
+            <div class="sc-header">
+              <h2>Our Support — Partner Organizations</h2>
+              <p>Edit the partner organizations shown in the "Our Supporters" section on the public Environment page. Each entry has a name, a type/relationship label, and an optional description.</p>
+            </div>
+            <div class="sc-body">
+              <div v-if="loading" class="loading-text">Loading partners...</div>
+              <template v-else>
+                <div v-for="(partner, index) in partners" :key="index" class="sub-editor-card">
+                  <div class="sub-editor-hdr">
+                    <span class="sub-num">Partner {{ index + 1 }}</span>
+                    <button class="btn-icon" @click="partners.splice(index, 1)" title="Remove partner">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <div class="form-row">
+                    <label class="field">
+                      <span class="field-label">Name</span>
+                      <input v-model="partner.name" placeholder="e.g. UN Environment" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Type / Relationship</span>
+                      <input v-model="partner.type" placeholder="e.g. International Partner" />
+                    </label>
+                  </div>
+                  <label class="field field-block">
+                    <span class="field-label">Description <span class="field-hint">(optional)</span></span>
+                    <textarea v-model="partner.description" rows="2" placeholder="Brief description of the partnership..."></textarea>
+                  </label>
+                </div>
+                <button class="btn btn-ghost add-stat-btn" @click="partners.push({ name: '', type: '', description: '' })">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Partner
+                </button>
+              </template>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================ TAB: CTA & QUOTE ================ -->
+        <section v-if="activeTab === 'cta'" class="tab-content">
+          <div class="section-card">
+            <div class="sc-header">
+              <h2>Quote / Testimonial</h2>
+              <p>Edit the quote block that appears between the gallery and team sections on the public page.</p>
+            </div>
+            <div class="sc-body">
+              <label class="field field-block">
+                <span class="field-label">Quote Text</span>
+                <textarea v-model="quoteContent.text" rows="3" placeholder="Enter the quote..."></textarea>
+              </label>
+              <label class="field field-block">
+                <span class="field-label">Citation / Author</span>
+                <input v-model="quoteContent.cite" placeholder="e.g. — SETE SENA Environmental Team" />
+              </label>
+            </div>
+          </div>
+
+          <div class="section-card" style="margin-top: 1.25rem;">
+            <div class="sc-header">
+              <h2>CTA Section</h2>
+              <p>Edit the Call to Action section at the bottom of the Environment page — the label, heading, description, and both button links.</p>
+            </div>
+            <div class="sc-body">
+              <div class="form-row">
+                <label class="field">
+                  <span class="field-label">Label / Eyebrow</span>
+                  <input v-model="ctaContent.label" placeholder="e.g. Take Action" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Heading</span>
+                  <input v-model="ctaContent.heading" placeholder="e.g. Join the Environmental Movement" />
+                </label>
+              </div>
+              <label class="field field-block">
+                <span class="field-label">Description</span>
+                <textarea v-model="ctaContent.description" rows="2" placeholder="CTA description..."></textarea>
+              </label>
+              <div class="form-row">
+                <label class="field">
+                  <span class="field-label">Primary Button Text</span>
+                  <input v-model="ctaContent.primaryBtnText" placeholder="e.g. Get Involved" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Primary Button URL</span>
+                  <input v-model="ctaContent.primaryBtnUrl" placeholder="e.g. /get-involved" />
+                </label>
+              </div>
+              <div class="form-row">
+                <label class="field">
+                  <span class="field-label">Secondary Button Text</span>
+                  <input v-model="ctaContent.secondaryBtnText" placeholder="e.g. Support Us" />
+                </label>
+                <label class="field">
+                  <span class="field-label">Secondary Button URL</span>
+                  <input v-model="ctaContent.secondaryBtnUrl" placeholder="e.g. /get-involved/donate" />
+                </label>
               </div>
             </div>
           </div>
@@ -588,7 +1099,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* ─── VARIABLES ─── */
 .env-dash {
   --bg: var(--admin-theme-bg);
   --surface: var(--admin-theme-surface);
@@ -601,19 +1111,19 @@ onMounted(async () => {
   --emerald-glow: color-mix(in srgb, var(--admin-theme-primary) 25%, transparent);
   --emerald-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
   --blue: var(--admin-theme-teal);
+  --blue-glow: color-mix(in srgb, var(--admin-theme-teal) 25%, transparent);
   --blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
   --amber: var(--admin-theme-gold);
+  --amber-glow: color-mix(in srgb, var(--admin-theme-gold) 25%, transparent);
   --amber-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
   --violet: #7c3aed;
+  --violet-glow: rgba(124,58,237,0.25);
   --violet-soft: color-mix(in srgb, #7c3aed 12%, transparent);
-  --slate: #64748b;
-  --slate-soft: color-mix(in srgb, #64748b 12%, transparent);
   --red: var(--admin-theme-danger);
   --red-soft: color-mix(in srgb, var(--admin-theme-danger) 12%, transparent);
   --shadow-xs: var(--admin-theme-shadow);
   --shadow-sm: var(--admin-theme-shadow);
   --shadow-md: var(--admin-theme-shadow);
-  --shadow-lg: var(--admin-theme-shadow);
   --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
   min-height: 100vh; background: var(--bg); color: var(--text);
   font-family: inherit;
@@ -622,7 +1132,6 @@ onMounted(async () => {
 .dash-layout { display: flex; }
 .dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; position: relative; }
 
-/* ─── TOASTS ─── */
 .toast-container { position: fixed; top: 72px; right: 1.5rem; z-index: 200; display: grid; gap: 0.4rem; }
 .toast { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; box-shadow: var(--shadow-md); background: var(--surface); border: 1px solid var(--border); }
 .toast-success { border-color: var(--emerald); color: var(--emerald); }
@@ -632,7 +1141,6 @@ onMounted(async () => {
 .toast-enter-from { opacity: 0; transform: translateX(30px); }
 .toast-leave-to { opacity: 0; transform: translateX(30px); }
 
-/* ─── BUTTONS ─── */
 .btn {
   display: inline-flex; align-items: center; gap: 0.45rem; min-height: 36px; padding: 0.4rem 1rem;
   border-radius: var(--radius-sm); font-weight: 700; font-size: 0.82rem;
@@ -646,14 +1154,16 @@ onMounted(async () => {
 .btn-ghost:hover { background: var(--surface); border-color: var(--border-s); box-shadow: var(--shadow-sm); }
 :global(.admin-dark) .btn-ghost { background: rgba(16,24,38,0.7); border-color: var(--border); }
 .btn:disabled { opacity: 0.5; cursor: wait; }
+.btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  border: 1px solid transparent; background: transparent;
+  color: var(--muted); cursor: pointer; transition: all 0.15s ease;
+}
+.btn-icon:hover { background: var(--red-soft); color: var(--red); border-color: var(--red-soft); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.8s linear infinite; }
-.btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; font-weight: 700; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; transition: all 0.15s ease; }
-.btn-sm:hover { border-color: var(--border-s); background: var(--bg); }
-.btn-sm-danger { color: var(--red); border-color: var(--red-soft); }
-.btn-sm-danger:hover { background: var(--red-soft); }
 
-/* ─── BANNER ─── */
 .dash-banner { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); overflow: hidden; }
 .banner-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 400px 200px at 10% 30%, rgba(5,150,105,0.08) 0%, transparent 70%), radial-gradient(ellipse 300px 200px at 90% 80%, rgba(37,99,235,0.05) 0%, transparent 70%); pointer-events: none; }
 .banner-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -681,25 +1191,32 @@ onMounted(async () => {
 .bstat { display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; border-right: 1px solid var(--border); transition: all 0.2s ease; }
 .bstat:last-child { border-right: none; }
 .bstat:hover { background: var(--surface); }
-.bstat-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius-sm); flex-shrink: 0; background: var(--emerald-soft); color: var(--emerald); transition: transform 0.2s ease; }
+.bstat-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius-sm); flex-shrink: 0; transition: transform 0.2s ease; }
 .bstat:hover .bstat-icon { transform: scale(1.08); }
+.bstat-emerald .bstat-icon { background: var(--emerald-soft); color: var(--emerald); }
+.bstat-emerald:hover .bstat-icon { box-shadow: 0 0 0 4px var(--emerald-glow); }
+.bstat-blue .bstat-icon { background: var(--blue-soft); color: var(--blue); }
+.bstat-blue:hover .bstat-icon { box-shadow: 0 0 0 4px var(--blue-glow); }
+.bstat-amber .bstat-icon { background: var(--amber-soft); color: var(--amber); }
+.bstat-amber:hover .bstat-icon { box-shadow: 0 0 0 4px var(--amber-glow); }
+.bstat-violet .bstat-icon { background: var(--violet-soft); color: var(--violet); }
+.bstat-violet:hover .bstat-icon { box-shadow: 0 0 0 4px var(--violet-glow); }
 .bstat-info strong { display: block; color: var(--contrast); font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
 .bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
 .bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 500; margin-top: 1px; }
 
-/* ─── TAB NAV ─── */
-.tab-nav { display: flex; gap: 0.35rem; margin-top: 1.25rem; padding: 0 0.25rem; overflow-x: auto; }
+.tab-nav { display: flex; align-items: center; gap: 0.35rem; margin-top: 1.25rem; padding: 0 0.25rem; overflow-x: auto; }
 .tab-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--muted); font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; font-family: inherit; }
 .tab-btn:hover { border-color: var(--border-s); color: var(--contrast); }
 .tab-btn.active { background: var(--emerald-soft); border-color: var(--emerald); color: var(--emerald); }
 :global(.admin-dark) .tab-btn.active { background: rgba(16,185,129,0.1); }
+.tab-spacer { flex: 1; }
+.tab-dirty { font-size: 0.72rem; font-weight: 700; color: var(--amber); padding: 0.25rem 0.6rem; border-radius: 999px; background: var(--amber-soft); white-space: nowrap; }
 
-/* ─── TAB CONTENT ─── */
 .tab-content { margin-top: 1.25rem; }
 
-/* ─── QUICK LINKS ─── */
-.quick-links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; margin-bottom: 1.25rem; }
-.link-card { display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); text-decoration: none; transition: all 0.2s cubic-bezier(0.16,1,0.3,1); }
+.quick-links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; }
+.link-card { display: flex; align-items: center; gap: 0.7rem; padding: 0.8rem 0.9rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); text-decoration: none; cursor: pointer; transition: all 0.2s cubic-bezier(0.16,1,0.3,1); }
 .link-card:hover { border-color: var(--border-s); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
 .link-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--radius-sm); flex-shrink: 0; }
 .link-emerald .link-icon { background: var(--emerald-soft); color: var(--emerald); }
@@ -712,65 +1229,66 @@ onMounted(async () => {
 .link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.2s ease; }
 .link-card:hover .link-arrow { transform: translateX(3px); color: var(--emerald); }
 
-/* ─── OVERVIEW CARDS ─── */
-.overview-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.85rem; }
+.overview-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.85rem; margin-top: 1.25rem; }
 .overview-card-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; transition: box-shadow 0.2s ease; }
 .overview-card-item:hover { box-shadow: var(--shadow-sm); }
 .oc-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
 .oc-text { color: var(--muted); font-size: 0.85rem; margin: 0.35rem 0; line-height: 1.4; }
-.oc-text.muted { font-style: italic; }
 .oc-action { background: none; border: none; color: var(--blue); font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0; font-family: inherit; }
 .oc-action:hover { text-decoration: underline; }
 
-/* ─── SECTION CARD ─── */
 .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); overflow: hidden; }
-.sc-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+.sc-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .sc-header h2 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--contrast); }
 .sc-header p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.82rem; }
-.sc-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .sc-body { padding: 1.25rem; }
 
-/* ─── FORMS ─── */
 .field { display: grid; gap: 0.25rem; }
 .field-block { grid-column: 1 / -1; }
 .field-label { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.field-hint { font-size: 0.7rem; font-weight: 500; color: var(--muted); font-style: italic; text-transform: none; letter-spacing: normal; }
 .field input, .field textarea, .field select { padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--contrast); font-size: 0.88rem; font-family: inherit; transition: border-color 0.15s ease; width: 100%; }
-.field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 2px var(--emerald-glow); }
-:global(.admin-dark) .field input, :global(.admin-dark) .field textarea, :global(.admin-dark) .field select { background: var(--bg); }
-.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem; }
-.form-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
-.inline-form { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1rem; }
-.inline-form h4 { margin: 0 0 0.75rem; font-size: 0.9rem; color: var(--contrast); }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 2px var(--emerald-glow); }
+:global(.admin-dark) .field input, :global(.admin-dark) .field textarea { background: var(--bg); }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem; }
+.add-stat-btn { margin-top: 0.75rem; }
 
-/* ─── DATA TABLE ─── */
-.data-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th, .data-table td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
-.data-table th { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); background: var(--bg); }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tbody tr:hover { background: var(--bg); }
-.actions-cell { display: flex; gap: 0.3rem; }
-.desc-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
-.metric-icon { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 4px; background: var(--emerald-soft); color: var(--emerald); font-size: 0.75rem; font-weight: 700; }
-.type-badge { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 4px; background: var(--violet-soft); color: var(--violet); font-size: 0.72rem; font-weight: 700; }
-.loading-text { color: var(--muted); font-style: italic; padding: 1rem 0; }
-.empty-state { color: var(--muted); padding: 1.5rem 0; text-align: center; }
+.stat-editor { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; }
+.stat-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.stat-editor-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
 
-/* ─── SECTIONS LIST ─── */
-.sections-list { display: grid; gap: 0.85rem; }
-.section-card-mini { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg); }
-.scm-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
-.section-card-mini h4 { margin: 0.25rem 0 0; font-size: 0.9rem; color: var(--contrast); }
-.scm-items { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
-.scm-item { border-left: 3px solid var(--emerald); padding: 0.5rem 0.75rem; background: var(--surface); border-radius: 0 6px 6px 0; }
-.scm-item strong { display: block; font-size: 0.82rem; color: var(--contrast); }
-.scm-item p { margin: 0.2rem 0 0; font-size: 0.78rem; color: var(--muted); }
-.scm-empty { color: var(--muted); font-style: italic; font-size: 0.82rem; margin-top: 0.5rem; }
+.sections-list { display: grid; gap: 0.75rem; }
+.section-edit-card { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; transition: border-color 0.15s ease; }
+.section-edit-card:hover { border-color: var(--border-s); }
+.sec-summary { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; cursor: pointer; list-style: none; user-select: none; }
+.sec-summary::-webkit-details-marker { display: none; }
+.sec-summary-left { display: flex; align-items: center; gap: 0.7rem; }
+.sec-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); background: var(--emerald-soft); padding: 0.15rem 0.5rem; border-radius: 4px; }
+.sec-heading-preview { font-size: 0.88rem; font-weight: 600; color: var(--contrast); }
+.sec-chevron { color: var(--muted); transition: transform 0.2s ease; }
+details[open] .sec-chevron { transform: rotate(180deg); }
+.sec-body { padding: 0 1rem 1rem; display: grid; gap: 0.75rem; }
 
-/* ─── RESPONSIVE ─── */
+.item-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; }
+.item-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.3rem; }
+.item-chip { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; background: var(--emerald-soft); color: var(--emerald); font-size: 0.75rem; font-weight: 600; }
+
+.sub-editor-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; }
+.sub-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.sub-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
+.field-img-preview { margin-top: 0.35rem; }
+.img-thumb { width: 120px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+
+.side-actions { display: grid; gap: 0.45rem; }
+.side-btn { display: flex; align-items: center; gap: 0.45rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: all 0.15s ease; }
+.side-btn:hover { border-color: var(--border-s); background: var(--bg); color: var(--contrast); box-shadow: var(--shadow-xs); }
+
+.loading-text { color: var(--muted); font-style: italic; padding: 1.5rem 0; text-align: center; }
+.cloud-badge { background: var(--emerald-soft) !important; color: var(--emerald) !important; }
+.local-badge { background: var(--amber-soft) !important; color: var(--amber) !important; }
+
 @media (min-width: 900px) { .env-dash.sidebar-open { padding-left: 260px; } }
-@media (max-width: 1100px) { .content-grid { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .banner-stats { grid-template-columns: repeat(2,1fr); } .quick-links-grid { grid-template-columns: 1fr; } .overview-cards { grid-template-columns: 1fr; } }
-@media (max-width: 720px) { .dash-main { padding: 1rem; } .banner-content { flex-direction: column; } .banner-stats { grid-template-columns: 1fr; } .bstat { border-right: none; border-bottom: 1px solid var(--border); } .bstat:last-child { border-bottom: none; } .tab-nav { gap: 0.2rem; } .tab-btn { padding: 0.4rem 0.6rem; font-size: 0.72rem; } }
+@media (max-width: 720px) { .dash-main { padding: 1rem; } .banner-content { flex-direction: column; } .banner-stats { grid-template-columns: 1fr; } .bstat { border-right: none; border-bottom: 1px solid var(--border); } .bstat:last-child { border-bottom: none; } }
 @media (max-width: 600px) { .banner-actions { width: 100%; } .banner-actions .btn { flex: 1; justify-content: center; } }
 </style>

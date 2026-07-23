@@ -97,10 +97,44 @@ const FALLBACK_WHY_IT_MATTERS = [
   },
 ]
 
+const FALLBACK_TEAM_CARDS = [
+  {
+    role: 'Program Director',
+    desc: 'Oversees livelihood programs, savings groups, and enterprise partnerships across provinces.',
+    icon: 'compass',
+  },
+  {
+    role: 'Field Coordinators',
+    desc: 'Manage Saving-for-Change groups and cooperative development in target villages.',
+    icon: 'map',
+  },
+  {
+    role: 'Agricultural Trainers',
+    desc: 'Deliver farmer field schools and climate-smart agriculture training.',
+    icon: 'heart',
+  },
+  {
+    role: 'Enterprise Officers',
+    desc: 'Support small business development, market linkages and financial literacy.',
+    icon: 'chart',
+  },
+]
+
 /* ─── Dynamic data from DB ─────────────────────── */
 const dynamicStats = ref<Array<{ number: string; label: string; description: string; icon: string }>>(FALLBACK_STATS)
 const whatWeDoItems = ref<WorkItem[]>(FALLBACK_WHAT_WE_DO)
 const whyMattersItems = ref<Array<{ text: string; icon: string; image: string }>>(FALLBACK_WHY_IT_MATTERS)
+const teamCards = ref(FALLBACK_TEAM_CARDS)
+const approachText = ref(
+  'We do not distribute cash. We build the systems — saving groups, cooperatives, farmer schools — that let a household earn, save, invest and repeat. Every group is coached for 18–24 months, then graduates to independence with our field team on call.'
+)
+const introText = ref(
+  'Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena answers with income at home — soil restored, savings pooled, cooperatives negotiating fair prices, and small enterprises rooted in local resources.'
+)
+
+const quoteText = ref(
+  'Our group has lent to twelve families for chickens and school fees. Nobody has left for Thailand this year.'
+)
 
 // modal state for "Why it matters" cards — clicking a card opens its image + text large in a popup
 const activeImpactItem = ref<{ text: string; icon: string; image: string } | null>(null)
@@ -199,13 +233,141 @@ function applyPageBody(body: string) {
         }))
       }
     }
+
+    // Approach — from 'livelihood-approach' section body
+    const approachSection = sections.find((s) => s.id === 'livelihood-approach')
+    if (approachSection && typeof approachSection.body === 'string' && approachSection.body.trim()) {
+      approachText.value = approachSection.body.trim()
+    }
+
+    // Team / Organizational Structure — from 'livelihood-team' section items
+    const teamSection = sections.find((s) => s.id === 'livelihood-team')
+    if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
+      const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        teamCards.value = lines.map(line => {
+          const parts = line.split('|').map((p: string) => p.trim())
+          return {
+            role: parts[0] || '',
+            icon: parts[1] || 'chart',
+            desc: parts[2] || parts[0] || '',
+          }
+        })
+      }
+    }
+
+    // Quote — from metadata quoteContent (only in applyProgramMetadata)
+    // (applyPageBody doesn't have quoteContent in pages table schema)
   } catch {
     // Invalid JSON — keep fallbacks
   }
 }
 
+/* ─── Load from programs table metadata ───────── */
+function applyProgramMetadata(meta: Record<string, unknown>) {
+  // Quote — from meta.quoteContent.text
+  if (meta.quoteContent && typeof meta.quoteContent === 'object') {
+    const qc = meta.quoteContent as Record<string, unknown>
+    if (typeof qc.text === 'string' && qc.text.trim()) {
+      quoteText.value = qc.text.trim()
+    }
+  }
+
+  // Stats band
+  if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+    dynamicStats.value = meta.statsBand.map((s: Record<string, unknown>) => {
+      const label = String(s.label ?? '')
+      const icon = label.includes('GROUP') || label.includes('SAVING') ? 'wallet'
+        : label.includes('MEMBER') || label.includes('FAMILY') ? 'users'
+        : 'building'
+      return {
+        number: String(s.number ?? ''),
+        label,
+        description: String(s.description ?? ''),
+        icon,
+      }
+    })
+  }
+
+  // Sections
+  if (Array.isArray(meta.sections)) {
+    const sections = meta.sections as Array<Record<string, unknown>>
+
+    // What we do — from 'livelihood-work' section items
+    const workSection = sections.find((s) => s.id === 'livelihood-work')
+    if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
+      const lines = workSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        const defaultText = (typeof workSection.body === 'string' && workSection.body.trim()) ? workSection.body : ''
+        whatWeDoItems.value = lines.map((title: string, i: number) => ({
+          title,
+          text: defaultText || FALLBACK_WHAT_WE_DO[i]?.text || '',
+          image: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.livelihoodHero1,
+        }))
+      }
+    }
+
+    // Why it matters — from 'livelihood-why' section items
+    const whySection = sections.find((s) => s.id === 'livelihood-why')
+    if (whySection && typeof whySection.items === 'string' && whySection.items.trim()) {
+      const lines = whySection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        whyMattersItems.value = lines.map((text: string, i: number) => ({
+          text,
+          icon: FALLBACK_WHY_IT_MATTERS[i]?.icon || 'shield-halved',
+          image: FALLBACK_WHY_IT_MATTERS[i % FALLBACK_WHY_IT_MATTERS.length]?.image || imageUrls.programs.livelihoodHero1,
+        }))
+      }
+    }
+
+    // Approach — from 'livelihood-approach' section body
+    const approachSection = sections.find((s) => s.id === 'livelihood-approach')
+    if (approachSection && typeof approachSection.body === 'string' && approachSection.body.trim()) {
+      approachText.value = approachSection.body.trim()
+    }
+
+    // Team / Organizational Structure — from 'livelihood-team' section items
+    const teamSection = sections.find((s) => s.id === 'livelihood-team')
+    if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
+      const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        teamCards.value = lines.map(line => {
+          const parts = line.split('|').map((p: string) => p.trim())
+          return {
+            role: parts[0] || '',
+            icon: parts[1] || 'chart',
+            desc: parts[2] || parts[0] || '',
+          }
+        })
+      }
+    }
+  }
+}
+
+async function loadFromProgramsTable() {
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('metadata')
+      .eq('slug', 'programs-livelihood')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[LivelihoodView] Programs load failed:', error.message)
+      return
+    }
+
+    if (data && data.metadata) {
+      applyProgramMetadata(data.metadata as Record<string, unknown>)
+    }
+  } catch (e) {
+    console.warn('[LivelihoodView] Programs load crashed:', e)
+  }
+}
+
 /* ─── Load from pages table ───────────────────── */
 async function loadFromDb() {
+  // Optional legacy `pages` body applies first as a base layer.
   try {
     const { data, error } = await supabase
       .from('pages')
@@ -215,22 +377,22 @@ async function loadFromDb() {
 
     if (error) {
       console.warn('[LivelihoodView] DB load failed:', error.message)
-      return
+    } else if (data && data.body) {
+      applyPageBody(data.body as string)
     }
-
-    if (!data || !data.body) {
-      console.warn('[LivelihoodView] No page data found, using fallbacks')
-      return
-    }
-
-    applyPageBody(data.body as string)
   } catch (e) {
     console.warn('[LivelihoodView] DB load crashed:', e)
   }
+
+  // The programs table metadata (edited from the admin Livelihood dashboard)
+  // is always applied last, so admin edits are the source of truth for this
+  // page — matching the Education program flow.
+  await loadFromProgramsTable()
 }
 
 /* ─── Real-time subscription ───────────────────── */
 let realtimeChannelLivelihood: ReturnType<typeof supabase.channel> | null = null
+let realtimeProgramsChannel: ReturnType<typeof supabase.channel> | null = null
 
 function setupRealtime() {
   realtimeChannelLivelihood = supabase
@@ -248,6 +410,28 @@ function setupRealtime() {
           const row = payload.new as Record<string, unknown>
           if (typeof row.body === 'string') {
             applyPageBody(row.body)
+          }
+        }
+      },
+    )
+    .subscribe()
+
+  // Also subscribe to programs table changes
+  realtimeProgramsChannel = supabase
+    .channel('livelihood-programs-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'programs',
+        filter: 'slug=eq.programs-livelihood',
+      },
+      (payload) => {
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (row.metadata) {
+            applyProgramMetadata(row.metadata as Record<string, unknown>)
           }
         }
       },
@@ -324,6 +508,10 @@ onBeforeUnmount(() => {
     supabase.removeChannel(realtimeChannelLivelihood)
     realtimeChannelLivelihood = null
   }
+  if (realtimeProgramsChannel) {
+    supabase.removeChannel(realtimeProgramsChannel)
+    realtimeProgramsChannel = null
+  }
 })
 </script>
 
@@ -362,11 +550,7 @@ onBeforeUnmount(() => {
     <section class="section-cream intro-section">
       <div class="container" ref="introEl">
         <div class="intro-rule" aria-hidden="true"></div>
-        <p class="intro-text text-center">
-          Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena
-          answers with income at home — soil restored, savings pooled, cooperatives negotiating fair
-          prices, and small enterprises rooted in local resources.
-        </p>
+        <p class="intro-text text-center">{{ introText }}</p>
       </div>
     </section>
 
@@ -433,11 +617,7 @@ onBeforeUnmount(() => {
       <div class="container quote-inner" ref="quoteInnerEl">
         <p class="section-eyebrow section-eyebrow--light text-center">Our method</p>
         <h2 class="section-title section-title--light text-center">Our approach</h2>
-        <p class="approach-text approach-text--light text-center">
-          We do not distribute cash. We build the systems — saving groups, cooperatives, farmer
-          schools — that let a household earn, save, invest and repeat. Every group is coached for
-          18–24 months, then graduates to independence with our field team on call.
-        </p>
+        <p class="approach-text approach-text--light text-center">{{ approachText }}</p>
 
         <div class="quote-block">
           <svg
@@ -453,9 +633,43 @@ onBeforeUnmount(() => {
             />
           </svg>
           <p class="quote-text">
-            "Our group has lent to twelve families for chickens and school fees. Nobody has left for
-            Thailand this year."
+            "{{ quoteText }}"
           </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team / Organizational Structure -->
+    <section class="section-cream">
+      <div class="container">
+        <div class="text-center">
+          <p class="section-eyebrow">Organizational Structure</p>
+          <h2 class="section-title">Who delivers livelihood programs on the ground</h2>
+        </div>
+
+        <div class="team-grid">
+          <div v-for="(member, index) in teamCards" :key="member.role" class="team-card" :style="{ transitionDelay: `${index * 0.08}s` }">
+            <div class="team-icon-wrap">
+              <svg v-if="member.icon === 'compass'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+                <path d="M16 8l-3 5-5 3 3-5 5-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              <svg v-else-if="member.icon === 'map'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6" />
+              </svg>
+              <svg v-else-if="member.icon === 'heart'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21l-1.5-1.4C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1A5.7 5.7 0 0116.5 3C19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.1L12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 20v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.6" />
+                <path d="M18 8l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3 class="team-role">{{ member.role }}</h3>
+            <p class="team-desc">{{ member.desc }}</p>
+          </div>
         </div>
       </div>
     </section>
@@ -1247,6 +1461,73 @@ onBeforeUnmount(() => {
   }
 }
 
+/* ===== Team / Organizational Structure ===== */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.team-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(22, 52, 42, 0.06);
+  box-shadow: 0 8px 24px -12px rgba(22, 52, 42, 0.12);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+  text-align: center;
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 40px -16px rgba(22, 52, 42, 0.22);
+  border-color: var(--primary-color);
+}
+
+.team-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+
+.team-card:hover .team-icon-wrap {
+  background: var(--primary-color);
+  color: #ffffff;
+  transform: scale(1.1) rotate(-4deg);
+}
+
+.team-icon-wrap svg {
+  width: 24px;
+  height: 24px;
+}
+
+.team-role {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0 0 0.6rem;
+  line-height: 1.3;
+}
+
+.team-desc {
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 /* ===== Buttons ===== */
 .btn-primary {
   background: var(--primary-color);
@@ -1351,12 +1632,20 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
 
+  .team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .quote-section {
     padding: 4.5rem 0;
     background-attachment: scroll;
   }
   .quote-text {
     font-size: 1.25rem;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
   }
 
   .cta-banner {

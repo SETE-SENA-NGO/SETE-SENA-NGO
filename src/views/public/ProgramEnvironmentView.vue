@@ -23,11 +23,8 @@
       <div class="container">
         <div class="section-header" ref="overviewHeaderRef">
           <span class="section-label">Our Approach</span>
-          <h2>Environmental Stewardship in Action</h2>
-          <p class="section-desc">
-            Our environment program takes a holistic approach to conservation, combining
-            immediate action with long-term community education and sustainable development.
-          </p>
+          <h2>{{ heroHeadline }}</h2>
+          <p class="section-desc">{{ heroIntro }}</p>
         </div>
         <div class="overview-grid">
           <div
@@ -202,10 +199,46 @@
           <div class="quote-deco" aria-hidden="true">
             <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
           </div>
-          <p class="quote-text">"We do not inherit the earth from our ancestors; we borrow it from our children. Our environmental program is a pledge to protect that inheritance and ensure future generations inherit a planet that is healthy, vibrant, and full of possibility."</p>
-          <cite>— SETE SENA Environmental Team</cite>
+          <p class="quote-text">"{{ quoteText }}"</p>
+          <cite>{{ quoteCite }}</cite>
           <div class="quote-deco-bottom" aria-hidden="true"><span></span><span></span><span></span></div>
         </blockquote>
+      </div>
+    </section>
+
+    <!-- ===================== TEAM ===================== -->
+    <section class="section team-section">
+      <div class="container">
+        <div class="section-header" ref="teamHeaderRef">
+          <span class="section-label">Organizational Structure</span>
+          <h2>Who delivers environment programs on the ground</h2>
+          <p class="section-desc">Our dedicated team works across provinces protecting forests, building climate resilience and restoring ecosystems.</p>
+        </div>
+
+        <div class="team-grid">
+          <div v-for="(member, index) in teamCards" :key="member.role" class="team-card" :style="{ transitionDelay: `${index * 0.08}s` }">
+            <div class="team-icon-wrap">
+              <svg v-if="member.icon === 'compass'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+                <path d="M16 8l-3 5-5 3 3-5 5-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              <svg v-else-if="member.icon === 'map'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6" />
+              </svg>
+              <svg v-else-if="member.icon === 'heart'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21l-1.5-1.4C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1A5.7 5.7 0 0116.5 3C19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.1L12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 20v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.6" />
+                <path d="M18 8l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3 class="team-role">{{ member.role }}</h3>
+            <p class="team-desc">{{ member.desc }}</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -235,12 +268,12 @@
         <div class="cta-content cta-animate" :class="{ visible: ctaVisible }" ref="ctaRef">
           <div class="cta-bg-shapes" aria-hidden="true"><span></span><span></span><span></span></div>
           <div class="cta-inner">
-            <span class="cta-label">Take Action</span>
-            <h2>Join the Environmental Movement</h2>
-            <p>Whether you want to volunteer, partner with us, or support our conservation efforts, your contribution helps create a sustainable future for all.</p>
+            <span class="cta-label">{{ ctaContent.label }}</span>
+            <h2>{{ ctaContent.heading }}</h2>
+            <p>{{ ctaContent.description }}</p>
             <div class="cta-actions">
-              <router-link to="/get-involved" class="btn-cta btn-cta-primary">Get Involved<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></router-link>
-              <router-link to="/get-involved/donate" class="btn-cta btn-cta-secondary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Support Us</router-link>
+              <router-link :to="ctaContent.primaryBtnUrl" class="btn-cta btn-cta-primary">{{ ctaContent.primaryBtnText }}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></router-link>
+              <router-link :to="ctaContent.secondaryBtnUrl" class="btn-cta btn-cta-secondary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>{{ ctaContent.secondaryBtnText }}</router-link>
             </div>
           </div>
         </div>
@@ -250,7 +283,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
+
+/* ─── Content Interfaces (matching dashboard) ──── */
+interface InitiativeItem {
+  title: string
+  text: string
+  img: string
+  tag: string
+}
+
+interface ProcessStep {
+  number: string
+  title: string
+  icon: string
+  text: string
+}
+
+interface GalleryImage {
+  src: string
+  caption: string
+  span: string
+}
+
+interface CTAContent {
+  label: string
+  heading: string
+  description: string
+  primaryBtnText: string
+  primaryBtnUrl: string
+  secondaryBtnText: string
+  secondaryBtnUrl: string
+}
+
+interface QuoteContent {
+  text: string
+  cite: string
+}
+
+interface PartnerItem {
+  name: string
+  type: string
+  description: string
+}
+import { supabase } from '@/lib/supabase'
 import { useEnvironmentProgram } from '@/composables/useEnvironmentProgram'
 
 const {
@@ -262,6 +338,172 @@ const {
   setupRealtime: setupEnvRealtime,
   cleanupRealtime: cleanupEnvRealtime,
 } = useEnvironmentProgram()
+
+/* ─── Programs table metadata (hero content) ───── */
+const FALLBACK_TEAM_CARDS = [
+  {
+    role: 'Program Director',
+    desc: 'Oversees environmental programs, conservation initiatives, and partnerships across provinces.',
+    icon: 'compass',
+  },
+  {
+    role: 'Field Coordinators',
+    desc: 'Manage community forestry, biogas, and WASH projects in target villages.',
+    icon: 'map',
+  },
+  {
+    role: 'Conservation Trainers',
+    desc: 'Deliver climate-smart agriculture, reforestation and environmental education.',
+    icon: 'heart',
+  },
+  {
+    role: 'WASH Officers',
+    desc: 'Implement clean water, sanitation and rainwater harvesting solutions.',
+    icon: 'chart',
+  },
+]
+
+const heroHeadline = ref('Environmental Stewardship in Action')
+const heroIntro = ref(
+  'Our environment program takes a holistic approach to conservation, combining immediate action with long-term community education and sustainable development.'
+)
+const teamCards = ref(FALLBACK_TEAM_CARDS)
+const quoteText = ref('We do not inherit the earth from our ancestors; we borrow it from our children. Our environmental program is a pledge to protect that inheritance and ensure future generations inherit a planet that is healthy, vibrant, and full of possibility.')
+const quoteCite = ref('— SETE SENA Environmental Team')
+const ctaContent = ref<CTAContent>({
+  label: 'Take Action',
+  heading: 'Join the Environmental Movement',
+  description: 'Whether you want to volunteer, partner with us, or support our conservation efforts, your contribution helps create a sustainable future for all.',
+  primaryBtnText: 'Get Involved',
+  primaryBtnUrl: '/get-involved',
+  secondaryBtnText: 'Support Us',
+  secondaryBtnUrl: '/get-involved/donate',
+})
+
+/* Partners managed from the admin Environment dashboard (Our Support tab) */
+const metaPartners = ref<PartnerItem[] | null>(null)
+
+async function loadFromProgramsTable() {
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('metadata')
+      .eq('slug', 'programs-environment')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[EnvView] Programs load failed:', error.message)
+      return
+    }
+
+    if (data && data.metadata) {
+      const meta = data.metadata as Record<string, unknown>
+      if (typeof meta.headline === 'string' && meta.headline.trim()) {
+        heroHeadline.value = meta.headline.trim()
+      }
+      if (typeof meta.intro === 'string' && meta.intro.trim()) {
+        heroIntro.value = meta.intro.trim()
+      }
+
+      // Initiatives — from meta.initiatives
+      if (meta.initiatives && Array.isArray(meta.initiatives)) {
+        const items = meta.initiatives as Array<Record<string, unknown>>
+        if (items.length > 0 && items[0]?.title) {
+          initiatives.value = items.map(item => ({
+            title: String(item.title ?? ''),
+            text: String(item.text ?? ''),
+            img: String(item.img ?? ''),
+            tag: String(item.tag ?? ''),
+          }))
+        }
+      }
+
+      // Process Steps — from meta.processSteps
+      if (meta.processSteps && Array.isArray(meta.processSteps)) {
+        const steps = meta.processSteps as Array<Record<string, unknown>>
+        if (steps.length > 0 && steps[0]?.title) {
+          processSteps.value = steps.map(step => ({
+            number: String(step.number ?? ''),
+            title: String(step.title ?? ''),
+            icon: String(step.icon ?? 'search'),
+            text: String(step.text ?? ''),
+          }))
+        }
+      }
+
+      // Gallery — from meta.galleryImages
+      if (meta.galleryImages && Array.isArray(meta.galleryImages)) {
+        const images = meta.galleryImages as Array<Record<string, unknown>>
+        if (images.length > 0 && images[0]?.src) {
+          galleryImages.value = images.map(img => ({
+            src: String(img.src ?? ''),
+            caption: String(img.caption ?? ''),
+            span: String(img.span ?? '1'),
+          }))
+        }
+      }
+
+      // CTA — from meta.ctaContent
+      if (meta.ctaContent && typeof meta.ctaContent === 'object') {
+        const cta = meta.ctaContent as Record<string, unknown>
+        ctaContent.value = {
+          label: String(cta.label ?? ctaContent.value.label),
+          heading: String(cta.heading ?? ctaContent.value.heading),
+          description: String(cta.description ?? ctaContent.value.description),
+          primaryBtnText: String(cta.primaryBtnText ?? ctaContent.value.primaryBtnText),
+          primaryBtnUrl: String(cta.primaryBtnUrl ?? ctaContent.value.primaryBtnUrl),
+          secondaryBtnText: String(cta.secondaryBtnText ?? ctaContent.value.secondaryBtnText),
+          secondaryBtnUrl: String(cta.secondaryBtnUrl ?? ctaContent.value.secondaryBtnUrl),
+        }
+      }
+
+      // Quote — from meta.quoteContent
+      if (meta.quoteContent && typeof meta.quoteContent === 'object') {
+        const qc = meta.quoteContent as Record<string, unknown>
+        if (typeof qc.text === 'string' && qc.text.trim()) {
+          quoteText.value = qc.text.trim()
+        }
+        if (typeof qc.cite === 'string' && qc.cite.trim()) {
+          quoteCite.value = qc.cite.trim()
+        }
+      }
+
+      // Team / Organizational Structure — from 'environment-team' section items
+      if (Array.isArray(meta.sections)) {
+        const sections = meta.sections as Array<Record<string, unknown>>
+        const teamSection = sections.find((s) => s.id === 'environment-team')
+        if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
+          const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+          if (lines.length > 0) {
+            teamCards.value = lines.map(line => {
+              const parts = line.split('|').map((p: string) => p.trim())
+              return {
+                role: parts[0] || '',
+                icon: parts[1] || 'chart',
+                desc: parts[2] || parts[0] || '',
+              }
+            })
+          }
+        }
+      }
+
+      // Our Support — from meta.partners (admin-managed, takes priority over the
+      // legacy `partners` table and the static fallback list)
+      if (meta.partners && Array.isArray(meta.partners)) {
+        const items = meta.partners as Array<Record<string, unknown>>
+        if (items.length > 0 && items[0]?.name) {
+          metaPartners.value = items.map(item => ({
+            name: String(item.name ?? ''),
+            type: String(item.type ?? ''),
+            description: String(item.description ?? ''),
+          }))
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[EnvView] Programs load crashed:', e)
+  }
+}
 
 /* Page sections from DB — shown below overview cards when available */
 const dbSectionsContent = computed(() => {
@@ -295,14 +537,14 @@ const overviewCards = [
   { title: 'Community Engagement', text: 'Empowering local communities with knowledge, resources, and tools to actively participate in environmental protection and climate action.', svgPaths: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
 ]
 
-const initiatives = [
+const initiatives = ref<InitiativeItem[]>([
   { title: 'Reforestation Projects', text: 'Planting native tree species to restore degraded forests. We\'ve planted over 500,000 trees across 12 communities.', img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80', tag: 'Conservation' },
   { title: 'Environmental Education', text: 'Developing curriculum and training programs for schools to build environmental literacy from an early age.', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80', tag: 'Education' },
   { title: 'Renewable Energy Access', text: 'Installing solar panels and clean energy solutions in rural communities, reducing dependence on fossil fuels.', img: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80', tag: 'Energy' },
   { title: 'Water Conservation', text: 'Implementing rainwater harvesting, watershed management, and water purification systems.', img: 'https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80', tag: 'Water' },
   { title: 'Sustainable Agriculture', text: 'Training farmers in organic farming, crop rotation, and agroforestry techniques.', img: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80', tag: 'Agriculture' },
   { title: 'Climate Research & Advocacy', text: 'Conducting climate impact assessments and advocating for policy changes.', img: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80', tag: 'Research' },
-]
+])
 
 const impactStatsRaw = [
   { label: 'Trees Planted', end: 500, suffix: 'K+', icon: 'tree' },
@@ -329,20 +571,20 @@ const displayMetrics = computed(() => {
   return impactStats as unknown as Array<{ label: string; displayed: string; icon: string; end: number; suffix: string }>
 })
 
-const processSteps = [
+const processSteps = ref<ProcessStep[]>([
   { number: '01', title: 'Assessment', icon: 'search', text: 'We conduct comprehensive environmental assessments to understand local ecosystems and identify priorities.' },
   { number: '02', title: 'Planning', icon: 'map', text: 'Working with community leaders, we develop tailored action plans that balance conservation with needs.' },
   { number: '03', title: 'Implementation', icon: 'play', text: 'We execute projects with active community participation, ensuring local ownership.' },
   { number: '04', title: 'Monitoring', icon: 'check', text: 'Continuous monitoring helps us measure impact and adapt strategies for greater effectiveness.' },
-]
+])
 
-const galleryImages = [
+const galleryImages = ref<GalleryImage[]>([
   { src: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600&q=75', caption: 'Reforestation in rural Cambodia', span: '2' },
   { src: 'https://images.unsplash.com/photo-1470071459604-4b118ecb0e7e?w=400&q=75', caption: 'Forest canopy restoration', span: '1' },
   { src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=75', caption: 'Community tree nursery', span: '1' },
   { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&q=75', caption: 'Eco-tourism initiatives', span: '1' },
   { src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=75', caption: 'Nature conservation areas', span: '2' },
-]
+])
 
 /* Partners from DB or static fallback */
 const PARTNER_ICON = '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'
@@ -357,6 +599,9 @@ const STATIC_PARTNERS = [
 ]
 
 const displayPartners = computed(() => {
+  if (metaPartners.value && metaPartners.value.length > 0) {
+    return metaPartners.value.map(p => ({ name: p.name, type: p.type, description: p.description, icon: PARTNER_ICON }))
+  }
   if (dbPartners.value.length > 0) {
     return dbPartners.value.map(p => ({ name: p.name, type: p.partner_type, description: p.description || '', icon: PARTNER_ICON }))
   }
@@ -368,8 +613,8 @@ type CardGroup = 'overview' | 'initiatives' | 'process'
 
 const visibleCards = reactive<Record<CardGroup, boolean[]>>({
   overview: Array(overviewCards.length).fill(false),
-  initiatives: Array(initiatives.length).fill(false),
-  process: Array(processSteps.length).fill(false),
+  initiatives: Array(initiatives.value.length).fill(false),
+  process: Array(processSteps.value.length).fill(false),
 })
 const statsVisible = ref(false)
 const quoteVisible = ref(false)
@@ -392,6 +637,7 @@ const galleryHeaderRef = ref<HTMLElement | null>(null)
 const quoteRef = ref<HTMLElement | null>(null)
 const partnersHeaderRef = ref<HTMLElement | null>(null)
 const partnersGridRef = ref<HTMLElement | null>(null)
+const teamHeaderRef = ref<HTMLElement | null>(null)
 const ctaRef = ref<HTMLElement | null>(null)
 
 function setRef(el: unknown, group: CardGroup, idx: number) {
@@ -450,10 +696,33 @@ function scrollToSection(index: number) {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+/* ─── Realtime subscription to programs table ───── */
+let realtimeProgramsChannel: ReturnType<typeof supabase.channel> | null = null
+
+function setupProgramsRealtime() {
+  realtimeProgramsChannel = supabase
+    .channel('env-programs-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'programs',
+        filter: 'slug=eq.programs-environment',
+      },
+      () => {
+        void loadFromProgramsTable()
+      },
+    )
+    .subscribe()
+}
+
 /* ─── Mount ─────────────────────────────────────── */
 onMounted(() => {
   void loadDbData()
+  void loadFromProgramsTable()
   setupEnvRealtime()
+  setupProgramsRealtime()
 
   let ticking = false
   window.addEventListener('scroll', () => {
@@ -481,6 +750,7 @@ onMounted(() => {
   observe(quoteRef.value, () => { quoteVisible.value = true })
   observe(partnersHeaderRef.value, () => partnersHeaderRef.value?.classList.add('entered'))
   observe(partnersGridRef.value, () => { partnersVisible.value = true })
+  observe(teamHeaderRef.value, () => teamHeaderRef.value?.classList.add('entered'))
   observe(ctaRef.value, () => { ctaVisible.value = true })
 })
 
@@ -488,6 +758,10 @@ onBeforeUnmount(() => {
   observers.forEach(io => io.disconnect())
   window.removeEventListener('scroll', handleScroll)
   cleanupEnvRealtime()
+  if (realtimeProgramsChannel) {
+    supabase.removeChannel(realtimeProgramsChannel)
+    realtimeProgramsChannel = null
+  }
 })
 </script>
 
@@ -650,6 +924,75 @@ onBeforeUnmount(() => {
 .partner-logo:hover .partner-icon { background: var(--env-primary); color: #ffffff; transform: scale(1.08); }
 .partner-logo strong { color: var(--color-ink, #16231d); font-size: 0.9rem; font-weight: 800; }
 .partner-logo small { color: var(--color-ink-soft, #53645b); font-size: 0.75rem; font-weight: 600; }
+
+/* ─── TEAM ─── */
+.team-section { background: var(--color-cream, #f7fbf8); padding: 5rem 0; }
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.team-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(15, 143, 105, 0.06);
+  box-shadow: 0 8px 24px -12px rgba(15, 143, 105, 0.12);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  text-align: center;
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 40px -16px rgba(15, 143, 105, 0.22);
+  border-color: var(--env-primary);
+}
+
+.team-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--env-primary-light);
+  color: var(--env-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.team-card:hover .team-icon-wrap {
+  background: var(--env-primary);
+  color: #ffffff;
+  transform: scale(1.1) rotate(-4deg);
+}
+
+.team-icon-wrap svg { width: 24px; height: 24px; }
+
+.team-role {
+  font-weight: 700;
+  color: var(--color-ink, #16231d);
+  margin: 0 0 0.6rem;
+  line-height: 1.3;
+}
+
+.team-desc {
+  color: var(--color-ink-soft, #53645b);
+  line-height: 1.6;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .team-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .team-grid { grid-template-columns: 1fr; }
+}
 
 /* ─── CTA ─── */
 .cta-section { padding: 5rem 0; background: linear-gradient(135deg, #0a1f18 0%, #0d3328 50%, #0f3d2e 100%); position: relative; overflow: hidden; }

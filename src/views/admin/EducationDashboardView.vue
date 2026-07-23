@@ -3,35 +3,23 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import ImagePickerField from '@/components/admin/ImagePickerField.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
+import { useAuthStore } from '@/stores/auth.store'
 
 const ui = useUiStore()
+const auth = useAuthStore()
 
 /* ─── Tabs ─────────────────────────────────────── */
-type TabId = 'overview' | 'hero' | 'sections'
-const activeTab = ref<TabId>('overview')
+type TabId = 'stats' | 'sections' | 'team' | 'image'
+const activeTab = ref<TabId>('stats')
 
 const tabs: { id: TabId; label: string; icon: string }[] = [
-  { id: 'overview', label: 'Overview', icon: 'grid' },
-  { id: 'hero', label: 'Hero & Stats', icon: 'file' },
-  { id: 'sections', label: 'Page Sections', icon: 'layout' },
-]
-
-/* ─── Quick Links (Overview tab) ────────────────── */
-interface QuickLink {
-  title: string
-  desc: string
-  to: string
-  tabId?: TabId
-  color: string
-}
-
-const quickLinks: QuickLink[] = [
-  { title: 'Edit Hero & Stats', desc: 'Headline, intro & stats band', to: '#', tabId: 'hero', color: 'blue' },
-  { title: 'Edit Page Sections', desc: 'What we do, approach & why', to: '#', tabId: 'sections', color: 'emerald' },
-  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
-  { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'violet' },
+  { id: 'image', label: 'Page Images', icon: 'image' },
+  { id: 'stats', label: 'Stats Band', icon: 'file' },
+  { id: 'sections', label: 'What They Do', icon: 'layout' },
+  { id: 'team', label: 'Team Cards', icon: 'users' },
 ]
 
 /* ─── Toast ─────────────────────────────────────── */
@@ -45,7 +33,7 @@ function addToast(message: string, type: 'success' | 'error' | 'info' = 'info') 
   setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, 3000)
 }
 
-/* ─── Page Content Types ────────────────────────── */
+/* ─── Types ─────────────────────────────────────── */
 interface EditableSection {
   id: string
   label: string
@@ -54,67 +42,43 @@ interface EditableSection {
   items: string
 }
 
+interface GalleryImage {
+  id: string
+  label: string
+  url: string
+}
+
 interface PageDraft {
   slug: string
-  route: string
-  group: string
   title: string
-  eyebrow: string
-  headline: string
-  intro: string
-  heroImageUrl: string
-  primaryAction: string
-  secondaryAction: string
+  galleryImages: GalleryImage[]
   sections: EditableSection[]
   updatedAt: string
 }
 
-/* ─── Default Education Page ────────────────────── */
-function createDefaultEducationPage(): PageDraft {
-  return {
-    slug: 'programs-education',
-    route: '/programs/education',
-    group: 'Programs',
-    title: 'Education',
-    eyebrow: 'Education',
-    headline: 'A teacher in every village. A book in every hand.',
-    intro: 'Community pre-schools, mobile libraries, scholarships and Buddhist education help rural children keep learning.',
-    heroImageUrl: '',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'education-work',
-        label: 'What we do',
-        heading: 'What we do',
-        body: 'The main education interventions that appear on the public page.',
-        items: 'Community pre-schools\nMobile libraries\nScholarships for poor children\nBuddhist education preservation\nTeacher and parent support',
-      },
-      {
-        id: 'education-approach',
-        label: 'Approach',
-        heading: 'Our approach',
-        body: 'Education work is local, practical and connected to family support.',
-        items: '',
-      },
-      {
-        id: 'education-why',
-        label: 'Why it matters',
-        heading: 'Why it matters',
-        body: 'Remote hamlets need early learning, reading access and support that helps children stay in school.',
-        items: '',
-      },
-    ],
-    updatedAt: '',
-  }
-}
+/* ─── Image Map for backward compatibility ─────── */
+const IMAGE_MAP: { field: string; label: string }[] = [
+  { field: 'introImageUrl', label: 'Intro Section Image' },
+  { field: 'readingImageUrl', label: 'What We Do — Reading Image' },
+  { field: 'teacherImageUrl', label: 'What We Do — Teacher Image' },
+  { field: 'studyImageUrl', label: 'Why It Matters — Study Image' },
+]
 
-/* ─── Stats Band (for public page) ──────────────── */
 interface StatItem {
   number: string
   label: string
   description: string
 }
+
+interface TeamCard {
+  role: string
+  icon: string
+  desc: string
+}
+
+/* ─── Default values matching public website ────── */
+let _idCounter = 0
+function genId() { return `img-${++_idCounter}-${Date.now()}` }
 
 const statsBand = ref<StatItem[]>([
   { number: '120+', label: 'PRE-SCHOOL CHILDREN', description: 'Enrolled each year across remote villages in Svay Rieng and Prey Veng.' },
@@ -122,75 +86,151 @@ const statsBand = ref<StatItem[]>([
   { number: '60+', label: 'ANNUAL SCHOLARSHIPS', description: 'For the poorest students at every level — especially girls.' },
 ])
 
+const teamCards = ref<TeamCard[]>([
+  { role: 'Program Director', icon: 'compass', desc: 'Oversees education initiatives, partnerships, and donor reporting across all provinces.' },
+  { role: 'Field Coordinators', icon: 'map', desc: 'Manage pre-school, library and scholarship programs in each province.' },
+  { role: 'Teachers & Facilitators', icon: 'heart', desc: 'Deliver early learning, literacy sessions and youth clubs in village settings.' },
+  { role: 'Monitoring & Evaluation', icon: 'chart', desc: 'Tracks learning progress, attendance and community outcomes.' },
+])
+
+function defaultSections() {
+  return [
+    {
+      id: 'education-work',
+      label: 'What we do',
+      heading: 'What we do',
+      body: 'Community pre-schools led by trained local teachers, mobile libraries reaching remote villages, scholarships for the poorest students, Buddhist moral education, youth peer-educator groups, and teacher training to keep children in school.',
+      items: 'Community pre-schools led by trained local teachers in remote villages\nMobile library service bringing books, audio and learning kits to children\nScholarships covering uniforms, supplies and transport for the poorest students\nBuddhist moral education and life-skills classes in pagoda settings\nYouth peer-educator groups on health, environment and child rights\nTeacher training and parent engagement to keep children in school',
+    },
+    {
+      id: 'education-approach',
+      label: 'Approach',
+      heading: 'Our approach',
+      body: 'We hire teachers from the villages we serve, train them in early-childhood pedagogy, and pair every classroom with a parent committee. Curriculum blends the national standard with Buddhist ethics, Khmer culture and hands-on environmental learning — so a child grows up rooted in both the national curriculum and the wisdom of the pagoda.',
+      items: '',
+    },
+    {
+      id: 'education-why',
+      label: 'Why it matters',
+      heading: 'Why it matters',
+      body: 'Children who attend pre-school are far more likely to complete primary and secondary school. Scholarships keep the poorest girls in class through their most vulnerable years, while mobile libraries reach villages a bus route never will.',
+      items: 'Children who attend pre-school are far more likely to complete primary and secondary school\nScholarships keep the poorest girls in class through the most vulnerable years\nMobile libraries reach children a bus route never will\nPagoda-based ethics classes preserve Khmer language and moral tradition',
+    },
+    {
+      id: 'education-team',
+      label: 'Organizational Structure',
+      heading: 'Who delivers education on the ground',
+      body: 'Our dedicated team works across provinces to ensure every child has access to quality education.',
+      items: teamCards.value.map(c => `${c.role} | ${c.icon} | ${c.desc}`).join('\n'),
+    },
+  ]
+}
+
+const page = ref<PageDraft>({
+  slug: 'programs-education',
+  title: 'Education',
+  galleryImages: [
+    { id: genId(), label: 'Intro Section Image', url: '' },
+    { id: genId(), label: 'What We Do — Reading Image', url: '' },
+    { id: genId(), label: 'What We Do — Teacher Image', url: '' },
+    { id: genId(), label: 'Why It Matters — Study Image', url: '' },
+  ],
+  sections: defaultSections(),
+  updatedAt: '',
+})
+
 /* ─── State ─────────────────────────────────────── */
 const loading = ref(false)
 const saving = ref(false)
-const page = ref<PageDraft>(createDefaultEducationPage())
 const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
 const STORAGE_KEY = 'edu-dashboard-page'
-
-/* ─── LocalStorage fallback ────────────────────── */
-function loadFromLocalStorage(): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const saved = JSON.parse(raw) as Record<string, unknown>
-      const defaults = createDefaultEducationPage()
-      page.value = {
-        ...defaults,
-        eyebrow: (saved.eyebrow as string) || defaults.eyebrow,
-        headline: (saved.headline as string) || defaults.headline,
-        intro: (saved.intro as string) || defaults.intro,
-        heroImageUrl: (saved.heroImageUrl as string) || '',
-        primaryAction: (saved.primaryAction as string) || '',
-        secondaryAction: (saved.secondaryAction as string) || '',
-        sections: saved.sections && Array.isArray(saved.sections)
-          ? (saved.sections as EditableSection[]).map(s => ({ ...s }))
-          : defaults.sections,
-        updatedAt: (saved.updatedAt as string) || '',
-      }
-      if (saved.statsBand && Array.isArray(saved.statsBand) && saved.statsBand.length > 0) {
-        statsBand.value = saved.statsBand as StatItem[]
-      }
-    }
-  } catch { /* ignore */ }
-}
+// Holds metadata keys not managed by this dashboard (e.g. headline, intro set via SQL)
+// so saving here never clobbers them.
+const rawMetadata = ref<Record<string, unknown>>({})
 
 function saveToLocalStorage(): void {
   try {
-    const p = page.value
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      eyebrow: p.eyebrow,
-      headline: p.headline,
-      intro: p.intro,
-      heroImageUrl: p.heroImageUrl,
-      primaryAction: p.primaryAction,
-      secondaryAction: p.secondaryAction,
-      sections: p.sections,
+      galleryImages: page.value.galleryImages,
+      sections: page.value.sections,
       statsBand: statsBand.value,
+      teamCards: teamCards.value,
       updatedAt: new Date().toISOString(),
     }))
   } catch { /* ignore */ }
 }
 
-/* ─── Helpers ───────────────────────────────────── */
+function loadFromLocalStorage(): void {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return
+    const saved = JSON.parse(raw) as Record<string, unknown>
+    if (Array.isArray(saved.galleryImages) && saved.galleryImages.length > 0) {
+      page.value.galleryImages = saved.galleryImages as GalleryImage[]
+    } else {
+      // Backward compat: migrate individual fields to gallery
+      const urls = [
+        String(saved.introImageUrl || ''),
+        String(saved.readingImageUrl || ''),
+        String(saved.teacherImageUrl || ''),
+        String(saved.studyImageUrl || ''),
+      ]
+      page.value.galleryImages = IMAGE_MAP.map((m, i) => ({
+        id: genId(),
+        label: m.label,
+        url: urls[i] || '',
+      }))
+    }
+    if (Array.isArray(saved.sections)) {
+      const savedSections = saved.sections as EditableSection[]
+      page.value.sections = page.value.sections.map(defSec => {
+        const match = savedSections.find(s => s.id === defSec.id)
+        return match ? { ...defSec, ...match } : defSec
+      })
+    }
+    if (Array.isArray(saved.statsBand)) statsBand.value = saved.statsBand as StatItem[]
+    if (Array.isArray(saved.teamCards)) teamCards.value = saved.teamCards as TeamCard[]
+    if (typeof saved.updatedAt === 'string') page.value.updatedAt = saved.updatedAt
+  } catch { /* ignore */ }
+}
+
 function snapshotData(): string {
   return JSON.stringify({
-    eyebrow: page.value.eyebrow,
-    headline: page.value.headline,
-    intro: page.value.intro,
-    heroImageUrl: page.value.heroImageUrl,
-    primaryAction: page.value.primaryAction,
-    secondaryAction: page.value.secondaryAction,
+    galleryImages: page.value.galleryImages.map(g => ({ ...g })),
     sections: page.value.sections.map(s => ({ ...s })),
     statsBand: statsBand.value.map(s => ({ ...s })),
+    teamCards: teamCards.value.map(s => ({ ...s })),
   })
 }
 
 const isDirty = computed(() => savedSnapshot.value !== snapshotData())
 
-/* ─── Load from programs table (metadata JSONB) ── */
+/* ─── Parse team cards from section items ──────── */
+function parseTeamFromSection(section: EditableSection): void {
+  if (section.items?.trim()) {
+    const lines = section.items.split('\n').map(l => l.trim()).filter(Boolean)
+    if (lines.length > 0) {
+      teamCards.value = lines.map(line => {
+        const parts = line.split('|').map(p => p.trim())
+        return {
+          role: parts[0] || '',
+          icon: parts[1] || 'chart',
+          desc: parts[2] || parts[0] || '',
+        }
+      })
+    }
+  }
+}
+
+function saveTeamToSection(): void {
+  const teamSection = page.value.sections.find(s => s.id === 'education-team')
+  if (teamSection) {
+    teamSection.items = teamCards.value.map(c => `${c.role} | ${c.icon} | ${c.desc}`).join('\n')
+  }
+}
+
+/* ─── Load from programs table ─────────────────── */
 async function loadPageContent() {
   loading.value = true
   try {
@@ -201,7 +241,6 @@ async function loadPageContent() {
       .maybeSingle()
 
     if (error) {
-      // Table doesn't exist — fall back to localStorage
       console.warn('Supabase load failed, falling back to localStorage:', error.message)
       loadFromLocalStorage()
       storageMode.value = 'local'
@@ -210,42 +249,65 @@ async function loadPageContent() {
       return
     }
 
-    if (data) {
-      const defaults = createDefaultEducationPage()
-      const meta = data.metadata as Record<string, unknown> | null
+    if (data && data.metadata) {
+      const meta = data.metadata as Record<string, unknown>
+      rawMetadata.value = { ...meta }
 
-      page.value = {
-        ...defaults,
-        title: data.title || defaults.title,
-        eyebrow: (meta?.eyebrow as string) || defaults.eyebrow,
-        headline: (meta?.headline as string) || defaults.headline,
-        intro: data.summary || (meta?.intro as string) || defaults.intro,
-        heroImageUrl: (meta?.heroImageUrl as string) || '',
-        primaryAction: (meta?.primaryAction as string) || '',
-        secondaryAction: (meta?.secondaryAction as string) || '',
-        sections: meta?.sections && Array.isArray(meta.sections)
-          ? (meta.sections as EditableSection[]).map(s => ({ ...s }))
-          : defaults.sections,
-        updatedAt: data.updated_at || '',
+      // Image gallery — prefer gallery array, fall back to individual fields
+      const galleryFromMeta = meta.gallery as GalleryImage[] | undefined
+      if (Array.isArray(galleryFromMeta) && galleryFromMeta.length > 0) {
+        page.value.galleryImages = galleryFromMeta.map(g => ({
+          id: g.id || genId(),
+          label: g.label || '',
+          url: g.url || '',
+        }))
+      } else {
+        // Backward compat: map individual fields to gallery
+        const urls = [
+          String(meta.introImageUrl || ''),
+          String(meta.readingImageUrl || ''),
+          String(meta.teacherImageUrl || ''),
+          String(meta.studyImageUrl || ''),
+        ]
+        page.value.galleryImages = IMAGE_MAP.map((m, i) => ({
+          id: genId(),
+          label: m.label,
+          url: urls[i] || '',
+        }))
       }
 
-      // Restore statsBand from metadata
-      if (meta?.statsBand && Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+      // Stats band
+      if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
         statsBand.value = meta.statsBand as StatItem[]
       }
 
+      // Sections (What we do, Approach, Why it matters)
+      if (Array.isArray(meta.sections)) {
+        const dbSections = meta.sections as EditableSection[]
+        page.value.sections = page.value.sections.map(defSec => {
+          const match = dbSections.find(s => s.id === defSec.id)
+          return match ? { ...defSec, ...match } : defSec
+        })
+      }
+
+      // Team cards from education-team section
+      const teamSection = page.value.sections.find(s => s.id === 'education-team')
+      if (teamSection) {
+        parseTeamFromSection(teamSection)
+      }
+
+      page.value.updatedAt = data.updated_at || ''
+
       storageMode.value = 'supabase'
-      // Also persist to localStorage as backup
       saveToLocalStorage()
     } else {
-      // No row found — try localStorage fallback
       loadFromLocalStorage()
       storageMode.value = 'local'
     }
 
     savedSnapshot.value = snapshotData()
   } catch (e: unknown) {
-    console.warn('Load crashed, falling back to localStorage:', e)
+    console.warn('Load crashed:', e)
     loadFromLocalStorage()
     storageMode.value = 'local'
     savedSnapshot.value = snapshotData()
@@ -258,46 +320,74 @@ async function loadPageContent() {
 async function savePageContent() {
   saving.value = true
   try {
+    // Save team cards back into the team section before saving
+    saveTeamToSection()
+
     const now = new Date().toISOString()
-    const p = page.value
 
     const payload = {
-      slug: p.slug,
-      title: p.title.trim() || p.headline.trim() || p.slug,
+      slug: 'programs-education',
+      title: 'Education Program',
       pillar: 'Education',
-      summary: p.intro || '',
-      description: p.intro || '',
+      summary: 'Community pre-schools, mobile libraries, scholarships and Buddhist education.',
+      description: 'Helping rural children keep learning through local teachers, libraries and family support.',
       status: 'published',
       metadata: {
-        eyebrow: p.eyebrow,
-        headline: p.headline,
-        intro: p.intro,
-        heroImageUrl: p.heroImageUrl,
-        primaryAction: p.primaryAction,
-        secondaryAction: p.secondaryAction,
-        sections: p.sections.map(s => ({
+        ...rawMetadata.value,
+        // Store gallery array and individual fields for backward compatibility
+        gallery: page.value.galleryImages,
+        introImageUrl: page.value.galleryImages[0]?.url || '',
+        readingImageUrl: page.value.galleryImages[1]?.url || '',
+        teacherImageUrl: page.value.galleryImages[2]?.url || '',
+        studyImageUrl: page.value.galleryImages[3]?.url || '',
+        statsBand: statsBand.value,
+        sections: page.value.sections.map(s => ({
           id: s.id,
           label: s.label,
           heading: s.heading,
           body: s.body,
           items: s.items,
         })),
-        statsBand: statsBand.value,
       },
       updated_at: now,
     }
 
-    // Always save to localStorage as backup
     saveToLocalStorage()
 
-    const { error } = await supabase
+    // Try upsert first
+    let { error } = await supabase
       .from('programs')
       .upsert(payload, { onConflict: 'slug' })
+
+    // If upsert fails with RLS, try insert then update
+    if (error && error.message?.includes('row-level security')) {
+      console.warn('Upsert blocked by RLS, trying insert/update separately...')
+
+      const { error: insertError } = await supabase
+        .from('programs')
+        .insert(payload)
+
+      if (insertError && insertError.message?.includes('duplicate key')) {
+        const { error: updateError } = await supabase
+          .from('programs')
+          .update(payload)
+          .eq('slug', 'programs-education')
+
+        if (updateError) {
+          error = updateError
+        } else {
+          error = null
+        }
+      } else if (insertError) {
+        error = insertError
+      } else {
+        error = null
+      }
+    }
 
     if (error) {
       console.warn('Supabase save failed:', error)
       addToast(`DB write blocked: ${error.message}`, 'error')
-      // Still save to localStorage so work isn't lost
       saveToLocalStorage()
       storageMode.value = 'local'
       savedSnapshot.value = snapshotData()
@@ -305,13 +395,12 @@ async function savePageContent() {
       return
     }
 
-    // Supabase save succeeded
+    rawMetadata.value = payload.metadata
     storageMode.value = 'supabase'
     savedSnapshot.value = snapshotData()
-    addToast(`${p.title} page saved!`, 'success')
+    addToast('Education page saved!', 'success')
   } catch (e: unknown) {
     console.error('Save crashed:', e)
-    // Even if Supabase crashed, localStorage save already happened above
     addToast('Saved to browser (database error)', 'info')
     storageMode.value = 'local'
     savedSnapshot.value = snapshotData()
@@ -320,25 +409,47 @@ async function savePageContent() {
   }
 }
 
-/* ─── Section helpers ───────────────────────────── */
-function parsedItemsForSection(section: EditableSection): string[] {
-  return section.items
-    ? section.items.split('\n').map(l => l.trim()).filter(Boolean)
-    : []
+/* ─── Gallery Image Management ────────────────── */
+function addGalleryImage() {
+  page.value.galleryImages.push({ id: genId(), label: '', url: '' })
 }
 
-/* ─── Init ──────────────────────────────────────── */
-onMounted(async () => {
-  await loadPageContent()
-})
+function removeGalleryImage(index: number) {
+  page.value.galleryImages.splice(index, 1)
+}
 
-/* ─── Helper: format date ───────────────────────── */
+function onGalleryImageSaved(msg: string) {
+  addToast(msg, 'success')
+  void savePageContent()
+}
+
+function parsedItemsForSection(section: EditableSection): string[] {
+  return section.items ? section.items.split('\n').map(l => l.trim()).filter(Boolean) : []
+}
+
 function formatDate(value: string) {
   if (!value) return 'Not saved yet'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Not saved yet'
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
+
+onMounted(async () => {
+  try {
+    await auth.init()
+  } catch (e) {
+    console.warn('[EducationDashboard] auth.init() failed:', e)
+  }
+  try {
+    await loadPageContent()
+  } catch (e) {
+    console.error('[EducationDashboard] loadPageContent() crashed:', e)
+    loadFromLocalStorage()
+    storageMode.value = 'local'
+    savedSnapshot.value = snapshotData()
+    loading.value = false
+  }
+})
 </script>
 
 <template>
@@ -362,15 +473,7 @@ function formatDate(value: string) {
         <!-- BANNER -->
         <header class="dash-banner">
           <div class="banner-glow" aria-hidden="true"></div>
-          <div class="banner-particles" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
           <div class="banner-inner">
-            <div class="banner-breadcrumb">
-              <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-label">Programs</span>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-current">Education</span>
-            </div>
             <div class="banner-content">
               <div class="banner-text">
                 <div class="banner-badge">
@@ -386,7 +489,7 @@ function formatDate(value: string) {
                   </span>
                 </div>
                 <h1 class="banner-title">Education Dashboard</h1>
-                <p class="banner-desc">Edit your education page content — hero, stats, and page sections — then save to publish.</p>
+                <p class="banner-desc">Edit stats, team cards, images, and content sections — then save to publish.</p>
               </div>
               <div class="banner-actions">
                 <button class="btn btn-primary" :disabled="saving || loading" @click="savePageContent">
@@ -401,7 +504,7 @@ function formatDate(value: string) {
               </div>
             </div>
 
-            <!-- Quick stats bar -->
+            <!-- Status bar -->
             <div class="banner-stats">
               <div class="bstat bstat-blue">
                 <div class="bstat-icon">
@@ -415,7 +518,7 @@ function formatDate(value: string) {
               </div>
               <div class="bstat bstat-emerald">
                 <div class="bstat-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                 </div>
                 <div class="bstat-info">
                   <strong>{{ statsBand[1]?.number || '0' }}</strong>
@@ -447,98 +550,69 @@ function formatDate(value: string) {
           </div>
         </header>
 
-        <!-- TAB NAVIGATION -->
+        <!-- TABS -->
         <nav class="tab-nav" aria-label="Education management tabs">
           <button v-for="tab in tabs" :key="tab.id" :class="['tab-btn', { active: activeTab === tab.id }]" @click="activeTab = tab.id">
-            <svg v-if="tab.icon === 'grid'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <svg v-if="tab.icon === 'image'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             <svg v-else-if="tab.icon === 'file'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <svg v-else-if="tab.icon === 'layout'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             {{ tab.label }}
           </button>
           <span class="tab-spacer"></span>
           <span v-if="isDirty" class="tab-dirty">Unsaved changes</span>
         </nav>
 
-        <!-- ================ TAB: OVERVIEW ================ -->
-        <section v-if="activeTab === 'overview'" class="tab-content">
-          <!-- Quick action links -->
-          <div class="quick-links-grid">
-            <RouterLink v-for="link in quickLinks" :key="link.title" :to="link.to || '/admin'" class="link-card" :class="'link-' + link.color"
-              @click.prevent="link.tabId ? activeTab = link.tabId : undefined">
-              <div class="link-icon">
-                <svg v-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                <svg v-else-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-                <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <!-- ═══ TAB: IMAGES ═══ -->
+        <section v-if="activeTab === 'image'" class="tab-content">
+          <div class="section-card">
+            <div class="sc-header">
+              <h2>Education Page Images</h2>
+              <p>Upload images from your computer (stored in Google Drive), paste a Google Drive URL, or add / delete images as needed. The first 4 images map to specific page sections.</p>
+            </div>
+            <div class="sc-body">
+              <div v-if="page.galleryImages.length === 0 && !loading" class="empty-state">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <p>No images yet. Click <strong>Add Image</strong> to get started.</p>
               </div>
-              <div class="link-text"><strong>{{ link.title }}</strong><small>{{ link.desc }}</small></div>
-              <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-            </RouterLink>
-          </div>
-
-          <!-- Content summary cards -->
-          <div class="overview-cards">
-            <div class="overview-card-item">
-              <span class="oc-label">Hero & Header</span>
-              <p class="oc-text"><strong>Headline:</strong> {{ page.headline.slice(0, 60) }}{{ page.headline.length > 60 ? '...' : '' }}</p>
-              <p class="oc-text"><strong>Eyebrow:</strong> {{ page.eyebrow || 'Not set' }}</p>
-              <button class="oc-action" @click="activeTab = 'hero'">Edit →</button>
-            </div>
-            <div class="overview-card-item">
-              <span class="oc-label">Stats Band</span>
-              <p class="oc-text">{{ statsBand.length }} stats configured: {{ statsBand.map(s => s.number).join(', ') }}</p>
-              <button class="oc-action" @click="activeTab = 'hero'">Edit →</button>
-            </div>
-            <div class="overview-card-item">
-              <span class="oc-label">Page Sections</span>
-              <p class="oc-text">{{ page.sections.length }} content sections: {{ page.sections.map(s => s.label).join(', ') }}</p>
-              <button class="oc-action" @click="activeTab = 'sections'">Edit →</button>
-            </div>
-            <div class="overview-card-item">
-              <span class="oc-label">Last Saved</span>
-              <p class="oc-text">{{ formatDate(page.updatedAt) }}</p>
-              <button class="oc-action" :disabled="saving || loading" @click="savePageContent">Save now →</button>
+              <div v-for="(img, index) in page.galleryImages" :key="img.id" class="gallery-item">
+                <div class="gallery-item-hdr">
+                  <div class="gallery-item-label">
+                    <span class="gallery-index">{{ index + 1 }}</span>
+                    <input
+                      v-model="img.label"
+                      class="gallery-label-input"
+                      placeholder="Image label / section name"
+                    />
+                  </div>
+                  <button class="btn-icon btn-delete" title="Delete this image" @click="removeGalleryImage(index)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </button>
+                </div>
+                <ImagePickerField
+                  v-model="img.url"
+                  :label="img.label || `Image ${index + 1}`"
+                  :hint="`Section: ${img.label || 'untitled'}`"
+                  @success="onGalleryImageSaved"
+                  @error="(msg) => addToast(msg, 'error')"
+                />
+              </div>
+              <button class="btn btn-ghost add-btn" @click="addGalleryImage">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Image
+              </button>
             </div>
           </div>
         </section>
 
-        <!-- ================ TAB: HERO & STATS ================ -->
-        <section v-if="activeTab === 'hero'" class="tab-content">
-          <div v-if="loading" class="loading-text">Loading content...</div>
+        <!-- ═══ TAB: STATS BAND ═══ -->
+        <section v-if="activeTab === 'stats'" class="tab-content">
+          <div v-if="loading" class="loading-text">Loading stats...</div>
           <template v-else>
           <div class="section-card">
             <div class="sc-header">
-              <h2>Hero & Header Content</h2>
-              <p>Edit the main header shown at the top of the public Education page. These fields control the page title, subtitle, and introductory paragraph.</p>
-            </div>
-            <div class="sc-body">
-              <div class="form-row">
-                <label class="field">
-                  <span class="field-label">Eyebrow / Badge</span>
-                  <input v-model="page.eyebrow" placeholder="e.g. Education" />
-                  <span class="field-hint">Small label above the main headline</span>
-                </label>
-                <label class="field">
-                  <span class="field-label">Hero Image URL</span>
-                  <input v-model="page.heroImageUrl" placeholder="https://..." />
-                  <span class="field-hint">URL for the hero background image</span>
-                </label>
-              </div>
-              <label class="field field-block">
-                <span class="field-label">Headline (main title)</span>
-                <input v-model="page.headline" placeholder="A teacher in every village. A book in every hand." />
-              </label>
-              <label class="field field-block">
-                <span class="field-label">Intro / Description</span>
-                <textarea v-model="page.intro" rows="3" placeholder="Community pre-schools, mobile libraries, scholarships and Buddhist education help rural children keep learning."></textarea>
-              </label>
-            </div>
-          </div>
-
-          <div class="section-card" style="margin-top: 1.25rem;">
-            <div class="sc-header">
               <h2>Stats Band</h2>
-              <p>Configure the three statistics that appear below the hero section on the public Education page. Each stat has a number, label, and description.</p>
+              <p>Edit the 3 statistics shown on the public Education page. Each stat has a number, label, and description.</p>
             </div>
             <div class="sc-body">
               <div v-for="(stat, index) in statsBand" :key="index" class="stat-editor">
@@ -569,20 +643,20 @@ function formatDate(value: string) {
               </button>
             </div>
           </div>
-        </template>
+          </template>
         </section>
 
-        <!-- ================ TAB: PAGE SECTIONS ================ -->
+        <!-- ═══ TAB: WHAT THEY DO ═══ -->
         <section v-if="activeTab === 'sections'" class="tab-content">
           <div class="section-card">
             <div class="sc-header">
-              <h2>Page Content Sections</h2>
-              <p>Edit the main content blocks of the Education page — What We Do, Our Approach, and Why It Matters. Each section has a heading, body text, and optional list items.</p>
+              <h2>What They Do — Content Sections</h2>
+              <p>Edit the main content blocks: <strong>What We Do</strong> (with bullet items), <strong>Our Approach</strong>, and <strong>Why It Matters</strong>.</p>
             </div>
             <div class="sc-body">
               <div v-if="loading" class="loading-text">Loading sections...</div>
               <div v-else class="sections-list">
-                <div v-for="(section, index) in page.sections" :key="section.id" class="section-edit-card">
+                <div v-for="(section, index) in page.sections.filter(s => s.id !== 'education-team')" :key="section.id" class="section-edit-card">
                   <details :open="index === 0">
                     <summary class="sec-summary">
                       <div class="sec-summary-left">
@@ -602,11 +676,7 @@ function formatDate(value: string) {
                       </label>
                       <label class="field field-block">
                         <span class="field-label">Bullet items <span class="field-hint">(one per line)</span></span>
-                        <textarea
-                          v-model="section.items"
-                          rows="5"
-                          placeholder="Community pre-schools&#10;Mobile libraries&#10;Scholarships for poor children"
-                        ></textarea>
+                        <textarea v-model="section.items" rows="5" placeholder="Community pre-schools&#10;Mobile libraries&#10;Scholarships for poor children"></textarea>
                       </label>
                       <div v-if="section.items" class="item-preview">
                         <span class="field-label">Preview ({{ parsedItemsForSection(section).length }} items)</span>
@@ -620,27 +690,50 @@ function formatDate(value: string) {
               </div>
             </div>
           </div>
+        </section>
 
-          <!-- Quick links to related resources -->
-          <div class="section-card" style="margin-top: 1.25rem;">
+        <!-- ═══ TAB: TEAM CARDS ═══ -->
+        <section v-if="activeTab === 'team'" class="tab-content">
+          <div class="section-card">
             <div class="sc-header">
-              <h2>Related Actions</h2>
+              <h2>Team Cards — Organizational Structure</h2>
+              <p>Edit the team/organizational structure cards shown on the public Education page. Each card has a role, description, and icon.</p>
             </div>
             <div class="sc-body">
-              <div class="side-actions">
-                <RouterLink class="side-btn" to="/admin/media">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  Media Library — Upload images for the Education page
-                </RouterLink>
-                <RouterLink class="side-btn" to="/admin/modules/programs">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                  Program Records — Manage education data entries
-                </RouterLink>
-                <RouterLink class="side-btn" to="/programs/education">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  View Live Page — See your changes on the public site
-                </RouterLink>
-              </div>
+              <div v-if="loading" class="loading-text">Loading team cards...</div>
+              <template v-else>
+                <div v-for="(card, index) in teamCards" :key="index" class="sub-editor-card">
+                  <div class="sub-editor-hdr">
+                    <span class="sub-num">Card {{ index + 1 }}</span>
+                    <button class="btn-icon" @click="teamCards.splice(index, 1)" title="Remove card">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <div class="form-row">
+                    <label class="field">
+                      <span class="field-label">Role / Title</span>
+                      <input v-model="card.role" placeholder="e.g. Program Director" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Icon</span>
+                      <select v-model="card.icon">
+                        <option value="compass">Compass</option>
+                        <option value="map">Map / Location</option>
+                        <option value="heart">Heart</option>
+                        <option value="chart">Chart / Analytics</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label class="field field-block">
+                    <span class="field-label">Description</span>
+                    <textarea v-model="card.desc" rows="2" placeholder="Describe this team member's role..."></textarea>
+                  </label>
+                </div>
+                <button class="btn btn-ghost add-stat-btn" @click="teamCards.push({ role: '', icon: 'chart', desc: '' })">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Card
+                </button>
+              </template>
             </div>
           </div>
         </section>
@@ -683,7 +776,7 @@ function formatDate(value: string) {
 .dash-layout { display: flex; }
 .dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; position: relative; }
 
-/* ─── TOASTS ─── */
+/* TOASTS */
 .toast-container { position: fixed; top: 72px; right: 1.5rem; z-index: 200; display: grid; gap: 0.4rem; }
 .toast { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; box-shadow: var(--shadow-md); background: var(--surface); border: 1px solid var(--border); }
 .toast-success { border-color: var(--emerald); color: var(--emerald); }
@@ -693,7 +786,6 @@ function formatDate(value: string) {
 .toast-enter-from { opacity: 0; transform: translateX(30px); }
 .toast-leave-to { opacity: 0; transform: translateX(30px); }
 
-/* ─── BUTTONS ─── */
 .btn {
   display: inline-flex; align-items: center; gap: 0.45rem; min-height: 36px; padding: 0.4rem 1rem;
   border-radius: var(--radius-sm); font-weight: 700; font-size: 0.82rem;
@@ -707,34 +799,15 @@ function formatDate(value: string) {
 .btn-ghost:hover { background: var(--surface); border-color: var(--border-s); box-shadow: var(--shadow-sm); }
 :global(.admin-dark) .btn-ghost { background: rgba(16,24,38,0.7); border-color: var(--border); }
 .btn:disabled { opacity: 0.5; cursor: wait; }
-.btn-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: var(--radius-sm);
-  border: 1px solid transparent; background: transparent;
-  color: var(--muted); cursor: pointer; transition: all 0.15s ease;
-}
+.btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s ease; }
 .btn-icon:hover { background: var(--red-soft); color: var(--red); border-color: var(--red-soft); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.8s linear infinite; }
 
-/* ─── BANNER ─── */
+/* BANNER */
 .dash-banner { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); overflow: hidden; }
 .banner-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 400px 200px at 10% 30%, rgba(37,99,235,0.08) 0%, transparent 70%), radial-gradient(ellipse 300px 200px at 90% 80%, rgba(5,150,105,0.05) 0%, transparent 70%); pointer-events: none; }
-.banner-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.banner-particles span { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: rgba(37,99,235,0.1); }
-.banner-particles span:nth-child(1) { top: 15%; left: 10%; animation: float 8s ease-in-out infinite; }
-.banner-particles span:nth-child(2) { top: 60%; right: 15%; width: 4px; height: 4px; animation: float 6s ease-in-out infinite reverse; }
-.banner-particles span:nth-child(3) { bottom: 20%; left: 40%; width: 5px; height: 5px; animation: float 10s ease-in-out infinite 2s; }
-.banner-particles span:nth-child(4) { top: 25%; right: 30%; animation: float 7s ease-in-out infinite 1s; }
-@keyframes float { 0%,100% { transform: translateY(0) scale(1); opacity: 0.4; } 50% { transform: translateY(-12px) scale(1.2); opacity: 0.8; } }
 .banner-inner { position: relative; z-index: 1; }
-.banner-breadcrumb { display: flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.25rem; background: rgba(255,255,255,0.5); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); font-size: 0.76rem; font-weight: 700; }
-:global(.admin-dark) .banner-breadcrumb { background: rgba(16,24,38,0.5); }
-.bcrumb-link { color: var(--blue); text-decoration: none; }
-.bcrumb-link:hover { text-decoration: underline; }
-.bcrumb-sep { color: var(--muted); width: 10px; }
-.bcrumb-label { color: var(--muted); }
-.bcrumb-current { color: var(--contrast); }
 .banner-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1.25rem 1.25rem 0.75rem; }
 .banner-text { display: grid; gap: 0.3rem; }
 .banner-badge { display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--blue); background: var(--blue-soft); padding: 0.2rem 0.7rem; border-radius: 999px; }
@@ -759,7 +832,7 @@ function formatDate(value: string) {
 .bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
 .bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 500; margin-top: 1px; }
 
-/* ─── TAB NAV ─── */
+/* TAB NAV */
 .tab-nav { display: flex; align-items: center; gap: 0.35rem; margin-top: 1.25rem; padding: 0 0.25rem; overflow-x: auto; }
 .tab-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--muted); font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; font-family: inherit; }
 .tab-btn:hover { border-color: var(--border-s); color: var(--contrast); }
@@ -767,42 +840,14 @@ function formatDate(value: string) {
 :global(.admin-dark) .tab-btn.active { background: rgba(59,130,246,0.1); }
 .tab-spacer { flex: 1; }
 .tab-dirty { font-size: 0.72rem; font-weight: 700; color: var(--amber); padding: 0.25rem 0.6rem; border-radius: 999px; background: var(--amber-soft); white-space: nowrap; }
+.tab-content { margin-top: 1.25rem;}
 
-/* ─── TAB CONTENT ─── */
-.tab-content { margin-top: 1.25rem; }
-
-/* ─── QUICK LINKS ─── */
-.quick-links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; }
-.link-card { display: flex; align-items: center; gap: 0.7rem; padding: 0.8rem 0.9rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); text-decoration: none; cursor: pointer; transition: all 0.2s cubic-bezier(0.16,1,0.3,1); }
-.link-card:hover { border-color: var(--border-s); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
-.link-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--radius-sm); flex-shrink: 0; }
-.link-blue .link-icon { background: var(--blue-soft); color: var(--blue); }
-.link-emerald .link-icon { background: var(--emerald-soft); color: var(--emerald); }
-.link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
-.link-violet .link-icon { background: var(--violet-soft); color: var(--violet); }
-.link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 700; margin-bottom: 1px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.2s ease; }
-.link-card:hover .link-arrow { transform: translateX(3px); color: var(--blue); }
-
-/* ─── OVERVIEW CARDS ─── */
-.overview-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.85rem; margin-top: 1.25rem; }
-.overview-card-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; transition: box-shadow 0.2s ease; }
-.overview-card-item:hover { box-shadow: var(--shadow-sm); }
-.oc-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--blue); }
-.oc-text { color: var(--muted); font-size: 0.85rem; margin: 0.35rem 0; line-height: 1.4; }
-.oc-action { background: none; border: none; color: var(--blue); font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0; font-family: inherit; }
-.oc-action:hover { text-decoration: underline; }
-
-/* ─── SECTION CARD ─── */
+/* SECTION CARD */
 .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); overflow: hidden; }
 .sc-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .sc-header h2 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--contrast); }
 .sc-header p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.82rem; }
 .sc-body { padding: 1.25rem; }
-
-/* ─── FORMS ─── */
 .field { display: grid; gap: 0.25rem; }
 .field-block { grid-column: 1 / -1; }
 .field-label { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -813,12 +858,17 @@ function formatDate(value: string) {
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem; }
 .add-stat-btn { margin-top: 0.75rem; }
 
-/* ─── STAT EDITOR ─── */
+/* STAT EDITOR */
 .stat-editor { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; }
 .stat-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
 .stat-editor-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--blue); }
 
-/* ─── SECTIONS LIST ─── */
+/* SUB EDITOR (team cards) */
+.sub-editor-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; }
+.sub-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.sub-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
+
+/* SECTIONS LIST */
 .sections-list { display: grid; gap: 0.75rem; }
 .section-edit-card { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; transition: border-color 0.15s ease; }
 .section-edit-card:hover { border-color: var(--border-s); }
@@ -831,23 +881,93 @@ function formatDate(value: string) {
 details[open] .sec-chevron { transform: rotate(180deg); }
 .sec-body { padding: 0 1rem 1rem; display: grid; gap: 0.75rem; }
 
-/* ─── ITEM PREVIEW ─── */
+/* ITEM PREVIEW */
 .item-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; }
 .item-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.3rem; }
 .item-chip { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; background: var(--blue-soft); color: var(--blue); font-size: 0.75rem; font-weight: 600; }
 
-/* ─── SIDE ACTIONS ─── */
-.side-actions { display: grid; gap: 0.45rem; }
-.side-btn { display: flex; align-items: center; gap: 0.45rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: all 0.15s ease; }
-.side-btn:hover { border-color: var(--border-s); background: var(--bg); color: var(--contrast); box-shadow: var(--shadow-xs); }
+/* GALLERY IMAGE MANAGEMENT */
+.gallery-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 0.85rem;
+  transition: border-color 0.15s ease;
+}
+.gallery-item:hover { border-color: var(--border-s); }
+.gallery-item-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+}
+.gallery-item-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+.gallery-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.gallery-label-input {
+  flex: 1;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--contrast);
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+.gallery-label-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-glow);
+}
+.btn-delete {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+.add-btn {
+  margin-top: 0.25rem;
+}
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: var(--muted);
+  text-align: center;
+}
+.empty-state svg {
+  color: var(--muted);
+  opacity: 0.5;
+}
+.empty-state p {
+  margin: 0;
+  font-size: 0.88rem;
+}
 
 .loading-text { color: var(--muted); font-style: italic; padding: 1.5rem 0; text-align: center; }
 .cloud-badge { background: var(--emerald-soft) !important; color: var(--emerald) !important; }
 .local-badge { background: var(--amber-soft) !important; color: var(--amber) !important; }
 
-/* ─── RESPONSIVE ─── */
 @media (min-width: 900px) { .edu-dash.sidebar-open { padding-left: 260px; } }
-@media (max-width: 900px) { .banner-stats { grid-template-columns: repeat(2,1fr); } .quick-links-grid { grid-template-columns: 1fr; } .overview-cards { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .banner-stats { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 720px) { .dash-main { padding: 1rem; } .banner-content { flex-direction: column; } .banner-stats { grid-template-columns: 1fr; } .bstat { border-right: none; border-bottom: 1px solid var(--border); } .bstat:last-child { border-bottom: none; } }
 @media (max-width: 600px) { .banner-actions { width: 100%; } .banner-actions .btn { flex: 1; justify-content: center; } }
 </style>
