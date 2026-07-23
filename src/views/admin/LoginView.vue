@@ -191,10 +191,12 @@ const handleLogin = async () => {
     // If your app later adds a route guard, it can pass through redirect automatically.
     await router.push(redirectPath.value)
   } catch (err) {
-    const message = (err as Error)?.message ?? ''
-    errorMessage.value = message.includes('admin access')
-      ? 'This account does not have permission to access the admin panel.'
-      : 'Email or password is incorrect.'
+    const rawMessage = (err as Error)?.message ?? ''
+    if (rawMessage.toLowerCase().includes('failed to fetch') || rawMessage.toLowerCase().includes('networkerror')) {
+      errorMessage.value = 'Cannot connect to Supabase. Please check your internet connection or verify your Supabase project URL.'
+    } else {
+      errorMessage.value = rawMessage || 'Email or password is incorrect.'
+    }
   } finally {
     loading.value = false
   }

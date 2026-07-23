@@ -1137,6 +1137,8 @@ const sectionCountLabel = computed(() => {
   return `${count} block${count !== 1 ? 's' : ''}`
 })
 
+const isImpactPage = computed(() => activePage.value.group === 'Impact')
+
 onMounted(() => {
   void loadPages()
 })
@@ -1507,9 +1509,278 @@ function formatDate(value: string) {
           </div>
         </Transition>
 
+        <!-- ============================================
+             IMPACT PAGES: Clean Get-Involved-style layout
+             ============================================ -->
+        <template v-if="isImpactPage">
+          <!-- Manager Hero Bar -->
+          <header class="impact-hero-bar">
+            <div class="impact-hero-title">
+              <p class="impact-eyebrow">{{ activePage.group }}</p>
+              <h1>{{ activePage.title }}</h1>
+              <div class="impact-meta" aria-label="Editable sections">
+                <span>{{ sectionCountLabel }}</span>
+                <span>{{ activePage.route }}</span>
+              </div>
+            </div>
+            <div class="impact-hero-actions">
+              <RouterLink class="btn btn-secondary" :to="activePage.route">View page</RouterLink>
+              <button type="button" class="btn btn-ghost" @click="resetCurrentToDefault">Reset draft</button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="savingSlug === activePage.slug || loading"
+                @click="saveCurrentPage"
+              >
+                <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                {{ savingSlug === activePage.slug ? 'Saving...' : 'Save changes' }}
+              </button>
+            </div>
+          </header>
+
+          <!-- Content Grid -->
+          <div class="impact-content-grid">
+            <!-- Page Identity Panel -->
+            <section class="impact-panel" aria-labelledby="impact-identity-heading">
+              <div class="impact-panel-header">
+                <div>
+                  <p class="impact-kicker">Page setup</p>
+                  <h2 id="impact-identity-heading">Page identity</h2>
+                </div>
+                <span v-if="!activePageDirty" class="impact-saved-pill">Saved</span>
+                <span v-else class="impact-unsaved-pill">Unsaved</span>
+              </div>
+              <div class="impact-panel-body">
+                <div class="impact-form-grid">
+                  <label class="impact-field">
+                    <span>Admin title</span>
+                    <input v-model="activePage.title" type="text" placeholder="Page title" />
+                  </label>
+                  <label class="impact-field">
+                    <span>Slug</span>
+                    <input :value="activePage.slug" type="text" disabled />
+                  </label>
+                  <label class="impact-field">
+                    <span>Route</span>
+                    <input :value="activePage.route" type="text" disabled />
+                  </label>
+                  <label class="impact-field">
+                    <span>Eyebrow</span>
+                    <input v-model="activePage.eyebrow" type="text" placeholder="Section eyebrow text" />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <!-- Hero Content Panel -->
+            <section class="impact-panel" aria-labelledby="impact-hero-heading">
+              <div class="impact-panel-header">
+                <div>
+                  <p class="impact-kicker">Hero section</p>
+                  <h2 id="impact-hero-heading">Main page copy</h2>
+                </div>
+              </div>
+              <div class="impact-panel-body">
+                <label class="impact-field impact-field-wide">
+                  <span>Hero headline</span>
+                  <textarea v-model="activePage.headline" rows="2" placeholder="The main headline for this page"></textarea>
+                </label>
+                <label class="impact-field impact-field-wide">
+                  <span>Intro copy</span>
+                  <textarea v-model="activePage.intro" rows="3" placeholder="Introduction paragraph for the page"></textarea>
+                </label>
+                <div class="impact-form-grid">
+                  <label class="impact-field">
+                    <span>Primary action</span>
+                    <input v-model="activePage.primaryAction" type="text" placeholder="e.g. Support Us" />
+                  </label>
+                  <label class="impact-field">
+                    <span>Secondary action</span>
+                    <input v-model="activePage.secondaryAction" type="text" placeholder="e.g. Learn More" />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <!-- Content Blocks Panel -->
+            <section class="impact-panel impact-sections-panel" aria-labelledby="impact-blocks-heading">
+              <div class="impact-panel-header">
+                <div>
+                  <p class="impact-kicker">Content blocks</p>
+                  <h2 id="impact-blocks-heading">{{ sectionCountLabel }}</h2>
+                </div>
+                <button type="button" class="btn btn-secondary" @click="addSection">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add block
+                </button>
+              </div>
+
+              <div class="impact-blocks-list">
+                <article
+                  v-for="(section, index) in activePage.sections"
+                  :key="section.id"
+                  class="impact-block-editor"
+                >
+                  <header class="impact-block-header">
+                    <div class="impact-block-heading">
+                      <span class="impact-block-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <div>
+                        <h3>{{ section.label || 'Untitled block' }}</h3>
+                        <p>{{ section.heading || 'No heading' }}</p>
+                      </div>
+                    </div>
+                    <div class="impact-block-actions">
+                      <button type="button" class="impact-icon-btn" :disabled="index === 0" @click="moveSection(index, -1)" title="Move up">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                      </button>
+                      <button type="button" class="impact-icon-btn" :disabled="index === activePage.sections.length - 1" @click="moveSection(index, 1)" title="Move down">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                      <button type="button" class="impact-icon-btn" @click="duplicateSection(index)" title="Duplicate">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      </button>
+                      <button type="button" class="impact-icon-btn danger" @click="removeSection(index)" title="Remove">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                  </header>
+
+                  <div class="impact-block-body">
+                    <div class="impact-form-grid">
+                      <label class="impact-field">
+                        <span>Block label</span>
+                        <input v-model="section.label" type="text" placeholder="e.g. Mission, Stats" />
+                      </label>
+                      <label class="impact-field">
+                        <span>Heading</span>
+                        <input v-model="section.heading" type="text" placeholder="Section heading" />
+                      </label>
+                    </div>
+
+                    <label class="impact-field impact-field-wide">
+                      <span>Body</span>
+                      <textarea v-model="section.body" rows="3" placeholder="Descriptive body text"></textarea>
+                    </label>
+
+                    <!-- Structured Table Editor -->
+                    <div class="impact-items-section">
+                      <div class="impact-items-header">
+                        <span class="impact-items-label">
+                          Items
+                          <span class="impact-items-hint" v-if="!showRawItems[section.id]">
+                            Fill in the fields below. Row order maps to public order.
+                          </span>
+                          <span class="impact-items-hint" v-else>
+                            Edit raw list. Use <code>|</code> to separate columns.
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          class="impact-toggle-btn"
+                          @click="toggleRawItems(section.id)"
+                        >
+                          {{ showRawItems[section.id] ? 'Visual Table' : 'Raw Text' }}
+                        </button>
+                      </div>
+
+                      <!-- Raw Textarea -->
+                      <textarea
+                        v-if="showRawItems[section.id]"
+                        v-model="section.items"
+                        rows="8"
+                        class="impact-raw-textarea"
+                        placeholder="Item 1&#10;Item 2&#10;Title | Description"
+                      ></textarea>
+
+                      <!-- Visual Table -->
+                      <div v-else class="impact-table-wrapper">
+                        <table class="impact-table">
+                          <thead>
+                            <tr>
+                              <th class="col-drag"></th>
+                              <th
+                                v-for="(header, hIdx) in getColumnHeaders(section.id, getSectionColCount(section))"
+                                :key="hIdx"
+                              >
+                                {{ header }}
+                              </th>
+                              <th class="col-actions"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(row, rIdx) in parseItemsToRows(section.items)" :key="rIdx">
+                              <td class="col-drag">
+                                <div class="impact-row-arrows">
+                                  <button
+                                    type="button"
+                                    class="impact-arrow-btn"
+                                    :disabled="rIdx === 0"
+                                    @click="moveRow(section, rIdx, -1)"
+                                    title="Move row up"
+                                  >▲</button>
+                                  <button
+                                    type="button"
+                                    class="impact-arrow-btn"
+                                    :disabled="rIdx === parseItemsToRows(section.items).length - 1"
+                                    @click="moveRow(section, rIdx, 1)"
+                                    title="Move row down"
+                                  >▼</button>
+                                </div>
+                              </td>
+                              <td
+                                v-for="cIdx in getSectionColCount(section)"
+                                :key="cIdx - 1"
+                              >
+                                <input
+                                  type="text"
+                                  :value="row[cIdx - 1] || ''"
+                                  @input="updateItemValue(section, rIdx, cIdx - 1, ($event.target as HTMLInputElement).value)"
+                                  placeholder="Enter value..."
+                                />
+                              </td>
+                              <td class="col-actions">
+                                <button
+                                  type="button"
+                                  class="impact-delete-row-btn"
+                                  @click="deleteRow(section, rIdx)"
+                                  title="Delete row"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                </button>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <button
+                          type="button"
+                          class="btn btn-secondary impact-add-row-btn"
+                          @click="addRow(section, getSectionColCount(section))"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          Add Row
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+
+                <div v-if="!activePage.sections.length" class="impact-empty-blocks">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  <p>No content blocks yet</p>
+                  <button class="btn btn-secondary" type="button" @click="addSection">Add your first block</button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </template>
+
+        <!-- ============================================
+             GENERIC PAGES: Existing layout (non-Impact)
+             ============================================ -->
+        <template v-else>
         <div class="editor-container">
           <!-- Editor Column -->
-          <section class="editor-column" aria-label="Page editor">
+          <section :class="['editor-column']" aria-label="Page editor">
             <!-- Page Header -->
             <header class="editor-header">
               <div class="header-left">
@@ -1808,121 +2079,19 @@ function formatDate(value: string) {
                             </label>
 
                             <div class="items-editor-container">
-                              <!-- Impact Group Pages: Structured Visual Table Editor -->
-                              <template v-if="activePage.group === 'Impact'">
-                                <div class="items-editor-header">
-                                  <span class="field-label">
-                                    Items (Structured list)
-                                    <span class="field-hint" v-if="!showRawItems[section.id]">
-                                      Fill in the fields below. Row order maps to public order.
-                                    </span>
-                                    <span class="field-hint" v-else>
-                                      Edit raw list. Use <code>|</code> to separate columns.
-                                    </span>
-                                  </span>
-                                  <button 
-                                    type="button" 
-                                    class="toggle-raw-btn" 
-                                    @click="toggleRawItems(section.id)"
-                                  >
-                                    {{ showRawItems[section.id] ? 'Visual Table' : 'Raw Text' }}
-                                  </button>
-                                </div>
-
-                                <!-- Raw Textarea Mode -->
+                              <!-- Other Pages: Default Raw Textarea -->
+                              <label class="field field-block" style="margin-top: 0;">
+                                <span class="field-label">
+                                  Items
+                                  <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
+                                </span>
                                 <textarea
-                                  v-if="showRawItems[section.id]"
                                   v-model="section.items"
                                   :name="`section-${section.id}-items`"
-                                  rows="8"
+                                  rows="4"
                                   placeholder="Item 1&#10;Item 2&#10;Title | Description"
                                 ></textarea>
-
-                                <!-- Visual Table Mode -->
-                                <div v-else class="table-editor-wrapper">
-                                  <table class="editor-table">
-                                    <thead>
-                                      <tr>
-                                        <th class="col-drag"></th>
-                                        <th 
-                                          v-for="(header, hIdx) in getColumnHeaders(section.id, getSectionColCount(section))" 
-                                          :key="hIdx"
-                                        >
-                                          {{ header }}
-                                        </th>
-                                        <th class="col-actions"></th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      <tr v-for="(row, rIdx) in parseItemsToRows(section.items)" :key="rIdx">
-                                        <td class="col-drag">
-                                          <div class="row-arrows">
-                                            <button 
-                                              type="button" 
-                                              class="btn-arrow" 
-                                              :disabled="rIdx === 0" 
-                                              @click="moveRow(section, rIdx, -1)"
-                                              title="Move row up"
-                                            >▲</button>
-                                            <button 
-                                              type="button" 
-                                              class="btn-arrow" 
-                                              :disabled="rIdx === parseItemsToRows(section.items).length - 1" 
-                                              @click="moveRow(section, rIdx, 1)"
-                                              title="Move row down"
-                                            >▼</button>
-                                          </div>
-                                        </td>
-                                        <td 
-                                          v-for="cIdx in getSectionColCount(section)" 
-                                          :key="cIdx - 1"
-                                        >
-                                          <input 
-                                            type="text" 
-                                            :value="row[cIdx - 1] || ''"
-                                            @input="updateItemValue(section, rIdx, cIdx - 1, ($event.target as HTMLInputElement).value)"
-                                            placeholder="Enter value..."
-                                          />
-                                        </td>
-                                        <td class="col-actions">
-                                          <button 
-                                            type="button" 
-                                            class="btn-delete-row" 
-                                            @click="deleteRow(section, rIdx)"
-                                            title="Delete row"
-                                          >
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                                          </button>
-                                        </td>
-                                      </tr>
-                                    </tbody>
-                                  </table>
-                                  <button 
-                                    type="button" 
-                                    class="btn btn-secondary btn-sm add-row-btn" 
-                                    @click="addRow(section, getSectionColCount(section))"
-                                  >
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                    Add Row
-                                  </button>
-                                </div>
-                              </template>
-
-                              <!-- Other Pages: Default Raw Textarea -->
-                              <template v-else>
-                                <label class="field field-block" style="margin-top: 0;">
-                                  <span class="field-label">
-                                    Items
-                                    <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
-                                  </span>
-                                  <textarea
-                                    v-model="section.items"
-                                    :name="`section-${section.id}-items`"
-                                    rows="4"
-                                    placeholder="Item 1&#10;Item 2&#10;Title | Description"
-                                  ></textarea>
-                                </label>
-                              </template>
+                              </label>
                             </div>
                           </div>
                         </div>
@@ -2010,7 +2179,7 @@ function formatDate(value: string) {
                           <span>{{ item.split('|').slice(1).join('|').trim() }}</span>
                         </div>
                         <div v-else class="preview-item-simple">
-                          <span class="preview-bullet"></span>
+                          <span class="previewBullet"></span>
                           <span>{{ item }}</span>
                         </div>
                       </template>
@@ -2036,6 +2205,7 @@ function formatDate(value: string) {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
+        </template>
       </main>
     </div>
   </div>
@@ -2203,6 +2373,10 @@ function formatDate(value: string) {
   flex: 1;
   min-width: 0;
   max-width: 1200px;
+}
+
+.editor-column.full-width {
+  max-width: 100%;
 }
 
 /* ==============================
@@ -2576,16 +2750,16 @@ function formatDate(value: string) {
 }
 
 .form-card {
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+  border: 1px solid var(--admin-theme-border, var(--admin-border));
+  border-radius: 8px;
+  background: var(--admin-theme-surface, var(--admin-surface));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .form-card:hover {
-  box-shadow: var(--admin-shadow-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .card-header {
@@ -2594,8 +2768,8 @@ function formatDate(value: string) {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 1.1rem;
-  border-bottom: 1px solid var(--admin-border);
-  background: var(--admin-surface-soft);
+  border-bottom: 1px solid var(--admin-theme-border, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 44%, var(--admin-theme-surface, #ffffff));
 }
 
 .card-header-left {
@@ -2610,40 +2784,40 @@ function formatDate(value: string) {
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 9px;
+  border-radius: 8px;
   flex-shrink: 0;
 }
 
 .card-icon-blue {
-  background: var(--admin-blue-soft);
-  color: var(--admin-blue);
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
 }
 
 .card-icon-violet {
-  background: var(--admin-violet-soft);
-  color: var(--admin-violet);
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
 }
 
 .card-icon-amber {
-  background: var(--admin-amber-soft);
-  color: var(--admin-amber);
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
 }
 
 .card-eyebrow {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--admin-muted);
+  letter-spacing: 0.05em;
+  color: var(--admin-theme-primary-deep, #047857);
   margin-bottom: 0.05rem;
 }
 
 .card-title {
   margin: 0;
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
+  font-size: 0.94rem;
+  font-weight: 900;
+  color: var(--admin-theme-contrast, var(--admin-contrast));
 }
 
 .card-body {
@@ -2651,18 +2825,20 @@ function formatDate(value: string) {
 }
 
 .status-pill {
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 28%, transparent);
   border-radius: 999px;
-  background: var(--admin-green-soft);
-  color: #166534;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.7rem;
-  font-weight: 900;
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 11%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .status-pill.dirty {
-  background: var(--admin-amber-soft);
+  border-color: color-mix(in srgb, var(--admin-theme-amber, #d97706) 35%, transparent);
+  background: color-mix(in srgb, var(--admin-theme-amber, #d97706) 12%, transparent);
   color: #92400e;
 }
 
@@ -2691,13 +2867,13 @@ function formatDate(value: string) {
 .field-label {
   font-size: 0.78rem;
   font-weight: 800;
-  color: var(--admin-contrast-soft);
+  color: var(--admin-theme-contrast-soft, var(--admin-contrast-soft));
   letter-spacing: 0.01em;
 }
 
 .field-hint {
   font-weight: 600;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted, var(--admin-muted));
   font-size: 0.72rem;
 }
 
@@ -2710,14 +2886,15 @@ function formatDate(value: string) {
 
 input, textarea {
   width: 100%;
-  border: 1.5px solid var(--admin-border-strong);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  color: var(--admin-text);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft, #475569) 30%, var(--admin-theme-border, #cbd5e1));
+  border-radius: 6px;
+  background: var(--admin-theme-surface, var(--admin-surface));
+  color: var(--admin-theme-contrast, var(--admin-text));
   padding: 0.62rem 0.78rem;
   font-size: 0.88rem;
   line-height: 1.5;
   font-family: inherit;
+  font-weight: 600;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -2727,14 +2904,14 @@ textarea {
 }
 
 input:focus, textarea:focus {
-  border-color: var(--admin-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--admin-theme-primary, var(--admin-blue));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary, #10b981) 15%, transparent);
   outline: none;
 }
 
 input:disabled {
-  background: var(--admin-bg-deep);
-  color: var(--admin-muted);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 60%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-muted, var(--admin-muted));
   cursor: not-allowed;
 }
 
@@ -2755,32 +2932,35 @@ input::placeholder, textarea::placeholder {
 
 .sections-list {
   display: grid;
-  gap: 0.6rem;
-  padding: 0.75rem;
+  gap: 0.75rem;
+  padding: 0.9rem;
 }
 
 .section-block {
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  background: var(--admin-surface);
+  border: 1px solid var(--admin-theme-border, var(--admin-border));
+  border-radius: 8px;
+  background: var(--admin-theme-surface, var(--admin-surface));
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .section-block:hover {
-  border-color: var(--admin-border-strong);
+  border-color: color-mix(in srgb, var(--admin-theme-primary, #10b981) 40%, var(--admin-theme-border, #cbd5e1));
 }
 
 .section-active {
-  border-color: var(--admin-blue) !important;
-  box-shadow: 0 0 0 1px var(--admin-blue), var(--admin-shadow-md);
+  border-color: var(--admin-theme-primary, #10b981) !important;
+  box-shadow: 0 0 0 1px var(--admin-theme-primary, #10b981), 0 4px 12px rgba(16, 185, 129, 0.1);
 }
 
 .section-summary {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.75rem;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 32%, var(--admin-theme-surface, #ffffff));
+  border-bottom: 1px solid var(--admin-theme-border, var(--admin-border));
   cursor: pointer;
   list-style: none;
   transition: background 0.15s;
@@ -2807,7 +2987,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .section-summary:hover {
-  background: var(--admin-surface-soft);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 60%, var(--admin-theme-surface, #ffffff));
 }
 
 .summary-drag {
@@ -2822,22 +3002,34 @@ input::placeholder, textarea::placeholder {
 .summary-content {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.7rem;
   min-width: 0;
   flex: 1;
 }
 
 .summary-index {
-  width: 22px;
-  height: 22px;
+  width: 2rem;
+  height: 2rem;
   display: grid;
   place-items: center;
   border-radius: 6px;
-  background: var(--admin-bg);
-  color: var(--admin-muted);
-  font-size: 0.68rem;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 24%, var(--admin-theme-border, #cbd5e1));
+  background: var(--admin-theme-surface, #ffffff);
+  color: var(--admin-theme-primary-deep, #047857);
+  font-size: 0.74rem;
   font-weight: 900;
   flex-shrink: 0;
+}
+
+.summary-badge {
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 11%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .summary-text {
@@ -3390,20 +3582,21 @@ input::placeholder, textarea::placeholder {
 }
 
 .toggle-raw-btn {
-  font-size: 0.72rem;
-  padding: 0.25rem 0.5rem;
+  font-size: 0.74rem;
+  padding: 0.28rem 0.6rem;
   min-height: auto;
   border-radius: 6px;
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--admin-blue);
-  font-weight: 700;
-  border: none;
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, transparent);
+  color: var(--admin-theme-primary-deep, #047857);
+  font-weight: 800;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 30%, transparent);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.18s ease;
 }
 
 .toggle-raw-btn:hover {
-  background: rgba(37, 99, 235, 0.16);
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 22%, transparent);
+  transform: translateY(-1px);
 }
 
 .table-editor-wrapper {
@@ -3415,27 +3608,28 @@ input::placeholder, textarea::placeholder {
 .editor-table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border, var(--admin-border));
   border-radius: 8px;
   overflow: hidden;
   font-size: 0.88rem;
-  background: var(--admin-surface-soft);
+  background: var(--admin-theme-surface, var(--admin-surface));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .editor-table th,
 .editor-table td {
-  padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid var(--admin-border);
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--admin-theme-border, var(--admin-border));
   text-align: left;
 }
 
 .editor-table th {
-  background: var(--admin-bg-deep);
-  color: var(--admin-contrast-soft);
-  font-weight: 700;
-  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft, #f8fafc) 44%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-contrast-soft, var(--admin-contrast-soft));
+  font-weight: 800;
+  font-size: 0.76rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
 
 .editor-table td {
@@ -3462,50 +3656,553 @@ input::placeholder, textarea::placeholder {
 }
 
 .btn-arrow {
-  width: 22px;
-  height: 18px;
+  width: 24px;
+  height: 20px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.62rem;
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border-strong);
+  font-size: 0.65rem;
+  background: color-mix(in srgb, var(--admin-theme-surface, #ffffff) 86%, var(--admin-theme-contrast, #0f172a) 14%);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft, #475569) 35%, var(--admin-theme-border, #cbd5e1));
   border-radius: 4px;
   cursor: pointer;
-  color: var(--admin-muted);
+  color: var(--admin-theme-contrast, var(--admin-contrast));
   line-height: 1;
+  transition: all 0.15s ease;
 }
 
 .btn-arrow:hover:not(:disabled) {
-  background: var(--admin-blue-soft);
-  color: var(--admin-blue);
-  border-color: var(--admin-blue);
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 12%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-primary-deep, #047857);
+  border-color: var(--admin-theme-primary, #10b981);
 }
 
 .btn-arrow:disabled {
-  opacity: 0.3;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
 .editor-table input[type="text"] {
   width: 100%;
-  padding: 0.45rem 0.65rem;
-  border: 1px solid var(--admin-border-strong);
+  padding: 0.48rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft, #475569) 30%, var(--admin-theme-border, #cbd5e1));
   border-radius: 6px;
-  background: var(--admin-surface);
-  color: var(--admin-text);
-  font-size: 0.85rem;
+  background: var(--admin-theme-surface, var(--admin-surface));
+  color: var(--admin-theme-contrast, var(--admin-text));
+  font-size: 0.86rem;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .editor-table input[type="text"]:focus {
   outline: none;
-  border-color: var(--admin-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: var(--admin-theme-primary, var(--admin-blue));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary, #10b981) 16%, transparent);
 }
 
 .btn-delete-row {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-danger, #dc2626) 40%, var(--admin-theme-border, #cbd5e1));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--admin-theme-danger, #dc2626) 8%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-danger, #dc2626);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-delete-row:hover {
+  background: var(--admin-theme-danger, #dc2626);
+  color: #ffffff;
+  border-color: var(--admin-theme-danger, #dc2626);
+}
+
+.add-row-btn {
+  align-self: flex-start;
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 0.5rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary, #10b981) 45%, var(--admin-theme-border, #cbd5e1));
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 10%, var(--admin-theme-surface, #ffffff));
+  color: var(--admin-theme-primary-deep, #047857);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.add-row-btn:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary, #10b981) 20%, var(--admin-theme-surface, #ffffff));
+  border-color: var(--admin-theme-primary, #10b981);
+  transform: translateY(-1px);
+}
+
+/* ==============================
+   IMPACT PAGES: GET-INVOLVED STYLE
+   ============================== */
+
+/* Hero Bar */
+.impact-hero-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
+  padding: 1rem 1.25rem;
+  margin-bottom: 0;
+}
+
+.impact-hero-bar h1,
+.impact-hero-bar p,
+.impact-panel h2,
+.impact-panel p {
+  margin: 0;
+}
+
+.impact-hero-bar h1 {
+  color: var(--admin-contrast);
+  font-size: 1.32rem;
+  line-height: 1.2;
+}
+
+.impact-hero-title {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.impact-eyebrow,
+.impact-kicker {
+  color: #047857;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.impact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.impact-meta span {
+  border: 1px solid var(--admin-border);
+  border-radius: 999px;
+  background: var(--admin-surface-soft);
+  color: var(--admin-muted);
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.impact-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Content Grid */
+.impact-content-grid {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+/* Panels */
+.impact-panel {
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-surface);
+  overflow: hidden;
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.impact-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--admin-border);
+  background: color-mix(in srgb, var(--admin-surface-soft) 44%, var(--admin-surface));
+  padding: 0.85rem 1rem;
+}
+
+.impact-panel-header h2 {
+  color: var(--admin-contrast);
+  font-size: 1rem;
+}
+
+.impact-saved-pill {
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.11);
+  color: #047857;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.impact-unsaved-pill {
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.11);
+  color: #92400e;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.impact-panel-body {
+  padding: 1.1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* Form Elements */
+.impact-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+
+.impact-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--admin-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.impact-field span {
+  color: var(--admin-contrast-soft);
+}
+
+.impact-field input,
+.impact-field textarea {
+  width: 100%;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 8px;
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 0.75rem;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.impact-field input:focus,
+.impact-field textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.impact-field input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--admin-bg);
+}
+
+.impact-field-wide {
+  grid-column: 1 / -1;
+}
+
+.impact-field textarea {
+  resize: vertical;
+  min-height: 64px;
+}
+
+/* Block Editors */
+.impact-blocks-list {
+  display: grid;
+  gap: 0;
+}
+
+.impact-block-editor {
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.impact-block-editor:last-child {
+  border-bottom: none;
+}
+
+.impact-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: color-mix(in srgb, var(--admin-surface-soft) 44%, var(--admin-surface));
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.impact-block-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.impact-block-number {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #10b981, #047857);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.impact-block-heading h3 {
+  margin: 0;
+  color: var(--admin-contrast);
+  font-size: 0.92rem;
+}
+
+.impact-block-heading p {
+  color: var(--admin-muted);
+  font-size: 0.78rem;
+}
+
+.impact-block-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.impact-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  background: var(--admin-surface);
+  color: var(--admin-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.impact-icon-btn:hover:not(:disabled) {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  transform: translateY(-1px);
+}
+
+.impact-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.impact-icon-btn.danger {
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+.impact-icon-btn.danger:hover:not(:disabled) {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.impact-block-body {
+  padding: 1.1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* Items Section */
+.impact-items-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.impact-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.impact-items-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--admin-contrast-soft);
+}
+
+.impact-items-hint {
+  display: block;
+  font-weight: 600;
+  color: var(--admin-muted);
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}
+
+.impact-items-hint code {
+  background: var(--admin-bg);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+
+.impact-toggle-btn {
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 6px;
+  background: var(--admin-surface);
+  color: var(--admin-muted);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.impact-toggle-btn:hover {
+  border-color: #10b981;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.impact-raw-textarea {
+  width: 100%;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 8px;
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.65rem 0.75rem;
+  resize: vertical;
+  min-height: 120px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.impact-raw-textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+/* Table */
+.impact-table-wrapper {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.impact-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.85rem;
+}
+
+.impact-table thead {
+  background: color-mix(in srgb, var(--admin-surface-soft) 60%, var(--admin-surface));
+}
+
+.impact-table th {
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--admin-muted);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.impact-table td {
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.impact-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.impact-table tbody tr:hover {
+  background: rgba(16, 185, 129, 0.03);
+}
+
+.impact-table td input {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-text);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.impact-table td input:hover {
+  border-color: var(--admin-border);
+  background: var(--admin-surface);
+}
+
+.impact-table td input:focus {
+  outline: none;
+  border-color: #10b981;
+  background: var(--admin-surface);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.12);
+}
+
+.impact-table .col-drag {
+  width: 36px;
+  text-align: center;
+}
+
+.impact-table .col-actions {
+  width: 36px;
+  text-align: center;
+}
+
+.impact-row-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.impact-arrow-btn {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--admin-muted-light);
+  cursor: pointer;
+  font-size: 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.impact-arrow-btn:hover:not(:disabled) {
+  color: #047857;
+}
+
+.impact-arrow-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.impact-delete-row-btn {
   display: grid;
   place-items: center;
   width: 28px;
@@ -3513,24 +4210,104 @@ input::placeholder, textarea::placeholder {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--admin-muted);
+  color: var(--admin-muted-light);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: all 0.15s ease;
 }
 
-.btn-delete-row:hover {
-  background: var(--admin-red-soft);
-  color: var(--admin-red);
+.impact-delete-row-btn:hover {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
 }
 
-.add-row-btn {
-  align-self: flex-start;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.45rem 0.85rem;
-  display: inline-flex;
+.impact-add-row-btn {
+  justify-self: start;
+  font-size: 0.78rem;
+  min-height: 32px;
+  padding: 0.35rem 0.75rem;
+}
+
+/* Empty State */
+.impact-empty-blocks {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  cursor: pointer;
+  gap: 0.6rem;
+  padding: 2.5rem 1rem;
+  color: var(--admin-muted);
+  text-align: center;
+}
+
+.impact-empty-blocks p {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Dark Mode */
+:global(.admin-dark) .impact-eyebrow,
+:global(.admin-dark) .impact-kicker {
+  color: #34d399;
+}
+
+:global(.admin-dark) .impact-block-number {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+:global(.admin-dark) .impact-saved-pill {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.28);
+  background: rgba(52, 211, 153, 0.11);
+}
+
+:global(.admin-dark) .impact-unsaved-pill {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.28);
+  background: rgba(251, 191, 36, 0.11);
+}
+
+:global(.admin-dark) .impact-field input:focus,
+:global(.admin-dark) .impact-field textarea:focus,
+:global(.admin-dark) .impact-raw-textarea:focus,
+:global(.admin-dark) .impact-table td input:focus {
+  border-color: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
+}
+
+:global(.admin-dark) .impact-toggle-btn:hover {
+  border-color: #34d399;
+  color: #34d399;
+}
+
+:global(.admin-dark) .impact-icon-btn:hover:not(:disabled) {
+  border-color: #34d399;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .impact-hero-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .impact-hero-actions {
+    justify-content: flex-end;
+  }
+
+  .impact-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .impact-block-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .impact-block-actions {
+    justify-content: flex-end;
+  }
 }
 </style>

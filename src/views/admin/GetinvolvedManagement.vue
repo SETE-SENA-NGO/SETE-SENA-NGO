@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import { imageUploadHelpText } from '@/lib/media'
+import { imageUploadHelpText, normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
@@ -555,7 +555,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
                 <div class="card-editor-top">
                   <figure class="image-preview card-preview">
-                    <img :src="resolveImageUrl(card.image, imageUrls.programs.hero1)" alt="" />
+                    <img :src="resolveImageUrl(card.image, fallbackContent.hero.image)" alt="" />
                   </figure>
 
                   <div class="card-image-controls image-control-panel">

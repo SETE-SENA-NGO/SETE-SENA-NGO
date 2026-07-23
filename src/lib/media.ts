@@ -42,3 +42,7 @@ export async function isSameImage(file: File, existingUrl: string) {
     return false
   }
 }
+
+export function normalizeMediaUrl(url?: string) {
+  return url ? url.trim() : ''
+}
