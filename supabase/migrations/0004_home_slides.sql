@@ -21,4 +21,3 @@ ALTER TABLE home_slides
 ALTER TABLE home_slides ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read" ON home_slides FOR SELECT USING (true);
 CREATE POLICY "Allow authenticated write" ON home_slides FOR ALL USING (auth.role() = 'authenticated');
- 

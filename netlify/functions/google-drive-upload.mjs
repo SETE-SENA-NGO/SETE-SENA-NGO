@@ -359,7 +359,18 @@ async function uploadDriveFile({ accessToken, file, fileName, folderId, mimeType
 
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.id) {
+<<<<<<< HEAD
     throw httpError(data?.error?.message || 'Could not upload image to Google Drive.', 502)
+=======
+<<<<<<< HEAD
+    throw httpError(data?.error?.message || 'Could not upload image to Google Drive.', 502)
+=======
+    throw httpError(driveErrorMessage(data, 'Could not upload image to Google Drive.'), 502, {
+      step: 'google-drive-upload',
+      googleMessage: driveErrorMessage(data, 'Could not upload image to Google Drive.'),
+    })
+>>>>>>> 55583b0716dc2b69d3d421af643b1a41cdef9c57
+>>>>>>> feature/admin-media
   }
 
   return data
@@ -437,11 +448,73 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
   return Array.isArray(data) ? data[0] : data
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> feature/admin-media
 function serviceHeaders(config) {
   return {
     apikey: config.serviceRoleKey,
     authorization: `Bearer ${config.serviceRoleKey}`,
   }
+<<<<<<< HEAD
+=======
+=======
+async function ensureMediaAssetsReady(config, authorization) {
+  const response = await fetch(`${config.url}/rest/v1/media_assets?select=id&limit=1`, {
+    method: 'GET',
+    headers: userHeaders(config, authorization),
+  })
+
+  if (response.ok) return
+
+  const message = await responseErrorMessage(response)
+  throw httpError(
+    'Supabase media table is not ready. Run supabase/complete_setup.sql before uploading images.',
+    502,
+    {
+      step: 'media-assets-check',
+      supabaseStatus: response.status,
+      supabaseMessage: message,
+    },
+  )
+}
+
+function userHeaders(config, authorization) {
+  return {
+    apikey: config.anonKey,
+    authorization,
+  }
+}
+
+function publicAdminContext(context) {
+  const { authorization: _authorization, ...safeContext } = context
+  return safeContext
+}
+
+function publicUser(user) {
+  return {
+    id: user.id,
+    email: user.email,
+  }
+}
+
+function publicProfile(profile) {
+  return {
+    email: profile.email,
+    role: profile.role,
+  }
+}
+
+async function responseErrorMessage(response) {
+  const data = await response.json().catch(() => null)
+  return responseDataMessage(data, response.statusText)
+}
+
+function responseDataMessage(data, fallback) {
+  return data?.message || data?.error_description || data?.error || fallback
+>>>>>>> 55583b0716dc2b69d3d421af643b1a41cdef9c57
+>>>>>>> feature/admin-media
 }
 
 function googleThumbnailUrl(fileId) {

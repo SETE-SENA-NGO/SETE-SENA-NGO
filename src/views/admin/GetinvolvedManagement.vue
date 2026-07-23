@@ -3,8 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import { imageUrls, resolveImageUrl } from '@/lib/imageUrls'
-import { imageUrlHelpText, normalizeMediaUrl } from '@/lib/media'
+import { imageUploadHelpText } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
@@ -63,13 +62,17 @@ type GetInvolvedPageContent = {
 const PAGE_SLUG = 'get-involved'
 const MAX_SUPPORT_CARDS = 8
 
+function resolveImageUrl(url: string, fallback: string) {
+  return url.trim() ? url : fallback
+}
+
 const fallbackContent: GetInvolvedPageContent = {
   hero: {
     eyebrow: 'Get involved',
     title: 'Support village peace.',
     description:
       'Since 1994, Santi Sena has worked with villages on peace, livelihoods, education, child protection and the environment.',
-    image: imageUrls.programs.hero2,
+    image: '/images/programs/hero-2.jpg',
     alt: 'Santi Sena staff and community members meeting in a village shelter',
     primaryCta: { label: 'Donate', to: '/get-involved/donate' },
     secondaryCta: { label: 'Partner with us', to: '/get-involved/partner' },
@@ -79,7 +82,7 @@ const fallbackContent: GetInvolvedPageContent = {
       label: 'Natural resources',
       title: 'Protect community forests',
       body: 'Support forestry committees, seedlings and climate adaptation.',
-      image: imageUrls.programs.environmentHero1,
+      image: '/images/programs/environment-hero1.jpg',
       alt: 'Community leaders receiving tree seedlings near a pagoda',
       to: '/programs/environment',
       cta: 'Environment',
@@ -88,7 +91,7 @@ const fallbackContent: GetInvolvedPageContent = {
       label: 'Livelihood',
       title: 'Strengthen savings and farming',
       body: 'Back savings groups, farming skills and rural enterprise.',
-      image: imageUrls.programs.livelihoodHero2,
+      image: '/images/programs/livelihood-hero2.jpg',
       alt: 'Women receiving livelihood support during a community event',
       to: '/programs/livelihood',
       cta: 'Livelihood',
@@ -97,7 +100,7 @@ const fallbackContent: GetInvolvedPageContent = {
       label: 'Education',
       title: 'Keep children learning',
       body: 'Support pre-schools, scholarships and mobile libraries.',
-      image: imageUrls.programs.education,
+      image: '/images/programs/education.jpg',
       alt: 'Students gathered for a Santi Sena education activity',
       to: '/programs/education',
       cta: 'Education',
@@ -106,7 +109,7 @@ const fallbackContent: GetInvolvedPageContent = {
       label: 'Protection',
       title: 'Make childhood safer',
       body: 'Help child protection networks and rights campaigns.',
-      image: imageUrls.programs.childProtection2,
+      image: '/images/programs/child-protection2.jpg',
       alt: 'Students participating in a community child protection activity',
       to: '/programs/child-protection',
       cta: 'Protection',
@@ -160,7 +163,7 @@ const savedAt = ref('')
 const draft = reactive<GetInvolvedPageContent>(cloneContent(fallbackContent))
 
 const heroPreview = computed(() => resolveImageUrl(draft.hero.image, fallbackContent.hero.image))
-const imageHint = imageUrlHelpText()
+const imageHint = imageUploadHelpText()
 const canAddCard = computed(() => draft.supportCards.length < MAX_SUPPORT_CARDS)
 
 onMounted(() => {
@@ -273,7 +276,7 @@ function addCard() {
     label: 'New support',
     title: 'New support card',
     body: 'Describe the community work this card promotes.',
-    image: imageUrls.programs.hero1,
+    image: '/images/programs/hero-1.jpg',
     alt: 'Santi Sena community activity',
     to: '/get-involved',
     cta: 'Learn more',
