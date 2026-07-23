@@ -293,37 +293,37 @@ function actionRoute(index: number) {
         <div :key="activeSlide?.image" class="hero-message">
           <p class="eyebrow eyebrow--light">
             {{
-              activeSlide?.eyebrow ??
-              content?.eyebrow ??
+              activeSlide?.eyebrow ||
+              content?.eyebrow ||
               'Buddhist NGO - Cambodia - Since 1994'
             }}
           </p>
           <h1 class="hero-title">
             {{
-              activeSlide?.title ??
-              content?.headline ??
+              activeSlide?.title ||
+              content?.headline ||
               'Walking with villages toward peace, sustainability and dignity.'
             }}
           </h1>
           <p class="hero-subtitle">
             {{
-              activeSlide?.description ??
-              content?.intro ??
+              activeSlide?.description ||
+              content?.intro ||
               'Santi Sena works alongside rural Cambodian communities in education, livelihoods, environment and child protection.'
             }}
           </p>
           <div class="hero-actions">
             <RouterLink
-              :to="activeSlide?.primaryTo ?? '/qr-donate'"
+              :to="activeSlide?.primaryTo || '/qr-donate'"
               class="btn btn--primary"
             >
-              {{ activeSlide?.primaryLabel ?? 'Support Us' }}
+              {{ activeSlide?.primaryLabel || 'Support Us' }}
             </RouterLink>
             <RouterLink
-              :to="activeSlide?.secondaryTo ?? '/about'"
+              :to="activeSlide?.secondaryTo || '/about'"
               class="btn btn--outline"
             >
-              {{ activeSlide?.secondaryLabel ?? 'Stand with us' }}
+              {{ activeSlide?.secondaryLabel || 'Stand with us' }}
             </RouterLink>
           </div>
         </div>
