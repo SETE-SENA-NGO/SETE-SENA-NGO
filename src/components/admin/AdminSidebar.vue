@@ -112,6 +112,7 @@ const pageGroups: PageGroup[] = [
   {
     slug: 'contact',
     labelKey: 'admin.sidebar.contact',
+    path: '/admin/contact',
     items: [],
   },
 ]
