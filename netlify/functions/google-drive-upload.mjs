@@ -7,6 +7,7 @@ const driveScope = 'https://www.googleapis.com/auth/drive'
 
 export default async function googleDriveUpload(request) {
   if (request.method === 'OPTIONS') return emptyResponse(204)
+  if (request.method === 'GET') return adminStatusResponse(request)
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
 
   try {
@@ -31,6 +32,8 @@ export default async function googleDriveUpload(request) {
 
     const requestedName = stringValue(formData.get('name'))
     const fileName = sanitizeFileName(requestedName || file.name || `image-${Date.now()}.jpg`)
+    await ensureMediaAssetsReady(config.supabase, user.authorization)
+
     const accessToken = await googleAccessToken(config.google)
     const driveFile = await uploadDriveFile({
       accessToken,
@@ -45,6 +48,7 @@ export default async function googleDriveUpload(request) {
     const publicUrl = googleThumbnailUrl(driveFile.id)
     const media = await saveMediaAsset(config.supabase, {
       userId: user.id,
+      authorization: user.authorization,
       fileName,
       publicUrl,
       mimeType,
@@ -60,7 +64,8 @@ export default async function googleDriveUpload(request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Upload failed.'
     const status = typeof error?.status === 'number' ? error.status : 500
-    return jsonResponse({ error: message }, status)
+    const details = error?.details && typeof error.details === 'object' ? error.details : undefined
+    return jsonResponse({ error: message, details }, status)
   }
 }
 
@@ -74,14 +79,12 @@ function readConfig() {
     env('SUPABASE_PUBLISHABLE_KEY') ||
     env('VITE_SUPABASE_PUBLISHABLE_KEY') ||
     env('SUPABASE_ANON_KEY')
-  const supabaseServiceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY')
   const folderId = env('GOOGLE_DRIVE_FOLDER_ID')
   const googleAuth = googleAuthConfig()
 
   const missing = []
   if (!supabaseUrl) missing.push('SUPABASE_URL')
   if (!supabaseAnonKey) missing.push('SUPABASE_PUBLISHABLE_KEY')
-  if (!supabaseServiceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY')
   if (!folderId) missing.push('GOOGLE_DRIVE_FOLDER_ID')
   missing.push(...missingGoogleAuthFields(googleAuth))
 
@@ -93,7 +96,6 @@ function readConfig() {
     supabase: {
       url: trimSlash(supabaseUrl),
       anonKey: supabaseAnonKey,
-      serviceRoleKey: supabaseServiceRoleKey,
     },
     google: {
       folderId,
@@ -104,8 +106,9 @@ function readConfig() {
 }
 
 function googleAuthConfig() {
+  const authType = env('GOOGLE_DRIVE_AUTH_TYPE').toLowerCase()
   const refreshToken = env('GOOGLE_OAUTH_REFRESH_TOKEN')
-  if (refreshToken) {
+  if (authType === 'oauth' || refreshToken) {
     return {
       authType: 'oauth',
       clientId: env('GOOGLE_OAUTH_CLIENT_ID'),
@@ -155,36 +158,115 @@ function missingGoogleAuthFields(config) {
 }
 
 async function requireAdminUser(request, config) {
+  const admin = await resolveAdminContext(request, config)
+
+  if (!admin.ok) {
+    throw httpError(admin.error, admin.status, publicAdminContext(admin))
+  }
+
+  return {
+    id: admin.user.id,
+    authorization: admin.authorization,
+  }
+}
+
+async function adminStatusResponse(request) {
+  try {
+    const admin = await resolveAdminContext(request, readConfig())
+    return jsonResponse(publicAdminContext(admin), admin.ok ? 200 : admin.status)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not check admin status.'
+    const status = typeof error?.status === 'number' ? error.status : 500
+    return jsonResponse({ ok: false, step: 'config', error: message }, status)
+  }
+}
+
+async function resolveAdminContext(request, config) {
   const authorization = request.headers.get('authorization') || ''
-  if (!authorization.startsWith('Bearer ')) throw httpError('Admin login is required.', 401)
+  if (!authorization.startsWith('Bearer ')) {
+    return {
+      ok: false,
+      status: 401,
+      step: 'authorization',
+      error: 'Admin login is required.',
+    }
+  }
+
+  const headers = userHeaders(config.supabase, authorization)
 
   const userResponse = await fetch(`${config.supabase.url}/auth/v1/user`, {
-    headers: {
-      apikey: config.supabase.anonKey,
-      authorization,
-    },
+    headers,
   })
 
-  if (!userResponse.ok) throw httpError('Admin login is invalid or expired.', 401)
+  if (!userResponse.ok) {
+    return {
+      ok: false,
+      status: 401,
+      step: 'auth-user',
+      error: 'Admin login is invalid or expired.',
+      supabaseStatus: userResponse.status,
+      supabaseMessage: await responseErrorMessage(userResponse),
+    }
+  }
 
   const user = await userResponse.json()
-  if (!user?.id) throw httpError('Admin login is invalid or expired.', 401)
+  if (!user?.id) {
+    return {
+      ok: false,
+      status: 401,
+      step: 'auth-user',
+      error: 'Admin login is invalid or expired.',
+    }
+  }
 
   const profileUrl = `${config.supabase.url}/rest/v1/profiles?id=eq.${encodeURIComponent(
     user.id,
   )}&select=id,email,role&limit=1`
 
   const profileResponse = await fetch(profileUrl, {
-    headers: serviceHeaders(config.supabase),
+    headers,
   })
 
-  if (!profileResponse.ok) throw httpError('Could not verify admin profile.', 403)
+  if (!profileResponse.ok) {
+    return {
+      ok: false,
+      status: 403,
+      step: 'profile-read',
+      error: 'Could not read your admin profile from Supabase.',
+      user: publicUser(user),
+      supabaseStatus: profileResponse.status,
+      supabaseMessage: await responseErrorMessage(profileResponse),
+    }
+  }
 
   const profiles = await profileResponse.json()
-  const role = profiles?.[0]?.role
-  if (!adminRoles.has(role)) throw httpError('You do not have permission to upload media.', 403)
+  const profile = profiles?.[0] ?? null
 
-  return user
+  if (!profile) {
+    return {
+      ok: false,
+      status: 403,
+      step: 'profile-missing',
+      error: `No public.profiles row was found for ${user.email || user.id}.`,
+      user: publicUser(user),
+      profile: null,
+    }
+  }
+
+  const role = profile.role
+  const ok = adminRoles.has(role)
+
+  return {
+    ok,
+    status: ok ? 200 : 403,
+    step: 'role-check',
+    error: ok
+      ? ''
+      : `Your profile role is "${role || 'missing'}"; uploads require super_admin, admin, or editor.`,
+    user: publicUser(user),
+    profile: publicProfile(profile),
+    authorization,
+  }
 }
 
 async function googleAccessToken(config) {
@@ -206,7 +288,7 @@ async function googleOAuthAccessToken(config) {
 
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.access_token) {
-    throw httpError(data?.error_description || data?.error || 'Could not authorize Google Drive.', 502)
+    throw googleAuthError(config, data)
   }
 
   return data.access_token
@@ -238,7 +320,7 @@ async function googleServiceAccountAccessToken(config) {
 
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.access_token) {
-    throw httpError(data?.error_description || data?.error || 'Could not authorize Google Drive.', 502)
+    throw googleAuthError(config, data)
   }
 
   return data.access_token
@@ -277,7 +359,14 @@ async function uploadDriveFile({ accessToken, file, fileName, folderId, mimeType
 
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.id) {
+<<<<<<< HEAD
     throw httpError(data?.error?.message || 'Could not upload image to Google Drive.', 502)
+=======
+    throw httpError(driveErrorMessage(data, 'Could not upload image to Google Drive.'), 502, {
+      step: 'google-drive-upload',
+      googleMessage: driveErrorMessage(data, 'Could not upload image to Google Drive.'),
+    })
+>>>>>>> 55583b0716dc2b69d3d421af643b1a41cdef9c57
   }
 
   return data
@@ -304,6 +393,13 @@ async function makeDriveFilePublic(accessToken, fileId) {
       data?.error?.message ||
         'Image uploaded, but Google Drive did not allow public sharing for this file.',
       502,
+      {
+        step: 'google-drive-share',
+        googleMessage: driveErrorMessage(
+          data,
+          'Image uploaded, but Google Drive did not allow public sharing for this file.',
+        ),
+      },
     )
   }
 }
@@ -314,7 +410,7 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
     {
       method: 'POST',
       headers: {
-        ...serviceHeaders(config),
+        ...userHeaders(config, authorization),
         'content-type': 'application/json',
         prefer: 'resolution=merge-duplicates,return=representation',
       },
@@ -338,17 +434,77 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
 
   const data = await response.json().catch(() => null)
   if (!response.ok) {
-    throw httpError(data?.message || 'Image uploaded, but Supabase media record could not be saved.', 502)
+    throw httpError(data?.message || 'Image uploaded, but Supabase media record could not be saved.', 502, {
+      step: 'media-assets-save',
+      supabaseStatus: response.status,
+      supabaseMessage: responseDataMessage(data, response.statusText),
+    })
   }
 
   return Array.isArray(data) ? data[0] : data
 }
 
+<<<<<<< HEAD
 function serviceHeaders(config) {
   return {
     apikey: config.serviceRoleKey,
     authorization: `Bearer ${config.serviceRoleKey}`,
   }
+=======
+async function ensureMediaAssetsReady(config, authorization) {
+  const response = await fetch(`${config.url}/rest/v1/media_assets?select=id&limit=1`, {
+    method: 'GET',
+    headers: userHeaders(config, authorization),
+  })
+
+  if (response.ok) return
+
+  const message = await responseErrorMessage(response)
+  throw httpError(
+    'Supabase media table is not ready. Run supabase/complete_setup.sql before uploading images.',
+    502,
+    {
+      step: 'media-assets-check',
+      supabaseStatus: response.status,
+      supabaseMessage: message,
+    },
+  )
+}
+
+function userHeaders(config, authorization) {
+  return {
+    apikey: config.anonKey,
+    authorization,
+  }
+}
+
+function publicAdminContext(context) {
+  const { authorization: _authorization, ...safeContext } = context
+  return safeContext
+}
+
+function publicUser(user) {
+  return {
+    id: user.id,
+    email: user.email,
+  }
+}
+
+function publicProfile(profile) {
+  return {
+    email: profile.email,
+    role: profile.role,
+  }
+}
+
+async function responseErrorMessage(response) {
+  const data = await response.json().catch(() => null)
+  return responseDataMessage(data, response.statusText)
+}
+
+function responseDataMessage(data, fallback) {
+  return data?.message || data?.error_description || data?.error || fallback
+>>>>>>> 55583b0716dc2b69d3d421af643b1a41cdef9c57
 }
 
 function googleThumbnailUrl(fileId) {
@@ -388,9 +544,10 @@ function emptyResponse(status) {
   return new Response(null, { status })
 }
 
-function httpError(message, status) {
+function httpError(message, status, details) {
   const error = new Error(message)
   error.status = status
+  if (details) error.details = details
   return error
 }
 
