@@ -5,6 +5,7 @@ import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
+import { useMediaStore } from '@/stores/media.store'
 
 type EditableSection = {
   id: string
@@ -989,6 +990,27 @@ const defaultPages: PageDraft[] = [
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
+const mediaStore = useMediaStore()
+
+const uploadingCell = ref<{ sectionId: string; rowIndex: number; colIndex: number } | null>(null)
+
+async function handleImageCellUpload(event: Event, section: EditableSection, rowIndex: number, colIndex: number) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+
+  uploadingCell.value = { sectionId: section.id, rowIndex, colIndex }
+  try {
+    const label = `${activePage.value.title} - ${section.label || 'block'} row ${rowIndex + 1} image`
+    const uploaded = await mediaStore.uploadToGoogleDrive(file, label)
+    updateItemValue(section, rowIndex, colIndex, uploaded.url)
+    ui.addToast('Image uploaded successfully to Google Drive.', 'success')
+  } catch (err) {
+    console.error('Image cell upload error:', err)
+    ui.addToast(err instanceof Error ? err.message : 'Could not upload image.', 'error')
+  } finally {
+    uploadingCell.value = null
+  }
+}
 
 const drafts = ref<PageDraft[]>(defaultPages.map(clonePage))
 const loading = ref(false)
@@ -1489,7 +1511,7 @@ function formatDate(value: string) {
 </script>
 
 <template>
-  <div :class="['editor-page', { 'sidebar-open': ui.sidebarOpen }]">
+  <div :class="['editor-page', { 'sidebar-open': ui.sidebarOpen, 'impact-admin-page': isImpactPage }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -1731,7 +1753,42 @@ function formatDate(value: string) {
                                 v-for="cIdx in getSectionColCount(section)"
                                 :key="cIdx - 1"
                               >
+                                <!-- Image/Logo column visual picker + upload -->
+                                <div 
+                                  v-if="getColumnHeaders(section.id, getSectionColCount(section))[cIdx - 1]?.toLowerCase().includes('image') || getColumnHeaders(section.id, getSectionColCount(section))[cIdx - 1]?.toLowerCase().includes('logo')" 
+                                  class="impact-image-cell-group"
+                                >
+                                  <div class="impact-cell-image-thumb" :title="row[cIdx - 1] ? 'View full image' : 'No image'">
+                                    <img 
+                                      v-if="row[cIdx - 1]" 
+                                      :src="row[cIdx - 1]" 
+                                      alt="" 
+                                      @error="($event.target as HTMLImageElement).style.display = 'none'"
+                                    />
+                                    <svg v-else class="thumb-placeholder" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    :value="row[cIdx - 1] || ''"
+                                    @input="updateItemValue(section, rIdx, cIdx - 1, ($event.target as HTMLInputElement).value)"
+                                    placeholder="Paste URL or upload..."
+                                  />
+                                  <label class="cell-upload-btn" :class="{ loading: uploadingCell?.sectionId === section.id && uploadingCell?.rowIndex === rIdx && uploadingCell?.colIndex === cIdx - 1 }">
+                                    <svg v-if="uploadingCell?.sectionId === section.id && uploadingCell?.rowIndex === rIdx && uploadingCell?.colIndex === cIdx - 1" class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                                    <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <input 
+                                      type="file" 
+                                      accept="image/*" 
+                                      style="display: none" 
+                                      :disabled="uploadingCell?.sectionId === section.id && uploadingCell?.rowIndex === rIdx && uploadingCell?.colIndex === cIdx - 1" 
+                                      @change="handleImageCellUpload($event, section, rIdx, cIdx - 1)"
+                                    />
+                                  </label>
+                                </div>
+
+                                <!-- Default text input column -->
                                 <input
+                                  v-else
                                   type="text"
                                   :value="row[cIdx - 1] || ''"
                                   @input="updateItemValue(section, rIdx, cIdx - 1, ($event.target as HTMLInputElement).value)"
@@ -3745,17 +3802,27 @@ input::placeholder, textarea::placeholder {
    IMPACT PAGES: GET-INVOLVED STYLE
    ============================== */
 
+.editor-page.impact-admin-page {
+  font-family: var(--font-family-base), 'Poppins', 'Noto Sans Khmer', sans-serif;
+  background: var(--admin-theme-bg);
+  color: var(--admin-theme-text);
+}
+
+.impact-admin-page .main {
+  padding: 1.25rem;
+}
+
 /* Hero Bar */
 .impact-hero-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
-  padding: 1rem 1.25rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
+  padding: 1rem 1.1rem;
   margin-bottom: 0;
 }
 
@@ -3767,7 +3834,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .impact-hero-bar h1 {
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 1.32rem;
   line-height: 1.2;
 }
@@ -3779,7 +3846,7 @@ input::placeholder, textarea::placeholder {
 
 .impact-eyebrow,
 .impact-kicker {
-  color: #047857;
+  color: var(--admin-theme-primary-deep);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -3793,10 +3860,10 @@ input::placeholder, textarea::placeholder {
 }
 
 .impact-meta span {
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 999px;
-  background: var(--admin-surface-soft);
-  color: var(--admin-muted);
+  background: var(--admin-theme-surface-soft);
+  color: var(--admin-theme-muted);
   padding: 0.18rem 0.55rem;
   font-size: 0.72rem;
   font-weight: 800;
@@ -3808,6 +3875,62 @@ input::placeholder, textarea::placeholder {
   gap: 0.5rem;
 }
 
+/* Button overrides to match get-involved */
+.impact-admin-page .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.impact-admin-page .btn:hover {
+  transform: translateY(-1px);
+}
+
+.impact-admin-page .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.impact-admin-page .btn-primary {
+  border-color: var(--admin-theme-primary-deep);
+  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
+  color: #ffffff;
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
+}
+
+.impact-admin-page .btn-secondary,
+.impact-admin-page .btn-ghost {
+  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
+  color: var(--admin-theme-contrast);
+}
+
+.impact-admin-page .btn-ghost {
+  background: var(--admin-theme-surface);
+}
+
+.impact-admin-page .btn-secondary:hover,
+.impact-admin-page .btn-ghost:hover {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+}
+
 /* Content Grid */
 .impact-content-grid {
   display: grid;
@@ -3817,11 +3940,11 @@ input::placeholder, textarea::placeholder {
 
 /* Panels */
 .impact-panel {
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  background: var(--admin-surface);
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
   overflow: hidden;
-  box-shadow: var(--admin-shadow-sm);
+  box-shadow: none;
 }
 
 .impact-panel-header {
@@ -3829,31 +3952,31 @@ input::placeholder, textarea::placeholder {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  border-bottom: 1px solid var(--admin-border);
-  background: color-mix(in srgb, var(--admin-surface-soft) 44%, var(--admin-surface));
+  border-bottom: 1px solid var(--admin-theme-border);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface));
   padding: 0.85rem 1rem;
 }
 
 .impact-panel-header h2 {
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 1rem;
 }
 
 .impact-saved-pill {
-  border: 1px solid rgba(16, 185, 129, 0.28);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 28%, transparent);
   border-radius: 999px;
-  background: rgba(16, 185, 129, 0.11);
-  color: #047857;
+  background: color-mix(in srgb, var(--admin-theme-primary) 11%, transparent);
+  color: var(--admin-theme-primary-deep);
   padding: 0.22rem 0.55rem;
   font-size: 0.72rem;
   font-weight: 800;
 }
 
 .impact-unsaved-pill {
-  border: 1px solid rgba(245, 158, 11, 0.28);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-gold) 28%, transparent);
   border-radius: 999px;
-  background: rgba(245, 158, 11, 0.11);
-  color: #92400e;
+  background: color-mix(in srgb, var(--admin-theme-gold) 11%, transparent);
+  color: var(--admin-theme-gold);
   padding: 0.22rem 0.55rem;
   font-size: 0.72rem;
   font-weight: 800;
@@ -3875,22 +3998,22 @@ input::placeholder, textarea::placeholder {
 .impact-field {
   display: grid;
   gap: 0.35rem;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   font-size: 0.8rem;
   font-weight: 800;
 }
 
 .impact-field span {
-  color: var(--admin-contrast-soft);
+  color: var(--admin-theme-contrast-soft);
 }
 
 .impact-field input,
 .impact-field textarea {
   width: 100%;
-  border: 1px solid var(--admin-border-strong);
-  border-radius: 8px;
-  background: var(--admin-surface);
-  color: var(--admin-text);
+  border: 1px solid var(--admin-theme-border-strong);
+  border-radius: 6px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -3901,14 +4024,14 @@ input::placeholder, textarea::placeholder {
 .impact-field input:focus,
 .impact-field textarea:focus {
   outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+  border-color: var(--admin-theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
 }
 
 .impact-field input:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  background: var(--admin-bg);
+  background: var(--admin-theme-bg-deep);
 }
 
 .impact-field-wide {
@@ -3923,15 +4046,22 @@ input::placeholder, textarea::placeholder {
 /* Block Editors */
 .impact-blocks-list {
   display: grid;
-  gap: 0;
+  gap: 0.95rem;
+  padding: 1rem;
+  background: var(--admin-theme-surface-soft);
+  border-radius: 8px;
+  border: 1px solid var(--admin-theme-border);
 }
 
 .impact-block-editor {
-  border-bottom: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  overflow: hidden;
 }
 
 .impact-block-editor:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid var(--admin-theme-border);
 }
 
 .impact-block-header {
@@ -3939,9 +4069,9 @@ input::placeholder, textarea::placeholder {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 1rem;
-  background: color-mix(in srgb, var(--admin-surface-soft) 44%, var(--admin-surface));
-  border-bottom: 1px solid var(--admin-border);
+  padding: 0.75rem 0.85rem;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
+  border-bottom: 1px solid var(--admin-theme-border);
 }
 
 .impact-block-heading {
@@ -3953,30 +4083,34 @@ input::placeholder, textarea::placeholder {
 .impact-block-number {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #10b981, #047857);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.74rem;
+  font-weight: 900;
   flex-shrink: 0;
 }
 
 .impact-block-heading h3 {
   margin: 0;
-  color: var(--admin-contrast);
-  font-size: 0.92rem;
+  color: var(--admin-theme-contrast);
+  font-size: 0.94rem;
+  font-weight: 900;
 }
 
 .impact-block-heading p {
-  color: var(--admin-muted);
-  font-size: 0.78rem;
+  color: var(--admin-theme-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin: 0;
 }
 
 .impact-block-actions {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.5rem;
 }
 
 .impact-icon-btn {
@@ -3984,35 +4118,36 @@ input::placeholder, textarea::placeholder {
   place-items: center;
   width: 32px;
   height: 32px;
-  border: 1px solid var(--admin-border);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
   border-radius: 6px;
-  background: var(--admin-surface);
-  color: var(--admin-muted);
+  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
+  color: var(--admin-theme-contrast);
   cursor: pointer;
   transition: all 0.18s ease;
 }
 
 .impact-icon-btn:hover:not(:disabled) {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.08);
-  color: #047857;
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
   transform: translateY(-1px);
 }
 
 .impact-icon-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.55;
   cursor: not-allowed;
   transform: none;
 }
 
 .impact-icon-btn.danger {
-  border-color: rgba(220, 38, 38, 0.3);
-  color: #dc2626;
+  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
+  color: var(--admin-theme-danger);
 }
 
 .impact-icon-btn.danger:hover:not(:disabled) {
-  border-color: #dc2626;
-  background: #dc2626;
+  border-color: var(--admin-theme-danger);
+  background: var(--admin-theme-danger);
   color: #ffffff;
 }
 
@@ -4038,29 +4173,29 @@ input::placeholder, textarea::placeholder {
 .impact-items-label {
   font-size: 0.8rem;
   font-weight: 800;
-  color: var(--admin-contrast-soft);
+  color: var(--admin-theme-contrast-soft);
 }
 
 .impact-items-hint {
   display: block;
   font-weight: 600;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   font-size: 0.75rem;
   margin-top: 0.15rem;
 }
 
 .impact-items-hint code {
-  background: var(--admin-bg);
+  background: var(--admin-theme-surface-soft);
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
   font-size: 0.72rem;
 }
 
 .impact-toggle-btn {
-  border: 1px solid var(--admin-border-strong);
+  border: 1px solid var(--admin-theme-border-strong);
   border-radius: 6px;
-  background: var(--admin-surface);
-  color: var(--admin-muted);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-muted);
   padding: 0.35rem 0.65rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -4069,17 +4204,17 @@ input::placeholder, textarea::placeholder {
 }
 
 .impact-toggle-btn:hover {
-  border-color: #10b981;
-  color: #047857;
-  background: rgba(16, 185, 129, 0.06);
+  border-color: var(--admin-theme-primary);
+  color: var(--admin-theme-primary-deep);
+  background: color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface));
 }
 
 .impact-raw-textarea {
   width: 100%;
-  border: 1px solid var(--admin-border-strong);
-  border-radius: 8px;
-  background: var(--admin-surface);
-  color: var(--admin-text);
+  border: 1px solid var(--admin-theme-border-strong);
+  border-radius: 6px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
   font: inherit;
   font-size: 0.88rem;
   font-weight: 600;
@@ -4091,8 +4226,8 @@ input::placeholder, textarea::placeholder {
 
 .impact-raw-textarea:focus {
   outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+  border-color: var(--admin-theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
 }
 
 /* Table */
@@ -4105,14 +4240,14 @@ input::placeholder, textarea::placeholder {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 8px;
   overflow: hidden;
   font-size: 0.85rem;
 }
 
 .impact-table thead {
-  background: color-mix(in srgb, var(--admin-surface-soft) 60%, var(--admin-surface));
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface));
 }
 
 .impact-table th {
@@ -4122,13 +4257,13 @@ input::placeholder, textarea::placeholder {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--admin-muted);
-  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-theme-muted);
+  border-bottom: 1px solid var(--admin-theme-border);
 }
 
 .impact-table td {
   padding: 0.35rem 0.4rem;
-  border-bottom: 1px solid var(--admin-border);
+  border-bottom: 1px solid var(--admin-theme-border);
 }
 
 .impact-table tbody tr:last-child td {
@@ -4136,7 +4271,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .impact-table tbody tr:hover {
-  background: rgba(16, 185, 129, 0.03);
+  background: color-mix(in srgb, var(--admin-theme-primary) 3%, transparent);
 }
 
 .impact-table td input {
@@ -4144,7 +4279,7 @@ input::placeholder, textarea::placeholder {
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
-  color: var(--admin-text);
+  color: var(--admin-theme-text);
   font: inherit;
   font-size: 0.85rem;
   padding: 0.4rem 0.5rem;
@@ -4152,16 +4287,82 @@ input::placeholder, textarea::placeholder {
 }
 
 .impact-table td input:hover {
-  border-color: var(--admin-border);
-  background: var(--admin-surface);
+  border-color: var(--admin-theme-border);
+  background: var(--admin-theme-surface);
 }
 
 .impact-table td input:focus {
   outline: none;
-  border-color: #10b981;
-  background: var(--admin-surface);
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.12);
+  border-color: var(--admin-theme-primary);
+  background: var(--admin-theme-surface);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
 }
+
+.impact-image-cell-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.impact-image-cell-group input {
+  flex: 1;
+  min-width: 0;
+}
+
+.impact-cell-image-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-theme-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--admin-theme-bg);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.impact-cell-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.impact-cell-image-thumb .thumb-placeholder {
+  color: var(--admin-theme-muted);
+  opacity: 0.6;
+}
+
+.cell-upload-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-theme-border-strong);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.cell-upload-btn:hover:not(.loading) {
+  border-color: var(--admin-theme-primary);
+  color: var(--admin-theme-primary-deep);
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
+  transform: translateY(-1px);
+}
+
+.cell-upload-btn.loading {
+  cursor: not-allowed;
+  opacity: 0.55;
+  border-color: var(--admin-theme-border);
+}
+
 
 .impact-table .col-drag {
   width: 36px;
@@ -4186,7 +4387,7 @@ input::placeholder, textarea::placeholder {
   height: 16px;
   border: none;
   background: transparent;
-  color: var(--admin-muted-light);
+  color: var(--admin-theme-muted);
   cursor: pointer;
   font-size: 8px;
   line-height: 1;
@@ -4194,7 +4395,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .impact-arrow-btn:hover:not(:disabled) {
-  color: #047857;
+  color: var(--admin-theme-primary-deep);
 }
 
 .impact-arrow-btn:disabled {
@@ -4210,14 +4411,14 @@ input::placeholder, textarea::placeholder {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--admin-muted-light);
+  color: var(--admin-theme-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .impact-delete-row-btn:hover {
-  background: rgba(220, 38, 38, 0.08);
-  color: #dc2626;
+  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
+  color: var(--admin-theme-danger);
 }
 
 .impact-add-row-btn {
@@ -4234,7 +4435,7 @@ input::placeholder, textarea::placeholder {
   align-items: center;
   gap: 0.6rem;
   padding: 2.5rem 1rem;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   text-align: center;
 }
 
@@ -4243,45 +4444,17 @@ input::placeholder, textarea::placeholder {
   font-weight: 700;
 }
 
-/* Dark Mode */
-:global(.admin-dark) .impact-eyebrow,
-:global(.admin-dark) .impact-kicker {
-  color: #34d399;
-}
-
-:global(.admin-dark) .impact-block-number {
-  background: linear-gradient(135deg, #10b981, #059669);
-}
-
+/* Dark Mode overrides */
 :global(.admin-dark) .impact-saved-pill {
-  color: #34d399;
-  border-color: rgba(52, 211, 153, 0.28);
-  background: rgba(52, 211, 153, 0.11);
+  color: var(--admin-theme-primary-deep);
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--admin-theme-primary) 11%, transparent);
 }
 
 :global(.admin-dark) .impact-unsaved-pill {
-  color: #fbbf24;
-  border-color: rgba(251, 191, 36, 0.28);
-  background: rgba(251, 191, 36, 0.11);
-}
-
-:global(.admin-dark) .impact-field input:focus,
-:global(.admin-dark) .impact-field textarea:focus,
-:global(.admin-dark) .impact-raw-textarea:focus,
-:global(.admin-dark) .impact-table td input:focus {
-  border-color: #34d399;
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
-}
-
-:global(.admin-dark) .impact-toggle-btn:hover {
-  border-color: #34d399;
-  color: #34d399;
-}
-
-:global(.admin-dark) .impact-icon-btn:hover:not(:disabled) {
-  border-color: #34d399;
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.1);
+  color: var(--admin-theme-gold);
+  border-color: color-mix(in srgb, var(--admin-theme-gold) 28%, transparent);
+  background: color-mix(in srgb, var(--admin-theme-gold) 11%, transparent);
 }
 
 /* Responsive */
