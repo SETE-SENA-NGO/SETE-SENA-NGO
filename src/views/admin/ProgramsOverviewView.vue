@@ -99,9 +99,8 @@ const form2 = reactive({
 })
 
 const quickLinks = [
-  { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'emerald' },
-  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
-  { title: 'Impact Stories', desc: 'Publish success stories', to: '/admin/modules/impact-stories', color: 'violet' },
+  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber', external: false },
+  { title: 'Open Live Page', desc: 'View the published Programs page', to: '', color: 'blue', external: true },
 ]
 
 // ── Editing state — only one box editable at a time ─────────
@@ -366,8 +365,7 @@ onMounted(() => {
 
         <!-- CONTENT GRID -->
         <div class="content-grid">
-          <div class="content-main">
-            <!-- Quick Links (unchanged) -->
+            <!-- Quick Links -->
             <section v-if="!anyEditing" class="card-section">
               <div class="card-hdr">
                 <div class="card-hdr-left">
@@ -377,19 +375,31 @@ onMounted(() => {
               </div>
               <div class="card-body">
                 <div class="links-grid">
-                  <RouterLink v-for="link in quickLinks" :key="link.title" :to="link.to" class="link-card" :class="'link-' + link.color">
-                    <span class="link-icon">
-                      <svg v-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      <svg v-else-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                      <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                      <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                    </span>
-                    <div class="link-text">
-                      <strong>{{ link.title }}</strong>
-                      <small>{{ link.desc }}</small>
-                    </div>
-                    <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                  </RouterLink>
+                  <template v-for="link in quickLinks" :key="link.title">
+                    <a v-if="link.external" :href="publicPageUrl" target="_blank" rel="noopener noreferrer" class="link-card" :class="'link-' + link.color">
+                      <span class="link-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      </span>
+                      <div class="link-text">
+                        <strong>{{ link.title }}</strong>
+                        <small>{{ link.desc }}</small>
+                      </div>
+                      <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                    <RouterLink v-else :to="link.to" class="link-card" :class="'link-' + link.color">
+                      <span class="link-icon">
+                        <svg v-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <svg v-else-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                      </span>
+                      <div class="link-text">
+                        <strong>{{ link.title }}</strong>
+                        <small>{{ link.desc }}</small>
+                      </div>
+                      <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </RouterLink>
+                  </template>
                 </div>
               </div>
             </section>
@@ -405,23 +415,32 @@ onMounted(() => {
                 <button v-if="goalsEditing" class="card-hdr-link" type="button" @click="toggleGoals">Done</button>
               </div>
               <div class="card-body">
-                <!-- compact view — now shows what we do / why it matters / quote,
-                     matching every field rendered on the public Programs page -->
+                <!-- compact view — now mirrors the public page: intro, what we do,
+                     why it matters, and quote all show at a glance -->
                 <div v-if="!goalsEditing" class="highlights-grid">
-                  <div v-for="goal in goals" :key="goal.title" class="hcard-full">
-                    <span class="hcard-tag">{{ goal.tag }}</span>
-                    <strong class="hcard-title">{{ goal.title }}</strong>
-                    <p class="hcard-intro">{{ goal.intro }}</p>
+                  <div v-for="goal in goals" :key="goal.title" class="hcard" :class="'hcard-' + goal.color">
+                    <div class="hcard-top">
+                      <span class="hcard-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                      </span>
+                      <span class="hcard-count">{{ goal.tag }}</span>
+                    </div>
+                    <div class="hcard-body">
+                      <strong>{{ goal.title }}</strong>
+                      <small>{{ goal.intro }}</small>
 
-                    <div class="hcard-divider"></div>
+                      <div v-if="goal.whatWeDo" class="hcard-detail">
+                        <span class="hcard-detail-label">What we do</span>
+                        <p>{{ goal.whatWeDo }}</p>
+                      </div>
 
-                    <span class="hcard-label">What we do</span>
-                    <p class="hcard-text">{{ goal.whatWeDo }}</p>
+                      <div v-if="goal.whyItMatters" class="hcard-detail">
+                        <span class="hcard-detail-label">Why it matters</span>
+                        <p>{{ goal.whyItMatters }}</p>
+                      </div>
 
-                    <span class="hcard-label">Why it matters</span>
-                    <p class="hcard-text">{{ goal.whyItMatters }}</p>
-
-                    <blockquote class="hcard-quote">"{{ goal.quote }}"</blockquote>
+                      <blockquote v-if="goal.quote" class="hcard-quote">"{{ goal.quote }}"</blockquote>
+                    </div>
                   </div>
                 </div>
 
@@ -493,29 +512,6 @@ onMounted(() => {
                 </div>
               </div>
             </section>
-          </div>
-
-          <!-- SIDEBAR (unchanged) -->
-          <aside v-if="!anyEditing" class="content-side">
-            <div class="side-card">
-              <div class="side-card-hdr">
-                <span class="side-card-badge">Manage</span>
-                <h3>Page controls</h3>
-              </div>
-              <RouterLink class="side-btn" to="/admin/modules/programs">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                Program records
-              </RouterLink>
-              <RouterLink class="side-btn" to="/admin/media">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                Media library
-              </RouterLink>
-              <a class="side-btn" :href="publicPageUrl" target="_blank" rel="noopener noreferrer">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                Open live page
-              </a>
-            </div>
-          </aside>
         </div>
       </main>
     </div>
@@ -654,11 +650,8 @@ onMounted(() => {
 
 /* ─── CONTENT GRID ─── */
 .content-grid {
-  display: grid; grid-template-columns: minmax(0,1fr) 260px;
-  gap: 1.25rem; margin-top: 1.25rem; align-items: start;
+  display: grid; gap: 1.25rem; margin-top: 1.25rem;
 }
-.content-main { display: grid; gap: 1.25rem; }
-.content-side { display: grid; gap: 0.85rem; position: sticky; top: calc(60px + 1.25rem); }
 
 /* ─── CARD ─── */
 .card-section {
@@ -685,89 +678,51 @@ onMounted(() => {
 .card-body { padding: 1rem 1.2rem 1.2rem; }
 
 /* ─── LINKS GRID ─── */
-.links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; }
+.links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.9rem; }
 .link-card {
-  display: flex; align-items: center; gap: 0.7rem;
-  padding: 0.75rem 0.85rem; border-radius: var(--radius-md);
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 1rem 1.1rem; border-radius: var(--radius-md);
   border: 1px solid var(--border); background: var(--surface);
   text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
-.link-card:hover { border-color: var(--border-s); }
+.link-card:hover {
+  border-color: var(--border-s);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -12px rgba(10,20,45,0.18);
+}
 .link-icon {
-  width: 36px; height: 36px; display: grid; place-items: center;
-  border-radius: var(--radius-sm); flex-shrink: 0;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: var(--radius-md); flex-shrink: 0;
 }
 .link-blue .link-icon { background: var(--blue-soft); color: var(--blue); }
 .link-emerald .link-icon { background: var(--emerald-soft); color: var(--emerald); }
 .link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
 .link-violet .link-icon { background: var(--violet-soft); color: var(--violet); }
 .link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 800; margin-bottom: 1px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-arrow { flex-shrink: 0; color: var(--muted); }
+.link-text strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 800; margin-bottom: 2px; }
+.link-text small { display: block; color: var(--muted); font-size: 0.76rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.15s ease; }
+.link-card:hover .link-arrow { transform: translateX(2px); color: var(--contrast); }
 
 /* ─── HIGHLIGHTS GRID (compact view of Our programs) ─── */
 .highlights-grid {
   display: grid; grid-template-columns: repeat(2,1fr); gap: 0.75rem;
 }
-
-/* ─── FULL DETAIL CARD — mirrors goal.whatWeDo / whyItMatters / quote
-   as they appear on the public Programs page ─── */
-.hcard-full {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  padding: 1rem 1.15rem;
+.hcard {
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--surface); overflow: hidden;
 }
-.hcard-tag {
-  display: block;
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+.hcard-blue { --hc: var(--blue); }
+.hcard-emerald { --hc: var(--emerald); }
+.hcard-amber { --hc: var(--amber); }
+.hcard-violet { --hc: var(--violet); }
+.hcard-slate { --hc: var(--slate); }
+.hcard-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--border);
 }
-.hcard-title {
-  display: block;
-  color: var(--contrast);
-  font-size: 1.05rem;
-  font-weight: 800;
-  margin: 0.35rem 0 0.4rem;
-}
-.hcard-intro {
-  margin: 0 0 0.7rem;
-  color: var(--text);
-  font-size: 0.85rem;
-  line-height: 1.55;
-}
-.hcard-divider {
-  border-top: 1px solid var(--border);
-  margin: 0.5rem 0 0.75rem;
-}
-.hcard-label {
-  display: block;
-  color: var(--blue);
-  font-weight: 700;
-  font-size: 0.8rem;
-  margin-bottom: 0.2rem;
-}
-.hcard-text {
-  margin: 0 0 0.7rem;
-  color: var(--text);
-  font-size: 0.85rem;
-  line-height: 1.55;
-}
-.hcard-quote {
-  margin: 0.7rem 0 0;
-  padding-left: 0.75rem;
-  border-left: 2px solid var(--blue);
-  font-style: italic;
-  color: var(--muted);
-  font-size: 0.83rem;
-  line-height: 1.5;
-}
-
-/* ─── shared icon/tag styles still used inside the edit-form header ─── */
 .hcard-icon {
   width: 26px; height: 26px; display: grid; place-items: center;
   border-radius: 6px;
@@ -779,6 +734,43 @@ onMounted(() => {
   padding: 0.1rem 0.4rem; border-radius: 999px;
   background: var(--surface); border: 1px solid var(--border);
 }
+.hcard-body { padding: 0.5rem 0.7rem 0.7rem; display: grid; gap: 0.15rem; }
+.hcard-body strong { color: var(--contrast); font-size: 0.8rem; font-weight: 800; }
+.hcard-body small { color: var(--muted); font-size: 0.7rem; font-weight: 600; line-height: 1.4; }
+
+/* ─── NEW: expanded detail blocks inside the compact goal card
+       (what we do / why it matters / quote) — mirrors the public
+       Programs page content so admins can preview it at a glance ─── */
+.hcard-detail {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+}
+.hcard-detail-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--hc, var(--blue));
+  margin-bottom: 0.15rem;
+}
+.hcard-detail p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.hcard-quote {
+  margin: 0.55rem 0 0;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--hc, var(--blue));
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.5;
+}
 
 /* ─── GOAL EDIT LIST (full editable form: title, intro, what we do, why it matters, quote) ─── */
 .goal-edit-list { display: grid; gap: 1rem; }
@@ -786,37 +778,10 @@ onMounted(() => {
   border: 1px solid var(--border); border-radius: var(--radius-lg);
   padding: 0.9rem 1rem 1.1rem;
 }
-.goal-edit-block.hcard-blue { --hc: var(--blue); }
-.goal-edit-block.hcard-emerald { --hc: var(--emerald); }
-.goal-edit-block.hcard-amber { --hc: var(--amber); }
-.goal-edit-block.hcard-violet { --hc: var(--violet); }
 .goal-edit-hdr {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 0.75rem;
 }
-
-/* ─── SIDEBAR ─── */
-.side-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 0.85rem;
-}
-.side-card-hdr { display: grid; gap: 0.15rem; margin-bottom: 0.7rem; }
-.side-card-badge {
-  font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue);
-}
-.side-card-hdr h3 { margin: 0; color: var(--contrast); font-size: 0.85rem; font-weight: 800; }
-
-.side-btn {
-  display: flex; align-items: center; gap: 0.45rem;
-  padding: 0.45rem 0.6rem; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); background: var(--surface);
-  color: var(--text); font-size: 0.78rem; font-weight: 700;
-  text-decoration: none;
-  margin-bottom: 0.3rem;
-}
-.side-btn:last-child { margin-bottom: 0; }
-.side-btn:hover { border-color: var(--border-s); color: var(--contrast); }
 
 /* ─── PRIORITY VIEW LIST (compact, "How we keep the tree alive") ─── */
 .priority-view-list { display: grid; gap: 0.5rem; }
@@ -866,12 +831,11 @@ onMounted(() => {
 
 /* ─── RESPONSIVE ─── */
 @media (min-width: 900px) { .edu-dash.sidebar-open { padding-left: 260px; } }
-@media (max-width: 1100px) {
-  .content-grid { grid-template-columns: 1fr; }
-  .content-side { position: static; }
-}
 @media (max-width: 900px) {
   .banner-stats { grid-template-columns: repeat(2,1fr); }
+  .links-grid { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 560px) {
   .links-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {

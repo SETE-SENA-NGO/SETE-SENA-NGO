@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { imageUrls } from '@/lib/imageUrls'
+import { supabase } from '@/lib/supabase'
 
 interface ProgramGoal {
   number: string
@@ -13,7 +14,7 @@ interface ProgramGoal {
   image: string
 }
 
-const goals: ProgramGoal[] = [
+const DEFAULT_GOALS: ProgramGoal[] = [
   {
     number: '01',
     tag: 'GOAL 01',
@@ -70,28 +71,23 @@ const goals: ProgramGoal[] = [
   },
 ]
 
-const priorities = [
-  {
-    title: 'Strengthened governance and accountability',
-    icon: 'shield',
-  },
-  {
-    title: 'Staff and volunteer development',
-    icon: 'users',
-  },
-  {
-    title: 'Income and funding diversification',
-    icon: 'sprout',
-  },
-  {
-    title: 'Research and knowledge management',
-    icon: 'book',
-  },
-  {
-    title: 'Public advocacy',
-    icon: 'megaphone',
-  },
-]
+const defaultIcons = ['shield', 'users', 'sprout', 'book', 'megaphone'] as const
+
+const goals = ref<ProgramGoal[]>(structuredClone(DEFAULT_GOALS))
+
+const priorities = ref<{ title: string; icon: string }[]>([
+  { title: 'Strengthened governance and accountability', icon: 'shield' },
+  { title: 'Staff and volunteer development', icon: 'users' },
+  { title: 'Income and funding diversification', icon: 'sprout' },
+  { title: 'Research and knowledge management', icon: 'book' },
+  { title: 'Public advocacy', icon: 'megaphone' },
+])
+
+const bannerEyebrow = ref('Our Programs')
+const bannerHeadline = ref('Four roots. One tree of peace.')
+const bannerIntro = ref(
+  "Santi Sena's work follows four interwoven strategic goals: environment, education, livelihoods and child protection, each delivered with and by the communities themselves.",
+)
 
 // Inline SVG icons — no external icon package required.
 // Line-style icons using currentColor so they inherit the .priority-icon color.
@@ -101,6 +97,67 @@ const priorityIconSvg: Record<string, string> = {
   sprout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10c0-3 2-5 5-5 0 3-2 5-5 5z"/><path d="M12 13c0-3-2-5-5-5 0 3 2 5 5 5z"/></svg>`,
   book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"/></svg>`,
   megaphone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l3 5V6l-3 5H5a2 2 0 0 0-2 2z"/><path d="M13 8a4 4 0 0 1 0 8"/><path d="M17 6a8 8 0 0 1 0 12"/></svg>`,
+}
+
+async function loadFromSupabase() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('body')
+      .eq('slug', 'programs')
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data?.body) return
+
+    const parsed = JSON.parse(data.body)
+    if (parsed?.kind !== 'santi-sena-page-content') return
+
+    if (typeof parsed.eyebrow === 'string' && parsed.eyebrow) {
+      bannerEyebrow.value = parsed.eyebrow
+    }
+    if (typeof parsed.headline === 'string' && parsed.headline) {
+      bannerHeadline.value = parsed.headline
+    }
+    if (typeof parsed.intro === 'string' && parsed.intro) {
+      bannerIntro.value = parsed.intro
+    }
+
+    const goalsSection = parsed.sections?.find((s: { id: string }) => s.id === 'programs-goals')
+    if (goalsSection?.items) {
+      try {
+        const loadedGoals = JSON.parse(goalsSection.items)
+        if (Array.isArray(loadedGoals)) {
+          goals.value = DEFAULT_GOALS.map((g, i) => {
+            const src = loadedGoals[i] as Record<string, unknown> | undefined
+            return {
+              ...g,
+              tag: typeof src?.tag === 'string' ? src.tag : g.tag,
+              title: typeof src?.title === 'string' ? src.title : g.title,
+              intro: typeof src?.intro === 'string' ? src.intro : g.intro,
+              whatWeDo: typeof src?.whatWeDo === 'string' ? src.whatWeDo : g.whatWeDo,
+              whyItMatters: typeof src?.whyItMatters === 'string' ? src.whyItMatters : g.whyItMatters,
+              quote: typeof src?.quote === 'string' ? src.quote : g.quote,
+            }
+          })
+        }
+      } catch {
+        // keep defaults
+      }
+    }
+
+    const prioritiesSection = parsed.sections?.find((s: { id: string }) => s.id === 'programs-priorities')
+    if (prioritiesSection?.items) {
+      const itemsText = String(prioritiesSection.items)
+      const titles: string[] = itemsText.split('\n').filter((line) => line.trim())
+      priorities.value = titles.map((title, i) => ({
+        title,
+        icon: defaultIcons[i] ?? 'shield',
+      }))
+    }
+  } catch {
+    // keep defaults
+  }
 }
 
 // Scroll-triggered reveal: each goal card (and the priorities grid) animates in once visible
@@ -115,6 +172,7 @@ function setCardRef(el: unknown | null, index: number) {
 }
 
 onMounted(() => {
+  void loadFromSupabase()
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -138,6 +196,13 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="programs-page">
+
+    <!-- BANNER -->
+    <section class="programs-intro">
+      <p v-if="bannerEyebrow" class="eyebrow">{{ bannerEyebrow }}</p>
+      <h1>{{ bannerHeadline }}</h1>
+      <p class="programs-intro-body">{{ bannerIntro }}</p>
+    </section>
 
     <!-- GOALS -->
     <section class="goals-wrap">
@@ -204,6 +269,29 @@ onBeforeUnmount(() => {
 .programs-page {
   background: var(--color-cream);
   color: var(--primary-dark);
+}
+
+.programs-intro {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 5rem 3rem 3rem;
+  text-align: center;
+}
+.programs-intro h1 {
+  margin: 0.5rem 0 1.25rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.programs-intro-body {
+  max-width: 760px;
+  margin: 0 auto;
+  color: var(--primary-dark);
+  opacity: 0.85;
+  font-size: 1.05rem;
+  line-height: 1.7;
 }
 
 /* HERO */
