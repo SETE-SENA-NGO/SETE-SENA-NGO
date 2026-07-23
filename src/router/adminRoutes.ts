@@ -4,6 +4,8 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/login', component: () => import('@/views/admin/LoginView.vue'), name: 'admin-login' },
   { path: '/admin', component: () => import('@/views/admin/DashboardView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/pages', component: () => import('@/views/admin/PagesManagerView.vue'), meta: { requiresAuth: true } },
+  // Dedicated Donate admin page (banner, support cards, program areas, contact)
+  { path: '/admin/editor/get-involved-donate', component: () => import('@/views/admin/DonateAdminView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/editor/:slug', component: () => import('@/views/admin/PageEditorView.vue'), meta: { requiresAuth: true } },
   // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
   { path: '/admin/editor/home-slideshow', component: () => import('@/views/admin/PageEditorView.vue'), meta: { requiresAuth: true } },
@@ -15,5 +17,6 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/child-protection', component: () => import('@/views/admin/ChildProtectionDashboardView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/programs', component: () => import('@/views/admin/ProgramsOverviewView.vue'), meta: { requiresAuth: true } },
   { path: '/admin/settings', component: () => import('@/views/admin/SettingsView.vue'), meta: { requiresAuth: true } },
-  { path: '/admin/donate', component: () => import('@/views/admin/DonationLView.vue'), meta: { requiresAuth: true } },
+  // Donation QR codes & bank accounts management — needs its own file created
+
 ]
