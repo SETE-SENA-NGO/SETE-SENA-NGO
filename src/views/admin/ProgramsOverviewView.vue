@@ -4,8 +4,8 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import ImageUploader from '@/components/admin/ImageUploader.vue'
 import { useUiStore } from '@/stores/ui.store'
-import { useMediaStore } from '@/stores/media.store'
 import { supabase } from '@/lib/supabase'
 import {
   explainPageSaveError,
@@ -14,7 +14,6 @@ import {
 } from '@/lib/pagePersistence'
 
 const ui = useUiStore()
-const media = useMediaStore()
 const { locale } = useI18n()
 
 const activeLocale = computed(() => (locale.value === 'kh' ? 'kh' : 'en'))
@@ -23,55 +22,12 @@ const loading = ref(false)
 const saving = ref(false)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 
-// ── Image upload — reuses the same Google Drive upload flow as the
-// Media Library page (media.store.ts → uploadToGoogleDrive → Netlify
-// function /api/google-drive-upload). No separate storage bucket needed.
-const uploadingIndex = ref<number | null>(null)
-const dragIndex = ref<number | null>(null)
-const uploadError = ref<string | null>(null)
-
-async function uploadGoalImage(file: File, index: number) {
-  if (!file.type.startsWith('image/')) {
-    uploadError.value = 'Please choose an image file.'
-    return
-  }
-  uploadingIndex.value = index
-  uploadError.value = null
-  try {
-    const displayName = `${goals[index].title || 'Program goal'} image`
-    const item = await media.uploadToGoogleDrive(file, displayName)
-    goals[index].image = item.url
-    notice.value = {
-      type: 'success',
-      message: 'Image uploaded to Google Drive. Click "Save & view page" to publish it.',
-    }
-  } catch (e: unknown) {
-    console.error('uploadGoalImage error:', e)
-    uploadError.value = e instanceof Error ? e.message : 'Image upload failed.'
-  } finally {
-    uploadingIndex.value = null
-  }
-}
-
-function onFileInputChange(e: Event, index: number) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (file) uploadGoalImage(file, index)
-  input.value = ''
-}
-
-function onImageDrop(e: DragEvent, index: number) {
-  dragIndex.value = null
-  const file = e.dataTransfer?.files?.[0]
-  if (file) uploadGoalImage(file, index)
-}
-
-function onImageDragOver(index: number) {
-  dragIndex.value = index
-}
-
-function onImageDragLeave(index: number) {
-  if (dragIndex.value === index) dragIndex.value = null
+// ── Image upload — reuses the same ImageUploader.vue component as the
+// Donate admin page (Supabase storage via media.store.ts → upload()).
+// Toggle map: which goal's uploader panel is currently open.
+const imageEditorsOpen = reactive<Record<string, boolean>>({})
+function toggleImageEditor(key: string) {
+  imageEditorsOpen[key] = !imageEditorsOpen[key]
 }
 
 // Public route this admin page edits.
@@ -508,7 +464,6 @@ watch(activeLocale, () => {
                       <span class="hcard-count">{{ goal.tag }}</span>
                     </div>
                     <div class="hcard-body">
-                      <img v-if="goal.image" :src="goal.image" class="hcard-thumb" alt="" />
                       <strong>{{ goal.title }}</strong>
                       <small>{{ goal.intro }}</small>
 
@@ -545,36 +500,18 @@ watch(activeLocale, () => {
 
                       <label class="field">
                         <span class="field-label">Image</span>
-                        <div
-                          class="image-upload-box"
-                          :class="{ 'has-image': goal.image, 'is-dragging': dragIndex === index }"
-                          @dragover.prevent="onImageDragOver(index)"
-                          @dragleave.prevent="onImageDragLeave(index)"
-                          @drop.prevent="onImageDrop($event, index)"
-                        >
-                          <img v-if="goal.image" :src="goal.image" class="image-upload-preview" alt="" />
-
-                          <div class="image-upload-inner">
-                            <svg v-if="!goal.image" class="image-upload-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                            <strong>{{ goal.image ? 'Replace Image' : 'Edit Image' }}</strong>
-                            <small>{{ uploadingIndex === index ? 'Uploading…' : 'Choose a file or drag & drop' }}</small>
-
-                            <input
-                              :id="'goal-image-input-' + index"
-                              type="file"
-                              accept="image/*"
-                              class="image-upload-input"
-                              :disabled="uploadingIndex === index"
-                              @change="onFileInputChange($event, index)"
-                            />
-                            <label :for="'goal-image-input-' + index" class="image-upload-btn" :class="{ disabled: uploadingIndex === index }">
-                              <svg v-if="uploadingIndex !== index" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
-                              <svg v-else class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
-                              {{ uploadingIndex === index ? 'Uploading' : 'Upload' }}
-                            </label>
-                          </div>
+                        <div class="image-field-row">
+                          <img v-if="goal.image" :src="goal.image" alt="" class="image-field-thumb" />
+                          <input v-model="goal.image" type="text" placeholder="/images/programs/example.jpg" />
+                          <button type="button" class="edit-image-btn" @click="toggleImageEditor('goal-' + index)">
+                            {{ imageEditorsOpen['goal-' + index] ? 'Close' : 'Upload / Edit image' }}
+                          </button>
                         </div>
-                        <p v-if="uploadError && uploadingIndex === null" class="image-upload-error">{{ uploadError }}</p>
+                        <ImageUploader
+                          v-if="imageEditorsOpen['goal-' + index]"
+                          :model-value="goal.image"
+                          @update:model-value="(url) => (goal.image = url)"
+                        />
                       </label>
 
                       <label class="field">
@@ -642,8 +579,8 @@ watch(activeLocale, () => {
   --surface: #ffffff;
   --border: #e8edf6;
   --border-s: #d4dcee;
-  --text: #1e2a4a;
-  --contrast: #0a142d;
+  --text: #2b54c5;
+  --contrast: #0d9656;
   --muted: #6a7fa0;
   --blue: #2563eb;
   --blue-glow: rgba(37,99,235,0.18);
@@ -669,20 +606,6 @@ watch(activeLocale, () => {
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 
-/* ── FIX: entire selector must be inside :global() together,
-   otherwise Vue's scoped-CSS compiler appends the component's
-   data-v-xxxx attribute to ".admin-dark" too, and since that
-   class lives on <html> (which never gets the attribute) the
-   rule can never match. Wrapping both sides in one :global()
-   call keeps the whole selector unscoped, exactly like the
-   Education page does.
-
-   GREEN ACCENT: --blue / --blue-soft / --blue-glow are set to
-   green here (not blue) so every element that uses the blue
-   accent — badges, breadcrumb link, "Quick access"/"Initiatives"
-   labels, "Edit cards" link, icons — turns green in dark mode,
-   matching the Education dashboard. Light mode keeps its
-   original blue further up in this file. ── */
 :global(.admin-dark .edu-dash) {
   --bg: #080c1a;
   --surface: #0d1f17;
@@ -723,6 +646,8 @@ watch(activeLocale, () => {
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-ghost { background: var(--surface); color: var(--contrast); border-color: var(--border-s); }
 .btn-ghost:hover { background: var(--bg); }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ─── BANNER ─── */
 .dash-banner {
@@ -929,74 +854,6 @@ watch(activeLocale, () => {
   margin-bottom: 0.75rem;
 }
 
-/* ─── IMAGE UPLOAD BOX (goal editor) ─── */
-.image-upload-box {
-  position: relative;
-  border: 1.5px dashed var(--border-s);
-  border-radius: var(--radius-lg);
-  background: var(--slate-soft);
-  padding: 1.5rem 1rem;
-  display: grid;
-  gap: 0.75rem;
-  justify-items: center;
-  text-align: center;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-.image-upload-box.is-dragging {
-  border-color: var(--emerald);
-  background: var(--emerald-soft);
-}
-.image-upload-box.has-image {
-  padding: 0.75rem;
-  justify-items: stretch;
-}
-.image-upload-preview {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-}
-.image-upload-inner {
-  display: grid;
-  gap: 0.3rem;
-  justify-items: center;
-}
-.image-upload-icon {
-  width: 40px; height: 40px;
-  padding: 9px;
-  border-radius: var(--radius-md);
-  background: var(--emerald-soft);
-  color: var(--emerald);
-}
-.image-upload-inner strong { font-size: 0.85rem; font-weight: 800; color: var(--contrast); }
-.image-upload-inner small { font-size: 0.76rem; color: var(--muted); font-weight: 600; margin-bottom: 0.15rem; }
-.image-upload-input {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
-}
-.image-upload-btn {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.45rem 1rem;
-  border-radius: 999px;
-  background: var(--emerald);
-  color: #fff;
-  font-size: 0.8rem; font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-.image-upload-btn:hover { opacity: 0.9; }
-.image-upload-btn.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
-.image-upload-error {
-  margin: 0.35rem 0 0;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #dc2626;
-}
-
 /* ─── PRIORITY VIEW LIST (compact, "How we keep the tree alive") ─── */
 .priority-view-list { display: grid; gap: 0.5rem; }
 .priority-view-row {
@@ -1126,4 +983,18 @@ watch(activeLocale, () => {
 }
 .editor-fields .field input:focus,
 .editor-fields .field textarea:focus { box-shadow: 0 0 0 3px var(--blue-glow); }
+
+/* ─── IMAGE FIELD ROW (matches Donate admin page) ─── */
+.image-field-row { display: flex; align-items: center; gap: 0.5rem; }
+.image-field-row input { flex: 1; }
+.image-field-thumb {
+  width: 40px; height: 40px; object-fit: cover; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); flex-shrink: 0; background: var(--bg);
+}
+.edit-image-btn {
+  flex-shrink: 0; padding: 0.5rem 0.7rem; border: 1px solid var(--border-s); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--blue); font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit;
+  white-space: nowrap;
+}
+.edit-image-btn:hover { background: var(--blue-soft); }
 </style>

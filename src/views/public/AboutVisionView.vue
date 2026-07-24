@@ -4,8 +4,8 @@
     <section class="section vision-section">
       <div class="container">
         <div class="section-header reveal-header">
-          <span class="section-label">Vision</span>
-          <h2>What Santi Sena Strives For</h2>
+          <span class="section-label">{{ visionLabel }}</span>
+          <h2>{{ visionHeading }}</h2>
         </div>
         <div class="vision-grid">
           <div
@@ -42,21 +42,17 @@
       <div class="container">
         <div class="mission-layout">
           <div class="mission-content reveal-left" :class="{ visible: missionVisible }">
-            <span class="section-label">Mission</span>
-            <h2>How The Mission Becomes Practical</h2>
-            <p class="mission-text">
-              Santi Sena alleviates poverty through community-led development rooted in Buddhist
-              ethics. Its work connects moral leadership with practical programs in education,
-              livelihoods, environment and child protection.
-            </p>
-            <ul class="mission-list">
-              <li
-                v-for="(item, i) in missionItems"
-                :key="i"
-                :style="{ '--delay': `${i * 100}ms` }"
-                :class="{ visible: missionVisible }"
-                class="mission-item-animate"
-              >
+            <span class="section-label">{{ missionLabel }}</span>
+             <h2>{{ missionHeading }}</h2>
+             <p class="mission-text">{{ missionBody }}</p>
+             <ul class="mission-list">
+               <li
+                 v-for="(item, i) in missionItems"
+                 :key="i"
+                 :style="{ '--delay': `${i * 100}ms` }"
+                 :class="{ visible: missionVisible }"
+                 class="mission-item-animate"
+               >
                 <svg
                   width="18"
                   height="18"
@@ -95,16 +91,14 @@
     <section class="section values-section">
       <div class="container">
         <div class="section-header reveal-header">
-          <span class="section-label">Core Values</span>
-          <h2>Values That Guide The Work</h2>
-          <p class="section-desc">
-            These values shape how Santi Sena works with communities, donors and partners.
-          </p>
+          <span class="section-label">{{ valueSectionLabel }}</span>
+          <h2>{{ valueSectionHeading }}</h2>
+          <p class="section-desc" v-if="valueSectionDesc">{{ valueSectionDesc }}</p>
         </div>
         <div class="values-grid">
           <div
-            v-for="(val, i) in values"
-            :key="val.number"
+            v-for="(val, i) in displayValues"
+            :key="val.title"
             class="value-item"
             :class="{ 'value-visible': visibleCards.values[i] }"
             :style="{ '--delay': `${i * 100}ms` }"
@@ -174,11 +168,13 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { supabase } from '@/lib/supabase'
 
-/* ─── Data ─────────────────────────────────────── */
-const visionCards = [
+const PAGE_SLUG = 'about-vision'
+
+const defaultVisionCards = [
   {
     title: 'Peace With Justice',
     text: 'A Cambodia where peace, justice and harmony are lived in daily village life, not only written in plans.',
@@ -196,12 +192,117 @@ const visionCards = [
   },
 ]
 
-const missionItems = [
+const visionLabel = ref('Vision')
+const visionHeading = ref('What Santi Sena Strives For')
+const visionCards = ref([...defaultVisionCards])
+
+const valueSectionLabel = ref('Core Values')
+const valueSectionHeading = ref('Values That Guide The Work')
+const valueSectionDesc = ref(
+  'These values shape how Santi Sena works with communities, donors and partners.',
+)
+
+const missionLabel = ref('Mission')
+const missionHeading = ref('How The Mission Becomes Practical')
+const missionBody = ref(
+  'Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics. Its work connects moral leadership with practical programs in education, livelihoods, environment and child protection.',
+)
+const missionItems = ref([
   'Work with monks, villagers, local government and schools',
   'Strengthen education, savings groups and rural livelihoods',
   'Protect children from trafficking, unsafe migration and exploitation',
   'Preserve community forests, water resources and local resilience',
-]
+])
+
+function applyCmsContent(body: string) {
+  try {
+    const parsed = JSON.parse(body)
+    if (parsed?.kind === 'santi-sena-page-content') {
+      const striveSection = parsed.sections?.find((s: any) => s.id === 'vision-strive')
+      if (striveSection) {
+        if (striveSection.label) visionLabel.value = striveSection.label
+        if (striveSection.heading) visionHeading.value = striveSection.heading
+        if (striveSection.items) {
+          const lines = striveSection.items.split('\n').filter((line: string) => line.trim())
+          if (lines.length > 0) {
+            visionCards.value = lines.map((line: string, i: number) => {
+              const [title, ...rest] = line.split('|').map((p: string) => p.trim())
+              return {
+                title: title || line,
+                text: rest.join(' | ') || title || line,
+                svgPaths: defaultVisionCards[i]?.svgPaths || defaultVisionCards[0].svgPaths,
+              }
+            })
+          }
+        }
+      }
+
+      const missionSection = parsed.sections?.find((s: any) => s.id === 'mission-content')
+      if (missionSection) {
+        if (missionSection.label) missionLabel.value = missionSection.label
+        if (missionSection.heading) missionHeading.value = missionSection.heading
+        if (missionSection.body) missionBody.value = missionSection.body
+        if (missionSection.items) {
+          const lines = missionSection.items.split('\n').filter((l: string) => l.trim())
+          if (lines.length) missionItems.value = lines.map((l: string) => l.trim())
+        }
+      }
+
+      const guidesSection = parsed.sections?.find((s: any) => s.id === 'vision-guides')
+      if (guidesSection) {
+        if (guidesSection.label) valueSectionLabel.value = guidesSection.label
+        if (guidesSection.heading) valueSectionHeading.value = guidesSection.heading
+        if (guidesSection.items) {
+          const lines = guidesSection.items.split('\n').filter((l: string) => l.trim())
+          if (lines.length) {
+            displayValues.value = lines.map((line: string, i: number) => {
+              const trimmed = line.trim()
+              if (trimmed.includes('|')) {
+                const [title, ...rest] = trimmed.split('|').map((p: string) => p.trim())
+                return {
+                  number: String(i + 1).padStart(2, '0'),
+                  title: title || trimmed,
+                  text: rest.join(' | '),
+                }
+              }
+              const commaIdx = trimmed.indexOf(',')
+              if (commaIdx > 0 && commaIdx < 30) {
+                return {
+                  number: String(i + 1).padStart(2, '0'),
+                  title: trimmed.slice(0, commaIdx).trim(),
+                  text: trimmed.slice(commaIdx + 1).trim(),
+                }
+              }
+              return {
+                number: String(i + 1).padStart(2, '0'),
+                title: trimmed,
+                text: '',
+              }
+            })
+            visibleCards.values = Array(lines.length).fill(false)
+          }
+        }
+      }
+    }
+  } catch {
+    // keep fallback
+  }
+}
+
+async function loadPageContentFromCms() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('body')
+      .eq('slug', PAGE_SLUG)
+      .maybeSingle()
+
+    if (error) throw error
+    if (data?.body) applyCmsContent(data.body)
+  } catch {
+    // keep fallback
+  }
+}
 
 const statsRaw = [
   { label: 'Founded', end: 1994, suffix: '' },
@@ -214,17 +315,19 @@ const stats = reactive(
   statsRaw.map(s => ({ ...s, displayed: s.end + s.suffix }))
 )
 
-const values = [
+const defaultValues = [
   { number: '01', title: 'Honesty', text: 'Clear communication and transparent relationships with donors, communities, partners and staff.' },
   { number: '02', title: 'Non-discrimination', text: 'Respect for people across disability, religion, background, race, community status and political belief.' },
   { number: '03', title: 'Collective Benefit', text: 'Organizational resources and knowledge are used for shared benefit, not private advantage.' },
   { number: '04', title: 'Flexibility', text: 'Plans adapt to community feedback, partner advice, available resources and real field needs.' },
 ]
 
+const displayValues = ref([...defaultValues])
+
 /* ─── Visibility state ─────────────────────────── */
 const visibleCards = reactive({
-  vision: Array(visionCards.length).fill(false),
-  values: Array(values.length).fill(false),
+  vision: Array(defaultVisionCards.length).fill(false),
+  values: Array(defaultValues.length).fill(false),
 })
 const missionVisible = ref(false)
 const statsVisible = ref(false)
@@ -275,8 +378,62 @@ function animateCounter(statObj) {
   requestAnimationFrame(tick)
 }
 
+/* ─── Real-time subscription ────────────────────── */
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+
+function setupRealtimeSubscription() {
+  realtimeChannel = supabase
+    .channel('about-vision-changes')
+    .on(
+      'postgres_changes' as any,
+      {
+        event: '*',
+        schema: 'public',
+        table: 'pages',
+        filter: `slug=eq.${PAGE_SLUG}`,
+      },
+      (payload: any) => {
+        if (payload.new?.body) {
+          const body = payload.new.body as string
+          // Reset visibility so animations replay
+          visibleCards.vision = []
+          visibleCards.values = []
+          applyCmsContent(body)
+        }
+      },
+    )
+    .subscribe()
+}
+
+async function reloadContent() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('body')
+      .eq('slug', PAGE_SLUG)
+      .maybeSingle()
+
+    if (error) throw error
+    if (data?.body) {
+      applyCmsContent(data.body)
+    }
+  } catch {
+    // silent fallback
+  }
+}
+
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible') {
+    reloadContent()
+  }
+}
+
 /* ─── Mount ─────────────────────────────────────── */
-onMounted(() => {
+onMounted(async () => {
+  await loadPageContentFromCms()
+  setupRealtimeSubscription()
+  document.addEventListener('visibilitychange', onVisibilityChange)
+
   // Vision cards
   cardRefs.vision.forEach((el, i) => {
     observe(el, () => {
@@ -309,7 +466,13 @@ onMounted(() => {
   observe(ctaRef.value, () => { ctaVisible.value = true })
 })
 
-onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
+onBeforeUnmount(() => {
+  observers.forEach(io => io.disconnect())
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel)
+  }
+})
 </script>
 
 <style scoped>

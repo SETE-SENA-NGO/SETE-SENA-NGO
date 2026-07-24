@@ -54,7 +54,7 @@ const pageGroups: PageGroup[] = [
     labelKey: 'admin.sidebar.about',
     items: [
       { slug: 'about-vision', labelKey: 'admin.sidebar.visionMission' },
-      { slug: 'about-organization', labelKey: 'admin.sidebar.organization' },
+      // { slug: 'about-organization', labelKey: 'admin.sidebar.organization' },
     ],
   },
   {

@@ -607,6 +607,11 @@ h1 {
   border-radius: 999px;
 }
 
+:global(.admin-dark) .pending-tag {
+  background: rgba(217, 173, 47, 0.85);
+  color: #0c1f1a;
+}
+
 .qr-actions {
   display: flex;
   flex-wrap: wrap;
@@ -677,6 +682,16 @@ h1 {
 
 .remove-btn:hover {
   background: rgba(225, 29, 72, 0.13);
+}
+
+:global(.admin-dark) .remove-btn {
+  border-color: rgba(251, 113, 133, 0.35);
+  background: rgba(251, 113, 133, 0.08);
+  color: #fb7185;
+}
+
+:global(.admin-dark) .remove-btn:hover {
+  background: rgba(251, 113, 133, 0.18);
 }
 
 .field {
@@ -757,6 +772,10 @@ h1 {
   color: #be123c;
 }
 
+:global(.admin-dark) .save-message.error {
+  color: #fb7185;
+}
+
 .save-btn {
   min-height: 46px;
   border: 1px solid var(--admin-blue);
@@ -815,5 +834,66 @@ h1 {
   h1 {
     font-size: 1.5rem;
   }
+}
+</style>
+
+<!-- Non-scoped dark mode overrides for Donation QR page -->
+<style>
+.admin-dark .admin-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .main {
+  background: #06100F !important;
+}
+.admin-dark .donation-header,
+.admin-dark .method-card {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input:not([type="color"]),
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .field label {
+  color: #c9ddd4 !important;
+}
+.admin-dark .qr-preview {
+  background: #0b1b17 !important;
+  border-color: #2d554a !important;
+}
+.admin-dark .method-switcher {
+  background: #0b1b17 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .switch-tab.active {
+  background: #0a1a14 !important;
+}
+.admin-dark .switch-tab:hover {
+  color: #f2fbf6 !important;
+}
+.admin-dark .card-save-bar {
+  border-color: #1d3b33 !important;
+}
+.admin-dark .save-message.success {
+  color: #74e0ae !important;
 }
 </style>

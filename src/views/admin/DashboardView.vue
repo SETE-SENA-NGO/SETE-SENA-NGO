@@ -258,7 +258,7 @@ function barWidth(value: number, total: number) {
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark .admin-page) {
+:global(.admin-dark) .admin-page {
   --admin-bg: var(--admin-theme-bg);
   --admin-bg-deep: var(--admin-theme-bg-deep);
   --admin-surface: var(--admin-theme-surface);
@@ -270,6 +270,12 @@ function barWidth(value: number, total: number) {
   --admin-border: var(--admin-theme-border);
   --admin-border-strong: var(--admin-theme-border-strong);
   --admin-shadow: var(--admin-theme-shadow);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-violet: var(--admin-theme-teal);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-green: var(--admin-theme-primary);
+  --admin-green-deep: var(--admin-theme-primary-deep);
 }
 
 .admin-layout {
@@ -772,5 +778,27 @@ h2 {
   h1 {
     font-size: 1.75rem;
   }
+}
+</style>
+
+<!-- Non-scoped dark mode override to ensure dark background applies in admin-dark mode -->
+<style>
+.admin-dark .admin-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .main {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .dashboard-card {
+  background: #0a1a14 !important;
+}
+.admin-dark .admin-page .dashboard-panel {
+  background: #0a1a14 !important;
+}
+.admin-dark .admin-page .overview-header {
+  background: #0a1a14 !important;
 }
 </style>
