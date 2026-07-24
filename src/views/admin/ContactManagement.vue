@@ -600,9 +600,23 @@ function normalizeTelegramUrl(value: string): string {
 
 <style scoped>
 .contact-admin {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-primary: var(--admin-theme-primary);
+  --admin-primary-deep: var(--admin-theme-primary-deep);
+  --admin-danger: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
+
   min-height: 100vh;
-  background: var(--admin-theme-bg);
-  color: var(--admin-theme-text);
+  background: var(--admin-bg);
+  color: var(--admin-text);
   transition: padding-left 0.25s ease;
 }
 
@@ -1051,6 +1065,22 @@ function normalizeTelegramUrl(value: string): string {
 
 .office-form-grid {
   padding: 0.9rem;
+}
+
+:global(.admin-dark) .contact-admin {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-primary: var(--admin-theme-primary);
+  --admin-primary-deep: var(--admin-theme-primary-deep);
+  --admin-danger: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 :global(.admin-dark) .btn-primary {

@@ -186,7 +186,7 @@ const adminEmail = ref('')
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark .admin-page) {
+:global(.admin-dark) .admin-page {
   --admin-bg: var(--admin-theme-bg);
   --admin-surface: var(--admin-theme-surface);
   --admin-surface-soft: var(--admin-theme-surface-soft);

@@ -834,6 +834,10 @@ h2 {
   --tone: #64748b;
 }
 
+:global(.admin-dark) .tone-slate {
+  --tone: #94a3b8;
+}
+
 .form-card,
 .table-card {
   margin-top: 1rem;
@@ -913,6 +917,17 @@ textarea {
   color: var(--admin-error);
 }
 
+:global(.admin-dark) .bulk-bar {
+  border-color: rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+:global(.admin-dark) .bulk-bar .danger,
+:global(.admin-dark) .row-actions .danger {
+  border-color: rgba(251, 113, 133, 0.35);
+  color: #fb7185;
+}
+
 .table-wrap {
   overflow-x: auto;
   margin-top: 1rem;
@@ -965,6 +980,11 @@ td small {
   font-weight: 900;
 }
 
+:global(.admin-dark) .thumb {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
 .status {
   display: inline-flex;
   border-radius: 999px;
@@ -986,6 +1006,21 @@ td small {
 .status.archived {
   background: rgba(100, 116, 139, 0.14);
   color: #475569;
+}
+
+:global(.admin-dark) .status.published {
+  background: rgba(74, 222, 128, 0.15);
+  color: #86efac;
+}
+
+:global(.admin-dark) .status.draft {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fcd34d;
+}
+
+:global(.admin-dark) .status.archived {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
 }
 
 .empty-state {
@@ -1025,5 +1060,64 @@ td small {
   .stat-grid {
     grid-template-columns: 1fr;
   }
+}
+</style>
+
+<!-- Non-scoped dark mode overrides for News -->
+<style>
+.admin-dark .admin-module-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-module-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-module-page .module-main {
+  background: #06100F !important;
+}
+.admin-dark .module-hero,
+.admin-dark .stat-card,
+.admin-dark .form-card,
+.admin-dark .table-card {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .module-form {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .thumb {
+  background: #0b1b17 !important;
+}
+.admin-dark .status.published {
+  background: #38c982 !important;
+  color: #06100F !important;
+}
+.admin-dark .status.draft {
+  background: #e0b15a !important;
+  color: #06100F !important;
+}
+.admin-dark .status.archived {
+  background: #fb7185 !important;
+  color: #06100F !important;
 }
 </style>
