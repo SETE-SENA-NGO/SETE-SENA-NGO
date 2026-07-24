@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
+import { useI18n } from 'vue-i18n'
+import { localizeContentValue } from '@/i18n/contentTranslations'
+import type { SupportedLocale } from '@/i18n'
 import { fetchPublishedNews, type NewsArticle } from '@/lib/newsContent'
 
-const newsCertificateImage = imageUrls.news.certificate
-const newsPreschoolImage = imageUrls.news.preschool
-const newsStudentImage = imageUrls.news.student
-const newsWashImage = imageUrls.news.wash
-const newsWaterImage = imageUrls.news.water
-const authorAvatarImage = imageUrls.logo
-
 // ─── Dummy news data ────────────────────────────────────────────────
+const { locale } = useI18n()
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
+
 const newsItems = ref<NewsArticle[]>([
   {
     id: '1',
@@ -20,11 +20,12 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
     content: '',
-    image: newsStudentImage,
+    image: 'src/assets/maps/student.png',
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
-    authorAvatar: authorAvatarImage,
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
     featured: true,
     readTime: '3 min read',
     views: 1247,
@@ -38,11 +39,12 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
     content: '',
-    image: newsWashImage,
+    image: 'src/assets/maps/wash.png',
     date: '2025-02-28',
     category: 'Environment',
     author: 'Santi Sena Environment Team',
-    authorAvatar: authorAvatarImage,
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
     featured: false,
     readTime: '4 min read',
     views: 856,
@@ -56,11 +58,12 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
     content: '',
-    image: newsCertificateImage,
+    image: 'src/assets/maps/certi.png',
     date: '2025-02-10',
     category: 'Child Protection',
     author: 'Santi Sena Child Protection Team',
-    authorAvatar: authorAvatarImage,
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/471173194_2997098380443489_5592666706350897819_n.jpg?stp=dst-jpg_tt6&cstp=mx720x960&ctp=s720x960&_nc_cat=100&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hFP2sKxfXCsQ7kNvwHxLGf8&_nc_oc=Adr2I7CZWYRBJMnV1SK1RvJI7jQtvOTMwhAMXMPMgoshaCbN1E-_7HVYnJEa8CR5z0s&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=YU-fNkdEviJfS6YG5vhw9A&_nc_ss=7b289&oh=00_AQBOG0k1Sd8ESYZKqyeBugQDl05XREVWwbhjzFPRxLasBg&oe=6A5A5B8E',
     featured: false,
     readTime: '2 min read',
     views: 523,
@@ -74,11 +77,12 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
     content: '',
-    image: newsPreschoolImage,
+    image: 'src/assets/maps/pre-school.png',
     date: '2025-01-20',
     category: 'Livelihood',
     author: 'Santi Sena Livelihood Unit',
-    authorAvatar: authorAvatarImage,
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/507567691_3182212525265406_8387750789754024704_n.jpg?stp=dst-jpg_tt6&cstp=mx1944x1458&ctp=s1944x1458&_nc_cat=110&ccb=1-7&_nc_sid=127cfc&_nc_ohc=s3WJgdYbjO4Q7kNvwE5b8SI&_nc_oc=AdrdDhedkIVV6mkk9ih5cSJLHeWED54DAxi2H4pIwJYlNaj-6JgI34iyqZWADDFvsWQ&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=b8h1w67zdj8K6NFZyJh4Sg&_nc_ss=7b289&oh=00_AQAizxgtNDtWvLd331TlORpObCOXJNrw2Y1bdwSocYu7JA&oe=6A5A8424',
     featured: false,
     readTime: '3 min read',
     views: 2134,
@@ -92,11 +96,12 @@ const newsItems = ref<NewsArticle[]>([
     summary:
       'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
     content: '',
-    image: newsWaterImage,
+    image: 'src/assets/maps/water.png',
     date: '2025-01-05',
     category: 'WASH',
     author: 'Santi Sena WASH Team',
-    authorAvatar: authorAvatarImage,
+    authorAvatar:
+      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
     featured: false,
     readTime: '5 min read',
     views: 678,
@@ -111,8 +116,17 @@ const likedArticles = ref<string[]>([])
 const newsletterEmail = ref('')
 
 // Featured + regular articles
-const featuredArticle = computed(() => newsItems.value.find((item) => item.featured))
-const regularArticles = computed(() => newsItems.value.filter((item) => !item.featured))
+const displayedNewsItems = computed(() =>
+  activeLocale.value === 'kh'
+    ? localizeContentValue(newsItems.value, activeLocale.value)
+    : newsItems.value,
+)
+const featuredArticle = computed(() =>
+  displayedNewsItems.value.find((item) => item.featured),
+)
+const regularArticles = computed(() =>
+  displayedNewsItems.value.filter((item) => !item.featured),
+)
 
 // ─── Scroll‑triggered animations ──────────────────────────────────
 const articleRefs = ref<HTMLElement[]>([])
@@ -251,19 +265,21 @@ const shareArticle = (title: string) => {
 }
 
 const subscribeNewsletter = () => {
-  const email = newsletterEmail.value.trim()
-  if (email) {
-    showToastNow(`Subscribed with ${email}!`)
+  if (newsletterEmail.value) {
+    alert(`Subscribed with ${newsletterEmail.value}!`)
     newsletterEmail.value = ''
   }
 }
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  return new Date(dateStr).toLocaleDateString(
+    activeLocale.value === 'kh' ? 'km-KH' : 'en-US',
+    {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    },
+  )
 }
 
 const getInitials = (name: string) => {
@@ -432,7 +448,10 @@ const scrollToTop = () => {
       <div class="section-header">
         <div class="section-header-left">
           <h2 class="section-title">All Stories</h2>
-          <span class="section-count">{{ regularArticles.length }} articles</span>
+          <span class="section-count">
+            {{ regularArticles.length }}
+            {{ activeLocale === 'kh' ? 'អត្ថបទ' : 'articles' }}
+          </span>
         </div>
       </div>
 
@@ -551,8 +570,10 @@ const scrollToTop = () => {
           </div>
           <div class="newsletter-form">
             <input
+              id="newsletter-email"
               type="email"
               v-model="newsletterEmail"
+              name="newsletter-email"
               placeholder="Enter your email"
               class="newsletter-input"
             />
@@ -583,6 +604,13 @@ const scrollToTop = () => {
 
 <style scoped>
 :root {
+  --color-cream: #faf8f5;
+  --color-border: #e8e3dc;
+  --color-ink: #1e1a16;
+  --color-ink-soft: #5a524a;
+  --primary-color: #2d7a5a;
+  --primary-dark: #1a3d2e;
+  --primary-light: #aad6c7;
   --gold: #c9a84c;
   --gold-light: #e8d5a3;
   --gold-glow: rgba(201, 168, 76, 0.15);
@@ -607,7 +635,7 @@ const scrollToTop = () => {
 
 /* ─── BALANCED HERO (shifted right) ────────────────────────── */
 .hero-static {
-  background: linear-gradient(135deg, var(--color-cream), var(--color-white));
+  background: linear-gradient(135deg, #f0f7f4, #ffffff);
   padding: 4rem 1.5rem 3rem;
   border-bottom: 1px solid var(--color-border);
   text-align: left;
@@ -726,11 +754,11 @@ const scrollToTop = () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  background: var(--primary-light);
+  background: #dafff3;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(47, 36, 29, 0.04);
   text-decoration: none;
   color: inherit;
   transition: all var(--transition);
@@ -903,8 +931,6 @@ const scrollToTop = () => {
   padding: 0.5rem 1.5rem 0.5rem 1.8rem;
   border: none;
   border-radius: 999px;
-  background: var(--primary-color);
-  color: var(--color-white);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -919,9 +945,10 @@ const scrollToTop = () => {
 }
 
 .read-more-btn:hover {
-  background: var(--primary-dark);
-  box-shadow: 0 8px 24px rgba(74, 222, 128, 0.3);
+  background: rgb(6, 127, 61);
+  box-shadow: 0 8px 24px rgba(19, 237, 146, 0.3);
   transform: translateY(-2px);
+  color: white;
 }
 
 .read-more-btn:hover svg {
@@ -941,6 +968,8 @@ const scrollToTop = () => {
   cursor: pointer;
   transition: all var(--transition);
   font-family: inherit;
+  color: rgb(255, 255, 255);
+  background: #169c14;
   border-radius: 999px;
 }
 
@@ -948,9 +977,9 @@ const scrollToTop = () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--color-cream-soft);
-  border: 1px solid var(--color-border);
-  color: var(--color-ink);
+  background: rgb(154, 224, 199);
+  border: 1px solid transparent;
+  color: black;
   opacity: 0.6;
   transition: all var(--transition);
 }
@@ -962,14 +991,14 @@ const scrollToTop = () => {
 }
 
 .icon-btn.active {
-  color: #fb7185;
+  color: #ef4444;
   opacity: 1;
-  background: rgba(251, 113, 133, 0.1);
+  background: rgba(239, 68, 68, 0.06);
 }
 
 .icon-btn.active svg {
-  fill: #fb7185;
-  stroke: #fb7185;
+  fill: #ef4444;
+  stroke: #ef4444;
 }
 
 .icon-btn.small {
@@ -1040,12 +1069,13 @@ const scrollToTop = () => {
 
 /* ── Card: initially hidden, pops when scrolled into view ── */
 .news-card {
-  background: var(--color-cream);
+  background: #f9e8e8;
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-border);
   position: relative;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   opacity: 0;
@@ -1243,7 +1273,7 @@ const scrollToTop = () => {
   padding: 2rem 2.5rem;
   background: linear-gradient(135deg, var(--primary-dark), #0b623f);
   border-radius: 20px;
-  color: #ffffff;
+  color: #fff;
   box-shadow: 0 12px 48px rgba(26, 61, 46, 0.2);
   transform: scale(0.88);
   opacity: 0.5;
@@ -1275,7 +1305,7 @@ const scrollToTop = () => {
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0 0 0.15rem;
-  color: #ffffff;
+  color: white;
 }
 
 .newsletter-content p {
@@ -1294,8 +1324,8 @@ const scrollToTop = () => {
   padding: 0.5rem 1.2rem;
   border: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background: rgb(224, 227, 226);
+  color: #050505;
   font-size: 0.85rem;
   min-width: 200px;
   transition: all var(--transition);
@@ -1303,20 +1333,20 @@ const scrollToTop = () => {
 }
 
 .newsletter-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(20, 16, 16, 0.975);
 }
 
 .newsletter-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(236, 221, 221, 0.897);
 }
 
 .newsletter-btn {
   padding: 0.5rem 1.8rem;
   border: none;
   border-radius: 999px;
-  background: #ffffff;
-  color: var(--primary-dark);
+  background: rgb(255, 255, 255);
+  color: rgb(19, 135, 73);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
@@ -1325,9 +1355,10 @@ const scrollToTop = () => {
 }
 
 .newsletter-btn:hover {
-  background: #ffffff;
+  background: rgb(255, 255, 255);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  color: rgb(8, 113, 17);
+  box-shadow: 0 8px 24px rgba(14, 14, 14, 0.25);
 }
 
 /* ── Bottom Actions ── */
@@ -1346,7 +1377,7 @@ const scrollToTop = () => {
   gap: 0.5rem;
   padding: 0.6rem 1.8rem;
   border-radius: 999px;
-  background: var(--color-cream-soft);
+  background: rgb(156, 254, 134);
   color: var(--color-ink-soft);
   font-weight: 600;
   text-decoration: none;
@@ -1375,7 +1406,7 @@ const scrollToTop = () => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--color-white);
+  background: #fff;
   border: 1px solid var(--color-border);
   color: var(--color-ink-soft);
   cursor: pointer;
@@ -1385,7 +1416,7 @@ const scrollToTop = () => {
 
 .scroll-top:hover {
   background: var(--primary-color);
-  color: #ffffff;
+  color: #fff;
   border-color: var(--primary-color);
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(45, 122, 90, 0.2);

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const auth = useAuthStore()
 const ui = useUiStore()
 
@@ -22,39 +25,45 @@ function titleFromSlug(value: string) {
 
 const pageTitle = computed(() => {
   const path = route.path
-  if (path === '/admin' || path === '/admin/') return 'Dashboard'
+  if (path === '/admin' || path === '/admin/') return t('admin.pages.dashboard')
   if (path.startsWith('/admin/editor/')) {
     const slug = path.replace('/admin/editor/', '')
     return titleFromSlug(slug)
   }
-  if (path === '/admin/programs') return 'Programs Overview'
-  if (path === '/admin/education') return 'Education Dashboard'
-  if (path === '/admin/environment') return 'Environment Dashboard'
-  if (path === '/admin/livelihood') return 'Livelihood Dashboard'
-  if (path === '/admin/child-protection') return 'Child Protection Dashboard'
-  if (path === '/admin/media') return 'Media Library'
-  if (path === '/admin/pages') return 'Pages Manager'
-  if (path === '/admin/settings') return 'Settings'
-  if (path === '/admin/login') return 'Login'
+  if (path === '/admin/programs') return t('admin.pages.programsOverview')
+  if (path === '/admin/get-involved') return t('admin.pages.getInvolved')
+  if (path === '/admin/education') return t('admin.pages.educationDashboard')
+  if (path === '/admin/environment')
+    return t('admin.pages.environmentDashboard')
+  if (path === '/admin/livelihood') return t('admin.pages.livelihoodDashboard')
+  if (path === '/admin/child-protection')
+    return t('admin.pages.childProtectionDashboard')
+  if (path === '/admin/media') return t('admin.pages.mediaLibrary')
+  if (path === '/admin/pages') return t('admin.pages.pagesManager')
+  if (path === '/admin/settings') return t('admin.pages.settings')
+  if (path === '/admin/login') return t('admin.pages.login')
   if (path.startsWith('/admin/modules/')) {
     const mod = path.replace('/admin/modules/', '')
     return titleFromSlug(mod)
   }
-  return 'Admin'
+  return t('admin.pages.admin')
 })
 
 const pageContext = computed(() => {
   const path = route.path
-  if (path.startsWith('/admin/editor/')) return 'Website page'
-  if (path === '/admin/programs') return 'Program overview'
-  if (path === '/admin/education') return 'Program management'
-  if (path === '/admin/environment') return 'Program management'
-  if (path === '/admin/livelihood') return 'Program management'
-  if (path === '/admin/child-protection') return 'Program management'
-  if (path.startsWith('/admin/modules/')) return 'Content module'
-  if (path === '/admin/media') return 'Asset library'
-  if (path === '/admin/settings') return 'Preferences'
-  return 'Admin workspace'
+  if (path.startsWith('/admin/editor/')) return t('admin.context.websitePage')
+  if (path === '/admin/programs') return t('admin.context.programOverview')
+  if (path === '/admin/get-involved') return t('admin.context.pageManagement')
+  if (path === '/admin/education') return t('admin.context.programManagement')
+  if (path === '/admin/environment') return t('admin.context.programManagement')
+  if (path === '/admin/livelihood') return t('admin.context.programManagement')
+  if (path === '/admin/child-protection')
+    return t('admin.context.programManagement')
+  if (path.startsWith('/admin/modules/'))
+    return t('admin.context.contentModule')
+  if (path === '/admin/media') return t('admin.context.assetLibrary')
+  if (path === '/admin/settings') return t('admin.context.preferences')
+  return t('admin.context.workspace')
 })
 
 const userInitials = computed(() => {
@@ -70,7 +79,9 @@ const userInitials = computed(() => {
   return 'AD'
 })
 
-const userEmail = computed(() => auth.user?.email || 'Not signed in')
+const userEmail = computed(
+  () => auth.user?.email || t('admin.user.notSignedIn'),
+)
 
 function goToSite() {
   void router.push('/')
@@ -84,7 +95,11 @@ function goToSite() {
         <button
           :class="['sidebar-toggle', { active: ui.sidebarOpen }]"
           type="button"
-          :aria-label="ui.sidebarOpen ? 'Hide sidebar' : 'Show sidebar'"
+          :aria-label="
+            ui.sidebarOpen
+              ? t('admin.actions.hideSidebar')
+              : t('admin.actions.showSidebar')
+          "
           :aria-pressed="ui.sidebarOpen"
           @click="ui.toggleSidebar"
         >
@@ -133,10 +148,11 @@ function goToSite() {
 
       <div class="actions">
         <div class="icon-group">
+          <LanguageSwitcher class="admin-language-switcher" />
           <button
             class="icon-btn view-site-btn"
             type="button"
-            aria-label="View public site"
+            :aria-label="t('admin.actions.viewPublicSite')"
             @click="goToSite"
           >
             <svg
@@ -155,12 +171,18 @@ function goToSite() {
                 d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
               />
             </svg>
-            <span class="icon-btn-label">View Site</span>
+            <span class="icon-btn-label">{{
+              t('admin.actions.viewSite')
+            }}</span>
           </button>
           <button
             class="icon-btn"
             type="button"
-            :aria-label="ui.darkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+            :aria-label="
+              ui.darkMode
+                ? t('admin.actions.lightMode')
+                : t('admin.actions.darkMode')
+            "
             :aria-pressed="ui.darkMode"
             @click="ui.toggleDarkMode"
           >
@@ -228,13 +250,7 @@ function goToSite() {
   color: var(--hdr-text);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
 }
 
 .admin-header-inner {
@@ -346,6 +362,14 @@ function goToSite() {
   gap: 0.35rem;
 }
 
+.admin-language-switcher {
+  --language-switcher-text: var(--hdr-muted);
+  --language-switcher-surface: var(--hdr-surface);
+  --language-switcher-border: var(--hdr-border);
+  --language-switcher-hover: var(--admin-theme-surface-soft);
+  --language-switcher-accent: var(--hdr-primary-deep);
+}
+
 .icon-btn {
   width: 36px;
   height: 36px;
@@ -408,7 +432,11 @@ function goToSite() {
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: linear-gradient(180deg, var(--hdr-primary), var(--hdr-primary-deep));
+  background: linear-gradient(
+    180deg,
+    var(--hdr-primary),
+    var(--hdr-primary-deep)
+  );
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 900;

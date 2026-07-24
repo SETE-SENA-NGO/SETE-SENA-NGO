@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  onUnmounted,
+  ref,
+  shallowRef,
+  watch,
+} from 'vue'
 import type { Component } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { imageUrls } from '@/lib/imageUrls'
+import { useI18n } from 'vue-i18n'
+import { localizeContentValue } from '@/i18n/contentTranslations'
+import type { SupportedLocale } from '@/i18n'
 import { supabase } from '@/lib/supabase'
 import Slideshow from '@/components/shared/Slideshow.vue'
+import { useContentStore } from '@/stores/content.store'
 import {
   parsePublishedPage,
   sectionItems,
@@ -13,22 +23,26 @@ import {
 } from '@/lib/publishedContent'
 
 const route = useRoute()
+const { locale } = useI18n()
+const contentStore = useContentStore()
 const content = ref<PublishedPageContent | null>(null)
 const loaded = ref(false)
 const loadError = ref('')
 const fallbackComponent = shallowRef<Component | null>(null)
-const defaultHeroImageUrl = imageUrls.programs.hero1
-const managedHeroBackground = computed(
-  () => `url(${content.value?.heroImageUrl || defaultHeroImageUrl})`,
-)
+let stopPageSubscription: (() => void) | null = null
+
+const slug = computed(() => {
+  return typeof route.meta.contentSlug === 'string'
+    ? route.meta.contentSlug
+    : ''
+})
 
 type FallbackComponentLoader = () => Promise<{ default: Component }>
 
-const slug = computed(() => {
-  return typeof route.meta.contentSlug === 'string' ? route.meta.contentSlug : ''
-})
-
 const isHome = computed(() => slug.value === 'home')
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
 
 const statusMessage = computed(() => {
   if (!loaded.value) return 'Loading page content...'
@@ -71,7 +85,8 @@ function normalizeSlide(raw: unknown): HomeSlide | null {
     description: typeof r.description === 'string' ? r.description : '',
     primaryLabel: typeof r.primaryLabel === 'string' ? r.primaryLabel : '',
     primaryTo: typeof r.primaryTo === 'string' ? r.primaryTo : '',
-    secondaryLabel: typeof r.secondaryLabel === 'string' ? r.secondaryLabel : '',
+    secondaryLabel:
+      typeof r.secondaryLabel === 'string' ? r.secondaryLabel : '',
     secondaryTo: typeof r.secondaryTo === 'string' ? r.secondaryTo : '',
     position: typeof r.position === 'string' ? r.position : undefined,
   }
@@ -145,13 +160,18 @@ const homeSlides = computed<HomeSlide[]>(() => {
   const slideshowSection = content.value.sections.find(
     (s) => s.id === 'home-slideshow',
   )
-  if (!slideshowSection || !slideshowSection.items) return getDefaultHomeSlides()
+  if (!slideshowSection || !slideshowSection.items) {
+    return localizeContentValue(getDefaultHomeSlides(), activeLocale.value)
+  }
   const parsed = safeJsonParse<unknown>(slideshowSection.items)
-  if (!Array.isArray(parsed)) return getDefaultHomeSlides()
+  if (!Array.isArray(parsed)) {
+    return localizeContentValue(getDefaultHomeSlides(), activeLocale.value)
+  }
   const normalized = parsed
     .map(normalizeSlide)
     .filter((s): s is HomeSlide => Boolean(s))
-  return normalized.length ? normalized : getDefaultHomeSlides()
+  const slides = normalized.length ? normalized : getDefaultHomeSlides()
+  return localizeContentValue(slides, activeLocale.value)
 })
 
 // Non-slideshow sections for the home page (rendered below the slideshow)
@@ -164,7 +184,9 @@ watch(
   () => route.meta.fallbackComponent,
   (component) => {
     if (typeof component === 'function') {
-      fallbackComponent.value = defineAsyncComponent(component as FallbackComponentLoader)
+      fallbackComponent.value = defineAsyncComponent(
+        component as FallbackComponentLoader,
+      )
       return
     }
 
@@ -173,13 +195,25 @@ watch(
   { immediate: true },
 )
 
+watch([slug, activeLocale], () => void loadPage(), { immediate: true })
+
 watch(
   slug,
-  () => {
-    void loadPage()
+  (nextSlug) => {
+    stopPageSubscription?.()
+    stopPageSubscription = nextSlug
+      ? contentStore.subscribeToSlug(nextSlug, () => {
+          void loadPage()
+        })
+      : null
   },
   { immediate: true },
 )
+
+onUnmounted(() => {
+  stopPageSubscription?.()
+  stopPageSubscription = null
+})
 
 async function loadPage() {
   if (!slug.value) {
@@ -192,21 +226,47 @@ async function loadPage() {
   loadError.value = ''
 
   try {
-    const { data, error } = await supabase
-      .from('pages')
-      .select('slug, title, body, updated_at')
-      .eq('slug', slug.value)
-      .maybeSingle()
+    const row =
+      (await fetchPublishedPage(slug.value, activeLocale.value)) ??
+      (activeLocale.value === 'kh'
+        ? await fetchPublishedPage(slug.value, 'en')
+        : null)
 
-    if (error) throw error
+    const parsedContent = row ? parsePublishedPage(row) : null
+    const localizedContent =
+      parsedContent && activeLocale.value === 'kh'
+        ? localizeContentValue(parsedContent, activeLocale.value)
+        : parsedContent
 
-    content.value = data ? parsePublishedPage(data as PublishedPageRow) : null
+    content.value =
+      parsedContent && localizedContent
+        ? {
+            ...localizedContent,
+            slug: parsedContent.slug,
+            route: parsedContent.route,
+            group: parsedContent.group,
+          }
+        : localizedContent
   } catch (error) {
     content.value = null
-    loadError.value = error instanceof Error ? error.message : 'Could not load page content.'
+    loadError.value =
+      error instanceof Error ? error.message : 'Could not load page content.'
   } finally {
     loaded.value = true
   }
+}
+
+async function fetchPublishedPage(slug: string, pageLocale: SupportedLocale) {
+  const { data, error } = await supabase
+    .from('pages')
+    .select('slug, title, body, updated_at, locale')
+    .eq('slug', slug)
+    .eq('locale', pageLocale)
+    .maybeSingle()
+
+  if (error) throw error
+
+  return data ? (data as PublishedPageRow) : null
 }
 
 function actionRoute(index: number) {
@@ -218,103 +278,58 @@ function actionRoute(index: number) {
 </script>
 
 <template>
-  <!-- ===== HOME PAGE WITH SLIDESHOW ===== -->
-  <main v-if="content && isHome && homeSlides.length" class="managed-page managed-page-home">
-    <Slideshow :slides="homeSlides" :interval-ms="4000" v-slot="{ activeSlide }">
-      <div class="hero-overlay" />
-      <div class="hero-inner">
-        <div :key="activeSlide?.image" class="hero-message">
-          <p class="eyebrow eyebrow--light">
-            {{ activeSlide?.eyebrow ?? content?.eyebrow ?? 'Buddhist NGO - Cambodia - Since 1994' }}
-          </p>
-          <h1 class="hero-title">
-            {{
-              activeSlide?.title ??
-              content?.headline ??
-              'Walking with villages toward peace, sustainability and dignity.'
-            }}
-          </h1>
-          <p class="hero-subtitle">
-            {{
-              activeSlide?.description ??
-              content?.intro ??
-              'Santi Sena works alongside rural Cambodian communities in education, livelihoods, environment and child protection.'
-            }}
-          </p>
-          <div class="hero-actions">
-            <RouterLink :to="activeSlide?.primaryTo ?? '/qr-donate'" class="btn btn--primary">
-              {{ activeSlide?.primaryLabel ?? 'Support Us' }}
+  <component
+    v-if="fallbackComponent"
+    :is="fallbackComponent"
+    :content="content"
+  />
+
+  <template v-else>
+    <main v-if="loaded && content" class="managed-page">
+      <section class="managed-hero">
+        <div class="managed-hero-inner">
+          <p class="managed-eyebrow">{{ content.eyebrow || content.group }}</p>
+          <h1>{{ content.headline || content.title }}</h1>
+          <p class="managed-intro">{{ content.intro }}</p>
+          <div class="managed-actions">
+            <RouterLink
+              v-if="content.primaryAction"
+              class="managed-button managed-button-primary"
+              :to="actionRoute(0)"
+            >
+              {{ content.primaryAction }}
             </RouterLink>
-            <RouterLink :to="activeSlide?.secondaryTo ?? '/about'" class="btn btn--outline">
-              {{ activeSlide?.secondaryLabel ?? 'Stand with us' }}
+            <RouterLink
+              v-if="content.secondaryAction"
+              class="managed-button managed-button-secondary"
+              :to="actionRoute(1)"
+            >
+              {{ content.secondaryAction }}
             </RouterLink>
           </div>
         </div>
-      </div>
-    </Slideshow>
+      </section>
 
-    <!-- Home content sections below slideshow -->
-    <section class="managed-sections home-sections-below" aria-label="Page content">
-      <article v-for="section in homeContentSections" :key="section.id" class="managed-section">
-        <p class="managed-section-label">{{ section.label }}</p>
-        <h2>{{ section.heading }}</h2>
-        <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
-        <div v-if="sectionItems(section).length" class="managed-item-grid">
-          <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
-            <strong>{{ item.title }}</strong>
-            <p v-if="item.detail">{{ item.detail }}</p>
+      <section class="managed-sections" aria-label="Page content">
+        <article v-for="section in content.sections" :key="section.id" class="managed-section">
+          <p class="managed-section-label">{{ section.label }}</p>
+          <h2>{{ section.heading }}</h2>
+          <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
+
+          <div v-if="sectionItems(section).length" class="managed-item-grid">
+            <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
+              <strong>{{ item.title }}</strong>
+              <p v-if="item.detail">{{ item.detail }}</p>
+            </div>
           </div>
-        </div>
-      </article>
-    </section>
-  </main>
+        </article>
+      </section>
+    </main>
 
-  <!-- ===== STANDARD PAGE (non-home) ===== -->
-  <main v-else-if="content" class="managed-page">
-    <section class="managed-hero">
-      <div class="managed-hero-inner">
-        <p class="managed-eyebrow">{{ content.eyebrow || content.group }}</p>
-        <h1>{{ content.headline || content.title }}</h1>
-        <p class="managed-intro">{{ content.intro }}</p>
-        <div class="managed-actions">
-          <RouterLink
-            v-if="content.primaryAction"
-            class="managed-button managed-button-primary"
-            :to="actionRoute(0)"
-          >
-            {{ content.primaryAction }}
-          </RouterLink>
-          <RouterLink
-            v-if="content.secondaryAction"
-            class="managed-button managed-button-secondary"
-            :to="actionRoute(1)"
-          >
-            {{ content.secondaryAction }}
-          </RouterLink>
-        </div>
-      </div>
-    </section>
-
-    <section class="managed-sections" aria-label="Page content">
-      <article v-for="section in content.sections" :key="section.id" class="managed-section">
-        <p class="managed-section-label">{{ section.label }}</p>
-        <h2>{{ section.heading }}</h2>
-        <p v-if="section.body" class="managed-section-body">{{ section.body }}</p>
-        <div v-if="sectionItems(section).length" class="managed-item-grid">
-          <div v-for="item in sectionItems(section)" :key="item.title" class="managed-item">
-            <strong>{{ item.title }}</strong>
-            <p v-if="item.detail">{{ item.detail }}</p>
-          </div>
-        </div>
-      </article>
-    </section>
-  </main>
-
-  <component v-else-if="loaded && fallbackComponent" :is="fallbackComponent" />
-
-  <main v-else class="managed-loading" aria-live="polite">
-    <p>{{ statusMessage }}</p>
-  </main>
+    <main v-else class="managed-loading" aria-live="polite">
+      <p>{{ statusMessage }}</p>
+    </main>
+  </template>
 </template>
 
 <style scoped>
@@ -331,7 +346,7 @@ function actionRoute(index: number) {
   overflow: hidden;
   background:
     linear-gradient(135deg, rgba(22, 48, 42, 0.88), rgba(58, 125, 68, 0.82)),
-    var(--managed-hero-background) center / cover;
+    url('/images/programs/hero-1.jpg') center / cover;
 }
 
 .managed-hero::after {
@@ -363,7 +378,7 @@ function actionRoute(index: number) {
   max-width: 820px;
   margin: 0;
   color: #ffffff;
-  font-family: var(--font-serif, Georgia, serif);
+  font-family: var(--font-family-base);
   font-size: clamp(2.7rem, 7vw, 5.8rem);
   font-weight: 800;
   line-height: 0.98;
@@ -414,8 +429,6 @@ function actionRoute(index: number) {
 }
 
 .managed-section {
-  display: grid;
-  gap: 1.25rem;
   border: 1px solid rgba(22, 48, 42, 0.12);
   border-radius: 8px;
   background: #ffffff;
@@ -423,22 +436,10 @@ function actionRoute(index: number) {
   box-shadow: 0 16px 34px rgba(22, 48, 42, 0.08);
 }
 
-.managed-section:has(.managed-section-image) {
-  grid-template-columns: minmax(220px, 0.35fr) minmax(0, 1fr);
-  align-items: start;
-}
-
-.managed-section-image {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
 .managed-section h2 {
   margin: 0;
   color: #16302a;
-  font-family: var(--font-serif, Georgia, serif);
+  font-family: var(--font-family-base);
   font-size: clamp(1.7rem, 4vw, 2.7rem);
   font-weight: 800;
   line-height: 1.1;
@@ -491,10 +492,6 @@ function actionRoute(index: number) {
     min-height: 460px;
   }
 
-  .managed-section:has(.managed-section-image) {
-    grid-template-columns: 1fr;
-  }
-
   .managed-section {
     padding: 1rem;
   }
@@ -521,7 +518,11 @@ function actionRoute(index: number) {
       rgba(6, 18, 13, 0.3) 65%,
       rgba(6, 18, 13, 0.05) 100%
     ),
-    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.4) 0%, transparent 55%);
+    radial-gradient(
+      circle at 82% 25%,
+      rgba(77, 111, 86, 0.4) 0%,
+      transparent 55%
+    );
 }
 
 .hero-inner {

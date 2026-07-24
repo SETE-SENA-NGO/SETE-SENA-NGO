@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
-
-const cambodiaMap = imageUrls.maps.cambodia
+import { onMounted, onBeforeUnmount, ref, nextTick, computed } from 'vue'
+import cambodiaMap from '@/assets/maps/cambodia.png'
 
 type StatItem = {
   value: string
@@ -10,47 +8,124 @@ type StatItem = {
   desc: string
 }
 
-const overviewItems: StatItem[] = [
+const props = defineProps<{
+  content?: {
+    headline?: string
+    intro?: string
+    sections?: Array<{
+      id: string
+      heading: string
+      body: string
+      items: string
+    }>
+  } | null
+}>()
+
+const headline = computed(() => props.content?.headline || 'Thirty years, measured village by village.')
+const intro = computed(() => props.content?.intro || 'Numbers do not tell the whole story, but they keep us honest. Every figure below is drawn from our annual monitoring and audited reports.')
+
+const defaultOverviewItems: StatItem[] = [
   { value: '293', label: 'Villages', desc: 'Across 43 communes in three provinces.' },
   { value: '43', label: 'Communes', desc: 'Svay Rieng, Prey Veng and Kratie.' },
   { value: '3', label: 'Provinces', desc: 'Continuous field presence since 1994.' },
 ]
 
+const overviewHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'numbers-overview')
+  return {
+    heading: section?.heading || 'Our Areas of Operation',
+    body: section?.body || 'Since 1994, our programs have maintained a continuous field presence, working closely with rural communities across three provinces to create sustainable impact.'
+  }
+})
+
+const overviewItems = computed<StatItem[]>(() => {
+  const section = props.content?.sections?.find(s => s.id === 'numbers-overview')
+  if (!section || !section.items) return defaultOverviewItems
+  
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      value: parts[0] || '',
+      label: parts[1] || '',
+      desc: parts[2] || ''
+    }
+  })
+})
+
+interface FlipCard {
+  title: string
+  icon: string
+  preview: string
+  details: Array<{ value: string; label: string; desc: string }>
+  description: string
+}
+
 // ─── FLIP CARD DATA ──────────────────────────────────────────────
-const sections = [{
+const defaultSections: FlipCard[] = [
+  {
     title: 'Environment',
     icon: 'tree',
     preview: '570+ hectares protected',
     details: [
-        { value: '570+', label: 'Hectares', desc: 'Community forest protected and restored.' },
-        { value: '50k+', label: 'Saplings', desc: 'Grown yearly in village nurseries.' },
-        { value: '300+', label: 'Biogas units', desc: 'Installed in rural kitchens.' },
+      { value: '570+', label: 'Hectares', desc: 'Community forest protected and restored.' },
+      { value: '50k+', label: 'Saplings', desc: 'Grown yearly in village nurseries.' },
+      { value: '300+', label: 'Biogas units', desc: 'Installed in rural kitchens.' },
     ],
     description: 'Community-led conservation that protects biodiversity and builds climate resilience.',
-},
-{
+  },
+  {
     title: 'Education',
     icon: 'book',
     preview: '120+ children enrolled yearly',
     details: [
-        { value: '120+', label: 'Pre-school children', desc: 'Enrolled each year.' },
-        { value: '8', label: 'Mobile libraries', desc: 'Reaching remote villages.' },
-        { value: '60+', label: 'Annual scholarships', desc: 'For the poorest students.' },
+      { value: '120+', label: 'Pre-school children', desc: 'Enrolled each year.' },
+      { value: '8', label: 'Mobile libraries', desc: 'Reaching remote villages.' },
+      { value: '60+', label: 'Annual scholarships', desc: 'For the poorest students.' },
     ],
     description: 'Early childhood education and lifelong learning opportunities for every child.',
-},
-{
+  },
+  {
     title: 'Livelihoods & Child Protection',
     icon: 'handshake',
     preview: '2,400+ SfC members',
     details: [
-        { value: '2,400+', label: 'SfC members', desc: 'Saving and lending together.' },
-        { value: '12', label: 'Cooperatives', desc: 'Rice, vegetables and enterprise.' },
-        { value: '600+', label: 'Peer educators', desc: 'Trained in child rights.' },
+      { value: '2,400+', label: 'SfC members', desc: 'Saving and lending together.' },
+      { value: '12', label: 'Cooperatives', desc: 'Rice, vegetables and enterprise.' },
+      { value: '600+', label: 'Peer educators', desc: 'Trained in child rights.' },
     ],
     description: 'Economic empowerment and child safeguarding go hand in hand.',
-},
+  },
 ]
+
+function parseFlipCard(sectionId: string, defaultCard: FlipCard): FlipCard {
+  const section = props.content?.sections?.find(s => s.id === sectionId)
+  if (!section || !section.items) return defaultCard
+  
+  const details = section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      value: parts[0] || '',
+      label: parts[1] || '',
+      desc: parts[2] || ''
+    }
+  })
+  
+  return {
+    title: section.heading || defaultCard.title,
+    icon: defaultCard.icon, // Keep native icon mapping
+    preview: details[0] ? `${details[0].value} ${details[0].label.toLowerCase()}` : defaultCard.preview,
+    details: details,
+    description: section.body || defaultCard.description
+  }
+}
+
+const sections = computed(() => {
+  return [
+    parseFlipCard('numbers-card-environment', defaultSections[0]!),
+    parseFlipCard('numbers-card-education', defaultSections[1]!),
+    parseFlipCard('numbers-card-livelihoods', defaultSections[2]!),
+  ]
+})
 
 // ─── SCROLL‑TRIGGERED POP‑UP (Intersection Observer) ──────────────
 let observers: IntersectionObserver[] = []
@@ -128,14 +203,9 @@ onBeforeUnmount(() => {
         <header class="hero-centered">
             <div class="container">
                 <div class="hero-inner">
-
-
                     <span class="eyebrow">Impact · By the Numbers</span>
-                    <h1>Thirty years, measured village by village.</h1>
-                    <p class="hero-description">
-                        Numbers do not tell the whole story, but they keep us honest. Every figure below is drawn from our
-                        annual monitoring and audited reports.
-                    </p>
+                    <h1>{{ headline }}</h1>
+                    <p class="hero-description">{{ intro }}</p>
                     <div class="hero-divider">
                         <span class="line"></span>
                         <span class="dot"></span>
@@ -148,15 +218,10 @@ onBeforeUnmount(() => {
         <!-- OPERATION SECTION — STATS + MAP -->
         <div class="operation-section">
             <div class="container">
-
                 <div class="section-header">
                     <span class="subtitle">Cambodia</span>
-                    <h2>Our Areas of Operation</h2>
-                    <p>
-                        Since 1994, our programs have maintained a continuous field presence,
-                        working closely with rural communities across three provinces to create
-                        sustainable impact.
-                    </p>
+                    <h2>{{ overviewHeader.heading }}</h2>
+                    <p>{{ overviewHeader.body }}</p>
                 </div>
 
                 <div class="operation-content">

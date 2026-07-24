@@ -4,17 +4,15 @@ import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
+import { imageUploadHelpText } from '@/lib/media'
 
 const media = useMediaStore()
 const ui = useUiStore()
 
+let dragCounter = 0
+const fileInput = ref<HTMLInputElement | null>(null)
+const dragging = ref(false)
 const deleting = ref<string | null>(null)
-const imageUrl = ref('')
-const imageName = ref('')
-const fileInputRef = ref<HTMLInputElement | null>(null)
-const selectedFile = ref<File | null>(null)
-const savingUrl = ref(false)
-const uploadingFile = ref(false)
 
 onMounted(() => {
   void loadFiles()
@@ -24,7 +22,42 @@ async function loadFiles() {
   try {
     await media.list()
   } catch {
-    ui.addToast('Could not load media URLs.', 'error')
+    ui.addToast('Could not load media files.', 'error')
+  }
+}
+
+function openFilePicker() {
+  fileInput.value?.click()
+}
+
+function onFilesSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = input.files
+  if (!files?.length) return
+
+  uploadFiles(Array.from(files))
+  input.value = ''
+}
+
+function onDragEnter() {
+  dragCounter++
+  dragging.value = true
+}
+
+function onDragLeave() {
+  dragCounter--
+  if (dragCounter <= 0) {
+    dragging.value = false
+    dragCounter = 0
+  }
+}
+
+function onDrop(event: DragEvent) {
+  dragging.value = false
+  dragCounter = 0
+  const files = event.dataTransfer?.files
+  if (files?.length) {
+    uploadFiles(Array.from(files))
   }
 }
 
@@ -58,41 +91,14 @@ const totalMediaSize = computed(() => {
   return media.items.reduce((total, item) => total + item.size, 0)
 })
 
-async function addImageUrl() {
-  if (savingUrl.value) return
-
-  savingUrl.value = true
-  try {
-    await media.addUrl(imageUrl.value, imageName.value)
-    ui.addToast('Image URL saved.', 'success')
-    imageUrl.value = ''
-    imageName.value = ''
-  } catch (error) {
-    ui.addToast(error instanceof Error ? error.message : 'Could not save image URL.', 'error')
-  } finally {
-    savingUrl.value = false
-  }
-}
-
-function onFileSelected(event: Event) {
-  const input = event.target as HTMLInputElement
-  selectedFile.value = input.files?.[0] ?? null
-}
-
-async function uploadSelectedFile() {
-  if (uploadingFile.value || !selectedFile.value) return
-
-  uploadingFile.value = true
-  try {
-    await media.uploadToGoogleDrive(selectedFile.value, imageName.value)
-    ui.addToast('Image uploaded to Google Drive.', 'success')
-    selectedFile.value = null
-    imageName.value = ''
-    if (fileInputRef.value) fileInputRef.value.value = ''
-  } catch (error) {
-    ui.addToast(error instanceof Error ? error.message : 'Could not upload image.', 'error')
-  } finally {
-    uploadingFile.value = false
+async function uploadFiles(files: File[]) {
+  for (const file of files) {
+    try {
+      await media.upload(file)
+      ui.addToast(`${file.name} uploaded.`, 'success')
+    } catch {
+      ui.addToast(`Failed to upload ${file.name}.`, 'error')
+    }
   }
 }
 
@@ -100,14 +106,14 @@ async function confirmDelete(item: { id: string; name: string }) {
   deleting.value = item.id
 
   ui.openModal(
-    'Delete URL?',
+    'Delete file?',
     `Remove "${item.name}" from the media library? This cannot be undone.`,
     async () => {
       try {
         await media.remove(item.id)
-        ui.addToast('URL deleted.', 'warning')
+        ui.addToast('File deleted.', 'warning')
       } catch {
-        ui.addToast('Failed to delete URL.', 'error')
+        ui.addToast('Failed to delete file.', 'error')
       } finally {
         deleting.value = null
       }
@@ -127,66 +133,57 @@ async function confirmDelete(item: { id: string; name: string }) {
           <div>
             <p class="eyebrow">Assets</p>
             <h1>Media Library</h1>
-            <p class="page-desc">Upload images to Google Drive or save public image URLs.</p>
+            <p class="page-desc">Upload, browse and manage website images.</p>
+          </div>
+          <div class="header-actions">
+            <button
+              class="button button-primary"
+              type="button"
+              :disabled="media.uploading"
+              @click="openFilePicker"
+            >
+              {{ media.uploading ? 'Uploading...' : 'Upload files' }}
+            </button>
           </div>
         </header>
 
-        <form
-          class="url-form upload-form"
-          aria-label="Upload image to Google Drive"
-          @submit.prevent="uploadSelectedFile"
-        >
-          <label class="url-field upload-file-field">
-            <span>Upload image</span>
-            <input
-              ref="fileInputRef"
-              type="file"
-              accept="image/*"
-              required
-              @change="onFileSelected"
-            />
-          </label>
-          <label class="url-field">
-            <span>Display name</span>
-            <input v-model="imageName" placeholder="Homepage hero" />
-          </label>
-          <button
-            class="button button-primary"
-            type="submit"
-            :disabled="uploadingFile || !selectedFile"
-          >
-            {{ uploadingFile ? 'Uploading...' : 'Upload to Drive' }}
-          </button>
-          <p>
-            Uses the Netlify Google Drive upload function. Configure the required Netlify secrets
-            before using this upload button.
-          </p>
-        </form>
+        <input
+          id="media-library-upload"
+          ref="fileInput"
+          name="media-library-upload"
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          class="file-input-hidden"
+          @change="onFilesSelected"
+        />
 
-        <form class="url-form" aria-label="Add Google Drive image URL" @submit.prevent="addImageUrl">
-          <label class="url-field">
-            <span>Image URL</span>
-            <input
-              v-model="imageUrl"
-              type="url"
-              placeholder="https://drive.google.com/file/d/.../view"
-              required
-            />
-          </label>
-          <label class="url-field">
-            <span>Display name</span>
-            <input v-model="imageName" placeholder="Homepage hero" />
-          </label>
-          <button class="button button-primary" type="submit" :disabled="savingUrl">
-            {{ savingUrl ? 'Saving...' : 'Add URL' }}
-          </button>
-          <p>{{ media.urlHelpText() }}</p>
-        </form>
+        <!-- Upload progress -->
+        <section v-if="media.uploading" class="upload-progress" aria-label="Upload progress">
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+          <span>Uploading files...</span>
+        </section>
+
+        <!-- Drop zone -->
+        <section
+          :class="['drop-zone', { active: dragging }]"
+          @dragenter.prevent="onDragEnter"
+          @dragover.prevent="dragging = true"
+          @dragleave="onDragLeave"
+          @drop.prevent="onDrop"
+          @click="openFilePicker"
+        >
+          <span class="drop-icon" aria-hidden="true"></span>
+          <strong>Drop files here or click to browse</strong>
+          <small>{{ imageUploadHelpText() }}</small>
+        </section>
 
         <!-- Stats bar -->
         <section class="stats-bar" aria-label="Media library stats">
           <span
-            ><strong>{{ media.items.length }}</strong> URLs</span
+            ><strong>{{ media.items.length }}</strong> files</span
           >
           <span>
             <strong>{{ media.items.filter((f) => isImage(f.mime_type)).length }}</strong> images
@@ -196,8 +193,8 @@ async function confirmDelete(item: { id: string; name: string }) {
           >
         </section>
 
-        <!-- URL grid -->
-        <section v-if="media.items.length" class="file-grid" aria-label="Media URLs">
+        <!-- File grid -->
+        <section v-if="media.items.length" class="file-grid" aria-label="Media files">
           <article v-for="item in media.items" :key="item.id" class="file-card">
             <div class="file-thumb">
               <img v-if="isImage(item.mime_type)" :src="item.url" :alt="item.name" loading="lazy" />
@@ -218,7 +215,7 @@ async function confirmDelete(item: { id: string; name: string }) {
                 :href="item.url"
                 target="_blank"
                 class="icon-button"
-                aria-label="Open URL"
+                aria-label="Open file"
               >
                 Open
               </a>
@@ -235,10 +232,10 @@ async function confirmDelete(item: { id: string; name: string }) {
         </section>
 
         <!-- Empty state -->
-        <section v-else-if="!media.saving" class="empty-state" aria-label="No media">
+        <section v-else-if="!media.uploading" class="empty-state" aria-label="No media">
           <span class="empty-icon" aria-hidden="true"></span>
-          <strong>No media URLs yet</strong>
-          <p>Paste a public Google Drive image URL above to get started.</p>
+          <strong>No media files yet</strong>
+          <p>Drop files above or click the Upload button to get started.</p>
         </section>
       </main>
     </div>
@@ -247,10 +244,34 @@ async function confirmDelete(item: { id: string; name: string }) {
 
 <style scoped>
 .media-page {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-green: var(--admin-theme-primary);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
+
   min-height: 100vh;
-  background: var(--admin-theme-bg);
-  color: var(--admin-theme-text);
+  background: var(--admin-bg);
+  color: var(--admin-text);
   transition: padding-left 0.25s ease;
+}
+
+:global(.admin-dark .media-page) {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 .admin-layout {
@@ -273,7 +294,7 @@ async function confirmDelete(item: { id: string; name: string }) {
 
 .eyebrow {
   margin: 0 0 0.45rem;
-  color: var(--admin-theme-teal);
+  color: var(--admin-blue);
   font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -281,13 +302,13 @@ async function confirmDelete(item: { id: string; name: string }) {
 
 h1 {
   margin: 0 0 0.35rem;
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: clamp(1.7rem, 3vw, 2.4rem);
 }
 
 .page-desc {
   margin: 0;
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   line-height: 1.6;
 }
 
@@ -318,23 +339,14 @@ h1 {
 }
 
 .button-primary {
-  border: 1px solid var(--admin-theme-teal);
-  background: var(--admin-theme-teal);
+  border: 1px solid var(--admin-blue);
+  background: var(--admin-blue);
   color: #ffffff;
   box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
 }
 
-.url-form {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.5fr) minmax(180px, 0.8fr) auto;
-  gap: 0.8rem;
-  align-items: end;
-  margin-bottom: 1rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 16px;
-  background: var(--admin-surface);
-  padding: 1rem;
-  box-shadow: var(--admin-shadow);
+.file-input-hidden {
+  display: none;
 }
 
 .upload-progress {
@@ -343,10 +355,10 @@ h1 {
   gap: 0.75rem;
   margin-bottom: 1rem;
   padding: 0.9rem 1rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 14px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
+  background: var(--admin-surface);
+  color: var(--admin-muted);
   font-weight: 800;
 }
 
@@ -354,7 +366,7 @@ h1 {
   width: 120px;
   height: 6px;
   border-radius: 999px;
-  background: var(--admin-theme-surface-soft);
+  background: var(--admin-surface-soft);
   overflow: hidden;
 }
 
@@ -362,7 +374,7 @@ h1 {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: var(--admin-theme-teal);
+  background: var(--admin-blue);
   animation: progress-pulse 1.2s ease-in-out infinite;
 }
 
@@ -381,10 +393,10 @@ h1 {
   justify-items: center;
   gap: 0.4rem;
   margin-bottom: 1rem;
-  border: 2px dashed var(--admin-theme-border);
+  border: 2px dashed var(--admin-border);
   border-radius: 20px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
+  background: var(--admin-surface);
+  color: var(--admin-muted);
   padding: 2.5rem 1rem;
   cursor: pointer;
   transition:
@@ -394,8 +406,8 @@ h1 {
 
 .drop-zone:hover,
 .drop-zone.active {
-  border-color: var(--admin-theme-teal);
-  background: color-mix(in srgb, var(--admin-theme-teal) 4%, var(--admin-theme-surface));
+  border-color: var(--admin-blue);
+  background: color-mix(in srgb, var(--admin-blue) 4%, var(--admin-surface));
 }
 
 .drop-icon {
@@ -416,7 +428,7 @@ h1 {
 }
 
 .drop-zone strong {
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: 1rem;
 }
 
@@ -435,17 +447,17 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 999px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
+  background: var(--admin-surface);
+  color: var(--admin-muted);
   padding: 0.35rem 0.7rem;
   font-size: 0.82rem;
   font-weight: 800;
 }
 
 .stats-bar strong {
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
 }
 
 .file-grid {
@@ -457,10 +469,10 @@ h1 {
 .file-card {
   display: grid;
   grid-template-rows: 170px auto auto;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 16px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
   overflow: hidden;
   transition:
     box-shadow 0.18s ease,
@@ -475,7 +487,7 @@ h1 {
 .file-thumb {
   display: grid;
   place-items: center;
-  background: var(--admin-theme-surface-soft);
+  background: var(--admin-surface-soft);
   overflow: hidden;
   position: relative;
 }
@@ -498,22 +510,22 @@ h1 {
 }
 
 .type-image {
-  background: var(--admin-theme-teal);
+  background: var(--admin-blue);
 }
 .type-video {
   background: #7c3aed;
 }
 .type-audio {
-  background: var(--admin-theme-primary);
+  background: var(--admin-green);
 }
 .type-pdf {
   background: #dc2626;
 }
 .type-doc {
-  background: var(--admin-theme-teal);
+  background: var(--admin-blue);
 }
 .type-sheet {
-  background: var(--admin-theme-primary);
+  background: var(--admin-green);
 }
 .type-file {
   background: #64748b;
@@ -528,7 +540,7 @@ h1 {
 .file-info strong {
   min-width: 0;
   overflow: hidden;
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: 0.88rem;
   font-weight: 900;
   text-overflow: ellipsis;
@@ -541,7 +553,7 @@ h1 {
 }
 
 .file-meta small {
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-size: 0.76rem;
   font-weight: 800;
 }
@@ -558,9 +570,9 @@ h1 {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  border: 1px solid var(--admin-theme-border);
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-contrast);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+  color: var(--admin-contrast);
   padding: 0.38rem 0.65rem;
   font-size: 0.78rem;
   font-weight: 800;
@@ -571,7 +583,7 @@ h1 {
 
 .icon-button.danger {
   border-color: rgba(220, 38, 38, 0.3);
-  color: var(--admin-theme-danger);
+  color: var(--admin-pink);
 }
 
 .icon-button:disabled {
@@ -585,7 +597,7 @@ h1 {
   gap: 0.5rem;
   padding: 3rem 1rem;
   text-align: center;
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
 }
 
 .empty-icon {
@@ -606,7 +618,7 @@ h1 {
 }
 
 .empty-state strong {
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: 1.05rem;
 }
 
@@ -629,10 +641,6 @@ h1 {
 
   .page-header {
     flex-direction: column;
-  }
-
-  .url-form {
-    grid-template-columns: 1fr;
   }
 
   .file-grid {

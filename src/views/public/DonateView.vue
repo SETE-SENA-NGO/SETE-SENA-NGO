@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { SupportedLocale } from '@/i18n'
+import acledaLogo from '@/assets/acleda-logo.png'
 import {
   defaultDonationMethods,
   fetchDonationMethods,
   type DonationMethod,
 } from '@/lib/donationSettings'
+import { subscribeToTableChanges } from '@/lib/realtime'
 
-const acledaLogo = imageUrls.donation.acledaLogo
-
-type Tab = 'qr' | 'card'
+type Tab = 'qr'
 const activeTab = ref<Tab>('qr')
+const { locale } = useI18n()
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
 
 interface PayMethod {
   key: string
@@ -39,20 +44,7 @@ const knownMeta: Record<string, Partial<PayMethod>> = {
     badgeTextColor: '#ffffff',
     panelColor: '#eef1f6',
   },
-  'aba-pay': {
-    badgeColor: '#294f8f',
-    badgeTextColor: '#ffffff',
-    panelColor: '#eef1f6',
-  },
   acleda: {
-    badgeColor: '#d9ad2f',
-    badgeTextColor: '#1d3d5c',
-    logo: acledaLogo,
-    logoAlt: 'ACLEDA Bank logo',
-    panelColor: '#fff4d4',
-    numberColor: '#d9ad2f',
-  },
-  'acleda-bank': {
     badgeColor: '#d9ad2f',
     badgeTextColor: '#1d3d5c',
     logo: acledaLogo,
@@ -71,7 +63,28 @@ function badgeFor(bank: string) {
   )
 }
 
-function toPayMethod(method: DonationMethod): PayMethod {
+function paymentSteps(bank: string, pageLocale: SupportedLocale) {
+  if (pageLocale === 'kh') {
+    return [
+      `បើកកម្មវិធីទូរស័ព្ទ ${bank}`,
+      'ចុច QR Payment ឬ Scan',
+      'ស្កេនកូដ QR ខាងលើ',
+      'បញ្ជាក់ចំនួនទឹកប្រាក់ និងការទូទាត់',
+    ]
+  }
+
+  return [
+    `Open the ${bank} mobile app`,
+    'Tap QR Payment or Scan',
+    'Scan the QR code above',
+    'Confirm amount & payment',
+  ]
+}
+
+function toPayMethod(
+  method: DonationMethod,
+  pageLocale: SupportedLocale,
+): PayMethod {
   return {
     key: method.id,
     bank: method.bank,
@@ -81,12 +94,7 @@ function toPayMethod(method: DonationMethod): PayMethod {
     accountName: method.accountName,
     accountNo: method.accountNo,
     currency: method.currency,
-    steps: [
-      `Open the ${method.bank} mobile app`,
-      'Tap QR Payment or Scan',
-      'Scan the QR code above',
-      'Confirm amount & payment',
-    ],
+    steps: paymentSteps(method.bank, pageLocale),
     headerColor: method.headerColor,
     badgeColor: method.headerColor,
     badgeTextColor: '#ffffff',
@@ -97,18 +105,33 @@ function toPayMethod(method: DonationMethod): PayMethod {
 }
 
 const savedMethods = ref<DonationMethod[]>([])
+let stopDonationSubscription: (() => void) | null = null
 
-onMounted(async () => {
+async function loadDonationMethods() {
   try {
     savedMethods.value = await fetchDonationMethods()
   } catch {
     // No admin settings saved yet — fall back to the defaults.
   }
+}
+
+onMounted(async () => {
+  stopDonationSubscription = subscribeToTableChanges('donation_methods', () => {
+    void loadDonationMethods()
+  })
+  await loadDonationMethods()
+})
+
+onUnmounted(() => {
+  stopDonationSubscription?.()
+  stopDonationSubscription = null
 })
 
 const methods = computed<PayMethod[]>(() => {
-  const source = savedMethods.value.length ? savedMethods.value : defaultDonationMethods()
-  return source.map(toPayMethod)
+  const source = savedMethods.value.length
+    ? savedMethods.value
+    : defaultDonationMethods()
+  return source.map((method) => toPayMethod(method, activeLocale.value))
 })
 </script>
 
@@ -241,13 +264,13 @@ const methods = computed<PayMethod[]>(() => {
 }
 .tab {
   min-height: 3rem;
-  border: 1px solid var(--primary-dark);
+  border: 1px solid #1d3d5c;
   border-radius: 999px;
   background: transparent;
   padding: 0.75rem 1.45rem;
   font-weight: 600;
   line-height: 1.1;
-  color: var(--primary-dark);
+  color: #1d3d5c;
   cursor: pointer;
   transition:
     background 0.2s ease,
@@ -256,20 +279,20 @@ const methods = computed<PayMethod[]>(() => {
     transform 0.18s ease;
 }
 .tab:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-dark);
+  border-color: #d9ad2f;
+  color: #1d3d5c;
   transform: translateY(-1px);
 }
 .tab.active {
-  background: var(--primary-dark);
+  background: #1d3d5c;
   color: var(--color-white);
-  border-color: var(--primary-dark);
+  border-color: #1d3d5c;
   box-shadow: 0 12px 24px rgba(29, 61, 92, 0.18);
 }
 .tab.active:hover {
-  background: var(--color-ink);
+  background: #17314a;
   color: var(--color-white);
-  border-color: var(--color-ink);
+  border-color: #17314a;
 }
 
 .cards {
@@ -471,8 +494,8 @@ const methods = computed<PayMethod[]>(() => {
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: var(--primary-light);
-  color: var(--primary-dark);
+  background: #fff4d4;
+  color: #1d3d5c;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -481,7 +504,7 @@ const methods = computed<PayMethod[]>(() => {
   margin: 0;
 }
 .notice a {
-  color: var(--primary-dark);
+  color: #1d3d5c;
   font-weight: 600;
 }
 .notice-sub {
