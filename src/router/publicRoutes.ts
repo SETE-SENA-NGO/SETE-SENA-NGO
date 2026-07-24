@@ -4,7 +4,6 @@ import AboutVisionView from '@/views/public/AboutVisionView.vue'
 import ProgramEnviromentView from '@/views/public/ProgramEnviromentView.vue'
 import OrganizationView from '@/views/public/OrganizationView.vue'
 import EducationView from '@/views/public/EducationView.vue'
-import ImpactView from '@/views/public/ImpactView.vue'
 import ImpactPartnersView from '@/views/public/ImpactPartnersView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
@@ -74,7 +73,6 @@ export const publicRoutes = [
   managedPage('/services', 'services'),
 
   // Impact
-  managedPage('/impact', 'impact', ImpactView),
   managedPage('/impact/numbers', 'impact-numbers', ImpactNumbersView),
   managedPage('/impact/partners', 'impact-partners', ImpactPartnersView),
   managedPage('/impact/timeline', 'impact-timeline', ImpactTimelineView),

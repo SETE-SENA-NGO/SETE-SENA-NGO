@@ -100,7 +100,7 @@ const pageGroups: PageGroup[] = [
     path: '/admin/get-involved',
     items: [
       { slug: 'get-involved-donate', labelKey: 'admin.sidebar.donate' },
-      { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer' },
+      { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer', path: '/admin/volunteer' },
       { slug: 'get-involved-partner', labelKey: 'admin.sidebar.partner' },
     ],
   },

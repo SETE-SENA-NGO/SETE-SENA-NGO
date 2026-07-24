@@ -13,6 +13,7 @@ export default async function googleDriveUpload(request) {
 
   try {
     const config = readConfig()
+    const authorization = request.headers.get('authorization') || ''
     const user = await requireAdminUser(request, config)
     const formData = await request.formData()
     const file = formData.get('file')
@@ -55,7 +56,7 @@ export default async function googleDriveUpload(request) {
       mimeType,
       size: file.size,
       driveFile,
-    })
+    }, authorization) // authorization from request header, used instead of service role key
 
     return jsonResponse({
       url: publicUrl,
@@ -124,7 +125,7 @@ export const config = {
   path: '/api/google-drive-upload',
 }
 
-function readConfig() {
+export function readConfig() {
   const supabaseUrl = env('SUPABASE_URL') || env('VITE_SUPABASE_URL')
   const supabaseAnonKey =
     env('SUPABASE_PUBLISHABLE_KEY') ||
@@ -270,12 +271,18 @@ async function resolveAdminContext(request, config) {
     }
   }
 
+  // Query the profiles table using the user's own auth token (not service role key)
+  // so that RLS allows reading the profile. This matches how the frontend verifies admin.
   const profileUrl = `${config.supabase.url}/rest/v1/profiles?id=eq.${encodeURIComponent(
     user.id,
   )}&select=id,email,role&limit=1`
 
   const profileResponse = await fetch(profileUrl, {
-    headers,
+    headers: {
+      apikey: config.supabase.anonKey,
+      authorization,
+      'content-type': 'application/json',
+    },
   })
 
   if (!profileResponse.ok) {
@@ -320,7 +327,7 @@ async function resolveAdminContext(request, config) {
   }
 }
 
-async function googleAccessToken(config) {
+export async function googleAccessToken(config) {
   if (config.authType === 'oauth') return googleOAuthAccessToken(config)
   return googleServiceAccountAccessToken(config)
 }
@@ -448,13 +455,28 @@ async function makeDriveFilePublic(accessToken, fileId) {
   }
 }
 
-async function saveMediaAsset(config, { userId, authorization, fileName, publicUrl, mimeType, size, driveFile }) {
+function driveErrorMessage(data, fallback) {
+  const message = data?.error?.message
+  if (typeof message !== 'string') return fallback
+
+  if (/service accounts do not have storage quota/i.test(message)) {
+    return [
+      'Google Drive rejected the upload because the service account cannot own files in a normal My Drive folder.',
+      'Use a Google Workspace Shared Drive folder, or configure Google OAuth with GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, and GOOGLE_OAUTH_REFRESH_TOKEN.',
+    ].join(' ')
+  }
+
+  return message
+}
+
+async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, size, driveFile }, authorization) {
   const response = await fetch(
     `${config.url}/rest/v1/media_assets?on_conflict=bucket,path&select=id,bucket,path,public_url,file_name,mime_type,file_size,created_at`,
     {
       method: 'POST',
       headers: {
-        ...userHeaders(config, authorization),
+        apikey: config.anonKey,
+        authorization,
         'content-type': 'application/json',
         prefer: 'resolution=merge-duplicates,return=representation',
       },
@@ -493,100 +515,10 @@ async function ensureMediaAssetsReady(config, authorization) {
     headers: userHeaders(config, authorization),
   })
 
-  if (response.ok) return
-
-  const message = await responseErrorMessage(response)
-  throw httpError(
-    'Supabase media table is not ready. Run supabase/complete_setup.sql before uploading images.',
-    502,
-    {
-      step: 'media-assets-check',
-      supabaseStatus: response.status,
-      supabaseMessage: message,
-    },
-  )
-}
-
-function userHeaders(config, authorization) {
-  return {
-    apikey: config.anonKey,
-    authorization,
-  }
-}
-
-function publicAdminContext(context) {
-  const { authorization: _authorization, ...safeContext } = context
-  return safeContext
-}
-
-function publicUser(user) {
-  return {
-    id: user.id,
-    email: user.email,
-  }
-}
-
-function publicProfile(profile) {
-  return {
-    email: profile.email,
-    role: profile.role,
-  }
-}
-
-async function responseErrorMessage(response) {
-  const data = await response.json().catch(() => null)
-  return responseDataMessage(data, response.statusText)
-}
-
-function responseDataMessage(data, fallback) {
-  return data?.message || data?.error_description || data?.error || fallback
-}
-
-function driveErrorMessage(data, fallback) {
-  const error = data?.error
-  if (typeof error === 'string') return data?.error_description || error
-  if (error && typeof error === 'object') {
-    return error.message || error.description || data?.error_description || fallback
-  }
-  return responseDataMessage(data, fallback)
-}
-
-function googleAuthError(config, data) {
-  const message = driveErrorMessage(data, 'Could not authenticate with Google Drive.')
-  return httpError(message, 502, {
-    step: config.authType === 'oauth' ? 'google-oauth' : 'google-service-account',
-    googleAuthType: config.authType,
-    googleMessage: message,
-  })
-}
-
 function googleThumbnailUrl(fileId) {
-  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1600`
-}
-
-function googleDriveFileIdFromMedia(media) {
-  const metadata = isRecord(media?.metadata) ? media.metadata : {}
-  return (
-    stringValue(metadata.google_drive_file_id) ||
-    googleDriveFileIdFromUrl(stringValue(media?.public_url)) ||
-    googleDriveFileIdFromUrl(stringValue(media?.path))
-  )
-}
-
-function googleDriveFileIdFromUrl(value) {
-  if (!value) return ''
-
-  try {
-    const url = new URL(value)
-    const id = stringValue(url.searchParams.get('id'))
-    if (id) return id
-
-    const drivePathMatch = url.pathname.match(/\/d\/([^/?#=]+)/)
-    return drivePathMatch?.[1] || ''
-  } catch {
-    const drivePathMatch = value.match(/\/d\/([^/?#=]+)/)
-    return drivePathMatch?.[1] || ''
-  }
+  // Use w3200 for high quality — far above the 380-480px display size, so it looks
+  // indistinguishable from the original, while still letting Google's CDN optimize file size.
+  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=w3200`
 }
 
 function sanitizeFileName(value) {

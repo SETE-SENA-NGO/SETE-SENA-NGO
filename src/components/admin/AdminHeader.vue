@@ -32,6 +32,8 @@ const pageTitle = computed(() => {
   }
   if (path === '/admin/programs') return t('admin.pages.programsOverview')
   if (path === '/admin/get-involved') return t('admin.pages.getInvolved')
+  if (path === '/admin/volunteer') return t('admin.pages.volunteer') || 'Volunteer'
+  if (path === '/admin/contact') return t('admin.pages.contact') || 'Contact'
   if (path === '/admin/education') return t('admin.pages.educationDashboard')
   if (path === '/admin/environment')
     return t('admin.pages.environmentDashboard')
@@ -54,6 +56,8 @@ const pageContext = computed(() => {
   if (path.startsWith('/admin/editor/')) return t('admin.context.websitePage')
   if (path === '/admin/programs') return t('admin.context.programOverview')
   if (path === '/admin/get-involved') return t('admin.context.pageManagement')
+  if (path === '/admin/volunteer') return t('admin.context.pageManagement')
+  if (path === '/admin/contact') return t('admin.context.pageManagement')
   if (path === '/admin/education') return t('admin.context.programManagement')
   if (path === '/admin/environment') return t('admin.context.programManagement')
   if (path === '/admin/livelihood') return t('admin.context.programManagement')

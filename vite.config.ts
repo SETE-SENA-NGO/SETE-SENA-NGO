@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     envPrefix: ['VITE_', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'],
-    plugins: [vue(), googleDriveUploadDevPlugin()],
+    plugins: [vue(), netlifyFunctionsDevPlugin()],
     server: {
       host: devHost,
       port: devPort,
@@ -40,14 +40,14 @@ function numberFromEnv(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
-function googleDriveUploadDevPlugin(): Plugin {
+function netlifyFunctionsDevPlugin(): Plugin {
   return {
-    name: 'santi-sena-google-drive-upload-dev',
+    name: 'santi-sena-netlify-functions-dev',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use('/api/google-drive-upload', async (request, response, next) => {
         try {
-          const uploadRequest = await toFetchRequest(request)
+          const uploadRequest = await toFetchRequest(request, '/api/google-drive-upload')
           const uploadFunctionUrl = new URL('./netlify/functions/google-drive-upload.mjs', import.meta.url).href
           const uploadFunction = (await import(uploadFunctionUrl)) as { default: NetlifyFunction }
           const uploadResponse = await uploadFunction.default(uploadRequest)
@@ -58,13 +58,27 @@ function googleDriveUploadDevPlugin(): Plugin {
           next(error)
         }
       })
+      server.middlewares.use('/api/google-drive-image', async (request, response, next) => {
+        try {
+          const imageRequest = await toFetchRequest(request, '/api/google-drive-image')
+          const imageFunctionUrl = new URL('./netlify/functions/google-drive-image.mjs', import.meta.url).href
+          const imageFunction = (await import(imageFunctionUrl)) as { default: NetlifyFunction }
+          const imageResponse = await imageFunction.default(imageRequest)
+
+          await sendFetchResponse(response, imageResponse)
+        } catch (error) {
+          server.ssrFixStacktrace(error as Error)
+          next(error)
+        }
+      })
     },
   }
 }
 
-async function toFetchRequest(request: IncomingMessage) {
+async function toFetchRequest(request: IncomingMessage, pathname: string) {
   const origin = `http://${request.headers.host || 'localhost:5173'}`
-  const url = new URL('/api/google-drive-upload', origin)
+  const mountedUrl = request.url && request.url.startsWith('/') ? request.url : '/'
+  const url = new URL(`${pathname}${mountedUrl === '/' ? '' : mountedUrl}`, origin)
   const body = await readRequestBody(request)
 
   return new Request(url, {
