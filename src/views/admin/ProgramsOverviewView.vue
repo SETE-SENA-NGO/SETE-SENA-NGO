@@ -579,8 +579,8 @@ watch(activeLocale, () => {
   --surface: #ffffff;
   --border: #e8edf6;
   --border-s: #d4dcee;
-  --text: #1e2a4a;
-  --contrast: #0a142d;
+  --text: #2b54c5;
+  --contrast: #0d9656;
   --muted: #6a7fa0;
   --blue: #2563eb;
   --blue-glow: rgba(37,99,235,0.18);

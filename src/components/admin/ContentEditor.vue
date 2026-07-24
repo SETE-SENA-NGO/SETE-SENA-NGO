@@ -61,8 +61,11 @@ async function onSubmit() {
 .editor-heading p {
   margin: 0;
 }
+.editor-heading h2 {
+  color: var(--admin-theme-contrast, #10241c);
+}
 .editor-heading p {
-  color: var(--muted);
+  color: var(--admin-theme-muted, #678074);
   font-size: 0.9rem;
 }
 label {
@@ -70,22 +73,38 @@ label {
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--admin-theme-muted, #678074);
 }
 input,
 textarea {
-  background: #0c0c0e;
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: var(--admin-theme-surface, #ffffff);
+  border: 1px solid var(--admin-theme-border, #d4e5dc);
+  color: var(--admin-theme-text, #31483e);
   border-radius: 0.45rem;
   padding: 0.6rem;
+  font-family: inherit;
+  font-size: inherit;
+}
+input:focus,
+textarea:focus {
+  border-color: var(--admin-theme-primary, #159a57);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary, #159a57) 15%, transparent);
 }
 .primary {
   justify-self: start;
-  background: #27272a;
-  border: 1px solid #3f3f46;
-  color: var(--text);
+  background: var(--admin-theme-surface, #ffffff);
+  border: 1px solid var(--admin-theme-border-strong, #aecdbe);
+  color: var(--admin-theme-text, #31483e);
   padding: 0.55rem 0.9rem;
   border-radius: 0.45rem;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.primary:hover {
+  background: var(--admin-theme-surface-soft, #eef7f2);
+  border-color: var(--admin-theme-primary, #159a57);
 }
 </style>

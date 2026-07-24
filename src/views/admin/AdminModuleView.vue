@@ -876,24 +876,24 @@ function bulkDelete() {
 }
 
 :global(.admin-dark) .admin-module-page {
-  --bg: #0a0f1f;
-  --surface: #111827;
-  --surface-soft: #0f172a;
-  --border: #1e2a45;
-  --border-strong: #2d3b5a;
+  --bg: #06100F;
+  --surface: #0a1a14;
+  --surface-soft: #0b1b17;
+  --border: #1d3b33;
+  --border-strong: #2d554a;
   --text: #c8d2e6;
   --contrast: #eef2f8;
   --muted: #8896b5;
   --blue: #3b82f6;
-  --blue-soft: #1a2a45;
+  --blue-soft: #0f1f18;
   --green: #22c55e;
-  --green-soft: #142c1e;
+  --green-soft: #0f231a;
   --orange: #f59e0b;
-  --orange-soft: #2a2015;
+  --orange-soft: #1f1a10;
   --red: #ef4444;
-  --red-soft: #2a1515;
+  --red-soft: #1f1015;
   --slate: #8b96b0;
-  --slate-soft: #111b2e;
+  --slate-soft: #0f1b18;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.35);
@@ -1928,5 +1928,49 @@ td {
   .stat-grid {
     grid-template-columns: 1fr;
   }
+}
+</style>
+
+<!-- Non-scoped dark mode overrides for module pages (Home, Programs, News) -->
+<style>
+.admin-dark .admin-module-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-module-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-module-page .module-main {
+  background: #06100F !important;
+}
+.admin-dark .module-hero,
+.admin-dark .stat-card,
+.admin-dark .form-card,
+.admin-dark .table-card {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .module-form {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
 }
 </style>
