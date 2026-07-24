@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDown,
   ArrowUp,
+  BookOpen,
   ExternalLink,
+  FileText,
+  FolderHeart,
   Handshake,
+  Network,
   Plus,
   RotateCcw,
   Save,
+  Sparkles,
   Trash2,
   Upload,
 } from 'lucide-vue-next'
@@ -100,6 +105,18 @@ const MAX_THEMES = 12
 const MAX_NETWORKS = 10
 const MAX_FUNDERS = 12
 const strategicIconOptions = ['growth', 'strategy', 'time', 'investment', 'chart', 'global'] as const
+
+function resolveImageUrl(url: string, fallback: string): string {
+  return url.trim() ? url : fallback
+}
+
+function getString(value: unknown): string {
+  return typeof value === 'string' ? value : ''
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 const fallbackContent: PartnerPageContent = {
   hero: {
@@ -300,8 +317,50 @@ const canAddTheme = computed(() => draft.strategicThemes.length < MAX_THEMES)
 const canAddNetwork = computed(() => draft.networks.length < MAX_NETWORKS)
 const canAddFunder = computed(() => draft.fundingHistory.length < MAX_FUNDERS)
 
+const sections = [
+  { id: 'partner-projects', label: 'Portfolio', icon: FolderHeart },
+  { id: 'partner-model', label: 'Model', icon: FileText },
+  { id: 'partner-themes', label: 'Themes', icon: Sparkles },
+  { id: 'partner-networks', label: 'Networks', icon: Network },
+  { id: 'partner-funding', label: 'Funding', icon: BookOpen },
+  { id: 'partner-cta', label: 'CTA', icon: Handshake },
+] as const
+
+const activeSection = ref(sections[0].id)
+let sectionObserver: IntersectionObserver | null = null
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function setupSectionObserver() {
+  sectionObserver?.disconnect()
+
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          activeSection.value = entry.target.id
+        }
+      }
+    },
+    { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
+  )
+
+  for (const s of sections) {
+    const el = document.getElementById(s.id)
+    if (el) sectionObserver.observe(el)
+  }
+}
+
 onMounted(() => {
   void loadPage()
+})
+
+onUnmounted(() => {
+  sectionObserver?.disconnect()
+  sectionObserver = null
 })
 
 watch(activeLocale, () => {
@@ -322,6 +381,8 @@ async function loadPage() {
     ui.addToast(loadError.value, 'error')
   } finally {
     loading.value = false
+    await nextTick()
+    setupSectionObserver()
   }
 }
 
@@ -661,19 +722,6 @@ function cloneSlide(slide: PartnerSlide): PartnerSlide {
 function cloneProject(project: PartnerProject): PartnerProject {
   return { ...project }
 }
-
-function resolveImageUrl(url: string, fallback: string) {
-  const normalized = normalizeMediaUrl(url)
-  return normalized || fallback
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function getString(value: unknown) {
-  return typeof value === 'string' ? value : ''
-}
 </script>
 
 <template>
@@ -716,332 +764,418 @@ function getString(value: unknown) {
           <button type="button" class="btn btn-secondary" @click="loadPage">Try again</button>
         </div>
 
-        <div v-else class="manager-shell">
-          <aside class="section-path" aria-label="Partner page sections">
-            <a href="#partner-projects">Portfolio</a>
-            <a href="#partner-model">Operating model</a>
-            <a href="#partner-themes">Strategic themes</a>
-            <a href="#partner-networks">Networks</a>
-            <a href="#partner-funding">Funding history</a>
-            <a href="#partner-cta">Final CTA</a>
-          </aside>
+        <div v-else class="content-grid">
 
-          <div class="content-grid">
-            <section id="partner-projects" class="editor-panel" aria-labelledby="partner-projects-heading">
-              <div class="panel-header">
-                <div>
-                  <p class="panel-kicker">Portfolio path</p>
-                  <h2 id="partner-projects-heading">Active projects</h2>
-                </div>
-                <button type="button" class="btn btn-secondary" :disabled="!canAddProject" @click="addProject">
-                  <Plus :size="16" aria-hidden="true" />
-                  <span>Add project</span>
-                </button>
+          <nav class="section-nav" aria-label="Partner page sections">
+            <button
+              v-for="sec in sections"
+              :key="sec.id"
+              type="button"
+              :class="['section-nav-btn', { active: activeSection === sec.id }]"
+              @click="scrollToSection(sec.id)"
+            >
+              <component :is="sec.icon" :size="15" aria-hidden="true" />
+              <span>{{ sec.label }}</span>
+            </button>
+          </nav>
+
+          <!-- ── PORTFOLIO ── -->
+          <div :id="sections[0].id" class="section-group">
+            <p class="section-group-label">Portfolio</p>
+          </div>
+
+          <!-- ─── Hero / Section Intro ─── -->
+          <section class="editor-panel" aria-labelledby="partner-hero-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Hero section</p>
+                <h2 id="partner-hero-heading">Partner page hero</h2>
               </div>
+              <FolderHeart :size="20" aria-hidden="true" />
+            </div>
+            <div class="panel-body form-grid">
+              <label class="field">
+                <span>Small label</span>
+                <input v-model="draft.hero.eyebrow" type="text" />
+              </label>
+              <label class="field">
+                <span>Section heading</span>
+                <input v-model="draft.hero.title" type="text" />
+              </label>
+              <label class="field wide">
+                <span>Section description</span>
+                <textarea v-model="draft.hero.description" rows="3"></textarea>
+              </label>
+            </div>
+          </section>
 
-              <div class="item-list">
-                <article v-for="(project, index) in draft.activeProjects" :key="index" class="record-card">
-                  <header class="record-header">
-                    <div class="record-title">
-                      <span class="record-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <div>
-                        <h3>{{ project.title || 'Untitled project' }}</h3>
-                        <p>{{ project.partner || 'No partner yet' }}</p>
-                      </div>
-                    </div>
-                    <div class="card-actions">
-                      <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move project up" @click="moveItem(draft.activeProjects, index, -1)">
-                        <ArrowUp :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn" :disabled="index === draft.activeProjects.length - 1" aria-label="Move project down" @click="moveItem(draft.activeProjects, index, 1)">
-                        <ArrowDown :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn danger" aria-label="Remove project" @click="removeItem(draft.activeProjects, index, 'project')">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </header>
+          <!-- ─── Active Projects ─── -->
+          <section class="editor-panel" aria-labelledby="partner-projects-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Active projects</p>
+                <h2 id="partner-projects-heading">Portfolio of projects</h2>
+              </div>
+              <button type="button" class="btn btn-secondary" :disabled="!canAddProject" @click="addProject">
+                <Plus :size="16" aria-hidden="true" />
+                <span>Add project</span>
+              </button>
+            </div>
 
-                  <div class="record-body project-body">
-                    <figure class="image-preview project-preview">
-                      <img :src="resolveImageUrl(project.image, fallbackContent.activeProjects[0]?.image ?? '')" alt="" />
-                    </figure>
-                    <div class="form-grid">
-                      <label class="field">
-                        <span>Period</span>
-                        <input v-model="project.period" type="text" />
-                      </label>
-                      <label class="field">
-                        <span>Project title</span>
-                        <input v-model="project.title" type="text" />
-                      </label>
-                      <label class="field wide">
-                        <span>Partner</span>
-                        <input v-model="project.partner" type="text" />
-                      </label>
-                      <label class="field wide">
-                        <span>Focus</span>
-                        <textarea v-model="project.focus" rows="2"></textarea>
-                      </label>
-                      <label class="field wide">
-                        <span>Image URL</span>
-                        <input v-model="project.image" type="url" :placeholder="imageHint" />
-                      </label>
-                      <label class="upload-box compact wide">
-                        <Upload :size="16" aria-hidden="true" />
-                        <span>{{ uploadingKey === `project-${index}` ? 'Uploading...' : 'Upload project image' }}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          :disabled="uploadingKey === `project-${index}`"
-                          @change="uploadImage($event, `project-${index}`, (url) => (project.image = url))"
-                        />
-                      </label>
+            <div class="cards-list">
+              <article v-for="(project, index) in draft.activeProjects" :key="index" class="card-editor">
+                <header class="card-editor-header">
+                  <div class="card-heading">
+                    <span class="card-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    <div>
+                      <h3>{{ project.title || 'Untitled project' }}</h3>
+                      <p>{{ project.partner || 'No partner yet' }}</p>
                     </div>
                   </div>
-                </article>
-              </div>
-            </section>
-
-            <section id="partner-model" class="editor-panel" aria-labelledby="partner-model-heading">
-              <div class="panel-header">
-                <div>
-                  <p class="panel-kicker">Delivery path</p>
-                  <h2 id="partner-model-heading">Operating model</h2>
-                </div>
-                <button type="button" class="btn btn-secondary" :disabled="!canAddOperatingStep" @click="addOperatingStep">
-                  <Plus :size="16" aria-hidden="true" />
-                  <span>Add step</span>
-                </button>
-              </div>
-
-              <div class="compact-list">
-                <article v-for="(step, index) in draft.operatingModel" :key="index" class="compact-card">
-                  <header class="compact-header">
-                    <strong>{{ step.step || String(index + 1).padStart(2, '0') }}</strong>
-                    <div class="card-actions">
-                      <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move step up" @click="moveItem(draft.operatingModel, index, -1)">
-                        <ArrowUp :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn" :disabled="index === draft.operatingModel.length - 1" aria-label="Move step down" @click="moveItem(draft.operatingModel, index, 1)">
-                        <ArrowDown :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn danger" aria-label="Remove step" @click="removeItem(draft.operatingModel, index, 'step')">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </header>
-                  <div class="form-grid">
-                    <label class="field">
-                      <span>Step</span>
-                      <input v-model="step.step" type="text" />
-                    </label>
-                    <label class="field">
-                      <span>Metric</span>
-                      <input v-model="step.metric" type="text" />
-                    </label>
-                    <label class="field wide">
-                      <span>Title</span>
-                      <input v-model="step.title" type="text" />
-                    </label>
-                    <label class="field wide">
-                      <span>Detail</span>
-                      <textarea v-model="step.detail" rows="2"></textarea>
-                    </label>
+                  <div class="card-actions">
+                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move project up" @click="moveItem(draft.activeProjects, index, -1)">
+                      <ArrowUp :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn" :disabled="index === draft.activeProjects.length - 1" aria-label="Move project down" @click="moveItem(draft.activeProjects, index, 1)">
+                      <ArrowDown :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn danger" aria-label="Remove project" @click="removeItem(draft.activeProjects, index, 'project')">
+                      <Trash2 :size="15" aria-hidden="true" />
+                    </button>
                   </div>
-                </article>
-              </div>
-            </section>
+                </header>
 
-            <section id="partner-themes" class="editor-panel" aria-labelledby="partner-themes-heading">
-              <div class="panel-header">
-                <div>
-                  <p class="panel-kicker">Strategy path</p>
-                  <h2 id="partner-themes-heading">Strategic partnership themes</h2>
-                </div>
-                <button type="button" class="btn btn-secondary" :disabled="!canAddTheme" @click="addTheme">
-                  <Plus :size="16" aria-hidden="true" />
-                  <span>Add theme</span>
-                </button>
-              </div>
-
-              <div class="compact-list two-col">
-                <article v-for="(theme, index) in draft.strategicThemes" :key="index" class="compact-card">
-                  <header class="compact-header">
-                    <strong>{{ theme.title || 'New theme' }}</strong>
-                    <div class="card-actions">
-                      <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move theme up" @click="moveItem(draft.strategicThemes, index, -1)">
-                        <ArrowUp :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn" :disabled="index === draft.strategicThemes.length - 1" aria-label="Move theme down" @click="moveItem(draft.strategicThemes, index, 1)">
-                        <ArrowDown :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn danger" aria-label="Remove theme" @click="removeItem(draft.strategicThemes, index, 'theme')">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </header>
-                  <div class="form-grid">
+                <div class="card-editor-top">
+                  <figure class="image-preview card-preview">
+                    <img :src="resolveImageUrl(project.image, fallbackContent.activeProjects[0]?.image ?? '')" alt="" />
+                  </figure>
+                  <div class="card-image-controls image-control-panel">
                     <label class="field">
-                      <span>Title</span>
-                      <input v-model="theme.title" type="text" />
+                      <span>Image URL</span>
+                      <input v-model="project.image" type="url" :placeholder="imageHint" />
                     </label>
-                    <label class="field">
-                      <span>Icon</span>
-                      <select v-model="theme.icon">
-                        <option v-for="icon in strategicIconOptions" :key="icon" :value="icon">
-                          {{ icon }}
-                        </option>
-                      </select>
-                    </label>
-                    <label class="field wide">
-                      <span>Detail</span>
-                      <textarea v-model="theme.detail" rows="2"></textarea>
-                    </label>
-                    <label class="field wide">
-                      <span>Partner action</span>
-                      <input v-model="theme.action" type="text" />
-                    </label>
-                  </div>
-                </article>
-              </div>
-            </section>
-
-            <section id="partner-networks" class="editor-panel" aria-labelledby="partner-networks-heading">
-              <div class="panel-header">
-                <div>
-                  <p class="panel-kicker">Relationship path</p>
-                  <h2 id="partner-networks-heading">Networks and local intermediaries</h2>
-                </div>
-                <button type="button" class="btn btn-secondary" :disabled="!canAddNetwork" @click="addNetwork">
-                  <Plus :size="16" aria-hidden="true" />
-                  <span>Add network</span>
-                </button>
-              </div>
-
-              <div class="compact-list two-col">
-                <article v-for="(network, index) in draft.networks" :key="index" class="compact-card">
-                  <header class="compact-header">
-                    <strong>{{ network.title || 'New network' }}</strong>
-                    <div class="card-actions">
-                      <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move network up" @click="moveItem(draft.networks, index, -1)">
-                        <ArrowUp :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn" :disabled="index === draft.networks.length - 1" aria-label="Move network down" @click="moveItem(draft.networks, index, 1)">
-                        <ArrowDown :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn danger" aria-label="Remove network" @click="removeItem(draft.networks, index, 'network')">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </header>
-                  <div class="form-grid">
-                    <label class="field">
-                      <span>Label</span>
-                      <input v-model="network.label" type="text" />
-                    </label>
-                    <label class="field">
-                      <span>Title</span>
-                      <input v-model="network.title" type="text" />
-                    </label>
-                    <label class="field wide">
-                      <span>Detail</span>
-                      <textarea v-model="network.detail" rows="2"></textarea>
-                    </label>
-                  </div>
-                </article>
-              </div>
-            </section>
-
-            <section id="partner-funding" class="editor-panel" aria-labelledby="partner-funding-heading">
-              <div class="panel-header">
-                <div>
-                  <p class="panel-kicker">Trust path</p>
-                  <h2 id="partner-funding-heading">Funding history</h2>
-                </div>
-                <button type="button" class="btn btn-secondary" :disabled="!canAddFunder" @click="addFunder">
-                  <Plus :size="16" aria-hidden="true" />
-                  <span>Add funder</span>
-                </button>
-              </div>
-
-              <div class="compact-list two-col">
-                <article v-for="(funder, index) in draft.fundingHistory" :key="index" class="compact-card">
-                  <header class="compact-header">
-                    <strong>{{ funder.name || 'New funder' }}</strong>
-                    <div class="card-actions">
-                      <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move funder up" @click="moveItem(draft.fundingHistory, index, -1)">
-                        <ArrowUp :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn" :disabled="index === draft.fundingHistory.length - 1" aria-label="Move funder down" @click="moveItem(draft.fundingHistory, index, 1)">
-                        <ArrowDown :size="15" aria-hidden="true" />
-                      </button>
-                      <button type="button" class="icon-btn danger" aria-label="Remove funder" @click="removeItem(draft.fundingHistory, index, 'funder')">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </header>
-                  <div class="form-grid">
-                    <label class="field">
-                      <span>Name</span>
-                      <input v-model="funder.name" type="text" />
-                    </label>
-                    <label class="field wide">
-                      <span>Detail</span>
-                      <textarea v-model="funder.detail" rows="2"></textarea>
-                    </label>
-                  </div>
-                </article>
-              </div>
-            </section>
-
-            <section id="partner-cta" class="editor-panel" aria-labelledby="partner-cta-heading">
-              <div class="panel-header">
-                <div>
-                  <p class="panel-kicker">Final path</p>
-                  <h2 id="partner-cta-heading">Bottom call to action</h2>
-                </div>
-                <Handshake :size="20" aria-hidden="true" />
-              </div>
-
-              <div class="image-editor-grid">
-                <figure class="image-preview hero-preview">
-                  <img :src="ctaPreview" alt="" />
-                </figure>
-
-                <div class="form-stack">
-                  <div class="form-grid">
-                    <label class="field">
-                      <span>Small label</span>
-                      <input v-model="draft.cta.eyebrow" type="text" />
-                    </label>
-                    <label class="field wide">
-                      <span>Heading</span>
-                      <textarea v-model="draft.cta.title" rows="2"></textarea>
-                    </label>
-                    <label class="field wide">
-                      <span>Body</span>
-                      <textarea v-model="draft.cta.body" rows="3"></textarea>
-                    </label>
-                    <label class="field wide">
-                      <span>Background image URL</span>
-                      <input v-model="draft.cta.image" type="url" :placeholder="imageHint" />
-                    </label>
-                    <label class="upload-box compact wide">
-                      <Upload :size="16" aria-hidden="true" />
-                      <span>{{ uploadingKey === 'cta' ? 'Uploading...' : 'Upload CTA image' }}</span>
+                    <label class="upload-box">
+                      <Upload :size="17" aria-hidden="true" />
+                      <span>{{ uploadingKey === `project-${index}` ? 'Uploading...' : 'Upload project image' }}</span>
                       <input
                         type="file"
                         accept="image/*"
-                        :disabled="uploadingKey === 'cta'"
-                        @change="uploadImage($event, 'cta', (url) => (draft.cta.image = url))"
+                        :disabled="uploadingKey === `project-${index}`"
+                        @change="uploadImage($event, `project-${index}`, (url) => (project.image = url))"
                       />
                     </label>
                   </div>
                 </div>
-              </div>
-            </section>
+
+                <div class="card-form-grid">
+                  <label class="field">
+                    <span>Period</span>
+                    <input v-model="project.period" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Project title</span>
+                    <input v-model="project.title" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Partner</span>
+                    <input v-model="project.partner" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Focus</span>
+                    <textarea v-model="project.focus" rows="3"></textarea>
+                  </label>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- ── OPERATING MODEL ── -->
+          <div :id="sections[1].id" class="section-group">
+            <p class="section-group-label">Model</p>
           </div>
+
+          <section class="editor-panel" aria-labelledby="partner-model-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Delivery path</p>
+                <h2 id="partner-model-heading">Operating model steps</h2>
+              </div>
+              <button type="button" class="btn btn-secondary" :disabled="!canAddOperatingStep" @click="addOperatingStep">
+                <Plus :size="16" aria-hidden="true" />
+                <span>Add step</span>
+              </button>
+            </div>
+
+            <div class="cards-list">
+              <article v-for="(step, index) in draft.operatingModel" :key="index" class="card-editor">
+                <header class="card-editor-header">
+                  <div class="card-heading">
+                    <span class="card-number">{{ step.step || String(index + 1).padStart(2, '0') }}</span>
+                    <div>
+                      <h3>{{ step.title || 'Untitled step' }}</h3>
+                      <p>{{ step.metric || 'No metric' }}</p>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move step up" @click="moveItem(draft.operatingModel, index, -1)">
+                      <ArrowUp :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn" :disabled="index === draft.operatingModel.length - 1" aria-label="Move step down" @click="moveItem(draft.operatingModel, index, 1)">
+                      <ArrowDown :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn danger" aria-label="Remove step" @click="removeItem(draft.operatingModel, index, 'step')">
+                      <Trash2 :size="15" aria-hidden="true" />
+                    </button>
+                  </div>
+                </header>
+
+                <div class="card-form-grid">
+                  <label class="field">
+                    <span>Step</span>
+                    <input v-model="step.step" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Metric</span>
+                    <input v-model="step.metric" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Title</span>
+                    <input v-model="step.title" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Detail</span>
+                    <textarea v-model="step.detail" rows="2"></textarea>
+                  </label>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- ── STRATEGIC THEMES ── -->
+          <div :id="sections[2].id" class="section-group">
+            <p class="section-group-label">Themes</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="partner-themes-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Strategy path</p>
+                <h2 id="partner-themes-heading">Strategic partnership themes</h2>
+              </div>
+              <button type="button" class="btn btn-secondary" :disabled="!canAddTheme" @click="addTheme">
+                <Plus :size="16" aria-hidden="true" />
+                <span>Add theme</span>
+              </button>
+            </div>
+
+            <div class="cards-list two-col">
+              <article v-for="(theme, index) in draft.strategicThemes" :key="index" class="card-editor">
+                <header class="card-editor-header">
+                  <div class="card-heading">
+                    <div>
+                      <h3>{{ theme.title || 'New theme' }}</h3>
+                      <p>{{ theme.icon || 'No icon' }}</p>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move theme up" @click="moveItem(draft.strategicThemes, index, -1)">
+                      <ArrowUp :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn" :disabled="index === draft.strategicThemes.length - 1" aria-label="Move theme down" @click="moveItem(draft.strategicThemes, index, 1)">
+                      <ArrowDown :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn danger" aria-label="Remove theme" @click="removeItem(draft.strategicThemes, index, 'theme')">
+                      <Trash2 :size="15" aria-hidden="true" />
+                    </button>
+                  </div>
+                </header>
+
+                <div class="card-form-grid">
+                  <label class="field">
+                    <span>Title</span>
+                    <input v-model="theme.title" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Icon</span>
+                    <select v-model="theme.icon">
+                      <option v-for="icon in strategicIconOptions" :key="icon" :value="icon">{{ icon }}</option>
+                    </select>
+                  </label>
+                  <label class="field wide">
+                    <span>Detail</span>
+                    <textarea v-model="theme.detail" rows="2"></textarea>
+                  </label>
+                  <label class="field wide">
+                    <span>Partner action</span>
+                    <input v-model="theme.action" type="text" />
+                  </label>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- ── NETWORKS ── -->
+          <div :id="sections[3].id" class="section-group">
+            <p class="section-group-label">Networks</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="partner-networks-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Relationship path</p>
+                <h2 id="partner-networks-heading">Networks and local intermediaries</h2>
+              </div>
+              <button type="button" class="btn btn-secondary" :disabled="!canAddNetwork" @click="addNetwork">
+                <Plus :size="16" aria-hidden="true" />
+                <span>Add network</span>
+              </button>
+            </div>
+
+            <div class="cards-list two-col">
+              <article v-for="(network, index) in draft.networks" :key="index" class="card-editor">
+                <header class="card-editor-header">
+                  <div class="card-heading">
+                    <div>
+                      <h3>{{ network.title || 'New network' }}</h3>
+                      <p>{{ network.label || 'No label' }}</p>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move network up" @click="moveItem(draft.networks, index, -1)">
+                      <ArrowUp :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn" :disabled="index === draft.networks.length - 1" aria-label="Move network down" @click="moveItem(draft.networks, index, 1)">
+                      <ArrowDown :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn danger" aria-label="Remove network" @click="removeItem(draft.networks, index, 'network')">
+                      <Trash2 :size="15" aria-hidden="true" />
+                    </button>
+                  </div>
+                </header>
+
+                <div class="card-form-grid">
+                  <label class="field">
+                    <span>Label</span>
+                    <input v-model="network.label" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Title</span>
+                    <input v-model="network.title" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Detail</span>
+                    <textarea v-model="network.detail" rows="2"></textarea>
+                  </label>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- ── FUNDING HISTORY ── -->
+          <div :id="sections[4].id" class="section-group">
+            <p class="section-group-label">Funding</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="partner-funding-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Trust path</p>
+                <h2 id="partner-funding-heading">Funding history</h2>
+              </div>
+              <button type="button" class="btn btn-secondary" :disabled="!canAddFunder" @click="addFunder">
+                <Plus :size="16" aria-hidden="true" />
+                <span>Add funder</span>
+              </button>
+            </div>
+
+            <div class="cards-list two-col">
+              <article v-for="(funder, index) in draft.fundingHistory" :key="index" class="card-editor">
+                <header class="card-editor-header">
+                  <div class="card-heading">
+                    <div>
+                      <h3>{{ funder.name || 'New funder' }}</h3>
+                      <p>{{ funder.detail ? funder.detail.slice(0, 40) + '...' : 'No detail' }}</p>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move funder up" @click="moveItem(draft.fundingHistory, index, -1)">
+                      <ArrowUp :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn" :disabled="index === draft.fundingHistory.length - 1" aria-label="Move funder down" @click="moveItem(draft.fundingHistory, index, 1)">
+                      <ArrowDown :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn danger" aria-label="Remove funder" @click="removeItem(draft.fundingHistory, index, 'funder')">
+                      <Trash2 :size="15" aria-hidden="true" />
+                    </button>
+                  </div>
+                </header>
+
+                <div class="card-form-grid">
+                  <label class="field">
+                    <span>Name</span>
+                    <input v-model="funder.name" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Detail</span>
+                    <textarea v-model="funder.detail" rows="2"></textarea>
+                  </label>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- ── CTA ── -->
+          <div :id="sections[5].id" class="section-group">
+            <p class="section-group-label">CTA</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="partner-cta-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Final path</p>
+                <h2 id="partner-cta-heading">Bottom call to action</h2>
+              </div>
+              <Handshake :size="20" aria-hidden="true" />
+            </div>
+
+            <div class="image-editor-grid">
+              <figure class="image-preview hero-preview">
+                <img :src="ctaPreview" alt="" />
+              </figure>
+
+              <div class="form-stack">
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Small label</span>
+                    <input v-model="draft.cta.eyebrow" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Heading</span>
+                    <textarea v-model="draft.cta.title" rows="2"></textarea>
+                  </label>
+                  <label class="field wide">
+                    <span>Body</span>
+                    <textarea v-model="draft.cta.body" rows="3"></textarea>
+                  </label>
+                  <label class="field wide">
+                    <span>Background image URL</span>
+                    <input v-model="draft.cta.image" type="url" :placeholder="imageHint" />
+                  </label>
+                </div>
+                <label class="upload-box">
+                  <Upload :size="17" aria-hidden="true" />
+                  <span>{{ uploadingKey === 'cta' ? 'Uploading...' : 'Upload CTA image' }}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    :disabled="uploadingKey === 'cta'"
+                    @change="uploadImage($event, 'cta', (url) => (draft.cta.image = url))"
+                  />
+                </label>
+              </div>
+            </div>
+          </section>
+
         </div>
       </main>
     </div>
@@ -1067,8 +1201,7 @@ function getString(value: unknown) {
 }
 
 .manager-hero,
-.editor-panel,
-.section-path {
+.editor-panel {
   border: 1px solid var(--admin-theme-border);
   border-radius: 8px;
   background: var(--admin-theme-surface);
@@ -1086,9 +1219,7 @@ function getString(value: unknown) {
 .manager-hero h1,
 .manager-hero p,
 .editor-panel h2,
-.editor-panel p,
-.subsection-header h3,
-.subsection-header p {
+.editor-panel p {
   margin: 0;
 }
 
@@ -1105,7 +1236,8 @@ function getString(value: unknown) {
 
 .manager-meta,
 .hero-actions,
-.card-actions {
+.card-actions,
+.panel-icons {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -1183,6 +1315,12 @@ function getString(value: unknown) {
   background: var(--admin-theme-surface);
 }
 
+.btn-small {
+  min-height: 32px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.74rem;
+}
+
 .icon-btn {
   width: 34px;
   min-height: 34px;
@@ -1226,61 +1364,88 @@ function getString(value: unknown) {
   color: var(--admin-theme-danger);
 }
 
-.manager-shell {
+.content-grid {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 1rem;
-  align-items: start;
+  gap: 0.9rem;
   margin-top: 1rem;
 }
 
-.section-path {
+.section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
+  padding: 0.5rem 0.6rem;
   position: sticky;
-  top: calc(60px + 1.25rem);
-  display: grid;
-  gap: 0.25rem;
-  padding: 0.55rem;
+  top: calc(60px + 0.5rem);
+  z-index: 40;
 }
 
-.section-path a {
+.section-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
   border-radius: 6px;
+  background: transparent;
   color: var(--admin-theme-muted);
-  padding: 0.55rem 0.65rem;
-  font-size: 0.82rem;
-  font-weight: 800;
-  text-decoration: none;
+  padding: 0.4rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.section-path a:hover {
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+.section-nav-btn:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
   color: var(--admin-theme-primary-deep);
 }
 
-.content-grid,
-.form-stack,
-.item-list,
-.compact-list {
-  display: grid;
-  gap: 0.9rem;
+.section-nav-btn.active {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 32%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+}
+
+.section-group {
+  scroll-margin-top: 120px;
+}
+
+.section-group-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.6rem 0 0;
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.section-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 18%, var(--admin-theme-border));
 }
 
 .editor-panel {
   overflow: hidden;
-  scroll-margin-top: calc(60px + 1rem);
 }
 
-.panel-header,
-.subsection-header,
-.record-header,
-.compact-header,
-.mini-card-header {
+.panel-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-}
-
-.panel-header {
   border-bottom: 1px solid var(--admin-theme-border);
   background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface));
   padding: 0.85rem 1rem;
@@ -1289,6 +1454,10 @@ function getString(value: unknown) {
 .panel-header h2 {
   color: var(--admin-theme-contrast);
   font-size: 1rem;
+}
+
+.panel-body {
+  padding: 1rem;
 }
 
 .image-editor-grid {
@@ -1320,19 +1489,20 @@ function getString(value: unknown) {
   aspect-ratio: 16 / 10;
 }
 
-.project-preview {
-  aspect-ratio: 1.22;
-  min-height: 210px;
-}
-
-.thumb-preview {
-  aspect-ratio: 1.4;
+.form-stack,
+.cards-list {
+  display: grid;
+  gap: 0.85rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
+}
+
+.wide {
+  grid-column: 1 / -1;
 }
 
 .field,
@@ -1377,10 +1547,6 @@ function getString(value: unknown) {
   outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
 }
 
-.wide {
-  grid-column: 1 / -1;
-}
-
 .upload-box {
   grid-template-columns: auto 1fr;
   align-items: center;
@@ -1395,84 +1561,69 @@ function getString(value: unknown) {
   padding: 0.55rem;
 }
 
-.upload-box.compact {
-  padding: 0.65rem;
+.image-control-panel {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 42%, var(--admin-theme-surface));
+  padding: 0.9rem;
 }
 
-.nested-section {
-  border-top: 1px solid var(--admin-theme-border);
+.cards-list {
+  gap: 0.95rem;
   padding: 1rem;
 }
 
-.subsection-header h3,
-.record-title h3 {
-  color: var(--admin-theme-contrast);
-  font-size: 0.96rem;
-  margin: 0;
+.cards-list.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.subsection-header p,
-.record-title p {
-  color: var(--admin-theme-muted);
-  font-size: 0.76rem;
-  font-weight: 700;
-  margin: 0.18rem 0 0;
-}
-
-.slide-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin-top: 0.85rem;
-}
-
-.mini-card,
-.record-card,
-.compact-card {
+.card-editor {
   border: 1px solid var(--admin-theme-border);
   border-radius: 8px;
   background: var(--admin-theme-surface);
   overflow: hidden;
 }
 
-.mini-card {
-  display: grid;
-  gap: 0.75rem;
-  padding: 0.75rem;
-}
-
-.mini-card-header strong,
-.compact-header strong {
-  min-width: 0;
-  color: var(--admin-theme-contrast);
-  font-size: 0.84rem;
-  line-height: 1.25;
-}
-
-.item-list {
-  padding: 1rem;
-}
-
-.record-header,
-.compact-header {
+.card-editor-header {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   border-bottom: 1px solid var(--admin-theme-border);
   background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
   padding: 0.75rem 0.85rem;
 }
 
-.record-title {
+.card-heading {
   display: flex;
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
 }
 
-.record-number {
+.card-heading h3,
+.card-heading p {
+  margin: 0;
+}
+
+.card-heading h3 {
+  color: var(--admin-theme-contrast);
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+
+.card-heading p {
+  color: var(--admin-theme-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.card-number {
   display: grid;
   width: 2rem;
   height: 2rem;
-  flex: 0 0 auto;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
   border-radius: 6px;
@@ -1480,29 +1631,33 @@ function getString(value: unknown) {
   color: var(--admin-theme-primary-deep);
   font-size: 0.74rem;
   font-weight: 900;
+  flex-shrink: 0;
 }
 
-.record-body {
-  padding: 0.9rem;
-}
-
-.project-body {
+.card-editor-top {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  gap: 1rem;
+  grid-template-columns: 170px minmax(280px, 1fr);
   align-items: start;
+  gap: 1rem;
+  padding: 0.9rem 0.9rem 0;
 }
 
-.compact-list {
-  padding: 1rem;
+.card-preview {
+  width: 170px;
+  aspect-ratio: 1.35;
+  flex: 0 0 auto;
 }
 
-.compact-list.two-col {
+.card-image-controls {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.card-form-grid {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.compact-card .form-grid {
-  padding: 0.85rem;
+  gap: 0.85rem;
+  padding: 0.9rem;
 }
 
 :global(.admin-dark) .btn-primary {
@@ -1516,17 +1671,7 @@ function getString(value: unknown) {
 }
 
 @media (max-width: 1100px) {
-  .manager-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .section-path {
-    position: static;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .slide-grid,
-  .compact-list.two-col {
+  .cards-list.two-col {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1537,12 +1682,19 @@ function getString(value: unknown) {
     padding-top: calc(60px + 1rem);
   }
 
+  .section-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .section-nav::-webkit-scrollbar {
+    display: none;
+  }
+
   .manager-hero,
   .panel-header,
-  .subsection-header,
-  .record-header,
-  .compact-header,
-  .mini-card-header {
+  .card-editor-header {
     align-items: stretch;
     flex-direction: column;
   }
@@ -1557,12 +1709,21 @@ function getString(value: unknown) {
     flex: 1;
   }
 
-  .section-path,
-  .slide-grid,
   .image-editor-grid,
   .form-grid,
-  .project-body,
-  .compact-list.two-col {
+  .card-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-editor-top {
+    grid-template-columns: 1fr;
+  }
+
+  .card-preview {
+    width: 100%;
+  }
+
+  .cards-list.two-col {
     grid-template-columns: 1fr;
   }
 }
