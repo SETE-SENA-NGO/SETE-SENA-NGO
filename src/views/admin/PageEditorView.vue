@@ -1049,6 +1049,7 @@ const savingSlug = ref<string | null>(null)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 const savedSnapshot = ref<Record<string, string>>({})
 const activeSectionIndex = ref<number | null>(null)
+const previewVisible = ref(true)
 
 // ─── Visual Table Editor Helpers ─────────────────────────────────
 const showRawItems = ref<Record<string, boolean>>({})
@@ -1171,6 +1172,8 @@ const activePage = computed<PageDraft>(() => {
     clonePage(defaultPages[0] as PageDraft)
   )
 })
+
+const activePageDirty = computed(() => isDirty(activePage.value.slug))
 
 
 const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
