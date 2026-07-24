@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import ImagePickerField from '@/components/admin/ImagePickerField.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -38,7 +39,8 @@ const quickLinks: QuickLink[] = [
   { title: 'Edit Hero & Stats', desc: 'Headline, intro & stats band', to: '#', tabId: 'hero', color: 'emerald' },
   { title: 'Edit Page Sections', desc: 'What we do, approach & why', to: '#', tabId: 'sections', color: 'blue' },
   { title: 'Edit Initiatives', desc: 'Key initiative cards with images', to: '#', tabId: 'initiatives', color: 'amber' },
-  { title: 'Edit Process & Gallery', desc: 'Process steps & field gallery', to: '#', tabId: 'process', color: 'violet' },
+  { title: 'Edit Process Steps', desc: '4-step process for how we work', to: '#', tabId: 'process', color: 'violet' },
+  { title: 'Edit Field Gallery', desc: 'Gallery images with captions', to: '#', tabId: 'gallery', color: 'violet' },
   { title: 'Edit Our Support', desc: 'Partner organizations & supporters', to: '#', tabId: 'partners', color: 'blue' },
   { title: 'Edit CTA & Quote', desc: 'Call to action & testimonial', to: '#', tabId: 'cta', color: 'emerald' },
   { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
@@ -725,11 +727,16 @@ function formatDate(value: string) {
                   <input v-model="page.eyebrow" placeholder="e.g. Environment" />
                   <span class="field-hint">Small label above the main headline</span>
                 </label>
-                <label class="field">
-                  <span class="field-label">Hero Image URL</span>
-                  <input v-model="page.heroImageUrl" placeholder="https://..." />
-                  <span class="field-hint">URL for the hero background image</span>
-                </label>
+                <div class="field field-block">
+                  <span class="field-label">Hero Image</span>
+                  <ImagePickerField
+                    v-model="page.heroImageUrl"
+                    label="Hero Image"
+                    hint="Background image for the hero section"
+                    @success="(msg) => addToast(msg, 'success')"
+                    @error="(msg) => addToast(msg, 'error')"
+                  />
+                </div>
               </div>
               <label class="field field-block">
                 <span class="field-label">Headline (main title)</span>
@@ -882,13 +889,15 @@ function formatDate(value: string) {
                     <span class="field-label">Description</span>
                     <textarea v-model="item.text" rows="2" placeholder="Brief description..."></textarea>
                   </label>
-                  <label class="field field-block">
-                    <span class="field-label">Image URL</span>
-                    <input v-model="item.img" placeholder="https://images.unsplash.com/..." />
-                    <div v-if="item.img" class="field-img-preview">
-                      <img :src="item.img" :alt="item.title" class="img-thumb" />
-                    </div>
-                  </label>
+                  <div class="field field-block">
+                    <span class="field-label">Initiative Image</span>
+                    <ImagePickerField
+                      v-model="item.img"
+                      :label="item.title || `Initiative ${index + 1}`"
+                      @success="(msg) => addToast(msg, 'success')"
+                      @error="(msg) => addToast(msg, 'error')"
+                    />
+                  </div>
                 </div>
                 <button class="btn btn-ghost add-stat-btn" @click="initiatives.push({ title: '', text: '', img: '', tag: '' })">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -947,41 +956,94 @@ function formatDate(value: string) {
               </template>
             </div>
           </div>
+        </section>
 
-          <div class="section-card" style="margin-top: 1.25rem;">
+        <!-- ================ TAB: GALLERY ================ -->
+        <section v-if="activeTab === 'gallery'" class="tab-content">
+          <div class="section-card">
             <div class="sc-header">
               <h2>Field Gallery</h2>
-              <p>Edit the gallery images shown on the public page. Each image has a URL, caption, and span (1 or 2 columns).</p>
+              <p>Edit the gallery images shown on the public page. Each image has a URL, caption, and span (1 or 2 columns). Upload images from your computer or paste a URL.</p>
             </div>
             <div class="sc-body">
-              <div v-for="(img, index) in galleryImages" :key="index" class="sub-editor-card">
-                <div class="sub-editor-hdr">
-                  <span class="sub-num">Image {{ index + 1 }}</span>
-                  <button class="btn-icon" @click="galleryImages.splice(index, 1)" title="Remove image">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
-                </div>
-                <div class="form-row">
-                  <label class="field">
-                    <span class="field-label">Caption</span>
-                    <input v-model="img.caption" placeholder="e.g. Reforestation in rural Cambodia" />
-                  </label>
-                  <label class="field">
-                    <span class="field-label">Span</span>
-                    <select v-model="img.span">
-                      <option value="1">1 column</option>
-                      <option value="2">2 columns (wider)</option>
-                    </select>
-                  </label>
-                </div>
-                <label class="field field-block">
-                  <span class="field-label">Image URL</span>
-                  <input v-model="img.src" placeholder="https://images.unsplash.com/..." />
-                  <div v-if="img.src" class="field-img-preview">
-                    <img :src="img.src" :alt="img.caption" class="img-thumb" />
-                  </div>
-                </label>
+              <!-- Gallery Stats -->
+              <div class="gallery-stats-bar">
+                <span class="gsb-item"><strong>{{ galleryImages.length }}</strong> images</span>
+                <span class="gsb-item"><strong>{{ galleryImages.filter(i => i.src?.trim()).length }}</strong> with images</span>
+                <span class="gsb-item gsb-missing" v-if="galleryImages.filter(i => !i.src?.trim()).length > 0">
+                  <strong>{{ galleryImages.filter(i => !i.src?.trim()).length }}</strong> missing images
+                </span>
               </div>
+
+              <!-- ====== VISUAL GALLERY PREVIEW ====== -->
+              <div class="gallery-preview-section">
+                <div class="gps-header">
+                  <span class="gps-badge">Field Gallery</span>
+                  <h3 class="gps-title">Our Work in Pictures</h3>
+                  <p class="gps-desc">A glimpse into our environmental projects across Cambodia.</p>
+                </div>
+                <div class="gps-grid">
+                  <div
+                    v-for="(img, i) in galleryImages"
+                    :key="i"
+                    class="gps-item"
+                    :class="{ 'gps-empty': !img.src?.trim(), 'gps-span-2': img.span === '2' }"
+                    :style="{ '--g-span': img.span || '1' }"
+                  >
+                    <template v-if="img.src?.trim()">
+                      <img :src="img.src" :alt="img.caption" class="gps-preview-img" />
+                      <div class="gps-overlay"><span class="gps-caption">{{ img.caption }}</span></div>
+                    </template>
+                    <template v-else>
+                      <div class="gps-empty-state">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <p class="gps-empty-text"><strong>No image</strong></p>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ====== IMAGE EDITOR CARDS ====== -->
+              <div class="gallery-editor-list">
+                <div v-for="(img, index) in galleryImages" :key="index" class="sub-editor-card">
+                  <div class="sub-editor-hdr">
+                    <span class="sub-num">
+                      Image {{ index + 1 }}
+                      <span v-if="img.span === '2'" class="gallery-span-badge">Wide</span>
+                      <span v-if="!img.src?.trim()" class="gallery-missing-badge">No image</span>
+                    </span>
+                    <div class="sub-editor-actions">
+                      <button class="btn-icon" @click="galleryImages.splice(index, 1)" title="Remove image">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <label class="field">
+                      <span class="field-label">Caption</span>
+                      <input v-model="img.caption" placeholder="e.g. Reforestation in rural Cambodia" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Span</span>
+                      <select v-model="img.span">
+                        <option value="1">1 column</option>
+                        <option value="2">2 columns (wider)</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="field field-block">
+                    <span class="field-label">Gallery Image</span>
+                    <ImagePickerField
+                      v-model="img.src"
+                      :label="img.caption || `Gallery Image ${index + 1}`"
+                      @success="(msg) => addToast(msg, 'success')"
+                      @error="(msg) => addToast(msg, 'error')"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <button class="btn btn-ghost add-stat-btn" @click="galleryImages.push({ src: '', caption: '', span: '1' })">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   Add Image
@@ -1253,6 +1315,116 @@ function formatDate(value: string) {
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem; }
 .add-stat-btn { margin-top: 0.75rem; }
 
+/* ─── GALLERY PREVIEW ─── */
+.gallery-stats-bar { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.gsb-item { font-size: 0.82rem; color: var(--muted); }
+.gsb-item strong { color: var(--contrast); }
+.gsb-missing { color: var(--red, #dc2626); }
+
+.gallery-preview-section {
+  background: var(--env-preview-bg, linear-gradient(135deg, #0a1f18 0%, #0d3328 50%, #0f3d2e 100%));
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+.gps-header { text-align: center; margin-bottom: 1.25rem; }
+.gps-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #d4a017;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  margin-bottom: 0.5rem;
+}
+.gps-title { font-size: 1.1rem; font-weight: 800; color: #ffffff; margin-bottom: 0.35rem; }
+.gps-desc { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin: 0; }
+
+.gps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  grid-auto-rows: 100px;
+}
+.gps-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  grid-column: span var(--g-span, 1);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: border-color 0.2s;
+}
+.gps-item.gps-span-2 { grid-column: span 2; }
+.gps-item.gps-empty {
+  border: 1.5px dashed rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.03);
+}
+.gps-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.gps-item:hover .gps-preview-img { transform: scale(1.05); }
+.gps-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10,31,24,0.7) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  display: flex;
+  align-items: flex-end;
+  padding: 0.65rem;
+}
+.gps-item:hover .gps-overlay { opacity: 1; }
+.gps-caption { color: #ffffff; font-size: 0.65rem; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.3); line-height: 1.2; }
+.gps-empty-state {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: rgba(255,255,255,0.2);
+  text-align: center;
+  padding: 0.5rem;
+}
+.gps-empty-text { font-size: 0.65rem; margin: 0.25rem 0 0; color: rgba(255,255,255,0.25); }
+
+.gallery-editor-list { display: grid; gap: 0.75rem; }
+.sub-editor-actions { display: flex; align-items: center; gap: 0.25rem; }
+.gallery-span-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--emerald-soft, rgba(15,143,105,0.1));
+  color: var(--emerald, #0f8f69);
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+.gallery-missing-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--red-soft, rgba(220,38,38,0.1));
+  color: var(--red, #dc2626);
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
 .stat-editor { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; }
 .stat-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
 .stat-editor-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
@@ -1276,8 +1448,7 @@ details[open] .sec-chevron { transform: rotate(180deg); }
 .sub-editor-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; }
 .sub-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
 .sub-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
-.field-img-preview { margin-top: 0.35rem; }
-.img-thumb { width: 120px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+
 
 .side-actions { display: grid; gap: 0.45rem; }
 .side-btn { display: flex; align-items: center; gap: 0.45rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: all 0.15s ease; }

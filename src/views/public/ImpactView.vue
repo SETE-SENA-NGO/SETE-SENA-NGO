@@ -1,16 +1,83 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { imageUrls } from '@/lib/imageUrls'
+import { supabase } from '@/lib/supabase'
 
-const heroImage = imageUrls.impact.hero
-const heroForest = imageUrls.impact.forest
-const heroVillage = imageUrls.impact.village
+/* ─── Dynamic slideshow images (loaded from pages.metadata) ── */
+const slideImages = ref<string[]>([
+  imageUrls.impact.hero,
+  imageUrls.impact.forest,
+  imageUrls.impact.village,
+])
 
-const slideItems = [
-  { image: heroImage, caption: '' },
-  { image: heroForest, caption: '' },
-  { image: heroVillage, caption: '' },
-]
+const slideItems = computed(() => [
+  { image: slideImages.value[0] || imageUrls.impact.hero, caption: '' },
+  { image: slideImages.value[1] || slideImages.value[0] || imageUrls.impact.hero, caption: '' },
+  { image: slideImages.value[2] || slideImages.value[0] || imageUrls.impact.hero, caption: '' },
+])
+
+/* ─── Load from pages table metadata ─────────────────────── */
+async function loadFromDb() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('metadata')
+      .eq('slug', 'impact')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[ImpactView] DB load failed:', error.message)
+      return
+    }
+
+    if (data?.metadata) {
+      const meta = data.metadata as Record<string, unknown>
+      const rawSlides = meta.slideImages
+      if (Array.isArray(rawSlides) && rawSlides.length > 0) {
+        const urls = rawSlides.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+        if (urls.length > 0) {
+          slideImages.value = urls
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[ImpactView] DB load crashed:', e)
+  }
+}
+
+/* ─── Real-time subscription for live updates ────────────── */
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+
+function setupRealtime() {
+  realtimeChannel = supabase
+    .channel('impact-page-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'pages',
+        filter: 'slug=eq.impact',
+      },
+      (payload) => {
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (row.metadata) {
+            const meta = row.metadata as Record<string, unknown>
+            const rawSlides = meta.slideImages
+            if (Array.isArray(rawSlides) && rawSlides.length > 0) {
+              const urls = rawSlides.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+              if (urls.length > 0) {
+                slideImages.value = urls
+              }
+            }
+          }
+        }
+      },
+    )
+    .subscribe()
+}
 
 const stats = [
   {
@@ -74,6 +141,20 @@ const timelineItems = [
 ]
 
 const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Children', 'ActionAid', 'Care']
+
+/* ─── Lifecycle ──────────────────────────────────────────── */
+onMounted(async () => {
+  document.title = 'Impact — Santi Sena'
+  await loadFromDb()
+  setupRealtime()
+})
+
+onBeforeUnmount(() => {
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel)
+    realtimeChannel = null
+  }
+})
 </script>
 
 <template>

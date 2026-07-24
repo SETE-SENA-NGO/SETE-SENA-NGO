@@ -367,7 +367,9 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
 }
 
 function googleThumbnailUrl(fileId) {
-  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=w1600`
+  // Use w3200 for high quality — far above the 380-480px display size, so it looks
+  // indistinguishable from the original, while still letting Google's CDN optimize file size.
+  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=w3200`
 }
 
 function sanitizeFileName(value) {

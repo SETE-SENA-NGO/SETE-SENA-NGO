@@ -5,6 +5,7 @@ import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ImagePickerField from '@/components/admin/ImagePickerField.vue'
 import { supabase } from '@/lib/supabase'
+import { imageUrls } from '@/lib/imageUrls'
 import { useUiStore } from '@/stores/ui.store'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -130,10 +131,10 @@ const page = ref<PageDraft>({
   slug: 'programs-education',
   title: 'Education',
   galleryImages: [
-    { id: genId(), label: 'Intro Section Image', url: '' },
-    { id: genId(), label: 'What We Do — Reading Image', url: '' },
-    { id: genId(), label: 'What We Do — Teacher Image', url: '' },
-    { id: genId(), label: 'Why It Matters — Study Image', url: '' },
+    { id: genId(), label: 'Intro Section Image', url: imageUrls.education.intro },
+    { id: genId(), label: 'What We Do — Reading Image', url: imageUrls.education.reading },
+    { id: genId(), label: 'What We Do — Teacher Image', url: imageUrls.education.teacher },
+    { id: genId(), label: 'Why It Matters — Study Image', url: imageUrls.education.study },
   ],
   sections: defaultSections(),
   updatedAt: '',
@@ -182,6 +183,8 @@ function loadFromLocalStorage(): void {
         url: urls[i] || '',
       }))
     }
+    // Ensure exactly 4 image slots (pad with empty if needed)
+    padGalleryToFour()
     if (Array.isArray(saved.sections)) {
       const savedSections = saved.sections as EditableSection[]
       page.value.sections = page.value.sections.map(defSec => {
@@ -256,11 +259,14 @@ async function loadPageContent() {
       // Image gallery — prefer gallery array, fall back to individual fields
       const galleryFromMeta = meta.gallery as GalleryImage[] | undefined
       if (Array.isArray(galleryFromMeta) && galleryFromMeta.length > 0) {
-        page.value.galleryImages = galleryFromMeta.map(g => ({
+        page.value.galleryImages = galleryFromMeta.map((g, i) => ({
           id: g.id || genId(),
-          label: g.label || '',
+          // Reassign labels from IMAGE_MAP to ensure keyword matching works on the public page
+          label: (g.label?.trim() ? g.label : IMAGE_MAP[i]?.label || `Slot ${i + 1}`),
           url: g.url || '',
         }))
+        // Ensure exactly 4 image slots (pad with empty if needed)
+        padGalleryToFour()
       } else {
         // Backward compat: map individual fields to gallery
         const urls = [
@@ -410,12 +416,38 @@ async function savePageContent() {
 }
 
 /* ─── Gallery Image Management ────────────────── */
-function addGalleryImage() {
-  page.value.galleryImages.push({ id: genId(), label: '', url: '' })
+function getImg(index: number) {
+  return page.value.galleryImages[index] || null
 }
 
-function removeGalleryImage(index: number) {
-  page.value.galleryImages.splice(index, 1)
+/* ─── Ensure gallery always has exactly 4 slots ── */
+function padGalleryToFour() {
+  while (page.value.galleryImages.length < 4) {
+    page.value.galleryImages.push({
+      id: genId(),
+      label: IMAGE_MAP[page.value.galleryImages.length]?.label || `Image ${page.value.galleryImages.length + 1}`,
+      url: '',
+    })
+  }
+}
+
+function missingImageWarning(): string {
+  const names: string[] = []
+  if (!page.value.galleryImages[0]?.url?.trim()) names.push('Intro Section')
+  if (!page.value.galleryImages[1]?.url?.trim()) names.push('What We Do — Reading')
+  if (!page.value.galleryImages[2]?.url?.trim()) names.push('What We Do — Teacher')
+  if (!page.value.galleryImages[3]?.url?.trim()) names.push('Why It Matters — Study')
+  if (names.length === 0) return ''
+  return `${names.length} image slot${names.length > 1 ? 's' : ''} missing: ${names.join(', ')}. These sections will show the default fallback image.`
+}
+
+function clearGalleryImage(index: number) {
+  const slotName = IMAGE_MAP[index]?.label || `Slot ${index + 1}`
+  if (!page.value.galleryImages[index]) return
+  if (!window.confirm(`Remove the image from "${slotName}"? This will show the default fallback image on the public page.`)) return
+  page.value.galleryImages[index].url = ''
+  addToast(`Image cleared for "${slotName}"`, 'info')
+  void savePageContent()
 }
 
 function onGalleryImageSaved(msg: string) {
@@ -561,46 +593,161 @@ onMounted(async () => {
           </button>
           <span class="tab-spacer"></span>
           <span v-if="isDirty" class="tab-dirty">Unsaved changes</span>
+          <span v-if="missingImageWarning()" class="tab-warning" :title="missingImageWarning()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Missing images
+          </span>
         </nav>
 
         <!-- ═══ TAB: IMAGES ═══ -->
         <section v-if="activeTab === 'image'" class="tab-content">
           <div class="section-card">
             <div class="sc-header">
-              <h2>Education Page Images</h2>
-              <p>Upload images from your computer (stored in Google Drive), paste a Google Drive URL, or add / delete images as needed. The first 4 images map to specific page sections.</p>
+              <h2>Page Images</h2>
+              <p>Upload images from your computer or paste a URL. Each slot matches a section on the public Education page. Clear an image to show the default fallback.</p>
             </div>
             <div class="sc-body">
-              <div v-if="page.galleryImages.length === 0 && !loading" class="empty-state">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <p>No images yet. Click <strong>Add Image</strong> to get started.</p>
-              </div>
-              <div v-for="(img, index) in page.galleryImages" :key="img.id" class="gallery-item">
-                <div class="gallery-item-hdr">
-                  <div class="gallery-item-label">
-                    <span class="gallery-index">{{ index + 1 }}</span>
-                    <input
-                      v-model="img.label"
-                      class="gallery-label-input"
-                      placeholder="Image label / section name"
-                    />
+              <div class="img-grid">
+                <!-- ═══ SLOT 0: Intro Section ═══ -->
+                <div class="img-card" :class="{ 'img-set': !!getImg(0)?.url?.trim() }">
+                  <div class="img-frame">
+                    <template v-if="getImg(0)?.url?.trim()">
+                      <img :src="getImg(0)!.url" alt="Intro" class="img-preview" />
+                      <button class="img-clear" @click="clearGalleryImage(0)" title="Remove this image">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </template>
+                    <template v-else>
+                      <div class="img-frame-empty">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <span class="img-frame-empty-text">No image set</span>
+                        <span class="img-frame-empty-hint">Fallback will be used</span>
+                      </div>
+                    </template>
                   </div>
-                  <button class="btn-icon btn-delete" title="Delete this image" @click="removeGalleryImage(index)">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                  </button>
+                  <div class="img-card-body">
+                    <div class="img-card-header">
+                      <span class="img-badge">Intro Section</span>
+                      <span class="img-path">Our Mission — Hero image</span>
+                    </div>
+                    <div class="img-upload-area">
+                      <ImagePickerField
+                        v-model="page.galleryImages[0].url"
+                        label="Upload or paste URL"
+                        hint=""
+                        hide-preview
+                        @success="onGalleryImageSaved"
+                        @error="(msg) => addToast(msg, 'error')"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <ImagePickerField
-                  v-model="img.url"
-                  :label="img.label || `Image ${index + 1}`"
-                  :hint="`Section: ${img.label || 'untitled'}`"
-                  @success="onGalleryImageSaved"
-                  @error="(msg) => addToast(msg, 'error')"
-                />
+
+                <!-- ═══ SLOT 1: What We Do — Reading ═══ -->
+                <div class="img-card" :class="{ 'img-set': !!getImg(1)?.url?.trim() }">
+                  <div class="img-frame">
+                    <template v-if="getImg(1)?.url?.trim()">
+                      <img :src="getImg(1)!.url" alt="Reading" class="img-preview" />
+                      <button class="img-clear" @click="clearGalleryImage(1)" title="Remove this image">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </template>
+                    <template v-else>
+                      <div class="img-frame-empty">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <span class="img-frame-empty-text">No image set</span>
+                        <span class="img-frame-empty-hint">Fallback will be used</span>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="img-card-body">
+                    <div class="img-card-header">
+                      <span class="img-badge">What We Do — Back</span>
+                      <span class="img-path">Reading / background photo</span>
+                    </div>
+                    <div class="img-upload-area">
+                      <ImagePickerField
+                        v-model="page.galleryImages[1].url"
+                        label="Upload or paste URL"
+                        hint=""
+                        hide-preview
+                        @success="onGalleryImageSaved"
+                        @error="(msg) => addToast(msg, 'error')"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ═══ SLOT 2: What We Do — Teacher ═══ -->
+                <div class="img-card" :class="{ 'img-set': !!getImg(2)?.url?.trim() }">
+                  <div class="img-frame">
+                    <template v-if="getImg(2)?.url?.trim()">
+                      <img :src="getImg(2)!.url" alt="Teacher" class="img-preview" />
+                      <button class="img-clear" @click="clearGalleryImage(2)" title="Remove this image">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </template>
+                    <template v-else>
+                      <div class="img-frame-empty">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <span class="img-frame-empty-text">No image set</span>
+                        <span class="img-frame-empty-hint">Fallback will be used</span>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="img-card-body">
+                    <div class="img-card-header">
+                      <span class="img-badge">What We Do — Front</span>
+                      <span class="img-path">Teacher / foreground photo</span>
+                    </div>
+                    <div class="img-upload-area">
+                      <ImagePickerField
+                        v-model="page.galleryImages[2].url"
+                        label="Upload or paste URL"
+                        hint=""
+                        hide-preview
+                        @success="onGalleryImageSaved"
+                        @error="(msg) => addToast(msg, 'error')"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ═══ SLOT 3: Why It Matters ═══ -->
+                <div class="img-card" :class="{ 'img-set': !!getImg(3)?.url?.trim() }">
+                  <div class="img-frame">
+                    <template v-if="getImg(3)?.url?.trim()">
+                      <img :src="getImg(3)!.url" alt="Study" class="img-preview" />
+                      <button class="img-clear" @click="clearGalleryImage(3)" title="Remove this image">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </template>
+                    <template v-else>
+                      <div class="img-frame-empty">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        <span class="img-frame-empty-text">No image set</span>
+                        <span class="img-frame-empty-hint">Fallback will be used</span>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="img-card-body">
+                    <div class="img-card-header">
+                      <span class="img-badge">Why It Matters</span>
+                      <span class="img-path">Impact / Study image</span>
+                    </div>
+                    <div class="img-upload-area">
+                      <ImagePickerField
+                        v-model="page.galleryImages[3].url"
+                        label="Upload or paste URL"
+                        hint=""
+                        hide-preview
+                        @success="onGalleryImageSaved"
+                        @error="(msg) => addToast(msg, 'error')"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <button class="btn btn-ghost add-btn" @click="addGalleryImage">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Image
-              </button>
             </div>
           </div>
         </section>
@@ -886,85 +1033,164 @@ details[open] .sec-chevron { transform: rotate(180deg); }
 .item-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.3rem; }
 .item-chip { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; background: var(--blue-soft); color: var(--blue); font-size: 0.75rem; font-weight: 600; }
 
-/* GALLERY IMAGE MANAGEMENT */
-.gallery-item {
-  background: var(--bg);
+/* ═══ IMAGE GRID (Professional card layout) ═══ */
+.img-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.img-card {
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1rem;
-  margin-bottom: 0.85rem;
-  transition: border-color 0.15s ease;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.gallery-item:hover { border-color: var(--border-s); }
-.gallery-item-hdr {
+.img-card:hover {
+  border-color: var(--border-s);
+  box-shadow: var(--shadow-sm);
+}
+.img-card.img-set {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 30%, var(--border));
+}
+.img-card.img-set:hover {
+  border-color: var(--emerald);
+  box-shadow: 0 0 0 1px var(--emerald-glow), var(--shadow-sm);
+}
+
+/* Image frame */
+.img-frame {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.img-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.img-card:hover .img-preview {
+  transform: scale(1.04);
+}
+
+/* Clear button */
+.img-clear {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.7rem;
-}
-.gallery-item-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-}
-.gallery-index {
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
   border-radius: 50%;
-  background: var(--blue-soft);
-  color: var(--blue);
-  font-size: 0.72rem;
-  font-weight: 800;
-  flex-shrink: 0;
+  border: none;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s ease, transform 0.15s ease;
 }
-.gallery-label-input {
-  flex: 1;
-  padding: 0.45rem 0.65rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--contrast);
-  font-size: 0.84rem;
-  font-weight: 600;
-  font-family: inherit;
-  transition: border-color 0.15s ease;
+.img-clear:hover {
+  background: #dc2626;
+  transform: scale(1.1);
 }
-.gallery-label-input:focus {
-  outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 2px var(--blue-glow);
-}
-.btn-delete {
-  flex-shrink: 0;
-  margin-left: 0.5rem;
-}
-.add-btn {
-  margin-top: 0.25rem;
-}
-.empty-state {
-  display: grid;
-  justify-items: center;
-  gap: 0.5rem;
-  padding: 2rem;
-  color: var(--muted);
-  text-align: center;
-}
-.empty-state svg {
+
+/* Empty state */
+.img-frame-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.35rem;
   color: var(--muted);
   opacity: 0.5;
+  padding: 0.5rem;
+  text-align: center;
 }
-.empty-state p {
-  margin: 0;
-  font-size: 0.88rem;
+.img-frame-empty svg {
+  opacity: 0.4;
+}
+.img-frame-empty-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.img-frame-empty-hint {
+  font-size: 0.68rem;
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* Card body */
+.img-card-body {
+  padding: 0.85rem 1rem 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+.img-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.img-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+.img-card.img-set .img-badge {
+  color: var(--emerald);
+  background: var(--emerald-soft);
+}
+.img-path {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.img-upload-area {
+  display: grid;
+}
+
+@media (max-width: 700px) {
+  .img-grid {
+    grid-template-columns: 1fr;
+  }
+  .img-frame {
+    height: 140px;
+  }
 }
 
 .loading-text { color: var(--muted); font-style: italic; padding: 1.5rem 0; text-align: center; }
 .cloud-badge { background: var(--emerald-soft) !important; color: var(--emerald) !important; }
 .local-badge { background: var(--amber-soft) !important; color: var(--amber) !important; }
+
+/* ⚠️ Missing image warning */
+.tab-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--red);
+  background: var(--red-soft);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: help;
+}
+
 
 @media (min-width: 900px) { .edu-dash.sidebar-open { padding-left: 260px; } }
 @media (max-width: 900px) { .banner-stats { grid-template-columns: repeat(2,1fr); } }

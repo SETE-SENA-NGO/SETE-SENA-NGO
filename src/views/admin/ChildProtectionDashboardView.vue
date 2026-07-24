@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import ImagePickerField from '@/components/admin/ImagePickerField.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
@@ -525,11 +526,16 @@ onMounted(async () => {
                   <input v-model="page.eyebrow" placeholder="e.g. Child Protection" />
                   <span class="field-hint">Small label above the main headline</span>
                 </label>
-                <label class="field">
-                  <span class="field-label">Hero Image URL</span>
-                  <input v-model="page.heroImageUrl" placeholder="https://..." />
-                  <span class="field-hint">URL for the hero background image</span>
-                </label>
+                <div class="field field-block">
+                  <span class="field-label">Hero Image</span>
+                  <ImagePickerField
+                    v-model="page.heroImageUrl"
+                    label="Hero Image"
+                    hint="Background image for the hero section"
+                    @success="(msg) => addToast(msg, 'success')"
+                    @error="(msg) => addToast(msg, 'error')"
+                  />
+                </div>
               </div>
               <label class="field field-block">
                 <span class="field-label">Headline (main title)</span>

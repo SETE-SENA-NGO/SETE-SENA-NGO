@@ -92,6 +92,12 @@ function iconForLabel(label: string): string {
   return 'star'
 }
 
+/* ─── Match gallery images to page slots by label ── */
+function imageFromGallery(gallery: Array<{ label: string; url: string }>, keyword: string): string {
+  const match = gallery.find(g => g.label?.toLowerCase().includes(keyword.toLowerCase()))
+  return match?.url?.trim() || ''
+}
+
 /* ─── Parse metadata into reactive refs ────────── */
 function applyMetadata(meta: Record<string, unknown>) {
   // Hero title & intro
@@ -102,19 +108,48 @@ function applyMetadata(meta: Record<string, unknown>) {
     heroDesc.value = meta.intro.trim()
   }
 
-  // Images from metadata
-  if (typeof meta.introImageUrl === 'string' && meta.introImageUrl.trim()) {
-    childIntroImage.value = meta.introImageUrl.trim()
+  // Images from metadata — prefer gallery array, fall back to individual fields
+  const galleryRaw = meta.gallery
+  const hasGallery = Array.isArray(galleryRaw) && galleryRaw.length > 0
+  const gallery = hasGallery ? (galleryRaw as Array<{ label: string; url: string }>) : []
+
+  // Helper: pick URL from gallery by keyword match, then by index, then from individual field
+  function pickImage(keyword: string, index: number, fieldUrl?: string): string | null {
+    // 1. Try label-based match from gallery
+    if (hasGallery) {
+      const url = imageFromGallery(gallery, keyword)
+      if (url) return url
+      // 2. Fallback: use index from gallery
+      if (gallery[index]?.url?.trim()) return gallery[index].url.trim()
+    }
+    // 3. Fallback: use the individual saved field (introImageUrl, readingImageUrl, etc.)
+    if (fieldUrl?.trim()) return fieldUrl.trim()
+    return null
   }
-  if (typeof meta.readingImageUrl === 'string' && meta.readingImageUrl.trim()) {
-    childReadingImage.value = meta.readingImageUrl.trim()
-  }
-  if (typeof meta.teacherImageUrl === 'string' && meta.teacherImageUrl.trim()) {
-    childTeacherImage.value = meta.teacherImageUrl.trim()
-  }
-  if (typeof meta.studyImageUrl === 'string' && meta.studyImageUrl.trim()) {
-    childStudyImage.value = meta.studyImageUrl.trim()
-  }
+
+  const metaIntroUrl = typeof meta.introImageUrl === 'string' ? meta.introImageUrl : undefined
+  const metaReadingUrl = typeof meta.readingImageUrl === 'string' ? meta.readingImageUrl : undefined
+  const metaTeacherUrl = typeof meta.teacherImageUrl === 'string' ? meta.teacherImageUrl : undefined
+  const metaStudyUrl = typeof meta.studyImageUrl === 'string' ? meta.studyImageUrl : undefined
+
+  const introUrl = pickImage('intro', 0, metaIntroUrl)
+  if (introUrl) childIntroImage.value = introUrl
+  else console.warn('[EducationView] No intro image found in gallery or fields')
+
+  const readingUrl = pickImage('reading', 1, metaReadingUrl)
+  if (readingUrl) childReadingImage.value = readingUrl
+  else console.warn('[EducationView] No reading image found')
+
+  const teacherUrl = pickImage('teacher', 2, metaTeacherUrl)
+  if (teacherUrl) childTeacherImage.value = teacherUrl
+  else console.warn('[EducationView] No teacher image found')
+
+  // Study: try 'study', 'impact', 'why'
+  let studyUrl = pickImage('study', 3, metaStudyUrl)
+  if (!studyUrl) studyUrl = pickImage('impact', 3, metaStudyUrl)
+  if (!studyUrl) studyUrl = pickImage('why', 3, metaStudyUrl)
+  if (studyUrl) childStudyImage.value = studyUrl
+  else console.warn('[EducationView] No study/impact image found')
 
   // Stats band
   if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {

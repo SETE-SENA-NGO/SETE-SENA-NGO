@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { imageUrls } from '@/lib/imageUrls'
 import { supabase } from '@/lib/supabase'
 
@@ -33,7 +33,8 @@ const statIcons: Record<string, string> = {
   building: `<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/><path d="M10 21v-4h4v4"/>`,
 }
 
-const quoteBackground = `url(${imageUrls.programs.livelihoodHero3})`
+const heroImageValue = ref(imageUrls.programs.livelihoodHero3)
+const quoteBackground = computed(() => `url(${heroImageValue.value})`)
 
 interface WorkItem {
   title: string
@@ -265,6 +266,19 @@ function applyPageBody(body: string) {
 
 /* ─── Load from programs table metadata ───────── */
 function applyProgramMetadata(meta: Record<string, unknown>) {
+  // Hero image — from meta.heroImageUrl (saved by admin dashboard)
+  if (typeof meta.heroImageUrl === 'string' && meta.heroImageUrl.trim()) {
+    heroImageValue.value = meta.heroImageUrl.trim()
+  }
+
+  // Gallery images — from meta.gallery (array of {label, url} like Education)
+  let galleryUrls: string[] = []
+  if (Array.isArray(meta.gallery) && meta.gallery.length > 0) {
+    galleryUrls = meta.gallery
+      .map((g: Record<string, unknown>) => typeof g.url === 'string' ? g.url.trim() : '')
+      .filter(Boolean)
+  }
+
   // Quote — from meta.quoteContent.text
   if (meta.quoteContent && typeof meta.quoteContent === 'object') {
     const qc = meta.quoteContent as Record<string, unknown>
@@ -302,7 +316,7 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
         whatWeDoItems.value = lines.map((title: string, i: number) => ({
           title,
           text: defaultText || FALLBACK_WHAT_WE_DO[i]?.text || '',
-          image: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.livelihoodHero1,
+          image: galleryUrls[i] || FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.livelihoodHero1,
         }))
       }
     }
@@ -315,7 +329,7 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
         whyMattersItems.value = lines.map((text: string, i: number) => ({
           text,
           icon: FALLBACK_WHY_IT_MATTERS[i]?.icon || 'shield-halved',
-          image: FALLBACK_WHY_IT_MATTERS[i % FALLBACK_WHY_IT_MATTERS.length]?.image || imageUrls.programs.livelihoodHero1,
+          image: galleryUrls[(FALLBACK_WHAT_WE_DO.length) + i] || FALLBACK_WHY_IT_MATTERS[i % FALLBACK_WHY_IT_MATTERS.length]?.image || imageUrls.programs.livelihoodHero1,
         }))
       }
     }

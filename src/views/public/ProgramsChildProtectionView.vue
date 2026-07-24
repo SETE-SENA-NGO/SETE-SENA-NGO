@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { imageUrls } from '@/lib/imageUrls'
 import { supabase } from '@/lib/supabase'
 
-const familyNetworkImage = imageUrls.programs.childProtection3
-const childProtectionImage = imageUrls.programs.childProtection
-const childProtectionPeerImage = imageUrls.programs.childProtection1
+const cpHeroRef = ref(imageUrls.programs.childProtection)
+const cpHero1Ref = ref(imageUrls.programs.childProtection1)
+const cpHero2Ref = ref(imageUrls.programs.childProtection2)
+const cpHero3Ref = ref(imageUrls.programs.childProtection3)
+
+const familyNetworkImage = computed(() => cpHero3Ref.value)
+const childProtectionImage = computed(() => cpHeroRef.value)
+const childProtectionPeerImage = computed(() => cpHero1Ref.value)
 
 const FALLBACK_STATS = [
   { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin', image: imageUrls.programs.childProtection },
@@ -190,6 +195,19 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
     introText.value = meta.intro.trim()
   }
 
+  // Gallery images — from meta.gallery (array of {label, url} like Education)
+  let galleryUrls: string[] = []
+  if (Array.isArray(meta.gallery) && meta.gallery.length > 0) {
+    galleryUrls = meta.gallery
+      .map((g: Record<string, unknown>) => typeof g.url === 'string' ? g.url.trim() : '')
+      .filter(Boolean)
+    // Map gallery URLs to CP hero refs for the story collage
+    if (galleryUrls.length > 0) cpHeroRef.value = galleryUrls[0]
+    if (galleryUrls.length > 1) cpHero1Ref.value = galleryUrls[1]
+    if (galleryUrls.length > 2) cpHero2Ref.value = galleryUrls[2]
+    if (galleryUrls.length > 3) cpHero3Ref.value = galleryUrls[3]
+  }
+
   // Stats band
   if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
     dynamicStats.value = meta.statsBand.map((s: Record<string, unknown>, i: number) => ({
@@ -197,7 +215,7 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
       label: String(s.label ?? ''),
       description: String(s.description ?? ''),
       icon: labelToIcon(String(s.label ?? '')),
-      image: FALLBACK_STATS[i % FALLBACK_STATS.length]?.image || imageUrls.programs.childProtection,
+      image: galleryUrls[i] || FALLBACK_STATS[i % FALLBACK_STATS.length]?.image || imageUrls.programs.childProtection,
     }))
   }
 
@@ -213,7 +231,7 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
         whatWeDoItems.value = lines.map((title: string, i: number) => ({
           title,
           text: (typeof workSection.body === 'string' ? workSection.body : '') || FALLBACK_WHAT_WE_DO[i]?.text || '',
-          image: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.childProtection,
+          image: galleryUrls[i] || FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.childProtection,
           color: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.color || '#0a7d5c',
         }))
       }

@@ -7,6 +7,7 @@ const props = defineProps<{
   label: string
   hint?: string
   placeholder?: string
+  hidePreview?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -98,7 +99,7 @@ function onUrlBlur() {
       <span v-if="props.hint" class="field-hint">{{ props.hint }}</span>
     </label>
 
-    <div v-if="modelValue" class="preview-wrap">
+    <div v-if="modelValue && !props.hidePreview" class="preview-wrap">
       <div class="img-preview-box">
         <img :src="modelValue" :alt="props.label" class="img-preview" />
       </div>
@@ -217,8 +218,9 @@ function onUrlBlur() {
 
 .img-preview {
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  max-height: 240px;
+  object-fit: contain;
   display: block;
+  background: #f0f0f0;
 }
 </style>
