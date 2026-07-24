@@ -191,8 +191,12 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
   }
 
   // Hero image — from meta.heroImageUrl (saved by Child Protection admin dashboard)
+  // Since the admin only has one image field, update all three collage images
   if (typeof meta.heroImageUrl === 'string' && meta.heroImageUrl.trim()) {
-    cpHero3Ref.value = meta.heroImageUrl.trim()
+    const url = meta.heroImageUrl.trim()
+    cpHeroRef.value = url
+    cpHero1Ref.value = url
+    cpHero3Ref.value = url
   }
 
   // Gallery images — from meta.gallery (array of {label, url} for backward compat)
