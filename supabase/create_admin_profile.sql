@@ -1,9 +1,11 @@
 -- Create the Auth user first in Supabase Dashboard:
 -- Authentication > Users > Add user
--- Email: your-admin@example.com
--- Password: use a strong generated password
+-- Email: your real admin email
+-- Password: a strong unique password
 --
--- Then replace the email below and run this SQL to grant admin access.
+-- Replace replace-with-your-admin-email@example.org below with that admin email.
+--
+-- Then run this SQL to grant admin access.
 -- If you have not run the project migrations yet, this also creates the
 -- minimal public.profiles table needed by the login guard.
 
@@ -45,7 +47,7 @@ select
   'super_admin',
   'Admin'
 from auth.users
-where lower(email) = lower('your-admin@example.com')
+where lower(email) = lower('replace-with-your-admin-email@example.org')
 on conflict (id) do update
 set
   email = excluded.email,
@@ -58,12 +60,12 @@ begin
   if not exists (
     select 1
     from auth.users
-    where lower(email) = lower('your-admin@example.com')
+    where lower(email) = lower('replace-with-your-admin-email@example.org')
   ) then
-    raise exception 'Create auth user your-admin@example.com first.';
+    raise exception 'Create the Supabase Auth admin user first, then replace the placeholder email in this SQL file.';
   end if;
 end $$;
 
 select id, email, role, full_name
 from public.profiles
-where lower(email) = lower('your-admin@example.com');
+where lower(email) = lower('replace-with-your-admin-email@example.org');

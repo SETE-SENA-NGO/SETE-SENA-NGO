@@ -891,22 +891,22 @@ onMounted(async () => {
 
 <style scoped>
 .edu-dash {
-  --bg: var(--admin-theme-bg);
-  --surface: var(--admin-theme-surface);
-  --border: var(--admin-theme-border);
-  --border-s: var(--admin-theme-border-strong);
-  --text: var(--admin-theme-text);
-  --contrast: var(--admin-theme-contrast);
-  --muted: var(--admin-theme-muted);
-  --blue: var(--admin-theme-teal);
-  --blue-glow: color-mix(in srgb, var(--admin-theme-teal) 25%, transparent);
-  --blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
-  --emerald: var(--admin-theme-primary);
-  --emerald-glow: color-mix(in srgb, var(--admin-theme-primary) 25%, transparent);
-  --emerald-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
-  --amber: var(--admin-theme-gold);
-  --amber-glow: color-mix(in srgb, var(--admin-theme-gold) 25%, transparent);
-  --amber-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
+  --bg: #f3f6fd;
+  --surface: #ffffff;
+  --border: #e8edf6;
+  --border-s: #d4dcee;
+  --text: #1e2a4a;
+  --contrast: #0a142d;
+  --muted: #6a7fa0;
+  --blue: #2563eb;
+  --blue-glow: rgba(37,99,235,0.25);
+  --blue-soft: #ecf2ff;
+  --emerald: #059669;
+  --emerald-glow: rgba(5,150,105,0.25);
+  --emerald-soft: #eafaf5;
+  --amber: #d97706;
+  --amber-glow: rgba(217,119,6,0.25);
+  --amber-soft: #fef8ee;
   --violet: #7c3aed;
   --violet-glow: rgba(124,58,237,0.25);
   --violet-soft: color-mix(in srgb, #7c3aed 12%, transparent);
@@ -975,9 +975,9 @@ onMounted(async () => {
 .bstat-amber:hover .bstat-icon { box-shadow: 0 0 0 4px var(--amber-glow); }
 .bstat-violet .bstat-icon { background: var(--violet-soft); color: var(--violet); }
 .bstat-violet:hover .bstat-icon { box-shadow: 0 0 0 4px var(--violet-glow); }
-.bstat-info strong { display: block; color: var(--contrast); font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
-.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
-.bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 500; margin-top: 1px; }
+.bstat-info strong { display: block; color: var(--contrast); font-size: 1.05rem; font-weight: 900; line-height: 1.2; }
+.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+.bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 600; margin-top: 1px; }
 
 /* TAB NAV */
 .tab-nav { display: flex; align-items: center; gap: 0.35rem; margin-top: 1.25rem; padding: 0 0.25rem; overflow-x: auto; }

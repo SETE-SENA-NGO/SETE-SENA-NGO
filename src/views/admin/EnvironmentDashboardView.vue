@@ -568,7 +568,9 @@ function formatDate(value: string) {
         <!-- BANNER -->
         <header class="dash-banner">
           <div class="banner-glow" aria-hidden="true"></div>
-          <div class="banner-particles" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <div class="banner-particles" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
           <div class="banner-inner">
             <div class="banner-breadcrumb">
               <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
@@ -1153,7 +1155,26 @@ function formatDate(value: string) {
                 </label>
               </div>
             </div>
-          </div>
+
+            <div class="side-card">
+              <div class="side-card-hdr">
+                <span class="side-card-badge env-badge">Actions</span>
+                <h3>Manage</h3>
+              </div>
+              <RouterLink class="side-btn" to="/admin/modules/programs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                Program records
+              </RouterLink>
+              <RouterLink class="side-btn" to="/admin/editor/programs-environment">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit page content
+              </RouterLink>
+              <RouterLink class="side-btn" to="/admin/media">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Media library
+              </RouterLink>
+            </div>
+        </div>
         </section>
       </main>
     </div>
@@ -1188,11 +1209,23 @@ function formatDate(value: string) {
   --shadow-md: var(--admin-theme-shadow);
   --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
   min-height: 100vh; background: var(--bg); color: var(--text);
-  font-family: inherit;
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
 }
+:global(.admin-dark) .env-dash {
+  --bg: #080c1a; --surface: #101826; --border: #1c2642; --border-s: #263252;
+  --text: #c8d2e6; --contrast: #eaf0f8; --muted: #7a8aaa;
+  --blue: #3b82f6; --blue-soft: #172244;
+  --emerald: #10b981; --emerald-glow: rgba(16,185,129,0.2); --emerald-soft: #142a22;
+  --amber: #f59e0b; --amber-soft: #241e14;
+  --violet: #a78bfa; --violet-soft: #1c1640;
+  --slate: #8896b0; --slate-soft: #121a2e;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.15);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.3);
+}
 .dash-layout { display: flex; }
-.dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; position: relative; }
+.dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; }
 
 .toast-container { position: fixed; top: 72px; right: 1.5rem; z-index: 200; display: grid; gap: 0.4rem; }
 .toast { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; box-shadow: var(--shadow-md); background: var(--surface); border: 1px solid var(--border); }
@@ -1204,15 +1237,23 @@ function formatDate(value: string) {
 .toast-leave-to { opacity: 0; transform: translateX(30px); }
 
 .btn {
-  display: inline-flex; align-items: center; gap: 0.45rem; min-height: 36px; padding: 0.4rem 1rem;
-  border-radius: var(--radius-sm); font-weight: 700; font-size: 0.82rem;
-  cursor: pointer; text-decoration: none; transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  min-height: 36px; padding: 0.4rem 1rem;
+  border-radius: var(--radius-sm); font-weight: 750; font-size: 0.82rem;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
   border: 1px solid transparent; font-family: inherit;
 }
 .btn:hover { transform: translateY(-1px); }
-.btn-primary { background: linear-gradient(135deg, #059669, #10b981); color: #fff; box-shadow: 0 4px 14px rgba(5,150,105,0.3); }
-.btn-primary:hover { box-shadow: 0 6px 24px rgba(5,150,105,0.4); }
-.btn-ghost { background: rgba(255,255,255,0.7); color: var(--contrast); border-color: var(--border); backdrop-filter: blur(8px); }
+.btn-primary.env-primary {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff; box-shadow: 0 4px 14px rgba(5,150,105,0.3);
+}
+.btn-primary.env-primary:hover { box-shadow: 0 6px 24px rgba(5,150,105,0.4); }
+.btn-ghost {
+  background: rgba(255,255,255,0.7); color: var(--contrast);
+  border-color: var(--border); backdrop-filter: blur(8px);
+}
 .btn-ghost:hover { background: var(--surface); border-color: var(--border-s); box-shadow: var(--shadow-sm); }
 :global(.admin-dark) .btn-ghost { background: rgba(16,24,38,0.7); border-color: var(--border); }
 .btn:disabled { opacity: 0.5; cursor: wait; }
@@ -1229,28 +1270,57 @@ function formatDate(value: string) {
 .dash-banner { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); overflow: hidden; }
 .banner-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 400px 200px at 10% 30%, rgba(5,150,105,0.08) 0%, transparent 70%), radial-gradient(ellipse 300px 200px at 90% 80%, rgba(37,99,235,0.05) 0%, transparent 70%); pointer-events: none; }
 .banner-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.banner-particles span { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: rgba(5,150,105,0.1); }
+.banner-particles span {
+  position: absolute; width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(5,150,105,0.1);
+}
 .banner-particles span:nth-child(1) { top: 15%; left: 10%; animation: float 8s ease-in-out infinite; }
 .banner-particles span:nth-child(2) { top: 60%; right: 15%; width: 4px; height: 4px; animation: float 6s ease-in-out infinite reverse; }
 .banner-particles span:nth-child(3) { bottom: 20%; left: 40%; width: 5px; height: 5px; animation: float 10s ease-in-out infinite 2s; }
 .banner-particles span:nth-child(4) { top: 25%; right: 30%; animation: float 7s ease-in-out infinite 1s; }
-@keyframes float { 0%,100% { transform: translateY(0) scale(1); opacity: 0.4; } 50% { transform: translateY(-12px) scale(1.2); opacity: 0.8; } }
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
+  50% { transform: translateY(-12px) scale(1.2); opacity: 0.8; }
+}
 .banner-inner { position: relative; z-index: 1; }
-.banner-breadcrumb { display: flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.25rem; background: rgba(255,255,255,0.5); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); font-size: 0.76rem; font-weight: 700; }
+.banner-breadcrumb {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 1.25rem;
+  background: rgba(255,255,255,0.5); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.76rem; font-weight: 700;
+}
 :global(.admin-dark) .banner-breadcrumb { background: rgba(16,24,38,0.5); }
 .bcrumb-link { color: var(--blue); text-decoration: none; }
 .bcrumb-link:hover { text-decoration: underline; }
 .bcrumb-sep { color: var(--muted); width: 10px; }
 .bcrumb-label { color: var(--muted); }
 .bcrumb-current { color: var(--contrast); }
-.banner-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1.25rem 1.25rem 0.75rem; }
+.banner-content {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  padding: 1.25rem 1.25rem 0.75rem;
+}
 .banner-text { display: grid; gap: 0.3rem; }
-.banner-badge { display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); background: var(--emerald-soft); padding: 0.2rem 0.7rem; border-radius: 999px; }
-.banner-title { margin: 0; color: var(--contrast); font-size: clamp(1.35rem,2.8vw,1.85rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.1; }
+.banner-badge {
+  display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content;
+  font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--emerald); background: var(--emerald-soft);
+  padding: 0.2rem 0.7rem; border-radius: 999px;
+}
+.banner-title {
+  margin: 0; color: var(--contrast);
+  font-size: clamp(1.35rem,2.8vw,1.85rem); font-weight: 900;
+  letter-spacing: -0.025em; line-height: 1.1;
+}
 .banner-desc { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.5; max-width: 460px; }
 .banner-actions { display: flex; gap: 0.45rem; flex-shrink: 0; flex-wrap: wrap; }
 .banner-stats { display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid var(--border); }
-.bstat { display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 1rem; border-right: 1px solid var(--border); transition: all 0.2s ease; }
+.bstat {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.75rem 1rem;
+  border-right: 1px solid var(--border);
+  text-decoration: none; transition: all 0.2s ease;
+}
 .bstat:last-child { border-right: none; }
 .bstat:hover { background: var(--surface); }
 .bstat-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius-sm); flex-shrink: 0; transition: transform 0.2s ease; }
@@ -1286,8 +1356,8 @@ function formatDate(value: string) {
 .link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
 .link-violet .link-icon { background: var(--violet-soft); color: var(--violet); }
 .link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 700; margin-bottom: 1px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 800; margin-bottom: 1px; }
+.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.2s ease; }
 .link-card:hover .link-arrow { transform: translateX(3px); color: var(--emerald); }
 

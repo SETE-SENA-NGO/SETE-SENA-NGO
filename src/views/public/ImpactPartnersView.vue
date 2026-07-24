@@ -5,11 +5,8 @@
       <div class="container">
         <div class="section-header">
           <span class="section-label">Our Network</span>
-          <h2 class="section-title">Partners & Supporters</h2>
-          <p class="section-intro">
-            These organizations and institutions make our work possible through funding, technical
-            expertise, and shared commitment to sustainable development.
-          </p>
+          <h2 class="section-title">{{ supportersHeader.heading }}</h2>
+          <p class="section-intro">{{ supportersHeader.body }}</p>
         </div>
 
         <!-- Logo Carousel -->
@@ -37,11 +34,8 @@
       <div class="container">
         <div class="section-header">
           <span class="section-label">Government Relations</span>
-          <h2 class="section-title">Government Coordination</h2>
-          <p class="section-intro">
-            We work hand-in-hand with national and provincial government bodies to align our
-            programs with Cambodia's development priorities.
-          </p>
+          <h2 class="section-title">{{ governmentHeader.heading }}</h2>
+          <p class="section-intro">{{ governmentHeader.body }}</p>
         </div>
         <div class="government-grid">
           <div v-for="item in governmentItems" :key="item.title" class="gov-card">
@@ -99,11 +93,8 @@
       <div class="container">
         <div class="section-header">
           <span class="section-label">Community Roots</span>
-          <h2 class="section-title">Local Partners</h2>
-          <p class="section-intro">
-            Sustainable change is built from the ground up. These local institutions and networks
-            are the backbone of every program we run.
-          </p>
+          <h2 class="section-title">{{ localHeader.heading }}</h2>
+          <p class="section-intro">{{ localHeader.body }}</p>
         </div>
         <div class="local-grid">
           <div v-for="item in localItems" :key="item.title" class="local-card">
@@ -120,11 +111,8 @@
       <div class="container">
         <div class="section-header">
           <span class="section-label">Why Partners Trust Us</span>
-          <h2 class="section-title">Why Partners Stay</h2>
-          <p class="section-intro">
-            Long-term partnerships don't happen by chance. Here's what keeps our partners committed
-            year after year.
-          </p>
+          <h2 class="section-title">{{ whyHeader.heading }}</h2>
+          <p class="section-intro">{{ whyHeader.body }}</p>
         </div>
         <div class="why-grid">
           <div v-for="item in whyItems" :key="item.title" class="why-card">
@@ -195,136 +183,161 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
 
-// Partner data
-const partners = [
-  { name: 'UNDP', logo: 'UNDP', image: imageUrls.partners.undp },
-  {
-    name: 'Asian Development Bank',
-    logo: 'ADB',
-    image: imageUrls.partners.adb,
-  },
-  {
-    name: 'Oxfam',
-    logo: 'OXFAM',
-    image: imageUrls.partners.oxfam,
-  },
-  {
-    name: 'Bread for the World',
-    logo: 'BFW',
-    image: imageUrls.partners.breadForTheWorld,
-  },
-  {
-    name: 'Misereor',
-    logo: 'MIS',
-    image: imageUrls.partners.misereor,
-  },
-  {
-    name: 'European Union',
-    logo: 'EU',
-    image: imageUrls.partners.europeanUnion,
-  },
-  {
-    name: 'USAID / Winrock',
-    logo: 'USAID',
-    image: imageUrls.partners.usaidWinrock,
-  },
-  {
-    name: 'Diakonia',
-    logo: 'DIA',
-    image: imageUrls.partners.diakonia,
-  },
-  {
-    name: 'Heinrich Böll Stiftung',
-    logo: 'HBS',
-    image: imageUrls.partners.heinrichBoll,
-  },
-  {
-    name: 'Caritas',
-    logo: 'CAR',
-    image: imageUrls.partners.caritas,
-  },
+const props = defineProps<{
+  content?: {
+    headline?: string
+    intro?: string
+    sections?: Array<{
+      id: string
+      heading: string
+      body: string
+      items: string
+    }>
+  } | null
+}>()
+
+// Dynamic logos map referencing local assets
+const donorLogosMap: Record<string, string> = {
+  'UNDP': new URL('@/assets/image.png', import.meta.url).href,
+  'Asian Development Bank': new URL('@/assets/image copy.png', import.meta.url).href,
+  'ADB': new URL('@/assets/image copy.png', import.meta.url).href,
+  'Oxfam': new URL('@/assets/image copy 2.png', import.meta.url).href,
+  'Bread for the World': new URL('@/assets/image copy 3.png', import.meta.url).href,
+  'Misereor': new URL('@/assets/image copy 4.png', import.meta.url).href,
+  'European Union': new URL('@/assets/image copy 5.png', import.meta.url).href,
+  'USAID / Winrock': new URL('@/assets/image copy 6.png', import.meta.url).href,
+  'Diakonia': new URL('@/assets/image copy 7.png', import.meta.url).href,
+  'Heinrich Böll Stiftung': new URL('@/assets/image copy 8.png', import.meta.url).href,
+  'Caritas': new URL('@/assets/image copy 9.png', import.meta.url).href,
+}
+
+// Partner default data
+const defaultPartners = [
+  { name: 'UNDP', logo: 'UNDP', image: donorLogosMap['UNDP'] },
+  { name: 'Asian Development Bank', logo: 'ADB', image: donorLogosMap['Asian Development Bank'] },
+  { name: 'Oxfam', logo: 'OXFAM', image: donorLogosMap['Oxfam'] },
+  { name: 'Bread for the World', logo: 'BFW', image: donorLogosMap['Bread for the World'] },
+  { name: 'Misereor', logo: 'MIS', image: donorLogosMap['Misereor'] },
+  { name: 'European Union', logo: 'EU', image: donorLogosMap['European Union'] },
+  { name: 'USAID / Winrock', logo: 'USAID', image: donorLogosMap['USAID / Winrock'] },
+  { name: 'Diakonia', logo: 'DIA', image: donorLogosMap['Diakonia'] },
+  { name: 'Heinrich Böll Stiftung', logo: 'HBS', image: donorLogosMap['Heinrich Böll Stiftung'] },
+  { name: 'Caritas', logo: 'CAR', image: donorLogosMap['Caritas'] },
 ]
 
-const governmentItems = [
-  {
-    icon: 'building',
-    title: 'Ministry of Interior',
-    desc: 'Registration and coordination across all program areas.',
-  },
-  {
-    icon: 'tree',
-    title: 'Ministry of Environment',
-    desc: 'Community forestry and natural resource management.',
-  },
-  {
-    icon: 'users',
-    title: 'Ministry of Women and Affairs',
-    desc: 'Gender equality initiatives and child protection programs.',
-  },
-  {
-    icon: 'book',
-    title: 'Ministry of Education, Youth and Sport',
-    desc: 'Pre-school certification and non-formal education.',
-  },
-  {
-    icon: 'map-pin',
-    title: 'Provincial Departments',
-    desc: 'Svay Rieng, Prey Veng and Kratie — our three focal provinces.',
-  },
+const supportersHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'partners-supporters')
+  return {
+    heading: section?.heading || 'Partners & Supporters',
+    body: section?.body || 'These organizations and institutions make our work possible through funding, technical expertise, and shared commitment to sustainable development.'
+  }
+})
+
+const partners = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'partners-supporters')
+  if (!section || !section.items) return defaultPartners
+  
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    const name = parts[0] || ''
+    const customLogo = parts[1] || ''
+    return {
+      name,
+      logo: name.toUpperCase().slice(0, 5),
+      image: customLogo || donorLogosMap[name] || donorLogosMap['UNDP']
+    }
+  })
+})
+
+const defaultGovernmentItems = [
+  { icon: 'building', title: 'Ministry of Interior', desc: 'Registration and coordination across all program areas.' },
+  { icon: 'tree', title: 'Ministry of Environment', desc: 'Community forestry and natural resource management.' },
+  { icon: 'users', title: 'Ministry of Women and Affairs', desc: 'Gender equality initiatives and child protection programs.' },
+  { icon: 'book', title: 'Ministry of Education, Youth and Sport', desc: 'Pre-school certification and non-formal education.' },
+  { icon: 'map-pin', title: 'Provincial Departments', desc: 'Svay Rieng, Prey Veng and Kratie — our three focal provinces.' },
 ]
 
-const localItems = [
-  {
-    number: '01',
-    title: 'Pagoda and Monastic Networks',
-    desc: 'Village pagodas and monastic networks across three provinces serve as trusted community hubs.',
-  },
-  {
-    number: '02',
-    title: 'Commune Councils and Child Protection',
-    desc: 'Commune councils and Child Protection Networks ensure local governance and safeguarding.',
-  },
-  {
-    number: '03',
-    title: 'NGO Forum and Working Groups',
-    desc: 'Cambodian NGO Forum and thematic working groups on environment, child rights, and more.',
-  },
-  {
-    number: '04',
-    title: 'Academic Partnerships',
-    desc: 'Provincial and national universities collaborating on applied research and monitoring.',
-  },
-  {
-    number: '05',
-    title: 'Social Enterprises',
-    desc: 'Local social enterprises buying cooperative produce at fair prices, creating sustainable markets.',
-  },
+const governmentHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'partners-government')
+  return {
+    heading: section?.heading || 'Government Coordination',
+    body: section?.body || 'We work hand-in-hand with national and provincial government bodies to align our programs with Cambodia\'s development priorities.'
+  }
+})
+
+const governmentItems = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'partners-government')
+  if (!section || !section.items) return defaultGovernmentItems
+  
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      title: parts[0] || '',
+      desc: parts[1] || '',
+      icon: parts[2] || 'building'
+    }
+  })
+})
+
+const defaultLocalItems = [
+  { number: '01', title: 'Pagoda and Monastic Networks', desc: 'Village pagodas and monastic networks across three provinces serve as trusted community hubs.' },
+  { number: '02', title: 'Commune Councils and Child Protection', desc: 'Commune councils and Child Protection Networks ensure local governance and safeguarding.' },
+  { number: '03', title: 'NGO Forum and Working Groups', desc: 'Cambodian NGO Forum and thematic working groups on environment, child rights, and more.' },
+  { number: '04', title: 'Academic Partnerships', desc: 'Provincial and national universities collaborating on applied research and monitoring.' },
+  { number: '05', title: 'Social Enterprises', desc: 'Local social enterprises buying cooperative produce at fair prices, creating sustainable markets.' },
 ]
 
-const whyItems = [
-  {
-    icon: 'building',
-    title: '30 years of unbroken presence',
-    desc: 'in southeastern Cambodia — trust built over generations.',
-  },
-  {
-    icon: 'bar-chart',
-    title: 'Audited financial systems',
-    desc: 'and clean grant reporting with full transparency.',
-  },
-  {
-    icon: 'handshake',
-    title: 'Deep community trust',
-    desc: 'rooted in Buddhist moral leadership and village relationships.',
-  },
-  {
-    icon: 'rocket',
-    title: 'Proven ability to scale',
-    desc: 'pilots into province-wide programs with measurable outcomes.',
-  },
+const localHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'partners-local')
+  return {
+    heading: section?.heading || 'Local Partners',
+    body: section?.body || 'Sustainable change is built from the ground up. These local institutions and networks are the backbone of every program we run.'
+  }
+})
+
+const localItems = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'partners-local')
+  if (!section || !section.items) return defaultLocalItems
+  
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      number: parts[0] || '01',
+      title: parts[1] || '',
+      desc: parts[2] || ''
+    }
+  })
+})
+
+const defaultWhyItems = [
+  { icon: 'building', title: '30 years of unbroken presence', desc: 'in southeastern Cambodia — trust built over generations.' },
+  { icon: 'bar-chart', title: 'Audited financial systems', desc: 'and clean grant reporting with full transparency.' },
+  { icon: 'handshake', title: 'Deep community trust', desc: 'rooted in Buddhist moral leadership and village relationships.' },
+  { icon: 'rocket', title: 'Proven ability to scale', desc: 'pilots into province-wide programs with measurable outcomes.' },
 ]
+
+const whyHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'partners-why')
+  return {
+    heading: section?.heading || 'Why Partners Stay',
+    body: section?.body || 'Long-term partnerships don\'t happen by chance. Here\'s what keeps our partners committed year after year.'
+  }
+})
+
+const whyItems = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'partners-why')
+  if (!section || !section.items) return defaultWhyItems
+  
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      title: parts[0] || '',
+      desc: parts[1] || '',
+      icon: parts[2] || 'building'
+    }
+  })
+})
 
 // Carousel state
 const isPaused = ref(false)
@@ -335,7 +348,8 @@ const speed = 0.9 // pixels per frame (~30px/sec at 60fps)
 
 // Duplicate partners 4x for more buffer (avoids ever reaching the end)
 const duplicatedPartners = computed(() => {
-  return [...partners, ...partners, ...partners, ...partners]
+  const currentPartners = partners.value
+  return [...currentPartners, ...currentPartners, ...currentPartners, ...currentPartners]
 })
 
 function startSmoothScroll() {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { resolveImageUrl } from '@/lib/imageUrls'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 defineOptions({ name: 'SharedSlideshow' })
 
@@ -30,23 +29,17 @@ const props = withDefaults(
 )
 
 const activeIndex = ref(0)
-const resolvedSlides = computed(() =>
-  props.slides.map((slide) => ({
-    ...slide,
-    image: resolveImageUrl(slide.image),
-  })),
-)
-const activeSlide = computed(() => resolvedSlides.value[activeIndex.value])
+const activeSlide = computed(() => props.slides[activeIndex.value])
 let timer: ReturnType<typeof setInterval> | undefined
 
 function next() {
-  if (!resolvedSlides.value.length) return
-  activeIndex.value = (activeIndex.value + 1) % resolvedSlides.value.length
+  if (!props.slides.length) return
+  activeIndex.value = (activeIndex.value + 1) % props.slides.length
 }
 
 function previous() {
-  if (!resolvedSlides.value.length) return
-  activeIndex.value = (activeIndex.value - 1 + resolvedSlides.value.length) % resolvedSlides.value.length
+  if (!props.slides.length) return
+  activeIndex.value = (activeIndex.value - 1 + props.slides.length) % props.slides.length
 }
 
 function goTo(index: number) {
@@ -55,7 +48,7 @@ function goTo(index: number) {
 }
 
 function startAutoplay() {
-  if (resolvedSlides.value.length <= 1) return
+  if (props.slides.length <= 1) return
   stopTimer()
   timer = setInterval(next, props.intervalMs)
 }
@@ -83,20 +76,11 @@ function goPrevious() {
 }
 
 function preloadImages() {
-  for (const slide of resolvedSlides.value.slice(1)) {
+  for (const slide of props.slides.slice(1)) {
     const img = new Image()
     img.src = slide.image
   }
 }
-
-watch(
-  () => resolvedSlides.value.length,
-  (length) => {
-    if (activeIndex.value >= length) activeIndex.value = 0
-    restartAutoplay()
-    preloadImages()
-  },
-)
 
 onMounted(() => {
   startAutoplay()
@@ -115,9 +99,9 @@ onUnmounted(stopTimer)
     @keydown.left.prevent="goPrevious"
     @keydown.right.prevent="goNext"
   >
-    <div v-if="resolvedSlides.length" class="slideshow-track">
+    <div v-if="slides.length" class="slideshow-track">
       <div
-        v-for="(slide, i) in resolvedSlides"
+        v-for="(slide, i) in slides"
         :key="slide.image"
         class="slideshow-slide"
         :class="{ 'is-active': i === activeIndex }"
@@ -141,7 +125,7 @@ onUnmounted(stopTimer)
       <slot :active-slide="activeSlide" :active-index="activeIndex" />
     </div>
 
-    <div v-if="resolvedSlides.length > 1" class="slideshow-controls" aria-label="Slideshow controls">
+    <div v-if="slides.length > 1" class="slideshow-controls" aria-label="Slideshow controls">
       <button
         type="button"
         class="slideshow-control slideshow-control--previous"
@@ -160,9 +144,9 @@ onUnmounted(stopTimer)
       </button>
     </div>
 
-    <div v-if="resolvedSlides.length > 1" class="slideshow-dots">
+    <div v-if="slides.length > 1" class="slideshow-dots">
       <button
-        v-for="(slide, i) in resolvedSlides"
+        v-for="(slide, i) in slides"
         :key="'dot-' + slide.image"
         type="button"
         class="slideshow-dot"

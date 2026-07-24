@@ -543,7 +543,7 @@ onBeforeUnmount(() => {
           <div class="col-image">
             <div class="story-collage" ref="collageEl">
               <div class="story-collage-main">
-                <img :src="familyNetworkImage" alt="Child Protection Network volunteer speaking with a family" />
+                <img src="/images/programs/child-protection3.jpg" alt="Child Protection Network volunteer speaking with a family" />
                 <span class="story-collage-heart">
                   <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 20.5s-7.6-4.8-10.2-9.4C.4 8.2 1.7 4.8 5 3.9c2-.5 3.9.3 5 2 .1-.1.1-.2.2-.3 1.1-1.6 3-2.5 5-2 3.3.9 4.6 4.3 3.2 7.2C19.6 15.7 12 20.5 12 20.5z"/>
@@ -553,10 +553,10 @@ onBeforeUnmount(() => {
 
               <!-- Two square photos, crossing/staggered, overlapping the bottom of the circle -->
               <div class="story-collage-sub story-collage-sub--left">
-                <img :src="childProtectionImage" alt="" />
+                <img src="/images/programs/child-protection.jpg" alt="" />
               </div>
               <div class="story-collage-sub story-collage-sub--right">
-                <img :src="childProtectionPeerImage" alt="" />
+                <img src="/images/programs/child-protection1.jpg" alt="" />
               </div>
             </div>
           </div>
@@ -909,7 +909,7 @@ onBeforeUnmount(() => {
 }
 .story-badge svg { width: 17px; height: 17px; }
 .story-text {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-family-base);
   font-style: italic;
   font-size: 1.15rem;
   color: var(--primary-dark);

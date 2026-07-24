@@ -1,114 +1,120 @@
-import { fileURLToPath, URL, pathToFileURL } from 'node:url'
-import { statSync } from 'node:fs'
+import { Buffer } from 'node:buffer'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-/**
- * Serves the Netlify Google Drive upload function during local dev.
- * In production, Netlify runs this function at /api/google-drive-upload.
- * This plugin intercepts those requests and calls the function directly.
- * Skipped automatically when running under Netlify Dev (NETLIFY_DEV=true).
- */
-function googleDriveUploadLocal(): Plugin {
-  const FUNCTION_PATH = fileURLToPath(
-    new URL('./netlify/functions/google-drive-upload.mjs', import.meta.url),
-  )
+type NetlifyFunction = (request: Request) => Promise<Response> | Response
 
-  // Skip this plugin under Netlify Dev — it serves the function natively
-  const isNetlifyDev = process.env.NETLIFY === 'true' || process.env.NETLIFY_DEV === 'true'
+// https://vite.dev/config/
+export default defineConfig(({ mode }) => {
+  const localEnv = loadEnv(mode, process.cwd(), '')
+  for (const [key, value] of Object.entries(localEnv)) {
+    process.env[key] ??= value
+  }
+  const devPort = numberFromEnv(process.env.VITE_DEV_PORT, 5173)
+  const devHost = process.env.VITE_DEV_HOST || '0.0.0.0'
 
   return {
-    name: 'google-drive-upload-local',
+    envPrefix: ['VITE_', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'],
+    plugins: [vue(), netlifyFunctionsDevPlugin()],
+    server: {
+      host: devHost,
+      port: devPort,
+      strictPort: false,
+    },
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
+  }
+})
+
+function numberFromEnv(value: string | undefined, fallback: number) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
+function netlifyFunctionsDevPlugin(): Plugin {
+  return {
+    name: 'santi-sena-netlify-functions-dev',
+    apply: 'serve',
     configureServer(server) {
-      if (isNetlifyDev) return // let Netlify Dev handle the function
-
-      // Ensure all .env variables are on process.env so the Netlify function can find them.
-      // Vite's loadEnv reads .env files but doesn't always set everything on process.env.
-      const env = loadEnv(server.config.mode, server.config.envDir || process.cwd(), '')
-      for (const key of Object.keys(env)) {
-        if (!process.env[key]) {
-          process.env[key] = env[key]
-        }
-      }
-
-      server.middlewares.use(async (req, res, next) => {
-        if (!req.url || !req.url.startsWith('/api/google-drive-upload')) {
-          return next()
-        }
-
+      server.middlewares.use('/api/google-drive-upload', async (request, response, next) => {
         try {
-          // Gather the request body (supports multipart file uploads)
-          const chunks: Buffer[] = []
-          for await (const chunk of req) {
-            chunks.push(Buffer.from(chunk))
-          }
-          const rawBody = Buffer.concat(chunks)
+          const uploadRequest = await toFetchRequest(request, '/api/google-drive-upload')
+          const uploadFunctionUrl = new URL('./netlify/functions/google-drive-upload.mjs', import.meta.url).href
+          const uploadFunction = (await import(uploadFunctionUrl)) as { default: NetlifyFunction }
+          const uploadResponse = await uploadFunction.default(uploadRequest)
 
-          // Build standard Web API headers from Connect-style req.headers
-          const headers: Record<string, string> = {}
-          for (const [key, value] of Object.entries(req.headers)) {
-            if (value) {
-              headers[key] = Array.isArray(value) ? value.join(', ') : value
-            }
-          }
-
-          const protocol = headers['x-forwarded-proto'] || 'http'
-          const host = headers.host || 'localhost:5173'
-          const url = `${protocol}://${host}${req.url}`
-
-          // Build a standard Web API Request for the Netlify function
-          const request = new Request(url, {
-            method: req.method || 'GET',
-            headers,
-            body:
-              req.method !== 'GET' && req.method !== 'HEAD' && rawBody.length > 0
-                ? new Uint8Array(rawBody)
-                : null,
-          })
-
-          // Dynamically import the Netlify function.
-          // Use pathToFileURL on Windows to avoid ERR_UNSUPPORTED_ESM_URL_SCHEME.
-          // Append file mtime as cache-buster so edits to the function take effect without restart.
-          const mtime = statSync(FUNCTION_PATH).mtimeMs
-          const { default: handler } = await import(pathToFileURL(FUNCTION_PATH).href + `?v=${mtime}`)
-          const response = await handler(request)
-
-          // Write the Web API Response back to Node.js ServerResponse
-          res.statusCode = response.status
-          response.headers.forEach((value: string, key: string) => {
-            res.setHeader(key, value)
-          })
-
-          const responseBody = await response.text()
-          res.end(responseBody)
+          await sendFetchResponse(response, uploadResponse)
         } catch (error) {
-          console.error('[google-drive-upload-local]', error)
-          res.statusCode = 500
-          res.setHeader('content-type', 'application/json')
-          res.end(JSON.stringify({ error: 'Local upload handler failed.' }))
+          server.ssrFixStacktrace(error as Error)
+          next(error)
+        }
+      })
+      server.middlewares.use('/api/google-drive-image', async (request, response, next) => {
+        try {
+          const imageRequest = await toFetchRequest(request, '/api/google-drive-image')
+          const imageFunctionUrl = new URL('./netlify/functions/google-drive-image.mjs', import.meta.url).href
+          const imageFunction = (await import(imageFunctionUrl)) as { default: NetlifyFunction }
+          const imageResponse = await imageFunction.default(imageRequest)
+
+          await sendFetchResponse(response, imageResponse)
+        } catch (error) {
+          server.ssrFixStacktrace(error as Error)
+          next(error)
         }
       })
     },
   }
 }
 
-// https://vite.dev/config/
-export default defineConfig({
-  envPrefix: ['VITE_', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'],
-  plugins: [vue(), googleDriveUploadLocal()],
-  server: {
-    host: 'localhost',
-    port: 5173,
-    strictPort: true,
-    hmr: {
-      host: 'localhost',
-      clientPort: 5173,
-    },
-  },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-  },
-})
+async function toFetchRequest(request: IncomingMessage, pathname: string) {
+  const origin = `http://${request.headers.host || 'localhost:5173'}`
+  const mountedUrl = request.url && request.url.startsWith('/') ? request.url : '/'
+  const url = new URL(`${pathname}${mountedUrl === '/' ? '' : mountedUrl}`, origin)
+  const body = await readRequestBody(request)
+
+  return new Request(url, {
+    method: request.method,
+    headers: toFetchHeaders(request),
+    body: body.length ? new Uint8Array(body) : undefined,
+  })
+}
+
+function toFetchHeaders(request: IncomingMessage) {
+  const headers = new Headers()
+
+  for (const [name, value] of Object.entries(request.headers)) {
+    if (Array.isArray(value)) {
+      value.forEach((item) => headers.append(name, item))
+    } else if (value) {
+      headers.set(name, value)
+    }
+  }
+
+  return headers
+}
+
+function readRequestBody(request: IncomingMessage) {
+  return new Promise<Buffer>((resolve, reject) => {
+    const chunks: Buffer[] = []
+
+    request.on('data', (chunk: Buffer | string) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    })
+    request.on('end', () => resolve(Buffer.concat(chunks)))
+    request.on('error', reject)
+  })
+}
+
+async function sendFetchResponse(response: ServerResponse, fetchResponse: Response) {
+  response.statusCode = fetchResponse.status
+  fetchResponse.headers.forEach((value, name) => response.setHeader(name, value))
+
+  const body = Buffer.from(await fetchResponse.arrayBuffer())
+  response.end(body)
+}

@@ -1,17 +1,16 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
-import { ref } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
-
-const environmentImg = imageUrls.home.environment
-const educationImg = imageUrls.home.education
-const livelihoodImg = imageUrls.home.livelihood
-const childImg = imageUrls.home.child
+import { defaultHomeSlides, fetchHomeSlides, type HomeSlide } from '@/lib/slidesSettings'
+import { subscribeToTableChanges } from '@/lib/realtime'
+import environmentImg from '@/assets/home-image/environtment.jpg'
+import educationImg from '@/assets/home-image/education.jpg'
+import livelihoodImg from '@/assets/home-image/livelihood.jpg'
+import childImg from '@/assets/home-image/child.jpg'
 
 const stats = [
-
   { value: '293', label: 'Villages Reached' },
   { value: '43', label: 'Communes Served' },
   { value: '30+', label: 'Years of Service' },
@@ -25,167 +24,48 @@ interface NgoSlide {
   eyebrow: string
   title: string
   description: string
-  primaryLabel: string
-  primaryTo: string
-  secondaryLabel: string
-  secondaryTo: string
   position?: string
 }
 
-const slideItems = ref<NgoSlide[]>([])
-
-
-function safeJsonParse<T>(value: string): T | null {
-  try {
-    return JSON.parse(value) as T
-  } catch {
-    return null
-  }
-}
-
-function normalizeSlide(raw: unknown): NgoSlide | null {
-  const r = raw as Record<string, unknown> | null
-  if (!r || typeof raw !== 'object') return null
-
-  const image = typeof r.image === 'string' ? r.image : ''
-
-  if (!image) return null
-
+function toNgoSlide(slide: HomeSlide): NgoSlide {
   return {
-    image,
-    caption: typeof r.caption === 'string' ? r.caption : '',
-    alt: typeof r.alt === 'string' ? r.alt : image,
-    eyebrow: typeof r.eyebrow === 'string' ? r.eyebrow : '',
-    title: typeof r.title === 'string' ? r.title : '',
-    description: typeof r.description === 'string' ? r.description : '',
-    primaryLabel: typeof r.primaryLabel === 'string' ? r.primaryLabel : '',
-    primaryTo: typeof r.primaryTo === 'string' ? r.primaryTo : '',
-    secondaryLabel: typeof r.secondaryLabel === 'string' ? r.secondaryLabel : '',
-    secondaryTo: typeof r.secondaryTo === 'string' ? r.secondaryTo : '',
-    position: typeof r.position === 'string' ? r.position : undefined,
+    image: slide.imageUrl,
+    caption: '',
+    alt: slide.alt,
+    eyebrow: slide.eyebrow,
+    title: slide.title,
+    description: slide.description,
+    position: 'center',
   }
-
 }
 
-async function loadAdminSlides() {
-  // We re-use the same CMS storage model as the admin PageEditor:
-  // section.items contains JSON text.
-  const { supabase } = await import('@/lib/supabase')
-  const defaultSlides: NgoSlide[] = [
-    {
-      image: imageUrls.programs.educationHero,
-      caption: '',
-      alt: 'Children learning with Santi Sena education support',
-      eyebrow: 'Education and Buddhist learning',
-      title: 'Helping children learn with confidence.',
-      description:
-        'Santi Sena supports schools, mobile libraries, scholarships and Buddhist education so children can keep learning close to home.',
-      primaryLabel: 'Support education',
-      primaryTo: '/qr-donate',
-      secondaryLabel: 'Explore programs',
-      secondaryTo: '/programs',
-      position: 'center',
-    },
-    {
-      image: imageUrls.programs.environment,
-      caption: '',
-      alt: 'Community environmental activity in rural Cambodia',
-      eyebrow: 'Environment and climate action',
-      title: 'Protecting the land that sustains villages.',
-      description:
-        'Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.',
-      primaryLabel: 'Support the work',
-      primaryTo: '/qr-donate',
-      secondaryLabel: 'Environment program',
-      secondaryTo: '/programs/environment',
-      position: 'center',
-    },
-    {
-      image: imageUrls.programs.livelihoodHero2,
-      caption: '',
-      alt: 'Rural livelihood activity with community members',
-      eyebrow: 'Livelihoods and family resilience',
-      title: 'Growing practical income and food security.',
-      description:
-        'Savings groups, home gardens, cooperatives and farmer support help rural families build steadier livelihoods.',
-      primaryLabel: 'Get involved',
-      primaryTo: '/get-involved',
-      secondaryLabel: 'Livelihood program',
-      secondaryTo: '/programs/livelihood',
-      position: 'center',
-    },
-    {
-      image: imageUrls.programs.childProtection1,
-      caption: '',
-      alt: 'Children and community members participating in a protection activity',
-      eyebrow: 'Child protection and dignity',
-      title: 'Safeguarding children through local action.',
-      description:
-        'Child rights campaigns, youth peer groups and community networks help children grow in safer, more caring communities.',
-      primaryLabel: 'Stand with us',
-      primaryTo: '/get-involved',
-      secondaryLabel: 'Protection program',
-      secondaryTo: '/programs/child-protection',
-      position: 'center',
-    },
-  ]
+// Managed from the admin Slideshow screen — starts from the built-in
+// defaults and swaps in the saved slides once they load.
+const slideItems = ref<NgoSlide[]>(defaultHomeSlides().map(toNgoSlide))
+let stopSlidesSubscription: (() => void) | null = null
 
-  const { data, error } = await supabase
-    .from('pages')
-    .select('body')
-    .eq('slug', 'home')
-    .maybeSingle()
-
-  if (error) {
-    slideItems.value = defaultSlides
-    return
+async function loadSlides() {
+  try {
+    const saved = await fetchHomeSlides()
+    if (saved.length) slideItems.value = saved.map(toNgoSlide)
+  } catch {
+    // Keep the default slides if the saved slideshow can't be loaded.
   }
-
-  const body = data?.body
-  if (!body) {
-    slideItems.value = defaultSlides
-    return
-  }
-
-  const parsed = safeJsonParse<{ sections?: Array<unknown> }>(body)
-  const sections: unknown[] = Array.isArray(parsed?.sections) ? parsed.sections : []
-  const slideshowSection = sections.find(
-    (s) => typeof s === 'object' && s !== null && typeof (s as Record<string, unknown>).id === 'string' && (s as Record<string, unknown>).id === 'home-slideshow',
-  )
-
-
-
-  // Admin format:
-  // slides stored as JSON in the section.items field.
-  // Example:
-  // [{"image":"/images/...","eyebrow":"...","title":"...","description":"...","primaryLabel":"...","primaryTo":"/...","secondaryLabel":"...","secondaryTo":"/..."}]
-  const rawSlidesText =
-    slideshowSection && typeof (slideshowSection as { items?: unknown }).items === 'string'
-      ? (slideshowSection as { items: string }).items
-      : ''
-
-  if (!rawSlidesText) {
-    slideItems.value = defaultSlides
-    return
-  }
-
-  const rawSlides = safeJsonParse<unknown>(rawSlidesText)
-  if (!Array.isArray(rawSlides)) {
-
-    slideItems.value = defaultSlides
-    return
-  }
-
-  const normalized = rawSlides
-    .map(normalizeSlide)
-    .filter((s): s is NgoSlide => Boolean(s))
-
-  slideItems.value = normalized.length ? normalized : defaultSlides
 }
+
+onMounted(async () => {
+  stopSlidesSubscription = subscribeToTableChanges('home_slides', () => {
+    void loadSlides()
+  })
+  await loadSlides()
+})
+
+onUnmounted(() => {
+  stopSlidesSubscription?.()
+  stopSlidesSubscription = null
+})
 
 useScrollReveal()
-
-void loadAdminSlides()
 </script>
 
 <template>
@@ -195,27 +75,23 @@ void loadAdminSlides()
       <div class="hero-inner">
         <div :key="activeSlide?.image" class="hero-message">
           <p class="eyebrow eyebrow--light">
-            {{ activeSlide?.eyebrow ?? 'Buddhist NGO - Cambodia - Since 1994' }}
+            {{ activeSlide?.eyebrow || 'Buddhist NGO - Cambodia - Since 1994' }}
           </p>
           <h1 class="hero-title">
             {{
-              activeSlide?.title ??
+              activeSlide?.title ||
               'Walking with villages toward peace, sustainability and dignity.'
             }}
           </h1>
           <p class="hero-subtitle">
             {{
-              activeSlide?.description ??
+              activeSlide?.description ||
               'Santi Sena works alongside rural Cambodian communities in education, livelihoods, environment and child protection.'
             }}
           </p>
           <div class="hero-actions">
-            <RouterLink :to="activeSlide?.primaryTo ?? '/qr-donate'" class="btn btn--primary">
-              {{ activeSlide?.primaryLabel ?? 'Support Us' }}
-            </RouterLink>
-            <RouterLink :to="activeSlide?.secondaryTo ?? '/about'" class="btn btn--outline">
-              {{ activeSlide?.secondaryLabel ?? 'Stand with us' }}
-            </RouterLink>
+            <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
+            <RouterLink to="/about" class="btn btn--outline">Stand with us</RouterLink>
           </div>
         </div>
       </div>
@@ -368,16 +244,6 @@ void loadAdminSlides()
 
 <style scoped>
 .home-view {
-  --page-bg: var(--color-cream);
-  --surface: var(--color-white);
-  --surface-soft: var(--color-cream-soft);
-  --ink: var(--color-ink);
-  --muted: var(--color-ink-soft);
-  --line: var(--color-border);
-  --accent: var(--admin-theme-primary);
-  --accent-dark: var(--admin-theme-primary-deep);
-  --accent-soft: var(--primary-light);
-  --shadow: var(--shadow-md);
   font-family: inherit;
   color: var(--color-ink);
   background: var(--color-cream);
@@ -447,12 +313,12 @@ void loadAdminSlides()
   background:
     linear-gradient(
       90deg,
-      rgba(6, 18, 13, 0.88) 0%,
-      rgba(6, 18, 13, 0.65) 38%,
-      rgba(6, 18, 13, 0.28) 65%,
+      rgba(6, 18, 13, 0.92) 0%,
+      rgba(6, 18, 13, 0.68) 38%,
+      rgba(6, 18, 13, 0.3) 65%,
       rgba(6, 18, 13, 0.05) 100%
     ),
-    radial-gradient(circle at 82% 25%, rgba(74, 222, 128, 0.15) 0%, transparent 55%);
+    radial-gradient(circle at 82% 25%, rgba(77, 111, 86, 0.4) 0%, transparent 55%);
 }
 
 .hero-inner {
@@ -499,13 +365,13 @@ void loadAdminSlides()
 
 .hero-title {
   margin: 0.75rem 0 1.25rem;
-  color: var(--color-white);
+  color: #fdf8ef;
 }
 
 .hero-subtitle {
   max-width: 620px;
   margin: 0 0 2rem;
-  color: var(--text-on-dark-secondary);
+  color: rgba(253, 248, 239, 0.85);
   font-size: 1.05rem;
   line-height: 1.7;
 }
@@ -533,21 +399,21 @@ void loadAdminSlides()
 }
 
 .btn--primary {
-  background: var(--admin-theme-primary);
-  color: var(--admin-theme-bg);
+  background: var(--primary-color);
+  color: var(--color-white);
 }
 
 .btn--primary:hover {
-  background: var(--admin-theme-primary-deep);
+  background: var(--primary-dark);
 }
 
 .btn--outline {
-  border-color: var(--text-on-dark-secondary);
-  color: var(--admin-theme-contrast);
+  border-color: rgba(253, 248, 239, 0.6);
+  color: #fdf8ef;
 }
 
 .btn--outline:hover {
-  background: var(--green-tint-light);
+  background: rgba(253, 248, 239, 0.1);
 }
 
 /* Stats */
@@ -572,7 +438,7 @@ void loadAdminSlides()
   font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.02em;
-  color: var(--admin-theme-primary);
+  color: var(--primary-dark);
 }
 
 .stat-label {
@@ -617,7 +483,7 @@ void loadAdminSlides()
 
 .btn--news:hover {
   background: var(--primary-color);
-  color: var(--color-white);
+  color: #fff;
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(22, 48, 42, 0.18);
 }
@@ -632,7 +498,7 @@ void loadAdminSlides()
 
 .mission-title {
   margin: 0 0 1.5rem;
-  color: var(--admin-theme-primary);
+  color: var(--primary-dark);
 }
 
 .mission-text {
@@ -643,7 +509,7 @@ void loadAdminSlides()
 
 .mission-text em {
   font-style: italic;
-  color: var(--admin-theme-primary);
+  color: var(--primary-dark);
 }
 
 /* Pillars */
@@ -664,7 +530,7 @@ void loadAdminSlides()
 
 .pillars-title {
   margin: 0.5rem 0 0;
-  color: var(--admin-theme-primary);
+  color: var(--primary-dark);
 }
 
 .pillars-link {
@@ -705,7 +571,7 @@ void loadAdminSlides()
 .pillar-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 20px 40px rgba(22, 48, 42, 0.14);
-  border-color: var(--admin-theme-primary);
+  border-color: var(--primary-color);
 }
 
 .pillar-image {
@@ -746,12 +612,12 @@ void loadAdminSlides()
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--admin-theme-primary);
+  color: var(--primary-color);
 }
 
 .pillar-title {
   margin: 0 0 0.6rem;
-  color: var(--admin-theme-primary);
+  color: var(--primary-dark);
   transition: color 0.25s ease;
 }
 
@@ -761,7 +627,7 @@ void loadAdminSlides()
 
 .pillar-desc {
   margin: 0;
-  color: var(--admin-theme-muted);
+  color: var(--color-ink-soft);
   line-height: 1.6;
   font-size: 0.95rem;
 }
@@ -779,7 +645,7 @@ void loadAdminSlides()
   font-style: italic;
   font-weight: 500;
   line-height: 1.4;
-  color: var(--admin-theme-primary);
+  color: var(--primary-dark);
 }
 
 .quote-attrib {
@@ -788,7 +654,7 @@ void loadAdminSlides()
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--admin-theme-muted);
+  color: var(--color-ink-soft);
 }
 
 /* CTA */
@@ -815,12 +681,12 @@ void loadAdminSlides()
 
 .cta-title {
   margin: 0 0 0.75rem;
-  color: #ffffff;
+  color: #fdf8ef;
 }
 
 .cta-desc {
   margin: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(253, 248, 239, 0.8);
   font-size: 1rem;
   line-height: 1.6;
 }

@@ -8,8 +8,6 @@ import { useUiStore } from '@/stores/ui.store'
 
 type RecordStatus = 'Published' | 'Draft' | 'Archived'
 
-type DbRecord = Record<string, unknown>
-
 type AdminRecord = {
   id: string
   title: string
@@ -21,35 +19,12 @@ type AdminRecord = {
   summary: string
 }
 
-type ModuleForm = {
-  title: string
-  category: string
-  status: RecordStatus
-  author: string
-  summary: string
-}
-
 type ModuleConfig = {
   title: string
   eyebrow: string
   description: string
   newLabel: string
   categories: string[]
-}
-
-type ModuleSource = {
-  table: string
-  select: string
-  orderBy: string
-  ascending?: boolean
-  canCreate: boolean
-  canDelete: boolean
-  canDuplicate: boolean
-  canStatus: boolean
-  mapRow: (row: DbRecord) => AdminRecord
-  buildCreate: (form: ModuleForm, currentRecords: AdminRecord[]) => DbRecord
-  buildUpdate: (form: ModuleForm) => DbRecord
-  buildStatus?: (status: RecordStatus) => DbRecord
 }
 
 const moduleConfigs: Record<string, ModuleConfig> = {
@@ -103,8 +78,6 @@ const route = useRoute()
 const ui = useUiStore()
 
 const records = ref<AdminRecord[]>([])
-const loading = ref(false)
-const saving = ref(false)
 const search = ref('')
 const statusFilter = ref<'all' | RecordStatus>('all')
 const sortKey = ref<'updatedAt' | 'title' | 'status'>('updatedAt')
@@ -112,13 +85,16 @@ const selectedIds = ref<string[]>([])
 const page = ref(1)
 const formOpen = ref(false)
 const editingId = ref<string | null>(null)
-const form = ref<ModuleForm>({
+const form = ref({
   title: '',
   category: 'General',
   status: 'Draft' as RecordStatus,
   author: 'Admin',
   summary: '',
 })
+
+const loading = ref(false)
+const saving = ref(false)
 
 const pageSize = 6
 
@@ -128,7 +104,6 @@ const moduleKey = computed(() => {
 })
 
 const config = computed<ModuleConfig>(() => moduleConfigs[moduleKey.value] ?? fallbackModuleConfig)
-const activeSource = computed(() => moduleSources[moduleKey.value])
 
 const filteredRows = computed(() => {
   const query = search.value.trim().toLowerCase()
@@ -210,11 +185,11 @@ const stats = computed(() => [
 
 watch(
   moduleKey,
-  (key) => {
-    void loadRecords(key)
+  () => {
     selectedIds.value = []
     page.value = 1
     formOpen.value = false
+    void fetchRecords()
   },
   { immediate: true },
 )
@@ -222,6 +197,38 @@ watch(
 watch([search, statusFilter], () => {
   page.value = 1
 })
+
+async function fetchRecords() {
+  loading.value = true
+  try {
+    const { data, error } = await supabase
+      .from('module_records')
+      .select('*')
+      .eq('module', moduleKey.value)
+      .order('updated_at', { ascending: false })
+
+    if (error) throw error
+
+    records.value = (data ?? []).map((row: Record<string, unknown>) => ({
+      id: row.id as string,
+      title: row.title as string,
+      status: (row.status as RecordStatus) || 'Draft',
+      author: (row.author as string) || 'Admin',
+      category: (row.category as string) || 'General',
+      updatedAt: (row.updated_at as string) || new Date().toISOString(),
+      thumbnail: initials(row.title as string),
+      summary: (row.summary as string) || '',
+    }))
+  } catch (error) {
+    ui.addToast(
+      error instanceof Error ? error.message : 'Failed to load records.',
+      'error',
+    )
+    records.value = []
+  } finally {
+    loading.value = false
+  }
+}
 
 function initials(value: string) {
   return value
@@ -232,356 +239,20 @@ function initials(value: string) {
     .toUpperCase()
 }
 
-function slugify(value: string) {
-  const slug = value
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80)
-
-  return slug || 'record'
-}
-
-function uniqueSlug(value: string) {
-  return `${slugify(value)}-${Date.now().toString(36)}`
-}
-
-function textValue(value: unknown, fallback = '') {
-  return typeof value === 'string' && value.trim() ? value : fallback
-}
-
-function booleanValue(value: unknown, fallback = false) {
-  return typeof value === 'boolean' ? value : fallback
-}
-
-function recordValue(value: unknown): DbRecord {
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as DbRecord) : {}
-}
-
-function metadataText(row: DbRecord, key: string, fallback = '') {
-  return textValue(recordValue(row.metadata)[key], fallback)
-}
-
-function relationName(value: unknown) {
-  const relation = Array.isArray(value) ? value[0] : value
-  return textValue(recordValue(relation).name)
-}
-
-function dbStatus(value: RecordStatus) {
-  return value.toLowerCase()
-}
-
-function statusFromDb(value: unknown): RecordStatus {
-  const status = textValue(value).toLowerCase()
-  if (status === 'published') return 'Published'
-  if (status === 'archived') return 'Archived'
-  return 'Draft'
-}
-
-function statusFromVisibility(value: unknown): RecordStatus {
-  return booleanValue(value, true) ? 'Published' : 'Draft'
-}
-
-function roleFromCategory(value: string) {
-  const normalized = value.toLowerCase().replace(/\s+/g, '_')
-  return ['super_admin', 'admin', 'editor', 'viewer'].includes(normalized) ? normalized : 'viewer'
-}
-
-function roleToCategory(value: unknown) {
-  const role = textValue(value, 'viewer')
-  return role
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
-}
-
-function isoDate(value: unknown) {
-  return textValue(value, new Date().toISOString())
-}
-
-function sourceMetadata(formValue: ModuleForm) {
-  return {
-    admin_author: formValue.author.trim() || 'Admin',
-    admin_category: formValue.category,
-  }
-}
-
-const profileSource: ModuleSource = {
-  table: 'profiles',
-  select: 'id, email, full_name, role, updated_at',
-  orderBy: 'updated_at',
-  ascending: false,
-  canCreate: false,
-  canDelete: false,
-  canDuplicate: false,
-  canStatus: false,
-  mapRow: (row) => {
-    const title = textValue(row.full_name, textValue(row.email, 'Unnamed user'))
-    const role = roleToCategory(row.role)
-    return {
-      id: textValue(row.id),
-      title,
-      status: role === 'Viewer' ? 'Draft' : 'Published',
-      author: textValue(row.email, 'No email'),
-      category: role,
-      updatedAt: isoDate(row.updated_at),
-      thumbnail: initials(title),
-      summary: `Role: ${role}`,
-    }
-  },
-  buildCreate: () => ({}),
-  buildUpdate: (formValue) => ({
-    full_name: formValue.title.trim(),
-    role: roleFromCategory(formValue.category),
-  }),
-}
-
-const moduleSources: Record<string, ModuleSource> = {
-  programs: {
-    table: 'programs',
-    select: 'id, slug, title, pillar, summary, description, status, updated_at, metadata',
-    orderBy: 'sort_order',
-    ascending: true,
-    canCreate: true,
-    canDelete: true,
-    canDuplicate: true,
-    canStatus: true,
-    mapRow: (row) => {
-      const title = textValue(row.title, 'Untitled program')
-      return {
-        id: textValue(row.id),
-        title,
-        status: statusFromDb(row.status),
-        author: metadataText(row, 'admin_author', 'CMS'),
-        category: textValue(row.pillar, 'Program'),
-        updatedAt: isoDate(row.updated_at),
-        thumbnail: initials(title),
-        summary: textValue(row.summary, textValue(row.description, '')),
-      }
-    },
-    buildCreate: (formValue, currentRecords) => ({
-      slug: uniqueSlug(formValue.title),
-      title: formValue.title.trim(),
-      pillar: formValue.category,
-      summary: formValue.summary.trim(),
-      description: formValue.summary.trim(),
-      status: dbStatus(formValue.status),
-      sort_order: currentRecords.length + 1,
-      published_at: formValue.status === 'Published' ? new Date().toISOString() : null,
-      metadata: sourceMetadata(formValue),
-    }),
-    buildUpdate: (formValue) => ({
-      title: formValue.title.trim(),
-      pillar: formValue.category,
-      summary: formValue.summary.trim(),
-      description: formValue.summary.trim(),
-      status: dbStatus(formValue.status),
-      published_at: formValue.status === 'Published' ? new Date().toISOString() : null,
-      metadata: sourceMetadata(formValue),
-    }),
-    buildStatus: (status) => ({
-      status: dbStatus(status),
-      published_at: status === 'Published' ? new Date().toISOString() : null,
-    }),
-  },
-  news: {
-    table: 'news_posts',
-    select:
-      'id, slug, title, excerpt, status, author_name, updated_at, metadata, news_categories(name)',
-    orderBy: 'updated_at',
-    ascending: false,
-    canCreate: true,
-    canDelete: true,
-    canDuplicate: true,
-    canStatus: true,
-    mapRow: (row) => {
-      const title = textValue(row.title, 'Untitled news')
-      return {
-        id: textValue(row.id),
-        title,
-        status: statusFromDb(row.status),
-        author: textValue(row.author_name, 'Santi Sena Communications Team'),
-        category:
-          relationName(row.news_categories) || metadataText(row, 'admin_category', 'News'),
-        updatedAt: isoDate(row.updated_at),
-        thumbnail: initials(title),
-        summary: textValue(row.excerpt),
-      }
-    },
-    buildCreate: (formValue) => ({
-      slug: uniqueSlug(formValue.title),
-      title: formValue.title.trim(),
-      excerpt: formValue.summary.trim(),
-      body: formValue.summary.trim(),
-      status: dbStatus(formValue.status),
-      author_name: formValue.author.trim() || 'Santi Sena Communications Team',
-      published_at: formValue.status === 'Published' ? new Date().toISOString() : null,
-      metadata: sourceMetadata(formValue),
-    }),
-    buildUpdate: (formValue) => ({
-      title: formValue.title.trim(),
-      excerpt: formValue.summary.trim(),
-      body: formValue.summary.trim(),
-      status: dbStatus(formValue.status),
-      author_name: formValue.author.trim() || 'Santi Sena Communications Team',
-      published_at: formValue.status === 'Published' ? new Date().toISOString() : null,
-      metadata: sourceMetadata(formValue),
-    }),
-    buildStatus: (status) => ({
-      status: dbStatus(status),
-      published_at: status === 'Published' ? new Date().toISOString() : null,
-    }),
-  },
-  partners: {
-    table: 'partners',
-    select: 'id, name, partner_type, description, is_visible, updated_at, metadata',
-    orderBy: 'sort_order',
-    ascending: true,
-    canCreate: true,
-    canDelete: true,
-    canDuplicate: true,
-    canStatus: true,
-    mapRow: (row) => {
-      const title = textValue(row.name, 'Unnamed partner')
-      return {
-        id: textValue(row.id),
-        title,
-        status: statusFromVisibility(row.is_visible),
-        author: metadataText(row, 'admin_author', 'CMS'),
-        category: textValue(row.partner_type, 'supporter'),
-        updatedAt: isoDate(row.updated_at),
-        thumbnail: initials(title),
-        summary: textValue(row.description),
-      }
-    },
-    buildCreate: (formValue, currentRecords) => ({
-      name: formValue.title.trim(),
-      partner_type: formValue.category.toLowerCase(),
-      description: formValue.summary.trim(),
-      is_visible: formValue.status === 'Published',
-      sort_order: currentRecords.length + 1,
-      metadata: sourceMetadata(formValue),
-    }),
-    buildUpdate: (formValue) => ({
-      name: formValue.title.trim(),
-      partner_type: formValue.category.toLowerCase(),
-      description: formValue.summary.trim(),
-      is_visible: formValue.status === 'Published',
-      metadata: sourceMetadata(formValue),
-    }),
-    buildStatus: (status) => ({ is_visible: status === 'Published' }),
-  },
-  'impact-stories': {
-    table: 'impact_timeline_events',
-    select: 'id, event_year, title, description, is_visible, updated_at, metadata',
-    orderBy: 'event_year',
-    ascending: false,
-    canCreate: true,
-    canDelete: true,
-    canDuplicate: true,
-    canStatus: true,
-    mapRow: (row) => {
-      const title = textValue(row.title, 'Untitled story')
-      return {
-        id: textValue(row.id),
-        title,
-        status: statusFromVisibility(row.is_visible),
-        author: metadataText(row, 'admin_author', 'CMS'),
-        category: metadataText(row, 'admin_category', String(row.event_year ?? 'Impact')),
-        updatedAt: isoDate(row.updated_at),
-        thumbnail: initials(title),
-        summary: textValue(row.description),
-      }
-    },
-    buildCreate: (formValue, currentRecords) => ({
-      event_year: new Date().getFullYear(),
-      title: formValue.title.trim(),
-      description: formValue.summary.trim(),
-      sort_order: currentRecords.length + 1,
-      is_visible: formValue.status === 'Published',
-      metadata: sourceMetadata(formValue),
-    }),
-    buildUpdate: (formValue) => ({
-      title: formValue.title.trim(),
-      description: formValue.summary.trim(),
-      is_visible: formValue.status === 'Published',
-      metadata: sourceMetadata(formValue),
-    }),
-    buildStatus: (status) => ({ is_visible: status === 'Published' }),
-  },
-  users: profileSource,
-  profile: profileSource,
-}
-
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(value))
 }
 
 function relativeTime(value: string) {
-  const timestamp = Date.parse(value)
-  if (!Number.isFinite(timestamp)) return 'Unknown'
-
-  const diffMs = Date.now() - timestamp
-  const diffDays = Math.floor(diffMs / 86_400_000)
-
-  if (diffDays <= 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 30) return `${diffDays} days ago`
-
+  const diff = Date.now() - Date.parse(value)
+  if (diff < 60000) return 'Just now'
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
   return formatDate(value)
-}
-
-async function loadRecords(key = moduleKey.value) {
-  const source = moduleSources[key]
-  records.value = []
-
-  if (!source) return
-
-  loading.value = true
-  try {
-    const { data, error } = await supabase
-      .from(source.table)
-      .select(source.select)
-      .order(source.orderBy, { ascending: source.ascending ?? false })
-
-    if (error) throw error
-
-    records.value = ((data ?? []) as unknown as DbRecord[]).map(source.mapRow)
-  } catch {
-    ui.addToast(`Could not load ${config.value.title}. Check Supabase permissions.`, 'error')
-  } finally {
-    loading.value = false
-  }
-}
-
-async function insertSourceRecord(source: ModuleSource, payload: DbRecord) {
-  const { data, error } = await supabase
-    .from(source.table)
-    .insert(payload)
-    .select(source.select)
-    .single()
-
-  if (error) throw error
-  return source.mapRow((data ?? payload) as unknown as DbRecord)
-}
-
-async function updateSourceRecord(source: ModuleSource, id: string, payload: DbRecord) {
-  const { data, error } = await supabase
-    .from(source.table)
-    .update(payload)
-    .eq('id', id)
-    .select(source.select)
-    .single()
-
-  if (error) throw error
-  return source.mapRow((data ?? payload) as unknown as DbRecord)
-}
-
-async function deleteSourceRecord(source: ModuleSource, id: string) {
-  const { error } = await supabase.from(source.table).delete().eq('id', id)
-  if (error) throw error
 }
 
 function isSelected(id: string) {
@@ -604,11 +275,6 @@ function toggleVisibleSelection(event: Event) {
 }
 
 function openCreate() {
-  if (!activeSource.value?.canCreate) {
-    ui.addToast('Create this account in Supabase Auth first, then edit its profile here.', 'info')
-    return
-  }
-
   editingId.value = null
   form.value = {
     title: '',
@@ -634,110 +300,129 @@ function editRecord(record: AdminRecord) {
 
 function closeForm() {
   formOpen.value = false
-  editingId.value = null
 }
 
 async function saveRecord() {
-  if (saving.value) return
-
-  const source = activeSource.value
   const title = form.value.title.trim()
-
-  if (!source) {
-    ui.addToast('This module is not connected to a Supabase table yet.', 'error')
-    return
-  }
-
-  if (!editingId.value && !source.canCreate) {
-    ui.addToast('This module does not support creating rows from this screen.', 'warning')
-    return
-  }
-
   if (!title) {
     ui.addToast('Title is required.', 'error')
     return
   }
 
   saving.value = true
-  try {
-    const savedRecord = editingId.value
-      ? await updateSourceRecord(source, editingId.value, source.buildUpdate(form.value))
-      : await insertSourceRecord(source, source.buildCreate(form.value, records.value))
 
-    records.value = editingId.value
-      ? records.value.map((record) => (record.id === editingId.value ? savedRecord : record))
-      : [savedRecord, ...records.value]
+  try {
+    const payload = {
+      module: moduleKey.value,
+      title,
+      category: form.value.category,
+      status: form.value.status,
+      author: form.value.author.trim() || 'Admin',
+      summary: form.value.summary.trim(),
+      updated_at: new Date().toISOString(),
+    }
+
+    if (editingId.value) {
+      const { error } = await supabase
+        .from('module_records')
+        .update(payload)
+        .eq('id', editingId.value)
+
+      if (error) throw error
+    } else {
+      const { error } = await supabase
+        .from('module_records')
+        .insert(payload)
+
+      if (error) throw error
+    }
 
     formOpen.value = false
-    ui.addToast(`${savedRecord.title} saved.`, 'success')
-  } catch {
-    ui.addToast(`Could not save ${title}. Check permissions and required fields.`, 'error')
+    ui.addToast(`${title} saved.`, 'success')
+    await fetchRecords()
+  } catch (error) {
+    ui.addToast(
+      error instanceof Error ? error.message : 'Failed to save record.',
+      'error',
+    )
   } finally {
     saving.value = false
   }
 }
 
 async function duplicateRecord(record: AdminRecord) {
-  if (saving.value) return
-
-  const source = activeSource.value
-  if (!source?.canDuplicate || !source.canCreate) {
-    ui.addToast('This module cannot duplicate records from this screen.', 'info')
-    return
-  }
-
   saving.value = true
   try {
-    const draft: ModuleForm = {
+    const { error } = await supabase.from('module_records').insert({
+      module: moduleKey.value,
       title: `${record.title} copy`,
-      category: record.category,
       status: 'Draft',
       author: record.author,
+      category: record.category,
       summary: record.summary,
-    }
-    const duplicate = await insertSourceRecord(source, source.buildCreate(draft, records.value))
-    records.value = [duplicate, ...records.value]
+      updated_at: new Date().toISOString(),
+    })
+
+    if (error) throw error
+
     ui.addToast('Record duplicated as draft.', 'info')
-  } catch {
-    ui.addToast('Could not duplicate this record.', 'error')
+    await fetchRecords()
+  } catch (error) {
+    ui.addToast(
+      error instanceof Error ? error.message : 'Failed to duplicate record.',
+      'error',
+    )
   } finally {
     saving.value = false
   }
 }
 
 async function togglePublish(record: AdminRecord) {
-  if (saving.value) return
+  const nextStatus: RecordStatus =
+    record.status === 'Published' ? 'Draft' : 'Published'
 
-  const source = activeSource.value
-  if (!source?.canStatus || !source.buildStatus) {
-    ui.addToast('Use the edit form to update this module.', 'info')
-    return
-  }
-
-  const nextStatus: RecordStatus = record.status === 'Published' ? 'Draft' : 'Published'
-
-  saving.value = true
   try {
-    const updated = await updateSourceRecord(source, record.id, source.buildStatus(nextStatus))
-    records.value = records.value.map((item) => (item.id === record.id ? updated : item))
+    const { error } = await supabase
+      .from('module_records')
+      .update({ status: nextStatus, updated_at: new Date().toISOString() })
+      .eq('id', record.id)
+
+    if (error) throw error
+
     ui.addToast(`${record.title} marked ${nextStatus.toLowerCase()}.`, 'success')
-  } catch {
-    ui.addToast(`Could not update ${record.title}.`, 'error')
-  } finally {
-    saving.value = false
+    await fetchRecords()
+  } catch (error) {
+    ui.addToast(
+      error instanceof Error ? error.message : 'Failed to update status.',
+      'error',
+    )
   }
 }
 
 function confirmDelete(record: AdminRecord) {
-  const source = activeSource.value
-  if (!source?.canDelete) {
-    ui.addToast('This module cannot delete records from this screen.', 'info')
-    return
-  }
+  ui.openModal(
+    'Delete content?',
+    `Delete "${record.title}" from ${config.value.title}?`,
+    async () => {
+      try {
+        const { error } = await supabase
+          .from('module_records')
+          .delete()
+          .eq('id', record.id)
 
-  ui.openModal('Delete content?', `Delete "${record.title}" from ${config.value.title}?`, () => {
-    void deleteRecord(record)
-  })
+        if (error) throw error
+
+        selectedIds.value = selectedIds.value.filter((id) => id !== record.id)
+        ui.addToast('Content deleted.', 'warning')
+        await fetchRecords()
+      } catch (error) {
+        ui.addToast(
+          error instanceof Error ? error.message : 'Failed to delete record.',
+          'error',
+        )
+      }
+    },
+  )
 }
 
 async function bulkPublish() {
@@ -751,109 +436,51 @@ async function bulkArchive() {
 async function bulkStatus(status: RecordStatus) {
   if (!selectedIds.value.length) return
 
-  const source = activeSource.value
-  if (!source?.canStatus || !source.buildStatus) {
-    ui.addToast('Bulk status changes are not available for this module.', 'info')
-    return
-  }
-
-  saving.value = true
   try {
-    const selected = [...selectedIds.value]
     const { error } = await supabase
-      .from(source.table)
-      .update(source.buildStatus(status))
-      .in('id', selected)
+      .from('module_records')
+      .update({ status, updated_at: new Date().toISOString() })
+      .in('id', selectedIds.value)
 
     if (error) throw error
 
-    records.value = records.value.map((record) =>
-      selected.includes(record.id)
-        ? { ...record, status, updatedAt: new Date().toISOString() }
-        : record,
-    )
-    ui.addToast(`${selected.length} records updated.`, 'success')
+    ui.addToast(`${selectedIds.value.length} records updated.`, 'success')
     selectedIds.value = []
-  } catch {
-    ui.addToast('Could not update selected records.', 'error')
-  } finally {
-    saving.value = false
+    await fetchRecords()
+  } catch (error) {
+    ui.addToast(
+      error instanceof Error ? error.message : 'Failed to bulk update.',
+      'error',
+    )
   }
 }
 
 function bulkDelete() {
   if (!selectedIds.value.length) return
 
-  const source = activeSource.value
-  if (!source?.canDelete) {
-    ui.addToast('Bulk delete is not available for this module.', 'info')
-    return
-  }
-
   ui.openModal(
     'Delete selected content?',
     `${selectedIds.value.length} records will be removed.`,
-    () => {
-      void deleteSelectedRecords()
+    async () => {
+      try {
+        const { error } = await supabase
+          .from('module_records')
+          .delete()
+          .in('id', selectedIds.value)
+
+        if (error) throw error
+
+        selectedIds.value = []
+        ui.addToast('Selected content deleted.', 'warning')
+        await fetchRecords()
+      } catch (error) {
+        ui.addToast(
+          error instanceof Error ? error.message : 'Failed to delete records.',
+          'error',
+        )
+      }
     },
   )
-}
-
-async function deleteRecord(record: AdminRecord) {
-  const source = activeSource.value
-  if (!source) return
-
-  try {
-    await deleteSourceRecord(source, record.id)
-    records.value = records.value.filter((item) => item.id !== record.id)
-    selectedIds.value = selectedIds.value.filter((id) => id !== record.id)
-    ui.addToast('Content deleted.', 'warning')
-  } catch {
-    ui.addToast(`Could not delete ${record.title}.`, 'error')
-  }
-}
-
-async function deleteSelectedRecords() {
-  const source = activeSource.value
-  if (!source || !selectedIds.value.length) return
-
-  try {
-    const selected = [...selectedIds.value]
-    const { error } = await supabase.from(source.table).delete().in('id', selected)
-    if (error) throw error
-
-    const selectedSet = new Set(selected)
-    records.value = records.value.filter((record) => !selectedSet.has(record.id))
-    selectedIds.value = []
-    ui.addToast('Selected content deleted.', 'warning')
-  } catch {
-    ui.addToast('Could not delete selected records.', 'error')
-  }
-}
-
-function csvEscape(value: string) {
-  return `"${value.replace(/"/g, '""')}"`
-}
-
-function exportCsv() {
-  const header = ['Title', 'Status', 'Author', 'Category', 'Updated', 'Summary']
-  const rows = records.value.map((record) => [
-    record.title,
-    record.status,
-    record.author,
-    record.category,
-    record.updatedAt,
-    record.summary,
-  ])
-  const csv = [header, ...rows].map((row) => row.map(csvEscape).join(',')).join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${moduleKey.value}-records.csv`
-  link.click()
-  URL.revokeObjectURL(url)
-  ui.addToast('CSV exported.', 'success')
 }
 </script>
 
@@ -876,15 +503,17 @@ function exportCsv() {
             <p>{{ config.description }}</p>
           </div>
           <div class="hero-actions">
-            <button class="button button-secondary" type="button" @click="exportCsv">
+            <button class="btn btn-ghost" type="button" :disabled="loading || !records.length">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Export CSV
             </button>
             <button
-              class="button button-primary"
+              class="btn btn-primary"
               type="button"
-              :disabled="saving || !activeSource?.canCreate"
+              :disabled="loading || saving"
               @click="openCreate"
             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               {{ config.newLabel }}
             </button>
           </div>
@@ -925,9 +554,6 @@ function exportCsv() {
               </div>
               <button class="btn-icon" type="button" @click="closeForm" aria-label="Close form">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-              <button class="button button-primary" type="submit" :disabled="saving">
-                {{ saving ? 'Saving...' : 'Save' }}
               </button>
             </div>
 
@@ -1022,18 +648,61 @@ function exportCsv() {
             </div>
           </div>
 
-          <div v-if="selectedCount" class="bulk-bar">
-            <strong>{{ selectedCount }} selected</strong>
-            <button type="button" :disabled="saving" @click="bulkPublish">Bulk publish</button>
-            <button type="button" :disabled="saving" @click="bulkArchive">Bulk archive</button>
-            <button type="button" class="danger" :disabled="saving" @click="bulkDelete">
-              Bulk delete
-            </button>
+          <!-- Bulk bar -->
+          <Transition name="bulk-slide">
+            <div v-if="selectedCount" class="bulk-bar">
+              <div class="bulk-info">
+                <span class="bulk-check-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                <strong>{{ selectedCount }} selected</strong>
+              </div>
+              <div class="bulk-actions">
+                <button class="bulk-btn bulk-publish" type="button" :disabled="saving" @click="bulkPublish">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  Publish
+                </button>
+                <button class="bulk-btn bulk-archive" type="button" :disabled="saving" @click="bulkArchive">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  Archive
+                </button>
+                <button class="bulk-btn bulk-delete" type="button" :disabled="saving" @click="bulkDelete">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </Transition>
+
+          <!-- Loading skeleton -->
+          <div v-if="loading && !records.length" class="loading-skeleton">
+            <div v-for="n in 4" :key="n" class="skeleton-row">
+              <div class="skeleton-cell skeleton-check"></div>
+              <div class="skeleton-cell skeleton-thumb"></div>
+              <div class="skeleton-cell skeleton-title">
+                <div class="skeleton-line w-60"></div>
+                <div class="skeleton-line w-40"></div>
+              </div>
+              <div class="skeleton-cell skeleton-badge">
+                <div class="skeleton-line w-20"></div>
+              </div>
+              <div class="skeleton-cell skeleton-author">
+                <div class="skeleton-line w-24"></div>
+              </div>
+              <div class="skeleton-cell skeleton-cat">
+                <div class="skeleton-line w-28"></div>
+              </div>
+              <div class="skeleton-cell skeleton-date">
+                <div class="skeleton-line w-24"></div>
+              </div>
+              <div class="skeleton-cell skeleton-actions">
+                <div class="skeleton-line w-32"></div>
+              </div>
+            </div>
           </div>
 
-          <div v-if="loading" class="loading-state">Loading records...</div>
-
-          <div class="table-wrap">
+          <!-- Table -->
+          <div v-else class="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -1094,36 +763,24 @@ function exportCsv() {
                   </td>
                   <td>
                     <div class="row-actions">
-                      <button type="button" @click="editRecord(record)">Edit</button>
-                      <button
-                        v-if="activeSource?.canDuplicate"
-                        type="button"
-                        :disabled="saving"
-                        @click="duplicateRecord(record)"
-                      >
-                        Duplicate
+                      <button class="row-action" type="button" :disabled="saving" @click="editRecord(record)" title="Edit">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
-                      <button
-                        v-if="activeSource?.canStatus"
-                        type="button"
-                        :disabled="saving"
-                        @click="togglePublish(record)"
-                      >
-                        {{ record.status === 'Published' ? 'Unpublish' : 'Publish' }}
+                      <button class="row-action" type="button" :disabled="saving" @click="duplicateRecord(record)" title="Duplicate">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                       </button>
-                      <button
-                        v-if="activeSource?.canDelete"
-                        type="button"
-                        class="danger"
-                        :disabled="saving"
-                        @click="confirmDelete(record)"
-                      >
-                        Delete
+                      <button class="row-action" :class="{ 'action-publish': record.status !== 'Published' }" type="button" :disabled="saving" @click="togglePublish(record)" :title="record.status === 'Published' ? 'Unpublish' : 'Publish'">
+                        <svg v-if="record.status === 'Published'" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="11.5" r="1.5"/></svg>
+                        <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      </button>
+                      <button class="row-action action-delete" type="button" :disabled="saving" @click="confirmDelete(record)" title="Delete">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       </button>
                     </div>
                   </td>
                 </tr>
-                <tr v-if="!loading && !pagedRows.length">
+                <!-- Empty state -->
+                <tr v-if="!pagedRows.length && !loading">
                   <td colspan="8">
                     <div class="empty-state">
                       <div class="empty-icon">
@@ -1186,27 +843,27 @@ function exportCsv() {
    DESIGN SYSTEM VARIABLES
    ============================================ */
 .admin-module-page {
-  --bg: var(--admin-theme-bg);
-  --surface: var(--admin-theme-surface);
-  --surface-soft: var(--admin-theme-surface-soft);
-  --border: var(--admin-theme-border);
-  --border-strong: var(--admin-theme-border-strong);
-  --text: var(--admin-theme-text);
-  --contrast: var(--admin-theme-contrast);
-  --muted: var(--admin-theme-muted);
-  --blue: var(--admin-theme-teal);
-  --blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
-  --green: var(--admin-theme-primary);
-  --green-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
-  --orange: var(--admin-theme-gold);
-  --orange-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
-  --red: var(--admin-theme-danger);
-  --red-soft: color-mix(in srgb, var(--admin-theme-danger) 12%, transparent);
+  --bg: #f0f4fb;
+  --surface: #ffffff;
+  --surface-soft: #f6f9fe;
+  --border: #e2e9f5;
+  --border-strong: #cbd9ec;
+  --text: #2c3d5f;
+  --contrast: #0f1a33;
+  --muted: #6a7d9e;
+  --blue: #2962ff;
+  --blue-soft: #e8efff;
+  --green: #0f973d;
+  --green-soft: #e6f9ed;
+  --orange: #e67e22;
+  --orange-soft: #fef4e6;
+  --red: #dc2626;
+  --red-soft: #fef2f2;
   --slate: #6b7280;
-  --slate-soft: color-mix(in srgb, #6b7280 12%, transparent);
-  --shadow-sm: var(--admin-theme-shadow);
-  --shadow-md: var(--admin-theme-shadow);
-  --shadow-lg: var(--admin-theme-shadow);
+  --slate-soft: #f1f5f9;
+  --shadow-sm: 0 1px 3px rgba(15, 26, 51, 0.06);
+  --shadow-md: 0 4px 14px rgba(15, 26, 51, 0.07);
+  --shadow-lg: 0 12px 40px rgba(15, 26, 51, 0.09);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -1216,6 +873,30 @@ function exportCsv() {
   background: var(--bg);
   color: var(--text);
   transition: padding-left 0.25s ease;
+}
+
+:global(.admin-dark) .admin-module-page {
+  --bg: #0a0f1f;
+  --surface: #111827;
+  --surface-soft: #0f172a;
+  --border: #1e2a45;
+  --border-strong: #2d3b5a;
+  --text: #c8d2e6;
+  --contrast: #eef2f8;
+  --muted: #8896b5;
+  --blue: #3b82f6;
+  --blue-soft: #1a2a45;
+  --green: #22c55e;
+  --green-soft: #142c1e;
+  --orange: #f59e0b;
+  --orange-soft: #2a2015;
+  --red: #ef4444;
+  --red-soft: #2a1515;
+  --slate: #8b96b0;
+  --slate-soft: #111b2e;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .admin-layout {
@@ -1377,19 +1058,12 @@ h1 {
   line-height: 1.6;
 }
 
-.button:disabled,
-.bulk-bar button:disabled,
-.row-actions button:disabled {
-  cursor: wait;
-  opacity: 0.58;
-}
-
-.button-secondary,
-.icon-button,
-.pagination button {
-  border: 1px solid var(--admin-border);
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
+.hero-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
 /* ============================================
@@ -1828,16 +1502,6 @@ h1 {
   margin-top: 1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-}
-
-.loading-state {
-  margin-top: 0.9rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface-soft);
-  color: var(--admin-muted);
-  padding: 0.85rem;
-  font-weight: 800;
 }
 
 table {

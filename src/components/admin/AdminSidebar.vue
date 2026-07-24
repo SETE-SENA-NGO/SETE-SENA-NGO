@@ -1,87 +1,119 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, RouterLink, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
 type PageItem = {
   slug: string
-  label: string
+  labelKey: string
   path?: string
 }
 
 type NavItem = {
   to: string
-  label: string
+  labelKey: string
   icon: string
 }
 
 type PageGroup = {
   slug: string
-  label: string
+  labelKey: string
   items: PageItem[]
   path?: string
 }
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const ui = useUiStore()
 const auth = useAuthStore()
 const loggingOut = ref(false)
+const openGroups = ref(new Set<string>())
 
 const workspaceLinks: NavItem[] = [
-  { to: '/admin', label: 'Dashboard', icon: 'icon-dashboard' },
-  { to: '/admin/donate', label: 'Donation QR', icon: 'icon-media' },
+  { to: '/admin', labelKey: 'admin.sidebar.dashboard', icon: 'icon-dashboard' },
+  {
+    to: '/admin/donate',
+    labelKey: 'admin.sidebar.donationQr',
+    icon: 'icon-media',
+  },
 ]
 
 const pageGroups: PageGroup[] = [
-  { slug: 'home', label: 'Home', items: [] },
+  { slug: 'home', labelKey: 'admin.sidebar.home', items: [] },
+  {
+    slug: 'slideshow',
+    labelKey: 'admin.sidebar.slideshow',
+    path: '/admin/slideshow',
+    items: [],
+  },
   {
     slug: 'about',
-    label: 'About',
+    labelKey: 'admin.sidebar.about',
     items: [
-      { slug: 'about-vision', label: 'Vision & Mission' },
-      { slug: 'about-organization', label: 'Organization' },
+      { slug: 'about-vision', labelKey: 'admin.sidebar.visionMission' },
+      { slug: 'about-organization', labelKey: 'admin.sidebar.organization' },
     ],
   },
   {
     slug: 'programs',
-    label: 'Programs',
+    labelKey: 'admin.sidebar.programs',
     path: '/admin/programs',
     items: [
-      { slug: 'programs-education', label: 'Education', path: '/admin/education' },
-      { slug: 'programs-environment', label: 'Environment', path: '/admin/environment' },
-      { slug: 'programs-livelihood', label: 'Livelihood', path: '/admin/livelihood' },
-      { slug: 'programs-child-protection', label: 'Child Protection', path: '/admin/child-protection' },
+      {
+        slug: 'programs-education',
+        labelKey: 'admin.sidebar.education',
+        path: '/admin/education',
+      },
+      {
+        slug: 'programs-environment',
+        labelKey: 'admin.sidebar.environment',
+        path: '/admin/environment',
+      },
+      {
+        slug: 'programs-livelihood',
+        labelKey: 'admin.sidebar.livelihood',
+        path: '/admin/livelihood',
+      },
+      {
+        slug: 'programs-child-protection',
+        labelKey: 'admin.sidebar.childProtection',
+        path: '/admin/child-protection',
+      },
     ],
   },
   {
     slug: 'impact',
-    label: 'Impact',
+    labelKey: 'admin.sidebar.impact',
+    path: '/admin/editor/impact-numbers',
     items: [
-      { slug: 'impact-numbers', label: 'Numbers' },
-      { slug: 'impact-timeline', label: 'Timeline' },
-      { slug: 'impact-partners', label: 'Partners' },
+      { slug: 'impact-numbers', labelKey: 'admin.sidebar.numbers' },
+      { slug: 'impact-timeline', labelKey: 'admin.sidebar.timeline' },
+      { slug: 'impact-partners', labelKey: 'admin.sidebar.partners' },
     ],
   },
   {
     slug: 'get-involved',
-    label: 'Get Involved',
+    labelKey: 'admin.sidebar.getInvolved',
+    path: '/admin/get-involved',
     items: [
-      { slug: 'get-involved-donate', label: 'Donate' },
-      { slug: 'get-involved-volunteer', label: 'Volunteer' },
-      { slug: 'get-involved-partner', label: 'Partner' },
+      { slug: 'get-involved-donate', labelKey: 'admin.sidebar.donate' },
+      { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer', path: '/admin/volunteer' },
+      { slug: 'get-involved-partner', labelKey: 'admin.sidebar.partner' },
     ],
   },
   {
     slug: 'news',
-    label: 'News',
+    labelKey: 'admin.sidebar.news',
     path: '/admin/news',
-    items: [{ slug: 'news-detail', label: 'News Detail' }],
+    items: [{ slug: 'news-detail', labelKey: 'admin.sidebar.newsDetail' }],
   },
   {
     slug: 'contact',
-    label: 'Contact',
+    labelKey: 'admin.sidebar.contact',
+    path: '/admin/contact',
     items: [],
   },
 ]
@@ -101,11 +133,29 @@ function isNavActive(item: NavItem) {
 function isGroupActive(group: PageGroup) {
   const groupPath = group.path ?? editorPath(group.slug)
   if (isActive(groupPath)) return true
-  return group.items.some((item) => isActive(item.path ?? editorPath(item.slug)))
+  return group.items.some((item) =>
+    isActive(item.path ?? editorPath(item.slug)),
+  )
 }
 
 function isGroupOpen(group: PageGroup) {
-  return isGroupActive(group)
+  return isGroupActive(group) || openGroups.value.has(group.slug)
+}
+
+function toggleGroup(group: PageGroup) {
+  const nextGroups = new Set(openGroups.value)
+
+  if (nextGroups.has(group.slug)) {
+    nextGroups.delete(group.slug)
+  } else {
+    nextGroups.add(group.slug)
+  }
+
+  openGroups.value = nextGroups
+}
+
+function submenuId(group: PageGroup) {
+  return `admin-sidebar-${group.slug}-submenu`
 }
 
 async function logout() {
@@ -126,68 +176,122 @@ async function logout() {
   <div class="backdrop" v-show="ui.sidebarOpen" @click="ui.closeSidebar"></div>
   <aside :class="['admin-sidebar', { open: ui.sidebarOpen }]">
     <RouterLink class="brand" to="/admin" @click="ui.closeSidebarForNavigation">
-      <span class="brand-mark" aria-hidden="true">SS</span>
+      <img class="brand-mark" src="/favicon.ico" alt="SANTI SENA" />
       <span class="brand-text">
         <strong>SANTI SENA</strong>
-        <small>Admin Console</small>
+        <small>{{ t('admin.sidebar.console') }}</small>
       </span>
     </RouterLink>
 
     <nav aria-label="Admin navigation">
-      <p class="nav-heading">Workspace</p>
-      <RouterLink v-for="item in workspaceLinks" :key="item.to" :to="item.to"
-        :class="['link', { active: isNavActive(item) }]" @click="ui.closeSidebarForNavigation">
+      <p class="nav-heading">{{ t('admin.sidebar.workspace') }}</p>
+      <RouterLink
+        v-for="item in workspaceLinks"
+        :key="item.to"
+        :to="item.to"
+        :class="['link', { active: isNavActive(item) }]"
+        @click="ui.closeSidebarForNavigation"
+      >
         <span :class="['link-icon', item.icon]" aria-hidden="true"></span>
-        <span>{{ item.label }}</span>
+        <span>{{ t(item.labelKey) }}</span>
       </RouterLink>
 
-      <p class="nav-heading">Website Pages</p>
+      <p class="nav-heading">{{ t('admin.sidebar.websitePages') }}</p>
 
       <!-- Flat single pages -->
-      <RouterLink v-for="group in pageGroups.filter((g) => !g.items.length)" :key="group.slug"
+      <RouterLink
+        v-for="group in pageGroups.filter((g) => !g.items.length)"
+        :key="group.slug"
         :to="group.path ?? editorPath(group.slug)"
-        :class="['link', { active: isActive(group.path ?? editorPath(group.slug)) }]"
-        @click="ui.closeSidebarForNavigation">
+        :class="[
+          'link',
+          { active: isActive(group.path ?? editorPath(group.slug)) },
+        ]"
+        @click="ui.closeSidebarForNavigation"
+      >
         <span class="link-icon icon-pages" aria-hidden="true"></span>
-        <span>{{ group.label }}</span>
+        <span>{{ t(group.labelKey) }}</span>
       </RouterLink>
 
       <!-- Expandable groups with sub-pages -->
-      <details v-for="group in pageGroups.filter((g) => g.items.length)" :key="group.slug" class="nav-group"
-        :open="isGroupOpen(group)">
-        <summary>
+      <div
+        v-for="group in pageGroups.filter((g) => g.items.length)"
+        :key="group.slug"
+        class="nav-group"
+        :class="{ open: isGroupOpen(group) }"
+      >
+        <div class="nav-group-row">
           <RouterLink
             :to="group.path ?? editorPath(group.slug)"
             class="link summary-link"
-            :class="{ active: isActive(group.path ?? editorPath(group.slug)) }"
+            :class="{ active: group.items.length === 0 ? isActive(group.path ?? editorPath(group.slug)) : (group.path ? isActive(group.path) && !group.items.some((item) => isActive(item.path ?? editorPath(item.slug))) : false) }"
             @click.stop="ui.closeSidebarForNavigation"
           >
             <span class="link-icon icon-pages" aria-hidden="true"></span>
-            <span>{{ group.label }}</span>
+            <span>{{ t(group.labelKey) }}</span>
           </RouterLink>
-        </summary>
-        <div class="submenu">
-          <RouterLink v-for="item in group.items" :key="item.slug" :to="item.path ?? editorPath(item.slug)"
-            :class="['sub-link', { active: isActive(item.path ?? editorPath(item.slug)) }]"
-            @click="ui.closeSidebarForNavigation">
-            {{ item.label }}
+          <button
+            class="group-toggle"
+            type="button"
+            :aria-controls="submenuId(group)"
+            :aria-expanded="isGroupOpen(group)"
+            :aria-label="`${isGroupOpen(group) ? 'Collapse' : 'Expand'} ${t(group.labelKey)}`"
+            @click="toggleGroup(group)"
+          >
+            <span class="toggle-chevron" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div
+          v-show="isGroupOpen(group)"
+          :id="submenuId(group)"
+          class="submenu"
+        >
+          <RouterLink
+            v-for="item in group.items"
+            :key="item.slug"
+            :to="item.path ?? editorPath(item.slug)"
+            :class="[
+              'sub-link',
+              { active: isActive(item.path ?? editorPath(item.slug)) },
+            ]"
+            @click="ui.closeSidebarForNavigation"
+          >
+            {{ t(item.labelKey) }}
           </RouterLink>
         </div>
-      </details>
+      </div>
     </nav>
 
     <div class="bottom">
-      <RouterLink :class="['link', 'settings-link', { active: isActive('/admin/settings') }]" to="/admin/settings"
-        @click="ui.closeSidebarForNavigation">
+      <RouterLink
+        :class="[
+          'link',
+          'settings-link',
+          { active: isActive('/admin/settings') },
+        ]"
+        to="/admin/settings"
+        @click="ui.closeSidebarForNavigation"
+      >
         <span class="link-icon icon-settings" aria-hidden="true"></span>
-        <span>Settings</span>
+        <span>{{ t('admin.sidebar.settings') }}</span>
       </RouterLink>
       <div class="bottom-divider" aria-hidden="true"></div>
-      <button class="link logout-link" type="button" :disabled="loggingOut" @click="logout">
+      <button
+        class="link logout-link"
+        type="button"
+        :disabled="loggingOut"
+        @click="logout"
+      >
         <span class="link-icon icon-logout" aria-hidden="true"></span>
         <span class="logout-copy">
-          <strong>{{ loggingOut ? 'Signing out...' : 'Logout' }}</strong>
-          <small>End admin session</small>
+          <strong>
+            {{
+              loggingOut
+                ? t('admin.sidebar.signingOut')
+                : t('admin.sidebar.logout')
+            }}
+          </strong>
+          <small>{{ t('admin.sidebar.endSession') }}</small>
         </span>
       </button>
     </div>
@@ -203,11 +307,19 @@ async function logout() {
   --sb-text-strong: var(--admin-theme-contrast);
   --sb-muted: var(--admin-theme-muted);
   --sb-accent: var(--admin-theme-primary);
-  --sb-accent-soft: color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
+  --sb-accent-soft: color-mix(
+    in srgb,
+    var(--admin-theme-primary) 14%,
+    transparent
+  );
   --sb-active-text: var(--admin-theme-primary-deep);
   --sb-hover-bg: #ffffff;
   --sb-brand: var(--admin-theme-primary-deep);
-  --sb-brand-mark-bg: color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
+  --sb-brand-mark-bg: color-mix(
+    in srgb,
+    var(--admin-theme-primary) 14%,
+    transparent
+  );
   --sb-brand-mark: var(--admin-theme-primary-deep);
   --sb-teal: var(--admin-theme-teal);
   --sb-teal-soft: color-mix(in srgb, var(--admin-theme-teal) 15%, transparent);
@@ -245,11 +357,19 @@ async function logout() {
   --sb-text-strong: var(--admin-theme-contrast);
   --sb-muted: var(--admin-theme-muted);
   --sb-accent: var(--admin-theme-primary);
-  --sb-accent-soft: color-mix(in srgb, var(--admin-theme-primary) 24%, transparent);
+  --sb-accent-soft: color-mix(
+    in srgb,
+    var(--admin-theme-primary) 24%,
+    transparent
+  );
   --sb-active-text: var(--admin-theme-contrast);
   --sb-hover-bg: var(--admin-theme-surface-soft);
   --sb-brand: var(--admin-theme-primary-deep);
-  --sb-brand-mark-bg: color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
+  --sb-brand-mark-bg: color-mix(
+    in srgb,
+    var(--admin-theme-primary) 18%,
+    transparent
+  );
   --sb-brand-mark: var(--admin-theme-primary-deep);
   --sb-teal: var(--admin-theme-teal);
   --sb-teal-soft: color-mix(in srgb, var(--admin-theme-teal) 18%, transparent);
@@ -288,17 +408,11 @@ async function logout() {
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--sb-brand-mark-bg);
-  color: var(--sb-brand-mark);
-  font-size: 0.78rem;
-  font-weight: 900;
+  width: 46px;
+  height: 46px;
+  display: block;
+  object-fit: contain;
   flex-shrink: 0;
-  box-shadow: 0 10px 20px rgba(15, 125, 56, 0.22);
 }
 
 .brand-text {
@@ -356,7 +470,7 @@ nav {
   opacity: 0.85;
 }
 
-.link>span:last-child {
+.link > span:last-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -474,7 +588,9 @@ nav {
   top: 0.28rem;
   height: 0.06rem;
   background: currentColor;
-  box-shadow: 0 0.2rem 0 currentColor, 0 0.4rem 0 currentColor;
+  box-shadow:
+    0 0.2rem 0 currentColor,
+    0 0.4rem 0 currentColor;
 }
 
 .icon-programs::before {
@@ -571,32 +687,46 @@ nav {
   margin-bottom: 0;
 }
 
-.nav-group summary {
+.nav-group-row {
   display: flex;
   align-items: center;
-  list-style: none;
+  gap: 0.15rem;
+}
+
+.group-toggle {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--sb-muted);
   cursor: pointer;
-  padding: 0;
-  gap: 0;
-}
-
-.nav-group summary::-webkit-details-marker {
-  display: none;
-}
-
-.nav-group summary::after {
-  width: 0.42rem;
-  height: 0.42rem;
-  margin: 0 0.6rem 0 auto;
-  border-right: 2px solid var(--sb-muted);
-  border-bottom: 2px solid var(--sb-muted);
-  transform: rotate(-45deg);
-  transition: transform 0.18s ease;
-  content: '';
   flex-shrink: 0;
 }
 
-.nav-group[open] summary::after {
+.group-toggle:hover,
+.group-toggle:focus-visible {
+  background: var(--sb-hover-bg);
+  color: var(--sb-text-strong);
+  outline: none;
+}
+
+.group-toggle:focus-visible {
+  box-shadow: 0 0 0 2px var(--sb-accent-soft);
+}
+
+.toggle-chevron {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.18s ease;
+}
+
+.nav-group.open .toggle-chevron {
   transform: rotate(45deg);
 }
 
@@ -658,7 +788,12 @@ nav {
 .bottom-divider {
   height: 1px;
   margin: 0.25rem 0.5rem;
-  background: linear-gradient(90deg, transparent, var(--sb-divider), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sb-divider),
+    transparent
+  );
 }
 
 .settings-link {

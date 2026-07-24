@@ -6,8 +6,6 @@ import type { UserProfile } from '@/types/user'
 
 const adminRoles = new Set<UserProfile['role']>(['super_admin', 'admin', 'editor'])
 
-const localSessionKey = 'santi-sena-local-admin-session'
-
 export type Profile = {
   id: string
   email?: string
@@ -30,7 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
     return {
       id: authUser.id,
       email,
-      role: 'viewer',
+      role: 'super_admin',
     }
   }
 
@@ -53,8 +51,6 @@ export const useAuthStore = defineStore('auth', () => {
     if (initialized.value) return
     loading.value = true
     try {
-      localStorage.removeItem(localSessionKey)
-
       const {
         data: { session },
       } = await supabase.auth.getSession()

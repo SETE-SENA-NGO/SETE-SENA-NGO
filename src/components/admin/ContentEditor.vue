@@ -33,15 +33,15 @@ async function onSubmit() {
     </div>
     <label>
       Slug
-      <input v-model="draft.slug" required />
+      <input id="content-editor-slug" v-model="draft.slug" name="content-editor-slug" required />
     </label>
     <label>
       Title
-      <input v-model="draft.title" required />
+      <input id="content-editor-title" v-model="draft.title" name="content-editor-title" required />
     </label>
     <label>
       Body
-      <textarea v-model="draft.body" rows="12" />
+      <textarea id="content-editor-body" v-model="draft.body" name="content-editor-body" rows="12" />
     </label>
     <button type="submit" class="primary">Save</button>
   </form>
@@ -62,7 +62,7 @@ async function onSubmit() {
   margin: 0;
 }
 .editor-heading p {
-  color: var(--admin-theme-muted);
+  color: var(--muted);
   font-size: 0.9rem;
 }
 label {
@@ -70,21 +70,21 @@ label {
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.9rem;
-  color: var(--admin-theme-muted);
+  color: var(--muted);
 }
 input,
 textarea {
-  background: var(--admin-theme-surface);
-  border: 1px solid var(--admin-theme-border);
-  color: var(--admin-theme-text);
+  background: #0c0c0e;
+  border: 1px solid var(--border);
+  color: var(--text);
   border-radius: 0.45rem;
   padding: 0.6rem;
 }
 .primary {
   justify-self: start;
-  background: var(--admin-theme-primary);
-  border: 1px solid var(--admin-theme-border-strong);
-  color: #ffffff;
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  color: var(--text);
   padding: 0.55rem 0.9rem;
   border-radius: 0.45rem;
 }
