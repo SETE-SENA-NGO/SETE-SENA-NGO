@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, onUnmounted } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
+import Slideshow from '@/components/shared/Slideshow.vue'
+import heroImpact from '@/assets/hero-impact.jpg'
+import logoUrl from '@/assets/santi_sena_logo.png'
 import { useScrollReveal } from '@/composables/useScrollReveal'
-
-const cambodiaMap = imageUrls.maps.cambodiaOffices
-const logoUrl = imageUrls.logo
 
 const { observe } = useScrollReveal({ threshold: 0.12 })
 
@@ -163,7 +162,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
           <div class="story-visual">
             <div class="photo-frame" ref="photoFrameRef">
               <div class="photo-inner" ref="photoInnerRef">
-                <img class="photo-img" :src="cambodiaMap"
+                <img class="photo-img" src="/src/assets/maps/Cambodia%20Map.png"
                   alt="Santi Sena operations across Cambodia" loading="lazy" />
                 <!-- Reveal sweep overlay -->
                 <div class="photo-sweep" aria-hidden="true"></div>
@@ -483,14 +482,12 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   --about-cream: var(--color-cream);
   --about-cream-soft: var(--color-cream-soft);
   --about-ink: var(--color-ink);
-  --about-ink-soft: var(--color-ink-soft);
+  --about-ink-soft: #324a3d;
   --about-border: var(--color-border);
   --about-white: var(--color-white);
   --about-surface: color-mix(in srgb, var(--about-primary) 8%, transparent);
   --about-surface-strong: color-mix(in srgb, var(--about-primary) 92%, var(--color-white));
-  --about-surface-soft: var(--about-cream-soft);
-  --about-highlight: var(--primary-color);
-  --about-shadow: var(--shadow-sm);
+  --about-highlight: #0f8f69;
 }
 
 /* ─── Shared Elements ─── */
@@ -568,12 +565,12 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--admin-theme-contrast);
+  color: #ffffff;
   margin-bottom: 1.25rem;
   padding: 0.35rem 1.1rem;
-  border: 1px solid var(--text-on-dark-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 9999px;
-  background: var(--green-tint-light);
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(4px);
 }
 
@@ -598,7 +595,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   max-width: 42rem;
   font-size: 1.05rem;
   line-height: 1.8;
-  color: var(--text-on-dark-secondary);
+  color: rgba(255, 255, 255, 0.9);
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
   margin: 0 0 2rem;
 }
@@ -620,7 +617,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
+  background: linear-gradient(135deg, #4ade80, #22c55e);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -632,13 +629,13 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-on-dark-tertiary);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .hero-stat-divider {
   width: 1px;
   height: 2.5rem;
-  background: var(--text-on-dark-secondary);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* ═══════════════════════════════════════════════
@@ -647,7 +644,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 
 .story-section {
   padding: 4rem 0;
-  background: var(--about-surface);
+  background: var(--about-white);
 }
 
 .story-grid {
@@ -810,7 +807,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   padding: 0.5rem 1rem;
   font-size: 0.78rem;
   color: var(--about-ink-soft);
-  background: var(--about-surface-soft);
+  background: var(--about-cream);
   border-radius: 0.6rem;
   border: 1px solid var(--about-border);
   opacity: 0;
@@ -861,10 +858,10 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   gap: 0.75rem;
   margin-top: 1.5rem;
   padding: 1rem 1rem 1.25rem;
-  background: var(--about-surface);
+  background: var(--about-white);
   border-radius: 0.875rem;
   border: 1px solid var(--about-border);
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.4s ease;
 }
@@ -881,9 +878,9 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   height: 120px;
   border-radius: 50%;
   overflow: hidden;
-  background: var(--about-surface);
+  background: var(--about-white);
   padding: 6px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1163,23 +1160,27 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 .vmg-card-inner {
   position: relative;
   z-index: 1;
-  background: var(--about-surface);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--about-border);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 1.5rem;
   padding: 2rem 1.5rem;
   height: 100%;
   display: flex;
   flex-direction: column;
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: var(--about-shadow);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .vmg-card:hover .vmg-card-inner {
-  background: var(--about-surface-strong);
-  border-color: var(--about-border);
-  box-shadow: var(--shadow-md);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* ── Number Badge ── */
@@ -1195,8 +1196,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .vmg-card:nth-child(1) .vmg-number {
-  background: color-mix(in srgb, var(--about-primary) 12%, transparent);
-  color: var(--about-primary);
+  background: color-mix(in srgb, #3b82f6 12%, transparent);
+  color: #3b82f6;
 }
 
 .vmg-card:nth-child(2) .vmg-number {
@@ -1393,7 +1394,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .value-card {
-  background: var(--about-surface);
+  background: var(--about-cream);
   border: 1px solid var(--about-border);
   border-radius: 1.125rem;
   padding: 1.5rem 1.25rem;
@@ -1404,7 +1405,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 
 .value-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
   border-color: color-mix(in srgb, var(--about-saffron) 30%, transparent);
 }
 
@@ -1489,14 +1490,14 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   width: min(100%, 280px);
   max-height: clamp(160px, 28vw, 280px);
   object-fit: contain;
-  filter: drop-shadow(0 14px 22px var(--dark-green-shadow));
+  filter: drop-shadow(0 14px 22px rgba(31, 61, 46, 0.16));
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
     filter 0.4s ease;
 }
 
 .org-logo:hover {
   transform: scale(1.08);
-  filter: drop-shadow(0 20px 36px var(--dark-green-shadow-strong));
+  filter: drop-shadow(0 20px 36px rgba(31, 61, 46, 0.3));
 }
 
 @keyframes logoFloat {
@@ -1525,9 +1526,9 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   align-items: flex-start;
   gap: 1rem;
   border-radius: 0.875rem;
-  background: var(--about-surface);
+  background: var(--about-white);
   padding: 1.25rem 1.5rem;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid var(--about-border);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
@@ -1654,13 +1655,13 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   display: flex;
   flex-direction: column;
   border-radius: 1.25rem;
-  background: var(--about-surface);
+  background: var(--about-white);
   border: 1px solid var(--about-border);
   position: relative;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.4s ease,
     border-color 0.4s ease;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .geo-card::before {
@@ -1973,13 +1974,13 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 
 .btn-outline {
   background: transparent;
-  color: var(--about-white);
-  border: 1px solid var(--text-on-dark-secondary);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .btn-outline:hover {
-  border-color: var(--about-white);
-  background: var(--green-tint-light);
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
   transform: translateY(-1px);
 }
 

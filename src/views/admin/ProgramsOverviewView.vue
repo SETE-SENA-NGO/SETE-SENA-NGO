@@ -428,7 +428,7 @@ onMounted(() => {
               <div class="card-hdr">
                 <div class="card-hdr-left">
                   <span class="card-badge">Quick access</span>
-                  <h2 class="card-title">Program management</h2>
+                  <h2 class="card-title">Frequent actions</h2>
                 </div>
               </div>
               <div class="card-body">
@@ -467,7 +467,7 @@ onMounted(() => {
               <div class="card-hdr">
                 <div class="card-hdr-left">
                   <span class="card-badge">Initiatives</span>
-                  <h2 class="card-title">Our programs</h2>
+                  <h2 class="card-title">Education programs</h2>
                 </div>
                 <button v-if="!anyEditing" class="card-hdr-link" type="button" @click="toggleGoals">Edit cards</button>
                 <button v-if="goalsEditing" class="card-hdr-link" type="button" @click="toggleGoals">Done</button>

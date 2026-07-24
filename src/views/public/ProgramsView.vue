@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { imageUrls } from '@/lib/imageUrls'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { supabase } from '@/lib/supabase'
 
 interface ProgramGoal {
@@ -12,6 +11,11 @@ interface ProgramGoal {
   whyItMatters: string
   quote: string
   image: string
+}
+
+interface PriorityItem {
+  title: string
+  icon: string
 }
 
 const DEFAULT_GOALS: ProgramGoal[] = [
@@ -26,7 +30,7 @@ const DEFAULT_GOALS: ProgramGoal[] = [
     whyItMatters:
       'Southeastern Cambodia is one of the most climate-vulnerable regions in the country. Healthy forests and clean water are peacekeeping infrastructure.',
     quote: 'The forest belongs to the pagoda and the pagoda belongs to the village.',
-    image: imageUrls.programs.environment,
+    image: '/images/programs/environment.jpg',
   },
   {
     number: '02',
@@ -40,7 +44,7 @@ const DEFAULT_GOALS: ProgramGoal[] = [
       'In the districts we work in, many hamlets are more than an hour is walk from the nearest school. Early learning centres change that.',
     quote:
       'Our library used to be a bag of ten books under the pagoda. Now the children come every afternoon.',
-    image: imageUrls.programs.education,
+    image: '/images/programs/education.jpg',
   },
   {
     number: '03',
@@ -54,7 +58,7 @@ const DEFAULT_GOALS: ProgramGoal[] = [
       'Cash predictability is what lets a family send their child to school this term instead of to a garment factory.',
     quote:
       'Before the savings group, I borrowed at 10% a month. Now I lend to my neighbours at zero.',
-    image: imageUrls.programs.livelihood,
+    image: '/images/programs/livelihood.jpg',
   },
   {
     number: '04',
@@ -67,27 +71,29 @@ const DEFAULT_GOALS: ProgramGoal[] = [
     whyItMatters:
       'The border with Vietnam brings both opportunity and risk. Community-led safeguarding is the most durable defense.',
     quote: "The safest village is one where every adult knows every child's name.",
-    image: imageUrls.programs.childProtection,
+    image: '/images/programs/child-protection.jpg',
   },
 ]
 
-const defaultIcons = ['shield', 'users', 'sprout', 'book', 'megaphone'] as const
-
-const goals = ref<ProgramGoal[]>(structuredClone(DEFAULT_GOALS))
-
-const priorities = ref<{ title: string; icon: string }[]>([
+const DEFAULT_PRIORITIES: PriorityItem[] = [
   { title: 'Strengthened governance and accountability', icon: 'shield' },
   { title: 'Staff and volunteer development', icon: 'users' },
   { title: 'Income and funding diversification', icon: 'sprout' },
   { title: 'Research and knowledge management', icon: 'book' },
   { title: 'Public advocacy', icon: 'megaphone' },
-])
+]
+
+const defaultIcons = ['shield', 'users', 'sprout', 'book', 'megaphone'] as const
+
+const goals = ref<ProgramGoal[]>(structuredClone(DEFAULT_GOALS))
+const priorities = ref<PriorityItem[]>(structuredClone(DEFAULT_PRIORITIES))
 
 const bannerEyebrow = ref('Our Programs')
 const bannerHeadline = ref('Four roots. One tree of peace.')
 const bannerIntro = ref(
   "Santi Sena's work follows four interwoven strategic goals: environment, education, livelihoods and child protection, each delivered with and by the communities themselves.",
 )
+const prioritiesHeading = ref('How we keep the tree alive')
 
 // Inline SVG icons — no external icon package required.
 // Line-style icons using currentColor so they inherit the .priority-icon color.
@@ -97,6 +103,85 @@ const priorityIconSvg: Record<string, string> = {
   sprout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10c0-3 2-5 5-5 0 3-2 5-5 5z"/><path d="M12 13c0-3-2-5-5-5 0 3 2 5 5 5z"/></svg>`,
   book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"/></svg>`,
   megaphone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 0 0 2 2h1l3 5V6l-3 5H5a2 2 0 0 0-2 2z"/><path d="M13 8a4 4 0 0 1 0 8"/><path d="M17 6a8 8 0 0 1 0 12"/></svg>`,
+}
+
+// When this view is rendered inside an admin live-preview wrapper (e.g. PageEditorView),
+// `content` is passed in directly and takes priority over a Supabase fetch.
+const props = defineProps<{
+  content?: {
+    headline?: string
+    intro?: string
+    sections?: Array<{
+      id: string
+      heading: string
+      body: string
+      items: string
+    }>
+  } | null
+}>()
+
+interface ParsedPageContent {
+  eyebrow?: string
+  headline?: string
+  intro?: string
+  sections?: Array<{ id: string; heading?: string; body?: string; items?: string }>
+}
+
+function applyParsedContent(parsed: ParsedPageContent) {
+  if (typeof parsed.eyebrow === 'string' && parsed.eyebrow) {
+    bannerEyebrow.value = parsed.eyebrow
+  }
+  if (typeof parsed.headline === 'string' && parsed.headline) {
+    bannerHeadline.value = parsed.headline
+  }
+  if (typeof parsed.intro === 'string' && parsed.intro) {
+    bannerIntro.value = parsed.intro
+  }
+
+  const goalsSection = parsed.sections?.find((s) => s.id === 'programs-goals')
+  if (goalsSection?.items) {
+    try {
+      const loadedGoals = JSON.parse(goalsSection.items)
+      if (Array.isArray(loadedGoals)) {
+        goals.value = DEFAULT_GOALS.map((g, i) => {
+          const src = loadedGoals[i] as Record<string, unknown> | undefined
+          return {
+            ...g,
+            tag: typeof src?.tag === 'string' ? src.tag : g.tag,
+            title: typeof src?.title === 'string' ? src.title : g.title,
+            intro: typeof src?.intro === 'string' ? src.intro : g.intro,
+            whatWeDo: typeof src?.whatWeDo === 'string' ? src.whatWeDo : g.whatWeDo,
+            whyItMatters: typeof src?.whyItMatters === 'string' ? src.whyItMatters : g.whyItMatters,
+            quote: typeof src?.quote === 'string' ? src.quote : g.quote,
+            // Only override the bundled default image once the admin has actually
+            // pasted a URL — an empty string from a freshly-added goal should
+            // still fall back to the shipped image instead of rendering broken.
+            image: typeof src?.image === 'string' && src.image ? src.image : g.image,
+          }
+        })
+      }
+    } catch {
+      // keep current goals
+    }
+  }
+
+  const prioritiesSection = parsed.sections?.find((s) => s.id === 'programs-priorities')
+  if (prioritiesSection) {
+    if (typeof prioritiesSection.heading === 'string' && prioritiesSection.heading) {
+      prioritiesHeading.value = prioritiesSection.heading
+    }
+    if (prioritiesSection.items) {
+      const titles = String(prioritiesSection.items)
+        .split('\n')
+        .filter((line) => line.trim())
+      if (titles.length) {
+        priorities.value = titles.map((title, i) => ({
+          title,
+          icon: defaultIcons[i] ?? 'shield',
+        }))
+      }
+    }
+  }
 }
 
 async function loadFromSupabase() {
@@ -113,56 +198,20 @@ async function loadFromSupabase() {
     const parsed = JSON.parse(data.body)
     if (parsed?.kind !== 'santi-sena-page-content') return
 
-    if (typeof parsed.eyebrow === 'string' && parsed.eyebrow) {
-      bannerEyebrow.value = parsed.eyebrow
-    }
-    if (typeof parsed.headline === 'string' && parsed.headline) {
-      bannerHeadline.value = parsed.headline
-    }
-    if (typeof parsed.intro === 'string' && parsed.intro) {
-      bannerIntro.value = parsed.intro
-    }
-
-    const goalsSection = parsed.sections?.find((s: { id: string }) => s.id === 'programs-goals')
-    if (goalsSection?.items) {
-      try {
-        const loadedGoals = JSON.parse(goalsSection.items)
-        if (Array.isArray(loadedGoals)) {
-          goals.value = DEFAULT_GOALS.map((g, i) => {
-            const src = loadedGoals[i] as Record<string, unknown> | undefined
-            return {
-              ...g,
-              tag: typeof src?.tag === 'string' ? src.tag : g.tag,
-              title: typeof src?.title === 'string' ? src.title : g.title,
-              intro: typeof src?.intro === 'string' ? src.intro : g.intro,
-              whatWeDo: typeof src?.whatWeDo === 'string' ? src.whatWeDo : g.whatWeDo,
-              whyItMatters: typeof src?.whyItMatters === 'string' ? src.whyItMatters : g.whyItMatters,
-              quote: typeof src?.quote === 'string' ? src.quote : g.quote,
-              // Only override the bundled default image once the admin has actually
-              // pasted a URL — an empty string from a freshly-added goal should
-              // still fall back to the shipped image instead of rendering broken.
-              image: typeof src?.image === 'string' && src.image ? src.image : g.image,
-            }
-          })
-        }
-      } catch {
-        // keep defaults
-      }
-    }
-
-    const prioritiesSection = parsed.sections?.find((s: { id: string }) => s.id === 'programs-priorities')
-    if (prioritiesSection?.items) {
-      const itemsText = String(prioritiesSection.items)
-      const titles: string[] = itemsText.split('\n').filter((line) => line.trim())
-      priorities.value = titles.map((title, i) => ({
-        title,
-        icon: defaultIcons[i] ?? 'shield',
-      }))
-    }
+    applyParsedContent(parsed)
   } catch {
     // keep defaults
   }
 }
+
+// Live-preview mode: whenever the admin editor pushes new content down as a prop, apply it.
+watch(
+  () => props.content,
+  (val) => {
+    if (val) applyParsedContent(val)
+  },
+  { immediate: true },
+)
 
 // Scroll-triggered reveal: each goal card (and the priorities grid) animates in once visible
 const cardRefs = ref<HTMLElement[]>([])
@@ -176,7 +225,12 @@ function setCardRef(el: unknown | null, index: number) {
 }
 
 onMounted(() => {
-  void loadFromSupabase()
+  // Only hit Supabase directly when nobody has already handed us content via props
+  // (e.g. when this view is loaded standalone at its public route).
+  if (!props.content) {
+    void loadFromSupabase()
+  }
+
   observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -245,7 +299,7 @@ onBeforeUnmount(() => {
       <p class="eyebrow center">
         <span class="line" /> OPERATIONAL PRIORITIES <span class="line" />
       </p>
-      <h2 class="center">How we keep the tree alive</h2>
+      <h2 class="center">{{ prioritiesHeading }}</h2>
 
       <div ref="priorityWaveRef" class="priorities-grid">
         <div
@@ -370,7 +424,7 @@ onBeforeUnmount(() => {
   min-height: 560px;
   border-radius: 1.25rem;
   overflow: hidden;
-  background-color: var(--color-cream-soft); /* fallback while image loads */
+  background-color: #e5ddc8; /* fallback while image loads */
 
   /* scroll-reveal: card fades/rises in, image is clipped by overflow:hidden above */
   opacity: 0;
@@ -401,10 +455,10 @@ onBeforeUnmount(() => {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(6, 18, 13, 0.92) 0%,
-    rgba(6, 18, 13, 0.72) 38%,
-    rgba(6, 18, 13, 0.35) 68%,
-    rgba(6, 18, 13, 0) 100%
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
   );
 }
 
@@ -414,10 +468,10 @@ onBeforeUnmount(() => {
 .goal-card.reverse .goal-overlay {
   background: linear-gradient(
     270deg,
-    rgba(6, 18, 13, 0.92) 0%,
-    rgba(6, 18, 13, 0.72) 38%,
-    rgba(6, 18, 13, 0.35) 68%,
-    rgba(6, 18, 13, 0) 100%
+    rgba(15, 61, 42, 0.9) 0%,
+    rgba(15, 61, 42, 0.72) 38%,
+    rgba(15, 61, 42, 0.25) 68%,
+    rgba(15, 61, 42, 0) 100%
   );
 }
 
@@ -593,9 +647,9 @@ onBeforeUnmount(() => {
 /* Card body */
 .priority-body {
   width: 100%;
-  background: var(--color-cream);
+  background: var(--color-white);
   border-radius: 18px;
-  border: 1px solid var(--color-border);
+  border: 1px solid rgba(20, 129, 62, 0.1);
   padding: 1.85rem 1.1rem 1.5rem;
   box-shadow:
     0 4px 10px rgba(20, 129, 62, 0.06),
@@ -646,13 +700,13 @@ onBeforeUnmount(() => {
 .priority-label {
   margin: 0;
   font-weight: 400;
-  color: var(--color-ink-soft);
+  color: #6b7280;
   line-height: 1.45;
   font-size: 0.9rem;
   transition: color 0.3s ease;
 }
 .priority-card:hover .priority-label {
-  color: var(--color-ink-soft);
+  color: #6b7280;
 }
 
 @media (max-width: 860px) {
