@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 CREATE TABLE IF NOT EXISTS public.pages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug text UNIQUE NOT NULL,
+  slug text NOT NULL,
   title text NOT NULL,
   body text NOT NULL DEFAULT '{}',
   route_path text,
@@ -59,6 +59,18 @@ ALTER TABLE public.pages
   ADD COLUMN IF NOT EXISTS published_at timestamptz,
   ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now(),
   ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
+ALTER TABLE public.pages
+  DROP CONSTRAINT IF EXISTS pages_slug_key;
+
+DROP INDEX IF EXISTS pages_slug_key;
+
+CREATE UNIQUE INDEX IF NOT EXISTS pages_slug_locale_key
+  ON public.pages (slug, locale);
+
+CREATE UNIQUE INDEX IF NOT EXISTS pages_route_locale_key
+  ON public.pages (route_path, locale)
+  WHERE route_path IS NOT NULL;
 
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
@@ -124,6 +136,7 @@ INSERT INTO public.pages (
   hero_intro,
   seo_title,
   seo_description,
+  locale,
   published_at
 )
 VALUES (
@@ -137,9 +150,10 @@ VALUES (
   'Since 1994, Santi Sena has worked with villages on peace, livelihoods, education, child protection and the environment.',
   'Get Involved',
   'Get involved with Santi Sena through donation, partnership or volunteer support.',
+  'en',
   now()
 )
-ON CONFLICT (slug) DO UPDATE
+ON CONFLICT (slug, locale) DO UPDATE
 SET title = EXCLUDED.title,
     route_path = EXCLUDED.route_path,
     nav_group = EXCLUDED.nav_group,

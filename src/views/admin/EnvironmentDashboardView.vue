@@ -233,17 +233,17 @@ const infoPages = [
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 :global(.admin-dark) .env-dash {
-  --bg: #080c1a; --surface: #101826; --border: #1c2642; --border-s: #263252;
-  --text: #c8d2e6; --contrast: #eaf0f8; --muted: #7a8aaa;
-  --blue: #3b82f6; --blue-soft: #172244;
-  --emerald: #10b981; --emerald-glow: rgba(16,185,129,0.2); --emerald-soft: #142a22;
-  --amber: #f59e0b; --amber-soft: #241e14;
-  --violet: #a78bfa; --violet-soft: #1c1640;
-  --slate: #8896b0; --slate-soft: #121a2e;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.15);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.3);
+  --bg: #021a14; --surface: #0a2920; --border: #0f3d2e; --border-s: #145238;
+  --text: #c8e6d8; --contrast: #eaf5f0; --muted: #7aaa94;
+  --blue: #3b82f6; --blue-soft: #0f2924;
+  --emerald: #10b981; --emerald-glow: rgba(16,185,129,0.22); --emerald-soft: #0f3d2e;
+  --amber: #f59e0b; --amber-soft: #2a1f0f;
+  --violet: #a78bfa; --violet-soft: #1a1630;
+  --slate: #7aa396; --slate-soft: #0f1f1a;
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.35);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.45);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.55);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.65);
 }
 .dash-layout { display: flex; }
 .dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; }

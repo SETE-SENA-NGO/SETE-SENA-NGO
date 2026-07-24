@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
-import { fetchPublishedNews, fetchPublishedNewsArticle, type NewsArticle } from '@/lib/newsContent'
-import { supabase } from '@/lib/supabase'
+import { useI18n } from 'vue-i18n'
+import { localizeContentValue } from '@/i18n/contentTranslations'
+import type { SupportedLocale } from '@/i18n'
+import { fetchPublishedNews, fetchPublishedNewsArticle } from '@/lib/newsContent'
+import type { NewsArticle } from '@/lib/newsContent'
 import { useAuthStore } from '@/stores/auth.store'
 
 const route = useRoute()
+const { locale } = useI18n()
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
 const articleId = computed(() => {
   const id = route.params.id
   return typeof id === 'string' ? id : '1'
@@ -129,9 +136,6 @@ const fallbackArticles: NewsArticle[] = [
   },
 ]
 
-const article = ref<NewsArticle | null>(null)
-const allArticles = ref<NewsArticle[]>(fallbackArticles)
-
 // ─── Auth & Admin content editing ───────────────────────────────
 const auth = useAuthStore()
 void auth.init()
@@ -150,41 +154,31 @@ function openContentEdit() {
 
 function cancelContentEdit() {
   editContentMode.value = false
-  editContentValue.value = ''
-  if (article.value) {
-    article.value.content = originalContent
-  }
+  editContentValue.value = originalContent
 }
 
 async function saveContentEdit() {
-  if (!article.value || !article.value.id) return
-  if (article.value.id.startsWith('sample-')) {
-    // Can't save to sample/fallback articles
-    showAlertToast('Cannot edit sample articles. Only news from admin can be edited.')
-    editContentMode.value = false
-    return
-  }
-
-  try {
-    const savedAt = new Date().toISOString()
-    const { error } = await supabase
-      .from('news_posts')
-      .update({
-        body: editContentValue.value,
-        updated_at: savedAt,
-      })
-      .eq('id', article.value.id)
-
-    if (error) throw error
-
-    article.value.content = editContentValue.value
-    editContentMode.value = false
-    showAlertToast('Content saved successfully.')
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Could not save content.'
-    showAlertToast(msg)
-  }
+  if (!article.value) return
+  article.value.content = editContentValue.value
+  editContentMode.value = false
+  showAlertToast('Content saved successfully.')
 }
+
+const sourceArticle = ref<NewsArticle | null>(null)
+const sourceArticles = ref<NewsArticle[]>(fallbackArticles)
+const article = computed<NewsArticle | null>(() => {
+  const currentArticle = sourceArticle.value
+  if (!currentArticle) return null
+
+  return activeLocale.value === 'kh'
+    ? localizeContentValue(currentArticle, activeLocale.value)
+    : currentArticle
+})
+const allArticles = computed<NewsArticle[]>(() => {
+  return activeLocale.value === 'kh'
+    ? localizeContentValue(sourceArticles.value, activeLocale.value)
+    : sourceArticles.value
+})
 
 onMounted(async () => {
   const fallback = fallbackArticles.find((a) => a.id === articleId.value) ?? null
@@ -195,10 +189,10 @@ onMounted(async () => {
       fetchPublishedNews(),
     ])
 
-    if (publishedNews.length) allArticles.value = publishedNews
-    article.value = loadedArticle ?? fallback
+    if (publishedNews.length) sourceArticles.value = publishedNews
+    sourceArticle.value = loadedArticle ?? fallback
   } catch {
-    article.value = fallback
+    sourceArticle.value = fallback
   }
 
   await nextTick()
@@ -602,7 +596,9 @@ const copyLink = () => {
               <p>Get the latest updates delivered to your inbox.</p>
               <div class="newsletter-mini-form">
                 <input
+                  id="news-detail-newsletter-email"
                   type="email"
+                  name="news-detail-newsletter-email"
                   placeholder="Your email"
                   class="mini-input"
                 />

@@ -70,7 +70,14 @@
               <label for="email">Email</label>
               <div class="input-wrapper">
                 <span class="material-icons-outlined input-icon"></span>
-                <input id="email" v-model="email" type="email" placeholder="Enter your email" required />
+                <input
+                  id="email"
+                  v-model="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  required
+                />
               </div>
             </div>
 
@@ -82,6 +89,7 @@
     <input
       id="password"
       v-model="password"
+      name="password"
       :type="showPassword ? 'text' : 'password'"
       placeholder="Enter your password"
       required
@@ -114,7 +122,7 @@
             <!-- Options -->
             <div class="form-options">
               <label class="remember-me">
-                <input type="checkbox" v-model="remember" />
+                <input id="remember-me" v-model="remember" name="remember-me" type="checkbox" />
                 <span>Remember Me</span>
               </label>
               <button type="button" class="forgot-link" :disabled="loading" @click="handlePasswordReset">
@@ -191,10 +199,12 @@ const handleLogin = async () => {
     // If your app later adds a route guard, it can pass through redirect automatically.
     await router.push(redirectPath.value)
   } catch (err) {
-    const message = (err as Error)?.message ?? ''
-    errorMessage.value = message.includes('admin access')
-      ? 'This account does not have permission to access the admin panel.'
-      : 'Email or password is incorrect.'
+    const rawMessage = (err as Error)?.message ?? ''
+    if (rawMessage.toLowerCase().includes('failed to fetch') || rawMessage.toLowerCase().includes('networkerror')) {
+      errorMessage.value = 'Cannot connect to Supabase. Please check your internet connection or verify your Supabase project URL.'
+    } else {
+      errorMessage.value = rawMessage || 'Email or password is incorrect.'
+    }
   } finally {
     loading.value = false
   }
@@ -242,7 +252,7 @@ const handlePasswordReset = async () => {
   background: #0f1415;
   padding: 20px;
   overflow-x: hidden;
-  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-family-base);
 }
 
 
@@ -539,7 +549,7 @@ const handlePasswordReset = async () => {
   border: 1px solid rgba(63, 73, 74, 0.4);
   border-radius: 16px;
   padding: 14px 48px 14px 48px;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-family-base);
   font-size: 15px;
   color: #fff;
   outline: none;
@@ -652,7 +662,7 @@ const handlePasswordReset = async () => {
   border: none;
   background: linear-gradient(90deg, #2ecc36 0%, #f2e7ce 100%);
   color: #000202;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-family-base);
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -711,7 +721,7 @@ const handlePasswordReset = async () => {
   border-radius: 30px;
   border: 1px solid rgba(206, 209, 209, 0.3);
   background: transparent;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-family-base);
   font-size: 13px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);

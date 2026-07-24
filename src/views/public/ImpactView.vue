@@ -1,8 +1,22 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import heroImage from '@/assets/hero-impact.jpg'
 import heroForest from '@/assets/hero-impact-forest.jpg'
 import heroVillage from '@/assets/hero-impact-village.jpg'
 import Slideshow from '@/components/shared/Slideshow.vue'
+
+const props = defineProps<{
+  content?: {
+    headline?: string
+    intro?: string
+    sections?: Array<{
+      id: string
+      heading: string
+      body: string
+      items: string
+    }>
+  } | null
+}>()
 
 const slideItems = [
   { image: heroImage, caption: '' },
@@ -10,7 +24,7 @@ const slideItems = [
   { image: heroVillage, caption: '' },
 ]
 
-const stats = [
+const defaultStats = [
   {
     value: '293',
     label: 'Villages served',
@@ -43,7 +57,7 @@ const stats = [
   },
 ]
 
-const timelineItems = [
+const defaultTimelineItems = [
   {
     year: '1994',
     title: 'Founding',
@@ -71,7 +85,67 @@ const timelineItems = [
   },
 ]
 
-const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Children', 'ActionAid', 'Care']
+const defaultDonors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Children', 'ActionAid', 'Care']
+
+const headline = computed(() => props.content?.headline || 'Three decades. One quiet revolution.')
+const intro = computed(() => props.content?.intro || 'Every number below is a household with a safer roof, a child with a teacher, a forest still standing.')
+
+const statsHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'impact-stats')
+  return {
+    heading: section?.heading || 'Thirty years of measurable change.',
+    body: section?.body || 'Every number represents a household strengthened, a forest protected, a life improved.'
+  }
+})
+
+const stats = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'impact-stats')
+  if (!section || !section.items) return defaultStats
+  
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      value: parts[0] || '',
+      label: parts[1] || '',
+      description: parts[2] || ''
+    }
+  })
+})
+
+const timelineHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'impact-timeline')
+  return {
+    heading: section?.heading || 'A journey rooted in patience.'
+  }
+})
+
+const timelineItems = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'impact-timeline')
+  if (!section || !section.items) return defaultTimelineItems
+  
+  return section.items.split('\n').filter(line => line.trim()).map(line => {
+    const parts = line.split('|').map(s => s.trim())
+    return {
+      year: parts[0] || '',
+      title: parts[1] || '',
+      description: parts[2] || ''
+    }
+  })
+})
+
+const partnersHeader = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'impact-partners')
+  return {
+    heading: section?.heading || 'Trusted by partners across the world.',
+    body: section?.body || 'Santi Sena has successfully managed grants from more than ten international institutions, with transparent reporting and audited accounts every year.'
+  }
+})
+
+const donors = computed(() => {
+  const section = props.content?.sections?.find(s => s.id === 'impact-partners')
+  if (!section || !section.items) return defaultDonors
+  return section.items.split('\n').filter(line => line.trim())
+})
 </script>
 
 <template>
@@ -80,18 +154,16 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Our Impact</span>
-        <h1>Three decades. One quiet revolution.</h1>
-        <p>
-          Every number below is a household with a safer roof, a child with a teacher, a forest still standing.
-        </p>
+        <h1>{{ headline }}</h1>
+        <p>{{ intro }}</p>
       </div>
     </Slideshow>
 
     <section id="numbers" class="stats-section">
       <div class="stats-header">
         <span class="eyebrow">Impact by the Numbers</span>
-        <h2>Thirty years of measurable change.</h2>
-        <p>Every number represents a household strengthened, a forest protected, a life improved.</p>
+        <h2>{{ statsHeader.heading }}</h2>
+        <p>{{ statsHeader.body }}</p>
       </div>
       <div class="stats-grid">
         <article v-for="stat in stats" :key="stat.label" class="stat-card">
@@ -105,7 +177,7 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
     <section id="timeline" class="timeline-section">
       <div class="timeline-shell">
         <span class="eyebrow">Timeline</span>
-        <h2>A journey rooted in patience.</h2>
+        <h2>{{ timelineHeader.heading }}</h2>
         <ol class="timeline-list">
           <li v-for="item in timelineItems" :key="item.year" class="timeline-item">
             <span class="timeline-dot" />
@@ -122,11 +194,8 @@ const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Childr
     <section id="partners" class="partners-section">
       <div class="partners-heading">
         <span class="eyebrow">Financial stewardship</span>
-        <h2>Trusted by partners across the world.</h2>
-        <p>
-          Santi Sena has successfully managed grants from more than ten international institutions,
-          with transparent reporting and audited accounts every year.
-        </p>
+        <h2>{{ partnersHeader.heading }}</h2>
+        <p>{{ partnersHeader.body }}</p>
       </div>
 
       <div class="marquee-mask">

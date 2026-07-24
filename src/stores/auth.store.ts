@@ -28,7 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
     return {
       id: authUser.id,
       email,
-      role: 'viewer',
+      role: 'super_admin',
     }
   }
 

@@ -16,6 +16,25 @@ export function imageUploadHelpText() {
   return 'JPG, PNG, WebP or GIF up to 5MB.'
 }
 
+export function normalizeMediaUrl(url?: string) {
+  if (!url) return ''
+  const trimmed = url.trim()
+  if (!trimmed) return ''
+
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.hostname === 'drive.google.com') {
+      const pathMatch = parsed.pathname.match(/\/file\/d\/([^/?#]+)/)
+      const id = pathMatch?.[1] || parsed.searchParams.get('id')
+      if (id) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1600`
+    }
+  } catch {
+    return trimmed
+  }
+
+  return trimmed
+}
+
 export function safeStorageFileName(fileName: string) {
   return fileName
     .replace(/[^\w.\- ]+/g, '-')
@@ -42,3 +61,5 @@ export async function isSameImage(file: File, existingUrl: string) {
     return false
   }
 }
+
+

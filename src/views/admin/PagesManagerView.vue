@@ -6,9 +6,11 @@ import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ContentEditor from '@/components/admin/ContentEditor.vue'
 import DataTable from '@/components/admin/DataTable.vue'
 import { useContentStore } from '@/stores/content.store'
+import { useUiStore } from '@/stores/ui.store'
 import type { PageContent } from '@/types/content'
 
 const store = useContentStore()
+const ui = useUiStore()
 const selectedPage = ref<PageContent | null>(null)
 
 const columns = [
@@ -57,7 +59,7 @@ function onSaved(page: PageContent) {
 </script>
 
 <template>
-  <div class="admin-page">
+  <div :class="['admin-page', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -83,18 +85,26 @@ function onSaved(page: PageContent) {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--admin-theme-bg);
+  color: var(--admin-theme-text);
+  transition: padding-left 0.25s ease;
 }
 .admin-layout {
   display: flex;
 }
 .main {
   flex: 1;
+  width: 100%;
   padding: 1.5rem;
-  max-width: 1200px;
+}
+.main h1 {
+  color: var(--admin-theme-contrast);
+  font-size: 1.6rem;
+  font-weight: 800;
 }
 @media (min-width: 900px) {
-  .main {
-    margin-left: max(10%, 180px);
+  .admin-page.sidebar-open {
+    padding-left: 260px;
   }
 }
 .grid {
@@ -108,30 +118,34 @@ function onSaved(page: PageContent) {
   margin: 0 0 1rem;
 }
 .toolbar button {
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 0.45rem;
-  background: var(--panel);
-  color: var(--text);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
   cursor: pointer;
   padding: 0.55rem 0.8rem;
+  font-family: inherit;
+  font-size: inherit;
+  transition: background 0.15s ease;
 }
 .toolbar button:hover {
-  background: #27272a;
+  background: var(--admin-theme-surface-soft);
 }
 .toolbar-link {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 0.45rem;
-  background: var(--panel);
-  color: var(--text);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
   cursor: pointer;
   padding: 0.55rem 0.8rem;
   text-decoration: none;
   font: inherit;
   font-size: inherit;
+  transition: background 0.15s ease;
 }
 .toolbar-link:hover {
-  background: #27272a;
+  background: var(--admin-theme-surface-soft);
 }
 </style>

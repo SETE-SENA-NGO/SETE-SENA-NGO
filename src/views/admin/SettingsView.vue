@@ -182,17 +182,11 @@ const adminEmail = ref('')
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark .admin-page) {
+:global(.admin-dark) .admin-page {
   --admin-bg: var(--admin-theme-bg);
   --admin-surface: var(--admin-theme-surface);
   --admin-surface-soft: var(--admin-theme-surface-soft);

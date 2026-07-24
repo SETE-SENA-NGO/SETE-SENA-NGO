@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { localizeContentValue } from '@/i18n/contentTranslations'
+import type { SupportedLocale } from '@/i18n'
 import { fetchPublishedNews, type NewsArticle } from '@/lib/newsContent'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 
-// ─── Fallback sample data ───────────────────────────────────────────
+// ─── Dummy news data ────────────────────────────────────────────────
+const { locale } = useI18n()
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
+
+// ─── Fallback sample news data ──────────────────────────────────────
 const fallbackArticles: NewsArticle[] = [
   {
     id: 'sample-1',
@@ -231,16 +240,17 @@ const likedArticles = ref<string[]>([])
 const newsletterEmail = ref('')
 
 // Featured + regular articles
-const featuredArticle = computed(() => {
-  const featured = newsItems.value.find((item) => item.featured)
-  return featured || newsItems.value[0] || null
-})
-const regularArticles = computed(() => {
-  if (featuredArticle.value && newsItems.value.length > 1) {
-    return newsItems.value.filter((item) => item.id !== featuredArticle.value!.id)
-  }
-  return newsItems.value
-})
+const displayedNewsItems = computed(() =>
+  activeLocale.value === 'kh'
+    ? localizeContentValue(newsItems.value, activeLocale.value)
+    : newsItems.value,
+)
+const featuredArticle = computed(() =>
+  displayedNewsItems.value.find((item) => item.featured),
+)
+const regularArticles = computed(() =>
+  displayedNewsItems.value.filter((item) => !item.featured),
+)
 
 // ─── Scroll‑triggered animations ──────────────────────────────────
 const articleRefs = ref<HTMLElement[]>([])
@@ -387,11 +397,14 @@ const subscribeNewsletter = () => {
 }
 
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  return new Date(dateStr).toLocaleDateString(
+    activeLocale.value === 'kh' ? 'km-KH' : 'en-US',
+    {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    },
+  )
 }
 
 const getInitials = (name: string) => {
@@ -666,7 +679,10 @@ const scrollToTop = () => {
       <div class="section-header">
         <div class="section-header-left">
           <h2 class="section-title">All Stories</h2>
-          <span class="section-count">{{ regularArticles.length }} articles</span>
+          <span class="section-count">
+            {{ regularArticles.length }}
+            {{ activeLocale === 'kh' ? 'អត្ថបទ' : 'articles' }}
+          </span>
         </div>
         <!-- Admin: Add Card Button -->
         <button
@@ -772,8 +788,10 @@ const scrollToTop = () => {
           </div>
           <div class="newsletter-form">
             <input
+              id="newsletter-email"
               type="email"
               v-model="newsletterEmail"
+              name="newsletter-email"
               placeholder="Enter your email"
               class="newsletter-input"
             />

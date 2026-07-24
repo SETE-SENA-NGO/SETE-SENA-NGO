@@ -254,17 +254,11 @@ function barWidth(value: number, total: number) {
   flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark .admin-page) {
+:global(.admin-dark) .admin-page {
   --admin-bg: var(--admin-theme-bg);
   --admin-bg-deep: var(--admin-theme-bg-deep);
   --admin-surface: var(--admin-theme-surface);
@@ -276,6 +270,12 @@ function barWidth(value: number, total: number) {
   --admin-border: var(--admin-theme-border);
   --admin-border-strong: var(--admin-theme-border-strong);
   --admin-shadow: var(--admin-theme-shadow);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-pink: var(--admin-theme-danger);
+  --admin-violet: var(--admin-theme-teal);
+  --admin-gold: var(--admin-theme-gold);
+  --admin-green: var(--admin-theme-primary);
+  --admin-green-deep: var(--admin-theme-primary-deep);
 }
 
 .admin-layout {
@@ -778,5 +778,32 @@ h2 {
   h1 {
     font-size: 1.75rem;
   }
+}
+</style>
+
+<!-- Non-scoped dark mode override to ensure dark background applies in admin-dark mode -->
+<style>
+.admin-dark .admin-page {
+  background: var(--admin-theme-bg, #071311) !important;
+}
+
+.admin-dark .admin-page .admin-layout {
+  background: var(--admin-theme-bg, #071311) !important;
+}
+
+.admin-dark .admin-page .main {
+  background: var(--admin-theme-bg, #071311) !important;
+}
+
+.admin-dark .admin-page .dashboard-card {
+  background: var(--admin-theme-surface, #10241f) !important;
+}
+
+.admin-dark .admin-page .dashboard-panel {
+  background: var(--admin-theme-surface, #10241f) !important;
+}
+
+.admin-dark .admin-page .overview-header {
+  background: var(--admin-theme-surface, #10241f) !important;
 }
 </style>

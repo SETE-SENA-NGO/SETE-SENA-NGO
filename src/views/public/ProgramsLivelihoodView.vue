@@ -972,7 +972,7 @@ onBeforeUnmount(() => {
   margin-bottom: 1rem;
 }
 .quote-text {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-family-base);
   font-style: italic;
   font-size: 1.55rem;
   color: #ffffff;

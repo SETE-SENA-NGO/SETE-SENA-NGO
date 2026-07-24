@@ -148,7 +148,9 @@ async function confirmDelete(item: { id: string; name: string }) {
         </header>
 
         <input
+          id="media-library-upload"
           ref="fileInput"
+          name="media-library-upload"
           type="file"
           multiple
           accept="image/jpeg,image/png,image/webp,image/gif"
@@ -261,7 +263,7 @@ async function confirmDelete(item: { id: string; name: string }) {
   transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark .media-page) {
+:global(.admin-dark) .media-page {
   --admin-bg: var(--admin-theme-bg);
   --admin-surface: var(--admin-theme-surface);
   --admin-surface-soft: var(--admin-theme-surface-soft);

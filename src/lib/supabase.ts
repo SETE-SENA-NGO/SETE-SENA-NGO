@@ -26,6 +26,11 @@ function createMockQueryBuilder(): MockQueryBuilder {
 function createMockClient(): SupabaseClient {
   const noop = () => Promise.resolve({ data: null, error: null })
   const chain = createMockQueryBuilder()
+  const channel = {
+    on: () => channel,
+    subscribe: () => channel,
+    unsubscribe: () => { },
+  }
 
   return {
     auth: {
@@ -83,7 +88,7 @@ function createMockClient(): SupabaseClient {
       }),
     },
     rpc: noop,
-    channel: () => ({ subscribe: () => ({}), unsubscribe: () => { } }),
+    channel: () => channel,
     functions: {} as any,
     realtime: {} as any,
     schema: () => chain,

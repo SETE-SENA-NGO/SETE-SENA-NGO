@@ -8,6 +8,7 @@ const driveScope = 'https://www.googleapis.com/auth/drive'
 export default async function googleDriveUpload(request) {
   if (request.method === 'OPTIONS') return emptyResponse(204)
   if (request.method === 'GET') return adminStatusResponse(request)
+  if (request.method === 'DELETE') return deleteMediaAssetResponse(request)
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
 
   try {
@@ -63,6 +64,56 @@ export default async function googleDriveUpload(request) {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Upload failed.'
+    const status = typeof error?.status === 'number' ? error.status : 500
+    const details = error?.details && typeof error.details === 'object' ? error.details : undefined
+    return jsonResponse({ error: message, details }, status)
+  }
+}
+
+async function deleteMediaAssetResponse(request) {
+  try {
+    const config = readConfig()
+    const user = await requireAdminUser(request, config)
+    const payload = await readJsonBody(request)
+    const mediaId = stringValue(payload?.id || payload?.mediaId)
+
+    if (!mediaId) {
+      return jsonResponse({ error: 'Media asset id is required.' }, 400)
+    }
+
+    await ensureMediaAssetsReady(config.supabase, user.authorization)
+
+    const media = await getMediaAsset(config.supabase, {
+      id: mediaId,
+      authorization: user.authorization,
+    })
+
+    if (!media) {
+      return jsonResponse({ deleted: true, media: null })
+    }
+
+    const driveFileId = googleDriveFileIdFromMedia(media)
+    if (driveFileId) {
+      const accessToken = await googleAccessToken(config.google)
+      await deleteDriveFile(accessToken, driveFileId)
+    }
+
+    await deleteMediaAsset(config.supabase, {
+      id: mediaId,
+      authorization: user.authorization,
+    })
+
+    return jsonResponse({
+      deleted: true,
+      media: {
+        id: media.id,
+        bucket: media.bucket,
+        path: media.path,
+        googleDriveFileId: driveFileId || null,
+      },
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Delete failed.'
     const status = typeof error?.status === 'number' ? error.status : 500
     const details = error?.details && typeof error.details === 'object' ? error.details : undefined
     return jsonResponse({ error: message, details }, status)
@@ -359,18 +410,7 @@ async function uploadDriveFile({ accessToken, file, fileName, folderId, mimeType
 
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.id) {
-<<<<<<< HEAD
     throw httpError(data?.error?.message || 'Could not upload image to Google Drive.', 502)
-=======
-<<<<<<< HEAD
-    throw httpError(data?.error?.message || 'Could not upload image to Google Drive.', 502)
-=======
-    throw httpError(driveErrorMessage(data, 'Could not upload image to Google Drive.'), 502, {
-      step: 'google-drive-upload',
-      googleMessage: driveErrorMessage(data, 'Could not upload image to Google Drive.'),
-    })
->>>>>>> 55583b0716dc2b69d3d421af643b1a41cdef9c57
->>>>>>> feature/admin-media
   }
 
   return data
@@ -408,7 +448,7 @@ async function makeDriveFilePublic(accessToken, fileId) {
   }
 }
 
-async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, size, driveFile }) {
+async function saveMediaAsset(config, { userId, authorization, fileName, publicUrl, mimeType, size, driveFile }) {
   const response = await fetch(
     `${config.url}/rest/v1/media_assets?on_conflict=bucket,path&select=id,bucket,path,public_url,file_name,mime_type,file_size,created_at`,
     {
@@ -447,19 +487,6 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
 
   return Array.isArray(data) ? data[0] : data
 }
-
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> feature/admin-media
-function serviceHeaders(config) {
-  return {
-    apikey: config.serviceRoleKey,
-    authorization: `Bearer ${config.serviceRoleKey}`,
-  }
-<<<<<<< HEAD
-=======
-=======
 async function ensureMediaAssetsReady(config, authorization) {
   const response = await fetch(`${config.url}/rest/v1/media_assets?select=id&limit=1`, {
     method: 'GET',
@@ -513,12 +540,53 @@ async function responseErrorMessage(response) {
 
 function responseDataMessage(data, fallback) {
   return data?.message || data?.error_description || data?.error || fallback
->>>>>>> 55583b0716dc2b69d3d421af643b1a41cdef9c57
->>>>>>> feature/admin-media
+}
+
+function driveErrorMessage(data, fallback) {
+  const error = data?.error
+  if (typeof error === 'string') return data?.error_description || error
+  if (error && typeof error === 'object') {
+    return error.message || error.description || data?.error_description || fallback
+  }
+  return responseDataMessage(data, fallback)
+}
+
+function googleAuthError(config, data) {
+  const message = driveErrorMessage(data, 'Could not authenticate with Google Drive.')
+  return httpError(message, 502, {
+    step: config.authType === 'oauth' ? 'google-oauth' : 'google-service-account',
+    googleAuthType: config.authType,
+    googleMessage: message,
+  })
 }
 
 function googleThumbnailUrl(fileId) {
   return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1600`
+}
+
+function googleDriveFileIdFromMedia(media) {
+  const metadata = isRecord(media?.metadata) ? media.metadata : {}
+  return (
+    stringValue(metadata.google_drive_file_id) ||
+    googleDriveFileIdFromUrl(stringValue(media?.public_url)) ||
+    googleDriveFileIdFromUrl(stringValue(media?.path))
+  )
+}
+
+function googleDriveFileIdFromUrl(value) {
+  if (!value) return ''
+
+  try {
+    const url = new URL(value)
+    const id = stringValue(url.searchParams.get('id'))
+    if (id) return id
+
+    const drivePathMatch = url.pathname.match(/\/d\/([^/?#=]+)/)
+    return drivePathMatch?.[1] || ''
+  } catch {
+    const drivePathMatch = value.match(/\/d\/([^/?#=]+)/)
+    return drivePathMatch?.[1] || ''
+  }
 }
 
 function sanitizeFileName(value) {
@@ -538,6 +606,14 @@ function isUploadFile(value) {
       typeof value.arrayBuffer === 'function' &&
       typeof value.size === 'number',
   )
+}
+
+async function readJsonBody(request) {
+  try {
+    return await request.json()
+  } catch {
+    return null
+  }
 }
 
 function jsonResponse(body, status = 200) {
@@ -573,6 +649,10 @@ function stringValue(value) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function isRecord(value) {
+  return typeof value === 'object' && value !== null
+}
+
 function base64UrlJson(value) {
   return Buffer.from(JSON.stringify(value)).toString('base64url')
 }
@@ -581,4 +661,3 @@ function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
   return `${Math.round(bytes / (1024 * 1024))} MB`
 }
-

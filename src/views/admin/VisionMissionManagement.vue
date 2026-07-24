@@ -501,9 +501,23 @@ function resetToDefaults() {
 
 <style scoped>
 .vision-admin {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-primary: var(--admin-theme-primary);
+  --admin-primary-deep: var(--admin-theme-primary-deep);
+  --admin-danger: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
+
   min-height: 100vh;
-  background: var(--admin-theme-bg);
-  color: var(--admin-theme-text);
+  background: var(--admin-bg);
+  color: var(--admin-text);
   transition: padding-left 0.25s ease;
 }
 
@@ -513,6 +527,7 @@ function resetToDefaults() {
 
 .manager-main {
   min-height: 100vh;
+  width: 100%;
   padding: 1.25rem;
   padding-top: calc(60px + 1.25rem);
 }
@@ -522,10 +537,10 @@ function resetToDefaults() {
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 8px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
   padding: 1rem 1.1rem;
 }
 
@@ -537,7 +552,7 @@ function resetToDefaults() {
 }
 
 .manager-hero h1 {
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: 1.32rem;
   line-height: 1.2;
 }
@@ -554,10 +569,10 @@ function resetToDefaults() {
 }
 
 .manager-meta span {
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 999px;
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-muted);
+  background: var(--admin-surface-soft);
+  color: var(--admin-muted);
   padding: 0.18rem 0.55rem;
   font-size: 0.72rem;
   font-weight: 800;
@@ -565,7 +580,7 @@ function resetToDefaults() {
 
 .eyebrow,
 .panel-kicker {
-  color: var(--admin-theme-primary-deep);
+  color: var(--admin-primary-deep);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -608,22 +623,22 @@ function resetToDefaults() {
 }
 
 .btn-primary {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
+  border-color: var(--admin-primary-deep);
+  background: linear-gradient(180deg, var(--admin-primary), var(--admin-primary-deep));
   color: #ffffff;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-primary) 22%, transparent);
 }
 
 .btn-secondary,
 .btn-ghost,
 .btn-icon {
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
-  color: var(--admin-theme-contrast);
+  border-color: color-mix(in srgb, var(--admin-contrast-soft) 42%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-surface) 86%, var(--admin-contrast) 14%);
+  color: var(--admin-contrast);
 }
 
 .btn-ghost {
-  background: var(--admin-theme-surface);
+  background: var(--admin-surface);
 }
 
 .btn-icon {
@@ -633,31 +648,31 @@ function resetToDefaults() {
 }
 
 .btn-icon.danger {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
+  border-color: color-mix(in srgb, var(--admin-danger) 64%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-danger) 9%, var(--admin-surface));
+  color: var(--admin-danger);
 }
 
 .btn-secondary:hover,
 .btn-ghost:hover,
 .btn-icon:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
+  border-color: var(--admin-primary);
+  background: color-mix(in srgb, var(--admin-primary) 10%, var(--admin-surface));
+  color: var(--admin-primary-deep);
 }
 
 .btn-icon.danger:hover {
-  border-color: var(--admin-theme-danger);
-  background: var(--admin-theme-danger);
+  border-color: var(--admin-danger);
+  background: var(--admin-danger);
   color: #ffffff;
 }
 
 .state-card {
   margin-top: 1rem;
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
+  background: var(--admin-surface);
+  color: var(--admin-muted);
   padding: 1rem;
 }
 
@@ -666,7 +681,7 @@ function resetToDefaults() {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  color: var(--admin-theme-danger);
+  color: var(--admin-danger);
 }
 
 .content-grid {
@@ -676,9 +691,9 @@ function resetToDefaults() {
 }
 
 .editor-panel {
-  border: 1px solid var(--admin-theme-border);
+  border: 1px solid var(--admin-border);
   border-radius: 8px;
-  background: var(--admin-theme-surface);
+  background: var(--admin-surface);
   overflow: hidden;
 }
 
@@ -687,21 +702,21 @@ function resetToDefaults() {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface));
+  border-bottom: 1px solid var(--admin-border);
+  background: color-mix(in srgb, var(--admin-surface-soft) 44%, var(--admin-surface));
   padding: 0.85rem 1rem;
 }
 
 .panel-header h2 {
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
   font-size: 1rem;
 }
 
 .saved-pill {
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--admin-primary) 28%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 11%, transparent);
-  color: var(--admin-theme-primary-deep);
+  background: color-mix(in srgb, var(--admin-primary) 11%, transparent);
+  color: var(--admin-primary-deep);
   padding: 0.22rem 0.55rem;
   font-size: 0.72rem;
   font-weight: 800;
@@ -720,22 +735,22 @@ function resetToDefaults() {
 .field {
   display: grid;
   gap: 0.35rem;
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-size: 0.8rem;
   font-weight: 800;
 }
 
 .field span {
-  color: var(--admin-theme-contrast-soft);
+  color: var(--admin-contrast-soft);
 }
 
 .field input,
 .field textarea {
   width: 100%;
-  border: 1px solid var(--admin-theme-border-strong);
+  border: 1px solid var(--admin-border-strong);
   border-radius: 6px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
+  background: var(--admin-surface);
+  color: var(--admin-text);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -751,8 +766,8 @@ function resetToDefaults() {
 
 .field input:focus,
 .field textarea:focus {
-  border-color: var(--admin-theme-primary);
-  outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
+  border-color: var(--admin-primary);
+  outline: 3px solid color-mix(in srgb, var(--admin-primary) 15%, transparent);
 }
 
 .field-block {
@@ -763,25 +778,25 @@ function resetToDefaults() {
 .sub-section-header {
   margin-top: 1.5rem;
   padding: 0.6rem 0 0.4rem;
-  border-top: 1px solid var(--admin-theme-border);
+  border-top: 1px solid var(--admin-border);
 }
 
 .sub-section-header h3 {
   margin: 0 0 0.25rem;
   font-size: 0.88rem;
   font-weight: 800;
-  color: var(--admin-theme-contrast);
+  color: var(--admin-contrast);
 }
 
 .sub-section-hint {
   margin: 0;
   font-size: 0.74rem;
-  color: var(--admin-theme-muted);
+  color: var(--admin-muted);
   font-weight: 600;
 }
 
 .sub-section-hint code {
-  background: var(--admin-theme-bg);
+  background: var(--admin-bg);
   padding: 0.08rem 0.3rem;
   border-radius: 3px;
   font-size: 0.72rem;
@@ -805,10 +820,10 @@ function resetToDefaults() {
   place-items: center;
   width: 1.75rem;
   height: 1.75rem;
-  border: 1px solid var(--admin-theme-border-strong);
+  border: 1px solid var(--admin-border-strong);
   border-radius: 6px;
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-muted);
+  background: var(--admin-surface-soft);
+  color: var(--admin-muted);
   font-size: 0.7rem;
   font-weight: 900;
   flex-shrink: 0;
@@ -830,6 +845,22 @@ function resetToDefaults() {
   min-height: 32px;
   padding: 0.35rem 0.7rem;
   font-size: 0.78rem;
+}
+
+:global(.admin-dark) .vision-admin {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-primary: var(--admin-theme-primary);
+  --admin-primary-deep: var(--admin-theme-primary-deep);
+  --admin-danger: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 @media (min-width: 900px) {

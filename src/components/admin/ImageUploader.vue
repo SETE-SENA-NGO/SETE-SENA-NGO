@@ -22,7 +22,14 @@ function onSelect(e: Event) {
 
 <template>
   <div class="image-uploader">
-    <input ref="fileInput" type="file" accept="image/*" @change="onSelect" />
+    <input
+      id="admin-image-upload"
+      ref="fileInput"
+      name="admin-image-upload"
+      type="file"
+      accept="image/*"
+      @change="onSelect"
+    />
     <div class="hint">{{ imageUploadHelpText() }}</div>
   </div>
 </template>

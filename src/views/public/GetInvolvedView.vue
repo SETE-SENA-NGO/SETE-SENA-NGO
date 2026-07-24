@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { localizeContentValue } from '@/i18n/contentTranslations'
 import { useContentStore } from '@/stores/content.store'
 
 interface ActionLink {
@@ -56,6 +58,8 @@ interface GetInvolvedPageContent {
 }
 
 const PAGE_SLUG = 'get-involved'
+const { locale } = useI18n()
+const activeLocale = computed(() => (locale.value === 'kh' ? 'kh' : 'en'))
 
 const fallbackContent: GetInvolvedPageContent = {
   hero: {
@@ -110,7 +114,8 @@ const fallbackContent: GetInvolvedPageContent = {
     quote:
       'Santi Sena means people working together for peace, livelihoods, justice and environmental preservation.',
     credit: 'From the Santi Sena profile and strategic plan',
-    title: 'Support here is not only a gift. It is cooperation with village systems.',
+    title:
+      'Support here is not only a gift. It is cooperation with village systems.',
     body: 'Santi Sena works with monks, villagers, local government, schools and partners in Svay Rieng, Prey Veng and Kratie. Choose the help you can offer and connect it to work communities can carry forward.',
   },
   journey: [
@@ -141,10 +146,14 @@ const fallbackContent: GetInvolvedPageContent = {
 
 const contentStore = useContentStore()
 const cmsContent = ref<Partial<GetInvolvedPageContent> | null>(null)
+let stopCmsSubscription: (() => void) | null = null
 
-const pageContent = computed<GetInvolvedPageContent>(() =>
-  mergeGetInvolvedContent(fallbackContent, cmsContent.value),
-)
+const pageContent = computed<GetInvolvedPageContent>(() => {
+  const merged = mergeGetInvolvedContent(fallbackContent, cmsContent.value)
+  return activeLocale.value === 'kh'
+    ? localizeContentValue(merged, activeLocale.value)
+    : merged
+})
 
 const description =
   'Get involved with Santi Sena through donation, partnership or volunteer support rooted in Santi Sena reports and strategic plan.'
@@ -160,19 +169,23 @@ onMounted(async () => {
   previousTitle = document.title
   document.title = 'Get Involved with Santi Sena'
   setDescription(description)
+  stopCmsSubscription = contentStore.subscribeToSlug(PAGE_SLUG, () => {
+    void loadCmsContent()
+  })
 
-  try {
-    const page = await contentStore.fetchBySlug(PAGE_SLUG)
-    cmsContent.value = page ? parseCmsBody(page.body) : null
-  } catch {
-    cmsContent.value = null
-  }
+  await loadCmsContent()
 
   await nextTick()
   setupPopReveal()
 })
 
+watch(activeLocale, () => {
+  void loadCmsContent()
+})
+
 onUnmounted(() => {
+  stopCmsSubscription?.()
+  stopCmsSubscription = null
   document.title = previousTitle
 
   if (descriptionMeta && createdDescriptionMeta) {
@@ -199,6 +212,15 @@ function setDescription(content: string) {
   descriptionMeta.setAttribute('content', content)
 }
 
+async function loadCmsContent() {
+  try {
+    const page = await contentStore.fetchBySlug(PAGE_SLUG, activeLocale.value)
+    cmsContent.value = page ? parseCmsBody(page.body) : null
+  } catch {
+    cmsContent.value = null
+  }
+}
+
 function parseCmsBody(body: string): Partial<GetInvolvedPageContent> | null {
   if (!body.trim()) return null
 
@@ -216,8 +238,12 @@ function mergeGetInvolvedContent(
 ): GetInvolvedPageContent {
   if (!override) return base
 
-  const hero: Record<string, unknown> = isRecord(override.hero) ? override.hero : {}
-  const closing: Record<string, unknown> = isRecord(override.closing) ? override.closing : {}
+  const hero: Record<string, unknown> = isRecord(override.hero)
+    ? override.hero
+    : {}
+  const closing: Record<string, unknown> = isRecord(override.closing)
+    ? override.closing
+    : {}
 
   return {
     hero: {
@@ -226,14 +252,20 @@ function mergeGetInvolvedContent(
       primaryCta: mergeObject(base.hero.primaryCta, hero.primaryCta),
       secondaryCta: mergeObject(base.hero.secondaryCta, hero.secondaryCta),
     },
-    supportCards: mergeArray<SupportCard>(override.supportCards, base.supportCards),
+    supportCards: mergeArray<SupportCard>(
+      override.supportCards,
+      base.supportCards,
+    ),
     quotePanel: mergeObject(base.quotePanel, override.quotePanel),
     journey: mergeArray<JourneyStep>(override.journey, base.journey),
     closing: {
       ...base.closing,
       ...closing,
       primaryCta: mergeObject(base.closing.primaryCta, closing.primaryCta),
-      secondaryCta: mergeObject(base.closing.secondaryCta, closing.secondaryCta),
+      secondaryCta: mergeObject(
+        base.closing.secondaryCta,
+        closing.secondaryCta,
+      ),
     },
   }
 }
@@ -243,7 +275,9 @@ function mergeObject<T>(base: T, override: unknown): T {
 }
 
 function mergeArray<T>(override: unknown, fallback: T[]) {
-  return Array.isArray(override) && override.length ? (override as T[]) : fallback
+  return Array.isArray(override) && override.length
+    ? (override as T[])
+    : fallback
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -256,7 +290,9 @@ function setupPopReveal() {
   const elements = Array.from(
     document.querySelectorAll<HTMLElement>('.get-involved-page .pop-reveal'),
   )
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const prefersReducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
 
   if (!('IntersectionObserver' in window) || prefersReducedMotion) {
     elements.forEach((element) => element.classList.add('is-visible'))
@@ -293,7 +329,6 @@ function setupPopReveal() {
     revealObserver?.observe(element)
   })
 }
-
 </script>
 
 <template>
@@ -305,10 +340,16 @@ function setupPopReveal() {
           <h1 id="get-involved-title">{{ pageContent.hero.title }}</h1>
           <p class="hero-description">{{ pageContent.hero.description }}</p>
           <div class="hero-actions">
-            <RouterLink :to="pageContent.hero.primaryCta.to" class="button button-primary">
+            <RouterLink
+              :to="pageContent.hero.primaryCta.to"
+              class="button button-primary"
+            >
               {{ pageContent.hero.primaryCta.label }}
             </RouterLink>
-            <RouterLink :to="pageContent.hero.secondaryCta.to" class="button button-secondary">
+            <RouterLink
+              :to="pageContent.hero.secondaryCta.to"
+              class="button button-secondary"
+            >
               {{ pageContent.hero.secondaryCta.label }}
             </RouterLink>
           </div>
@@ -322,14 +363,18 @@ function setupPopReveal() {
       </div>
     </section>
 
-    <section id="ways-to-help" class="about-section" aria-labelledby="support-heading">
+    <section
+      id="ways-to-help"
+      class="about-section"
+      aria-labelledby="support-heading"
+    >
       <div class="about-shell">
         <div class="about-copy pop-reveal pop-content">
           <p class="eyebrow">About</p>
           <h2 id="support-heading">Support real community work.</h2>
           <p>
-            Santi Sena welcomes donors, partners, researchers and volunteers who can strengthen
-            local initiatives.
+            Santi Sena welcomes donors, partners, researchers and volunteers who
+            can strengthen local initiatives.
           </p>
         </div>
 
@@ -356,7 +401,9 @@ function setupPopReveal() {
     <section class="quote-section" aria-labelledby="strategy-heading">
       <div class="quote-shell">
         <article class="quote-panel quote-panel-left pop-reveal pop-left">
-          <span class="quote-mark quote-mark-large" aria-hidden="true">&ldquo;</span>
+          <span class="quote-mark quote-mark-large" aria-hidden="true"
+            >&ldquo;</span
+          >
           <blockquote id="strategy-heading">
             {{ pageContent.quotePanel.quote }}
           </blockquote>
@@ -364,7 +411,9 @@ function setupPopReveal() {
 
         <div class="quote-detail pop-reveal pop-right">
           <p>{{ pageContent.quotePanel.body }}</p>
-          <span class="quote-mark quote-mark-detail" aria-hidden="true">&rdquo;</span>
+          <span class="quote-mark quote-mark-detail" aria-hidden="true"
+            >&rdquo;</span
+          >
         </div>
       </div>
     </section>
@@ -373,11 +422,17 @@ function setupPopReveal() {
       <div class="journey-intro pop-reveal pop-content">
         <p class="eyebrow">Your path</p>
         <h2 id="journey-heading">Choose your path.</h2>
-        <p class="journey-summary">Choose one route and connect it to real field needs.</p>
+        <p class="journey-summary">
+          Choose one route and connect it to real field needs.
+        </p>
       </div>
 
       <ol class="journey-list">
-        <li v-for="item in pageContent.journey" :key="item.step" class="pop-reveal pop-card">
+        <li
+          v-for="item in pageContent.journey"
+          :key="item.step"
+          class="pop-reveal pop-card"
+        >
           <span>{{ item.step }}</span>
           <div>
             <h3>{{ item.title }}</h3>
@@ -399,7 +454,9 @@ function setupPopReveal() {
         </div>
 
         <div class="closing-body">
-          <p class="closing-copy pop-reveal pop-content">{{ pageContent.closing.body }}</p>
+          <p class="closing-copy pop-reveal pop-content">
+            {{ pageContent.closing.body }}
+          </p>
           <div class="closing-action-column">
             <p class="pop-reveal pop-content">
               Start with a conversation or a local donation path.
@@ -449,8 +506,12 @@ function setupPopReveal() {
 
 .hero-section {
   position: relative;
-  background:
-    linear-gradient(180deg, var(--surface), var(--surface-soft) 58%, var(--surface));
+  background: linear-gradient(
+    180deg,
+    var(--surface),
+    var(--surface-soft) 58%,
+    var(--surface)
+  );
   padding: clamp(4rem, 7vw, 6rem) 0 4.5rem;
 }
 
@@ -883,7 +944,7 @@ function setupPopReveal() {
 }
 
 .quote-mark {
-  font-family: Georgia, serif;
+  font-family: var(--font-family-base);
   font-weight: 900;
   line-height: 0.7;
 }
@@ -1167,7 +1228,8 @@ function setupPopReveal() {
 
   opacity: 0;
   filter: none;
-  transform: translate3d(var(--pop-x, 0), var(--pop-offset), 0) scale(var(--pop-scale));
+  transform: translate3d(var(--pop-x, 0), var(--pop-offset), 0)
+    scale(var(--pop-scale));
   transition:
     opacity 0.76s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.76s cubic-bezier(0.16, 1, 0.3, 1),
