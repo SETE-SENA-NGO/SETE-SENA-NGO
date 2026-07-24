@@ -1,14 +1,23 @@
 ﻿<script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
 import { supabase } from '@/lib/supabase'
+import {
+  explainPageSaveError,
+  savePageByLocale,
+  type PageLocalePayload,
+} from '@/lib/pagePersistence'
 
 const ui = useUiStore()
 const media = useMediaStore()
+const { locale } = useI18n()
+
+const activeLocale = computed(() => (locale.value === 'kh' ? 'kh' : 'en'))
 
 const loading = ref(false)
 const saving = ref(false)
@@ -200,22 +209,28 @@ function removePriority(index: number) {
   form2.priorities.splice(index, 1)
 }
 
-// ── Load from Supabase ────────────────────────────────────────
+// ── Load from Supabase (locale-aware, falls back to English) ────
 async function loadPage() {
   loading.value = true
   notice.value = null
   try {
+    const localeToLoad = activeLocale.value
+    const locales = localeToLoad === 'en' ? ['en'] : [localeToLoad, 'en']
+
     const { data, error } = await supabase
       .from('pages')
-      .select('body, updated_at')
+      .select('body, locale, updated_at')
       .eq('slug', 'programs')
-      .maybeSingle()
+      .in('locale', locales)
 
     if (error) throw error
 
-    if (data?.body) {
+    const rows = (data ?? []) as { body: string; locale: string; updated_at: string | null }[]
+    const row = rows.find((r) => r.locale === localeToLoad) ?? rows.find((r) => r.locale === 'en')
+
+    if (row?.body) {
       try {
-        const parsed = JSON.parse(data.body)
+        const parsed = JSON.parse(row.body)
         if (parsed?.kind === 'santi-sena-page-content') {
           form.eyebrow = parsed.eyebrow || form.eyebrow
           form.headline = parsed.headline || form.headline
@@ -253,10 +268,11 @@ async function loadPage() {
   }
 }
 
-// ── Save to Supabase ──────────────────────────────────────────
+// ── Save to Supabase (locale-aware, matches PageEditorView.vue) ──
 async function savePage() {
   saving.value = true
   notice.value = null
+
   try {
     const goalsItems = JSON.stringify(goals)
     const prioritiesItems = form2.priorities.filter((line) => line.trim()).join('\n')
@@ -290,13 +306,14 @@ async function savePage() {
       ],
     })
 
-    const payload = {
+    const savedAt = new Date().toISOString()
+    const payload: PageLocalePayload = {
       slug: 'programs',
       title: form.headline.trim() || 'Programs',
       body,
       route_path: '/programs',
       nav_group: 'Programs',
-      locale: 'en',
+      locale: activeLocale.value,
       template: 'standard',
       status: 'published',
       hero_eyebrow: form.eyebrow.trim() || null,
@@ -309,15 +326,17 @@ async function savePage() {
       seo_title: form.headline.trim() || 'Programs',
       seo_description: form.intro.trim() || null,
       sort_order: 4,
-      published_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      published_at: savedAt,
+      updated_at: savedAt,
     }
 
-    const { error } = await supabase.from('pages').upsert(payload, { onConflict: 'slug' })
+    const { error } = await savePageByLocale(payload, 'body')
+    if (error) throw explainPageSaveError(error)
 
-    if (error) throw error
-
-    notice.value = { type: 'success', message: 'Programs page saved successfully.' }
+    notice.value = {
+      type: 'success',
+      message: `Programs page (${activeLocale.value === 'kh' ? 'Khmer' : 'English'}) saved successfully.`,
+    }
     ui.addToast('Programs page saved.', 'success')
     closeEditors()
   } catch (e: unknown) {
@@ -341,7 +360,12 @@ async function viewPage() {
 }
 
 onMounted(() => {
-  loadPage()
+  void loadPage()
+})
+
+// Reload the correct-language draft whenever the admin switches EN/KH.
+watch(activeLocale, () => {
+  void loadPage()
 })
 </script>
 
@@ -462,12 +486,12 @@ onMounted(() => {
               </div>
             </section>
 
-            <!-- ══════════ BOX 1: OUR PROGRAMS ══════════ -->
+            <!-- ══════════ BOX 1: PROGRAM GOALS ══════════ -->
             <section v-if="!bannerEditing && !prioritiesEditing" class="card-section">
               <div class="card-hdr">
                 <div class="card-hdr-left">
                   <span class="card-badge">Initiatives</span>
-                  <h2 class="card-title">Education programs</h2>
+                  <h2 class="card-title">Program goals</h2>
                 </div>
                 <button v-if="!anyEditing" class="card-hdr-link" type="button" @click="toggleGoals">Edit cards</button>
                 <button v-if="goalsEditing" class="card-hdr-link" type="button" @click="toggleGoals">Done</button>

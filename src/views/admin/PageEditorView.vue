@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink, onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import type { SupportedLocale } from '@/i18n'
@@ -12,7 +13,6 @@ import {
 } from '@/lib/pagePersistence'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
-
 type EditableSection = {
   id: string
   label: string
