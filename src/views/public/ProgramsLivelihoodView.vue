@@ -626,7 +626,7 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- Our approach — full-bleed photo statement -->
-    <section class="quote-section">
+    <section class="quote-section" :style="{ backgroundImage: quoteBackground }">
       <div class="quote-overlay"></div>
       <div class="container quote-inner" ref="quoteInnerEl">
         <p class="section-eyebrow section-eyebrow--light text-center">Our method</p>
