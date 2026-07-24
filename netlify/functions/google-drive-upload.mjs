@@ -124,7 +124,7 @@ export const config = {
   path: '/api/google-drive-upload',
 }
 
-function readConfig() {
+export function readConfig() {
   const supabaseUrl = env('SUPABASE_URL') || env('VITE_SUPABASE_URL')
   const supabaseAnonKey =
     env('SUPABASE_PUBLISHABLE_KEY') ||
@@ -320,7 +320,7 @@ async function resolveAdminContext(request, config) {
   }
 }
 
-async function googleAccessToken(config) {
+export async function googleAccessToken(config) {
   if (config.authType === 'oauth') return googleOAuthAccessToken(config)
   return googleServiceAccountAccessToken(config)
 }
@@ -573,7 +573,7 @@ function googleDriveFileIdFromMedia(media) {
   )
 }
 
-function googleDriveFileIdFromUrl(value) {
+export function googleDriveFileIdFromUrl(value) {
   if (!value) return ''
 
   try {

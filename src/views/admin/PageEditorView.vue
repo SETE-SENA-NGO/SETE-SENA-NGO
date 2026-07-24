@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { RouterLink, onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
@@ -13,7 +13,6 @@ import {
 } from '@/lib/pagePersistence'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
-
 type EditableSection = {
   id: string
   label: string
@@ -1196,6 +1195,15 @@ watch(
   { immediate: true },
 )
 
+onBeforeRouteLeave(() => {
+  if (activePageDirty.value) {
+    const confirmed = confirm('Discard unsaved changes?')
+    if (!confirmed) return false
+    return true
+  }
+  return true
+})
+
 function clonePage(page: PageDraft): PageDraft {
   return {
     ...page,
@@ -1530,6 +1538,24 @@ function applyDefaultReset() {
   if (index === -1) return
   drafts.value[index] = clonePage(fallback)
   ui.addToast(`${fallback.title} reset to default draft.`, 'info')
+}
+
+async function discardChanges() {
+  if (!activePageDirty.value) {
+    router.push('/admin/pages')
+    return
+  }
+
+  await new Promise<void>((resolve) => {
+    ui.openModal(
+      'Discard unsaved changes?',
+      `Any edits on ${activePage.value.title} will be lost if you leave now.`,
+      () => resolve(),
+    )
+  })
+
+  await loadPages()
+  router.push('/admin/pages')
 }
 
 function formatDate(value: string) {
@@ -1876,6 +1902,15 @@ function formatDate(value: string) {
             <!-- Page Header -->
             <header class="editor-header">
               <div class="header-left">
+                <button
+                  class="btn btn-ghost back-btn"
+                  type="button"
+                  @click="discardChanges"
+                  title="Back to pages"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Back
+                </button>
                 <div class="breadcrumb">
                   <RouterLink to="/admin" class="breadcrumb-link">Dashboard</RouterLink>
                   <span class="breadcrumb-sep" aria-hidden="true">

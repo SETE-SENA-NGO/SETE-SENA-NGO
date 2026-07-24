@@ -14,13 +14,17 @@ import ProgramsOverviewView from '@/views/admin/ProgramsOverviewView.vue'
 import DonationLView from '@/views/admin/DonationLView.vue'
 import SlideshowManagerView from '@/views/admin/SlideshowManagerView.vue'
 import GetinvolvedManagement from '@/views/admin/GetinvolvedManagement.vue'
+import PartnerManagement from '@/views/admin/PartnerManagement(involved).vue'
 import ContactManagement from '@/views/admin/ContactManagement.vue'
+import VolunteerManagement from '@/views/admin/VolunteerManagement.vue'
 
 export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
   { path: '/admin', component: DashboardView, meta: { requiresAuth: true } },
   { path: '/admin/pages', component: PagesManagerView, meta: { requiresAuth: true } },
   { path: '/admin/editor/impact', redirect: '/admin/editor/impact-numbers', meta: { requiresAuth: true } },
+  { path: '/admin/editor/get-involved-partner', component: PartnerManagement, meta: { requiresAuth: true } },
+  { path: '/admin/partner-management', redirect: '/admin/editor/get-involved-partner', meta: { requiresAuth: true } },
   { path: '/admin/editor/:slug', component: PageEditorView, meta: { requiresAuth: true } },
   { path: '/admin/media', component: MediaLibraryView, meta: { requiresAuth: true } },
   { path: '/admin/modules/:module', component: AdminModuleView, meta: { requiresAuth: true } },
@@ -33,8 +37,10 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/donate', component: DonationLView, meta: { requiresAuth: true } },
   { path: '/admin/slideshow', component: SlideshowManagerView, meta: { requiresAuth: true } },
   { path: '/admin/get-involved', component: GetinvolvedManagement, meta: { requiresAuth: true } },
+  { path: '/admin/volunteer', component: VolunteerManagement, meta: { requiresAuth: true } },
   { path: '/admin/contact', component: ContactManagement, meta: { requiresAuth: true } },
   { path: '/admin/editor/get-involved', redirect: '/admin/get-involved', meta: { requiresAuth: true } },
+  { path: '/admin/editor/volunteer', redirect: '/admin/volunteer', meta: { requiresAuth: true } },
   // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
   { path: '/admin/editor/home-slideshow', component: PageEditorView, meta: { requiresAuth: true } },
   // Redirect old /admin/news to the News page editor

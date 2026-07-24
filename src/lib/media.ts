@@ -23,16 +23,29 @@ export function normalizeMediaUrl(url?: string) {
 
   try {
     const parsed = new URL(trimmed)
-    if (parsed.hostname === 'drive.google.com') {
-      const pathMatch = parsed.pathname.match(/\/file\/d\/([^/?#]+)/)
-      const id = pathMatch?.[1] || parsed.searchParams.get('id')
-      if (id) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(id)}&sz=w1600`
+    const id = googleDriveFileIdFromUrl(parsed)
+    if (id) {
+      return `/api/google-drive-image?id=${encodeURIComponent(id)}`
     }
   } catch {
     return trimmed
   }
 
   return trimmed
+}
+
+function googleDriveFileIdFromUrl(url: URL) {
+  if (url.hostname === 'drive.google.com') {
+    const pathMatch = url.pathname.match(/\/(?:file\/)?d\/([^/?#]+)/)
+    return pathMatch?.[1] || url.searchParams.get('id') || ''
+  }
+
+  if (url.hostname === 'lh3.googleusercontent.com') {
+    const pathMatch = url.pathname.match(/\/d\/([^/?#=]+)/)
+    return pathMatch?.[1] || ''
+  }
+
+  return ''
 }
 
 export function safeStorageFileName(fileName: string) {
@@ -61,5 +74,3 @@ export async function isSameImage(file: File, existingUrl: string) {
     return false
   }
 }
-
-
