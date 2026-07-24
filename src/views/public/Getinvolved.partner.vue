@@ -281,18 +281,24 @@ const pageContent = computed<PartnerPageContent>(() => {
     : merged
 })
 
+function localizeText(value: string) {
+  return activeLocale.value === 'kh'
+    ? localizeContentValue(value, activeLocale.value)
+    : value
+}
+
 const portfolioStats = computed(() => [
   {
-    value: '2023-2026',
-    label: 'Portfolio window',
+    value: localizeText('2023-2026'),
+    label: localizeText('Portfolio window'),
   },
   {
-    value: '3 months',
-    label: 'M&E review cycle',
+    value: localizeText('3 months'),
+    label: localizeText('M&E review cycle'),
   },
   {
-    value: '10+',
-    label: 'Grant partners',
+    value: localizeText('10+'),
+    label: localizeText('Grant partners'),
   },
 ])
 
@@ -590,20 +596,23 @@ onUnmounted(() => {
         <div class="portfolio-copy pop-reveal">
           <p class="portfolio-pill">
             <span aria-hidden="true"></span>
-            Recent and current portfolio
+            {{ localizeText('Recent and current portfolio') }}
           </p>
-          <h2 id="portfolio-heading">Current portfolio.</h2>
+          <h2 id="portfolio-heading">{{ localizeText('Current portfolio.') }}</h2>
           <p>
-            A quick view of active project themes, timeframes and funding
-            partners moving through the field system now.
+            {{
+              localizeText(
+                'A quick view of active project themes, timeframes and funding partners moving through the field system now.',
+              )
+            }}
           </p>
 
           <div class="portfolio-actions">
             <RouterLink to="/contact" class="button button-primary"
-              >Start a partnership</RouterLink
+              >{{ localizeText('Start a partnership') }}</RouterLink
             >
             <RouterLink to="#portfolio-projects" class="portfolio-link"
-              >See active work</RouterLink
+              >{{ localizeText('See active work') }}</RouterLink
             >
           </div>
 
@@ -636,7 +645,7 @@ onUnmounted(() => {
             </span>
             <div>
               <strong>{{ featuredPortfolioProject.period }}</strong>
-              <small>Portfolio active</small>
+              <small>{{ localizeText('Portfolio active') }}</small>
             </div>
           </div>
           <div class="portfolio-partner-card">
@@ -761,10 +770,16 @@ onUnmounted(() => {
     <section class="operating-section" aria-labelledby="operating-heading">
       <div class="operating-inner">
         <div class="operating-copy pop-reveal">
-          <p class="section-kicker">How partnership works</p>
-          <h2 id="operating-heading">Clear field rhythm.</h2>
+          <p class="section-kicker">{{ localizeText('How partnership works') }}</p>
+          <h2 id="operating-heading">
+            {{ localizeText('Clear field rhythm.') }}
+          </h2>
           <p>
-            Support moves through planning, reporting, monitoring and learning.
+            {{
+              localizeText(
+                'Support moves through planning, reporting, monitoring and learning.',
+              )
+            }}
           </p>
         </div>
 
@@ -790,11 +805,18 @@ onUnmounted(() => {
       aria-labelledby="strategy-heading"
     >
       <div class="section-intro pop-reveal">
-        <p class="section-kicker">Strategic partnership space</p>
-        <h2 id="strategy-heading">Where partners can help next.</h2>
+        <p class="section-kicker">
+          {{ localizeText('Strategic partnership space') }}
+        </p>
+        <h2 id="strategy-heading">
+          {{ localizeText('Where partners can help next.') }}
+        </h2>
         <p>
-          Partners can strengthen the next cycle of village-led work through
-          funding, learning, technical systems and practical field support.
+          {{
+            localizeText(
+              'Partners can strengthen the next cycle of village-led work through funding, learning, technical systems and practical field support.',
+            )
+          }}
         </p>
       </div>
 
@@ -890,11 +912,16 @@ onUnmounted(() => {
     <section class="network-section" aria-labelledby="network-heading">
       <div class="network-inner">
         <div class="network-panel pop-reveal">
-          <p class="section-kicker">Network layers</p>
-          <h2 id="network-heading">Connected beyond the office.</h2>
+          <p class="section-kicker">{{ localizeText('Network layers') }}</p>
+          <h2 id="network-heading">
+            {{ localizeText('Connected beyond the office.') }}
+          </h2>
           <p>
-            Civil society, faith and youth networks help learning reach
-            villages.
+            {{
+              localizeText(
+                'Civil society, faith and youth networks help learning reach villages.',
+              )
+            }}
           </p>
         </div>
 
@@ -915,11 +942,16 @@ onUnmounted(() => {
     <section class="funding-section" aria-labelledby="funding-heading">
       <div class="funding-inner">
         <div class="funding-header section-intro pop-reveal">
-          <p class="section-kicker">Funding history</p>
-          <h2 id="funding-heading">A wider support base.</h2>
+          <p class="section-kicker">{{ localizeText('Funding history') }}</p>
+          <h2 id="funding-heading">
+            {{ localizeText('A wider support base.') }}
+          </h2>
           <p>
-            Past supporters across development, multilateral, child-focused and
-            education programs.
+            {{
+              localizeText(
+                'Past supporters across development, multilateral, child-focused and education programs.',
+              )
+            }}
           </p>
         </div>
 
