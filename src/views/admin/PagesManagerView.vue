@@ -149,3 +149,27 @@ function onSaved(page: PageContent) {
   background: var(--admin-theme-surface-soft);
 }
 </style>
+
+<!-- Non-scoped dark mode overrides for Pages Manager page -->
+<style>
+.admin-dark .admin-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .main {
+  background: #06100F !important;
+}
+.admin-dark .toolbar button,
+.admin-dark .toolbar-link {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .toolbar button:hover,
+.admin-dark .toolbar-link:hover {
+  background: #0b1b17 !important;
+  border-color: #2d554a !important;
+}
+</style>

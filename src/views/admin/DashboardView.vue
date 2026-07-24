@@ -784,26 +784,21 @@ h2 {
 <!-- Non-scoped dark mode override to ensure dark background applies in admin-dark mode -->
 <style>
 .admin-dark .admin-page {
-  background: var(--admin-theme-bg, #071311) !important;
+  background: #06100F !important;
 }
-
 .admin-dark .admin-page .admin-layout {
-  background: var(--admin-theme-bg, #071311) !important;
+  background: #06100F !important;
 }
-
 .admin-dark .admin-page .main {
-  background: var(--admin-theme-bg, #071311) !important;
+  background: #06100F !important;
 }
-
 .admin-dark .admin-page .dashboard-card {
-  background: var(--admin-theme-surface, #10241f) !important;
+  background: #0a1a14 !important;
 }
-
 .admin-dark .admin-page .dashboard-panel {
-  background: var(--admin-theme-surface, #10241f) !important;
+  background: #0a1a14 !important;
 }
-
 .admin-dark .admin-page .overview-header {
-  background: var(--admin-theme-surface, #10241f) !important;
+  background: #0a1a14 !important;
 }
 </style>

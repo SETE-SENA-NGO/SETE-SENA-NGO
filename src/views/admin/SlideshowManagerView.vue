@@ -913,3 +913,65 @@ h1 {
   }
 }
 </style>
+
+<!-- Non-scoped dark mode overrides for Slideshow Manager page -->
+<style>
+.admin-dark .admin-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .main {
+  background: #06100F !important;
+}
+.admin-dark .slideshow-header,
+.admin-dark .slide-card,
+.admin-dark .save-bar {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .selector-tab {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .selector-tab.active {
+  border-color: #38c982 !important;
+}
+.admin-dark .selector-tab:hover {
+  border-color: #2d554a !important;
+}
+.admin-dark .field label {
+  color: #c9ddd4 !important;
+}
+.admin-dark .image-preview {
+  background: #0b1b17 !important;
+  border-color: #2d554a !important;
+}
+.admin-dark .save-message.success {
+  color: #74e0ae !important;
+}
+.admin-dark .save-message.error {
+  color: #fb7185 !important;
+}
+</style>

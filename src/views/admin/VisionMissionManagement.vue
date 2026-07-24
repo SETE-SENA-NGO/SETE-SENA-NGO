@@ -894,3 +894,41 @@ function resetToDefaults() {
 }
 </style>
 
+<!-- Non-scoped dark mode overrides for About / Vision & Mission -->
+<style>
+.admin-dark .vision-admin {
+  background: #06100F !important;
+}
+.admin-dark .vision-admin .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .vision-admin .manager-main {
+  background: #06100F !important;
+}
+.admin-dark .manager-hero,
+.admin-dark .vision-form-card {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+</style>
+

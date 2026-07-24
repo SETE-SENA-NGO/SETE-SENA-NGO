@@ -47,9 +47,9 @@
 }
 
 .admin-dark {
-  --admin-theme-bg: #071311;
-  --admin-theme-bg-deep: #0c1f1a;
-  --admin-theme-surface: #10241f;
+  --admin-theme-bg: #06100F;
+  --admin-theme-bg-deep: #081510;
+  --admin-theme-surface: #0a1a14;
   --admin-theme-surface-soft: #0b1b17;
   --admin-theme-contrast: #f2fbf6;
   --admin-theme-contrast-soft: #b9ead5;

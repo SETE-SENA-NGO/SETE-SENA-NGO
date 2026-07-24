@@ -228,7 +228,7 @@ const infoPages = [
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 :global(.admin-dark) .cp-dash {
-  --bg: #080c1a; --surface: #101826; --border: #1c2642; --border-s: #263252;
+  --bg: #06100F; --surface: #0a1a14; --border: #1d3b33; --border-s: #263252;
   --text: #c8d2e6; --contrast: #eaf0f8; --muted: #7a8aaa;
   --blue: #3b82f6; --blue-soft: #172244;
   --emerald: #10b981; --emerald-soft: #142a22;

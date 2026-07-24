@@ -2328,22 +2328,22 @@ function formatDate(value: string) {
   --admin-bg: #f1f5f9;
   --admin-bg-deep: #e2e8f0;
   --admin-surface: #ffffff;
-  --admin-surface-soft: #f8fafc;
-  --admin-contrast: #0f172a;
-  --admin-contrast-soft: #1e293b;
+  --admin-surface-soft: #0c331f;
+  --admin-contrast: #dbeae3;
+  --admin-contrast-soft: #57b685;
   --admin-text: #334155;
   --admin-muted: #64748b;
   --admin-muted-light: #94a3b8;
-  --admin-border: #e2e8f0;
+  --admin-border: #2d6754;
   --admin-border-strong: #cbd5e1;
-  --admin-blue: #2563eb;
-  --admin-blue-soft: #eff6ff;
-  --admin-violet: #7c3aed;
+  --admin-blue: #10894e;
+  --admin-blue-soft: #153021;
+  --admin-violet: #050505;
   --admin-violet-soft: #f5f3ff;
   --admin-amber: #d97706;
   --admin-amber-soft: #fffbeb;
-  --admin-green: #16a34a;
-  --admin-green-soft: #f0fdf4;
+  --admin-green: #19723a;
+  --admin-green-soft: #122b19;
   --admin-red: #dc2626;
   --admin-red-soft: #fef2f2;
   --admin-gold: #f59e0b;
@@ -4538,5 +4538,57 @@ input::placeholder, textarea::placeholder {
   .impact-block-actions {
     justify-content: flex-end;
   }
+}
+</style>
+
+<!-- Non-scoped dark mode overrides for page editor (Home, About, Programs, News) -->
+<style>
+.admin-dark .editor-page {
+  background: #06100F !important;
+}
+.admin-dark .editor-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .editor-page .main {
+  background: #06100F !important;
+}
+.admin-dark .editor-header,
+.admin-dark .editor-container,
+.admin-dark .impact-hero-bar,
+.admin-dark .impact-panel,
+.admin-dark .impact-content-grid {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .notice {
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .impact-saved-pill {
+  background: #38c982 !important;
+  color: #06100F !important;
+}
+.admin-dark .impact-unsaved-pill {
+  background: #e0b15a !important;
+  color: #06100F !important;
 }
 </style>

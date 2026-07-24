@@ -259,22 +259,22 @@ const infoPages = [
 }
 
 :global(.admin-dark) .edu-dash {
-  --bg: #080c1a;
-  --surface: #101826;
-  --border: #1c2642;
+  --bg: #06100F;
+  --surface: #0a1a14;
+  --border: #1d3b33;
   --border-s: #263252;
   --text: #c8d2e6;
   --contrast: #eaf0f8;
   --muted: #7a8aaa;
   --blue: #3b82f6;
   --blue-glow: rgba(59,130,246,0.2);
-  --blue-soft: #172244;
+  --blue-soft: #0f1f18;
   --emerald: #10b981;
   --emerald-glow: rgba(16,185,129,0.2);
   --emerald-soft: #142a22;
   --amber: #f59e0b;
   --amber-glow: rgba(245,158,11,0.2);
-  --amber-soft: #241e14;
+  --amber-soft: #1f1a10;
   --violet: #a78bfa;
   --violet-glow: rgba(167,139,250,0.2);
   --violet-soft: #1c1640;

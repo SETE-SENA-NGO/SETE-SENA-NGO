@@ -223,13 +223,13 @@ const infoPages = [
 <style scoped>
 .edu-dash {
   --bg: #f3f6fd;
-  --surface: #ffffff;
+  --surface: #02110e;
   --border: #e8edf6;
   --border-s: #d4dcee;
-  --text: #1e2a4a;
-  --contrast: #0a142d;
+  --text: #2b54c5;
+  --contrast: #0d9656;
   --muted: #6a7fa0;
-  --blue: #2563eb;
+  --blue: #b4c9f3;
   --blue-glow: rgba(37,99,235,0.25);
   --blue-soft: #ecf2ff;
   --emerald: #059669;
@@ -259,22 +259,22 @@ const infoPages = [
 }
 
 :global(.admin-dark) .edu-dash {
-  --bg: #080c1a;
-  --surface: #101826;
-  --border: #1c2642;
+  --bg: #06100F;
+  --surface: #0a1a14;
+  --border: #1d3b33;
   --border-s: #263252;
   --text: #c8d2e6;
   --contrast: #eaf0f8;
   --muted: #7a8aaa;
   --blue: #3b82f6;
   --blue-glow: rgba(59,130,246,0.2);
-  --blue-soft: #172244;
+  --blue-soft: #0f1f18;
   --emerald: #10b981;
   --emerald-glow: rgba(16,185,129,0.2);
   --emerald-soft: #142a22;
   --amber: #f59e0b;
   --amber-glow: rgba(245,158,11,0.2);
-  --amber-soft: #241e14;
+  --amber-soft: #1f1a10;
   --violet: #a78bfa;
   --violet-glow: rgba(167,139,250,0.2);
   --violet-soft: #1c1640;
@@ -347,7 +347,7 @@ const infoPages = [
 .banner-breadcrumb {
   display: flex; align-items: center; gap: 0.4rem;
   padding: 0.6rem 1.25rem;
-  background: rgba(255,255,255,0.5);
+  background: rgb(31, 69, 63);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
   font-size: 0.76rem; font-weight: 700;
@@ -586,5 +586,45 @@ const infoPages = [
 @media (max-width: 600px) {
   .banner-actions { width: 100%; }
   .banner-actions .btn { flex: 1; justify-content: center; }
+}
+</style>
+
+<!-- Non-scoped dark mode overrides for Programs overview -->
+<style>
+.admin-dark .edu-dash {
+  background: #06100F !important;
+}
+.admin-dark .edu-dash .dash-layout {
+  background: #06100F !important;
+}
+.admin-dark .edu-dash .dash-main {
+  background: #06100F !important;
+}
+.admin-dark .dash-banner,
+.admin-dark .dashboard-cards,
+.admin-dark .stat-card,
+.admin-dark .banner-stats {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
 }
 </style>

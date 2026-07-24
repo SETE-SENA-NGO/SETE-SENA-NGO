@@ -233,7 +233,7 @@ const infoPages = [
   transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 :global(.admin-dark) .env-dash {
-  --bg: #021a14; --surface: #0a2920; --border: #0f3d2e; --border-s: #145238;
+  --bg: #06100F; --surface: #0a1a14; --border: #1d3b33; --border-s: #263252;
   --text: #c8e6d8; --contrast: #eaf5f0; --muted: #7aaa94;
   --blue: #3b82f6; --blue-soft: #0f2924;
   --emerald: #10b981; --emerald-glow: rgba(16,185,129,0.22); --emerald-soft: #0f3d2e;
