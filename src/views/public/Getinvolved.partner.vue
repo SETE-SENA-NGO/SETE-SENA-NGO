@@ -6,6 +6,7 @@ import { localizeContentValue } from '@/i18n/contentTranslations'
 import heroImpact from '@/assets/hero-impact.jpg'
 import heroImpactForest from '@/assets/hero-impact-forest.jpg'
 import heroImpactVillage from '@/assets/hero-impact-village.jpg'
+import { normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
 
 defineOptions({ name: 'GetInvolvedPartnerView' })
@@ -343,7 +344,7 @@ function mergePartnerContent(
       slides: normalizeSlides(overrideSlides, base.hero.slides),
     },
     activeProjects: Array.isArray(override.activeProjects)
-      ? override.activeProjects
+      ? override.activeProjects.map(normalizeProjectImage)
       : base.activeProjects,
     operatingModel: Array.isArray(override.operatingModel)
       ? override.operatingModel
@@ -357,7 +358,21 @@ function mergePartnerContent(
     fundingHistory: Array.isArray(override.fundingHistory)
       ? override.fundingHistory
       : base.fundingHistory,
-    cta: { ...base.cta, ...override.cta },
+    cta: normalizeCtaImage({ ...base.cta, ...override.cta }),
+  }
+}
+
+function normalizeProjectImage(project: PartnerProject): PartnerProject {
+  return {
+    ...project,
+    image: normalizeMediaUrl(project.image) || project.image,
+  }
+}
+
+function normalizeCtaImage(cta: PartnerCta): PartnerCta {
+  return {
+    ...cta,
+    image: normalizeMediaUrl(cta.image) || cta.image,
   }
 }
 
