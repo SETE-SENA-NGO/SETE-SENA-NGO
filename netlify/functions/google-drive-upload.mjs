@@ -509,11 +509,46 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
 
   return Array.isArray(data) ? data[0] : data
 }
+function userHeaders(supabaseConfig, authorization) {
+  return {
+    apikey: supabaseConfig.anonKey,
+    authorization,
+    'content-type': 'application/json',
+  }
+}
+
 async function ensureMediaAssetsReady(config, authorization) {
   const response = await fetch(`${config.url}/rest/v1/media_assets?select=id&limit=1`, {
     method: 'GET',
     headers: userHeaders(config, authorization),
   })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw httpError(
+      `Could not verify media_assets table: ${response.status} ${text}`,
+      502,
+    )
+  }
+}
+
+export function googleDriveFileIdFromUrl(url) {
+  if (typeof url === 'string') {
+    try { url = new URL(url) } catch { return '' }
+  }
+
+  if (url.hostname === 'drive.google.com') {
+    const pathMatch = url.pathname.match(/\/(?:file\/)?d\/([^/?#]+)/)
+    return pathMatch?.[1] || url.searchParams.get('id') || ''
+  }
+
+  if (url.hostname === 'lh3.googleusercontent.com') {
+    const pathMatch = url.pathname.match(/\/d\/([^/?#=]+)/)
+    return pathMatch?.[1] || ''
+  }
+
+  return ''
+}
 
 function googleThumbnailUrl(fileId) {
   // Use w3200 for high quality — far above the 380-480px display size, so it looks
@@ -592,4 +627,107 @@ function base64UrlJson(value) {
 function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
   return `${Math.round(bytes / (1024 * 1024))} MB`
+}
+
+function googleAuthError(config, data) {
+  const message =
+    data?.error_description || data?.error?.message || 'Google Drive authentication failed.'
+  return httpError(message, 502, {
+    step: 'google-auth',
+    googleAuthType: config.authType,
+    googleMessage: data?.error || data?.error_description || message,
+  })
+}
+
+function publicUser(user) {
+  return { id: user.id, email: user.email }
+}
+
+function publicProfile(profile) {
+  return { id: profile.id, email: profile.email, role: profile.role }
+}
+
+function publicAdminContext(admin) {
+  return {
+    ok: admin.ok,
+    step: admin.step,
+    error: admin.error,
+    user: admin.user,
+    profile: admin.profile,
+  }
+}
+
+async function responseErrorMessage(response) {
+  try {
+    const data = await response.json()
+    return data?.message || data?.error?.message || response.statusText
+  } catch {
+    return response.statusText
+  }
+}
+
+function responseDataMessage(data, fallback) {
+  if (!data) return fallback
+  return data.message || data.error?.message || data.error || fallback
+}
+
+async function getMediaAsset(config, { id, authorization }) {
+  const url = `${config.url}/rest/v1/media_assets?id=eq.${encodeURIComponent(id)}&select=*`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: userHeaders(config, authorization),
+  })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw httpError(`Could not fetch media asset: ${response.status} ${text}`, 502)
+  }
+
+  const data = await response.json()
+  return Array.isArray(data) && data.length > 0 ? data[0] : null
+}
+
+function googleDriveFileIdFromMedia(media) {
+  // Check metadata first
+  const metaId = media.metadata?.google_drive_file_id
+  if (metaId) return metaId
+
+  // Fall back to extracting from public_url or path
+  const url = media.public_url || media.path || ''
+  return googleDriveFileIdFromUrl(url)
+}
+
+async function deleteDriveFile(accessToken, fileId) {
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true`,
+    {
+      method: 'DELETE',
+      headers: { authorization: `Bearer ${accessToken}` },
+    },
+  )
+
+  // 404 means the file is already gone — that's fine
+  if (!response.ok && response.status !== 404) {
+    const data = await response.json().catch(() => null)
+    throw httpError(
+      data?.error?.message || 'Could not delete file from Google Drive.',
+      502,
+      { step: 'google-drive-delete', googleMessage: data?.error?.message || '' },
+    )
+  }
+}
+
+async function deleteMediaAsset(config, { id, authorization }) {
+  const url = `${config.url}/rest/v1/media_assets?id=eq.${encodeURIComponent(id)}`
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: userHeaders(config, authorization),
+  })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw httpError(`Could not delete media asset: ${response.status} ${text}`, 502)
+  }
 }

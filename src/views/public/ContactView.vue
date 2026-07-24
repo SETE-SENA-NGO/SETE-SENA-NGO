@@ -777,6 +777,7 @@ onUnmounted(() => {
                 required
                 rows="5"
                 :maxlength="messageMaxLength"
+                autocomplete="off"
                 :placeholder="formContent.messagePlaceholder"
               ></textarea>
             </span>
