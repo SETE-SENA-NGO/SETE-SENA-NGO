@@ -38,9 +38,11 @@ async function uploadGoalImage(file: File, index: number) {
   uploadingIndex.value = index
   uploadError.value = null
   try {
-    const displayName = `${goals[index].title || 'Program goal'} image`
+    const goal = goals[index]
+    if (!goal) return
+    const displayName = `${goal.title || 'Program goal'} image`
     const item = await media.uploadToGoogleDrive(file, displayName)
-    goals[index].image = item.url
+    goal.image = item.url
     notice.value = {
       type: 'success',
       message: 'Image uploaded to Google Drive. Click "Save & view page" to publish it.',

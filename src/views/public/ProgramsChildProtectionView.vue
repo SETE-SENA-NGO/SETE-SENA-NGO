@@ -202,10 +202,10 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
       .map((g: Record<string, unknown>) => typeof g.url === 'string' ? g.url.trim() : '')
       .filter(Boolean)
     // Map gallery URLs to CP hero refs for the story collage
-    if (galleryUrls.length > 0) cpHeroRef.value = galleryUrls[0]
-    if (galleryUrls.length > 1) cpHero1Ref.value = galleryUrls[1]
-    if (galleryUrls.length > 2) cpHero2Ref.value = galleryUrls[2]
-    if (galleryUrls.length > 3) cpHero3Ref.value = galleryUrls[3]
+    if (galleryUrls.length > 0) cpHeroRef.value = galleryUrls[0] as string
+    if (galleryUrls.length > 1) cpHero1Ref.value = galleryUrls[1] as string
+    if (galleryUrls.length > 2) cpHero2Ref.value = galleryUrls[2] as string
+    if (galleryUrls.length > 3) cpHero3Ref.value = galleryUrls[3] as string
   }
 
   // Stats band
