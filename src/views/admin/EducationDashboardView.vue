@@ -632,7 +632,7 @@ onMounted(async () => {
                     </div>
                     <div class="img-upload-area">
                       <ImagePickerField
-                        v-model="page.galleryImages[0].url"
+                        v-model="page.galleryImages[0]!.url"
                         label="Upload or paste URL"
                         hint=""
                         hide-preview
@@ -667,7 +667,7 @@ onMounted(async () => {
                     </div>
                     <div class="img-upload-area">
                       <ImagePickerField
-                        v-model="page.galleryImages[1].url"
+                        v-model="page.galleryImages[1]!.url"
                         label="Upload or paste URL"
                         hint=""
                         hide-preview
@@ -702,7 +702,7 @@ onMounted(async () => {
                     </div>
                     <div class="img-upload-area">
                       <ImagePickerField
-                        v-model="page.galleryImages[2].url"
+                        v-model="page.galleryImages[2]!.url"
                         label="Upload or paste URL"
                         hint=""
                         hide-preview
@@ -737,7 +737,7 @@ onMounted(async () => {
                     </div>
                     <div class="img-upload-area">
                       <ImagePickerField
-                        v-model="page.galleryImages[3].url"
+                        v-model="page.galleryImages[3]!.url"
                         label="Upload or paste URL"
                         hint=""
                         hide-preview

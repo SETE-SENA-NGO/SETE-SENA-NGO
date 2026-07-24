@@ -280,7 +280,7 @@ function setupSectionObserver() {
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          activeSection.value = entry.target.id
+          activeSection.value = entry.target.id as typeof activeSection.value
         }
       }
     },
