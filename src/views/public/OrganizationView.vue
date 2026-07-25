@@ -284,8 +284,8 @@ onMounted(() => {
   color: var(--green-deep);
   padding: 0.4rem 1rem;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--green-deep) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--green-deep) 18%, transparent);
+  background: color-mix(in srgb, 12%, transparent);
+  border: 0px solid color-mix(in srgb, var(--green-deep) 18%, transparent);
 }
 
 .txt-gradient {
@@ -933,7 +933,7 @@ onMounted(() => {
 }
 
 .acc-badge-style {
-  background: color-mix(in srgb, var(--green) 8%, transparent) !important;
+  background: color-mix(in srgb,  8%, transparent) !important;
   border-color: color-mix(in srgb, var(--green) 12%, transparent) !important;
   color: var(--green-deep) !important;
 }

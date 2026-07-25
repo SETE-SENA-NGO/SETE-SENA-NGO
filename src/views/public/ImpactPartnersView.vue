@@ -428,9 +428,9 @@ onUnmounted(() => {
   color: var(--primary-color);
   margin-bottom: 0.75rem;
   padding: 0.35rem 1.1rem;
-  border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+  border: 0px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--primary-color) 6%, transparent);
+  background: color-mix(in srgb,  6%, transparent);
 }
 
 .section-title {

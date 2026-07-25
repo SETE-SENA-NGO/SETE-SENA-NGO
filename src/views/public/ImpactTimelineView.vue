@@ -494,10 +494,10 @@ onBeforeUnmount(() => {
   font-weight: 600;
   letter-spacing: 0.2em;
   color: #11cf80;
-  background: rgba(45, 122, 90, 0.08);
+  background: none;
   padding: 0.2rem 1rem 0.2rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid rgba(45, 122, 90, 0.1);
+  border: 0px solid rgba(45, 122, 90, 0.1);
   width: fit-content;
   margin-left: 60px;
 }
@@ -506,7 +506,7 @@ onBeforeUnmount(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ef6a0b;
+  background: #37cc8c;
   display: inline-block;
 }
 
@@ -562,7 +562,7 @@ onBeforeUnmount(() => {
 .stat-number {
   font-size: 2.2rem;
   font-weight: 700;
-  color: #092064;
+  color: #096455;
   letter-spacing: -0.02em;
   line-height: 1;
 }
@@ -631,7 +631,7 @@ onBeforeUnmount(() => {
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #72290f;
+  color: #0f7265;
   letter-spacing: 0.02em;
   display: flex;
   flex-direction: column;
@@ -765,7 +765,7 @@ onBeforeUnmount(() => {
   font-size: 0.75rem;
   font-weight: 700;
   color: #2d7a5a;
-  background: rgba(45, 122, 90, 0.08);
+  background: none;
   padding: 0.3rem 1.4rem;
   border-radius: 999px;
   margin-bottom: 1rem;
