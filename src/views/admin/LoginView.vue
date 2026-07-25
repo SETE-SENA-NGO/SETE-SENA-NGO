@@ -370,7 +370,7 @@ const handleLogin = async () => {
   text-align: center;
   padding-top: 16px;
   border-top: 1px solid rgba(63, 73, 74, 0.3);
-  margin-left: 60px;
+  margin-left: 20px;
 
 }
 

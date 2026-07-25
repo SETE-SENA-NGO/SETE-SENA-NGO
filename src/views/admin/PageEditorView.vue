@@ -2328,22 +2328,22 @@ function formatDate(value: string) {
   --admin-bg: #f1f5f9;
   --admin-bg-deep: #e2e8f0;
   --admin-surface: #ffffff;
-  --admin-surface-soft: #0c331f;
-  --admin-contrast: #dbeae3;
-  --admin-contrast-soft: #57b685;
+  --admin-surface-soft: #f1f7f4;
+  --admin-contrast: #0f172a;
+  --admin-contrast-soft: #475569;
   --admin-text: #334155;
   --admin-muted: #64748b;
   --admin-muted-light: #94a3b8;
-  --admin-border: #2d6754;
+  --admin-border: #dce8e0;
   --admin-border-strong: #cbd5e1;
-  --admin-blue: #10894e;
-  --admin-blue-soft: #153021;
-  --admin-violet: #050505;
+  --admin-blue: #0f8f69;
+  --admin-blue-soft: #e3f5ef;
+  --admin-violet: #6d28d9;
   --admin-violet-soft: #f5f3ff;
   --admin-amber: #d97706;
   --admin-amber-soft: #fffbeb;
-  --admin-green: #19723a;
-  --admin-green-soft: #122b19;
+  --admin-green: #16a34a;
+  --admin-green-soft: #f0fdf4;
   --admin-red: #dc2626;
   --admin-red-soft: #fef2f2;
   --admin-gold: #f59e0b;
@@ -2560,7 +2560,7 @@ function formatDate(value: string) {
 
 .route-badge {
   color: var(--admin-blue);
-  background: var(--admin-blue-soft);
+  background: rgb(212, 221, 221);
 }
 
 .locale-badge {
@@ -2600,7 +2600,7 @@ function formatDate(value: string) {
 }
 
 .save-indicator.dirty .save-dot {
-  background: var(--admin-amber);
+  background: rgb(174, 174, 137);
 }
 
 .save-label {
@@ -4590,5 +4590,28 @@ input::placeholder, textarea::placeholder {
 .admin-dark .impact-unsaved-pill {
   background: #e0b15a !important;
   color: #06100F !important;
+}
+/* Force dark mode variables with high specificity */
+html.admin-dark .editor-page,
+html.admin-dark .editor-page .form-card,
+html.admin-dark .editor-page .card-header,
+html.admin-dark .editor-page .step,
+html.admin-dark .editor-page .section-block,
+html.admin-dark .editor-page .section-toolbar,
+html.admin-dark .editor-page .section-summary {
+  --admin-surface-soft: #0b1b17 !important;
+  --admin-contrast: #f2fbf6 !important;
+  --admin-contrast-soft: #b9ead5 !important;
+  --admin-border: #1d3b33 !important;
+  --admin-border-strong: #2d554a !important;
+  --admin-text: #c9ddd4 !important;
+  --admin-muted: #90aaa0 !important;
+  --admin-muted-light: #6d8d80 !important;
+  --admin-blue: #38c982 !important;
+  --admin-blue-soft: #0b1b17 !important;
+  --admin-green-soft: #0b1b17 !important;
+  --admin-amber-soft: #1a150b !important;
+  --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+  --admin-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4) !important;
 }
 </style>
