@@ -733,7 +733,7 @@ const copyLink = () => {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--primary-color);
-  background: rgba(45, 122, 90, 0.08);
+  /* background: rgba(45, 122, 90, 0.08); */
   padding: 0.3rem 1.2rem;
   border-radius: 999px;
   margin-bottom: 0.75rem;

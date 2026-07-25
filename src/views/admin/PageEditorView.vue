@@ -1176,6 +1176,8 @@ const activePage = computed<PageDraft>(() => {
 const activePageDirty = computed(() => isDirty(activePage.value.slug))
 
 
+const activePageDirty = computed(() => isDirty(activePage.value.slug))
+
 const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
 
 const previewItems = computed(() => {
@@ -1193,8 +1195,6 @@ const sectionCountLabel = computed(() => {
 })
 
 const isImpactPage = computed(() => activePage.value.group === 'Impact')
-
-const activePageDirty = computed(() => isDirty(requestedSlug.value))
 
 onMounted(() => {
   void loadPages()
