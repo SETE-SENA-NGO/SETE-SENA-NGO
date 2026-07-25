@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ImageUploader from '@/components/admin/ImageUploader.vue'
@@ -8,6 +8,7 @@ import { useUiStore } from '@/stores/ui.store'
 import { supabase } from '@/lib/supabase'
 
 const ui = useUiStore()
+const route = useRoute()
 
 const loading = ref(true)
 const saving = ref(false)
@@ -99,12 +100,6 @@ const cta = reactive({
   imageSmall: '/images/programs/hero-2.jpg',
   imageLarge: '/images/programs/livelihood-hero3.jpg',
 })
-
-const quickLinks = [
-  { title: 'Donation QR & Banks', desc: 'Manage bank accounts & QR codes', to: '/admin/donate', color: 'emerald', external: false },
-  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber', external: false },
-  { title: 'Open Live Page', desc: 'View the published Donate page', to: '', color: 'blue', external: true },
-]
 
 const giftEditing = ref(false)
 const trustEditing = ref(false)
@@ -254,6 +249,7 @@ async function viewPage() {
   try {
     await savePage()
     if (notice.value?.type !== 'error') {
+      localStorage.setItem('admin_return_path', route.path)
       window.open(publicPageUrl.value, '_blank', 'noopener,noreferrer')
     }
   } catch (e) {
@@ -287,14 +283,6 @@ onMounted(() => {
 
         <header class="dash-banner">
           <div class="banner-inner">
-            <div class="banner-breadcrumb">
-              <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-label">Get Involved</span>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-current">Donate</span>
-            </div>
-
             <div class="banner-content">
               <div class="banner-text">
                 <div class="banner-badge">
@@ -317,78 +305,10 @@ onMounted(() => {
                 </button>
               </div>
             </div>
-
-            <div v-if="!anyEditing" class="banner-stats">
-              <div class="bstat bstat-emerald">
-                <div class="bstat-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ giftUses.length }}</strong>
-                  <small>Gift-use cards</small>
-                </div>
-              </div>
-              <div class="bstat bstat-blue">
-                <div class="bstat-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2 2 6 2s6-.9 6-2v-5"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ trustNotes.length }}</strong>
-                  <small>Stewardship notes</small>
-                </div>
-              </div>
-              <div class="bstat bstat-amber">
-                <div class="bstat-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ cta.primaryLabel ? '1' : '0' }}</strong>
-                  <small>CTA set</small>
-                </div>
-              </div>
-            </div>
           </div>
         </header>
 
         <div class="content-grid">
-          <section v-if="!anyEditing" class="card-section">
-            <div class="card-hdr">
-              <div class="card-hdr-left">
-                <span class="card-badge">Quick access</span>
-                <h2 class="card-title">Donate management</h2>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="links-grid">
-                <template v-for="link in quickLinks" :key="link.title">
-                  <a v-if="link.external" :href="publicPageUrl" target="_blank" rel="noopener noreferrer" class="link-card" :class="'link-' + link.color">
-                    <span class="link-icon">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                    </span>
-                    <div class="link-text">
-                      <strong>{{ link.title }}</strong>
-                      <small>{{ link.desc }}</small>
-                    </div>
-                    <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                  </a>
-                  <RouterLink v-else :to="link.to" class="link-card" :class="'link-' + link.color">
-                    <span class="link-icon">
-                      <svg v-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      <svg v-else-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>
-                      <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                      <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                    </span>
-                    <div class="link-text">
-                      <strong>{{ link.title }}</strong>
-                      <small>{{ link.desc }}</small>
-                    </div>
-                    <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                  </RouterLink>
-                </template>
-              </div>
-            </div>
-          </section>
-
           <section v-if="!trustEditing && !ctaEditing" class="card-section">
             <div class="card-hdr">
               <div class="card-hdr-left">
@@ -611,7 +531,7 @@ onMounted(() => {
   --emerald-soft: #eafaf5;
   --amber: #d97706;
   --amber-soft: #fef8ee;
-  --btn-primary-bg: #0a142d;
+  --btn-primary-bg: #0d9656;
   --btn-primary-text: #ffffff;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -676,12 +596,6 @@ onMounted(() => {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .dash-banner { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; }
-.banner-breadcrumb { display: flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.25rem; border-bottom: 1px solid var(--border); font-size: 0.76rem; font-weight: 700; }
-.bcrumb-link { color: var(--blue); text-decoration: none; }
-.bcrumb-link:hover { text-decoration: underline; }
-.bcrumb-sep { color: var(--muted); width: 10px; }
-.bcrumb-label { color: var(--muted); }
-.bcrumb-current { color: var(--contrast); }
 
 .banner-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1.25rem; }
 .banner-text { display: grid; gap: 0.4rem; max-width: 460px; flex: 1; }
@@ -694,39 +608,16 @@ onMounted(() => {
 .banner-desc { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.55; }
 .banner-actions { display: flex; gap: 0.45rem; flex-shrink: 0; flex-wrap: wrap; }
 
-.banner-stats { display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid var(--border); }
-.bstat { display: flex; align-items: center; gap: 0.7rem; padding: 0.9rem 1.1rem; border-right: 1px solid var(--border); }
-.bstat:last-child { border-right: none; }
-.bstat-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--radius-sm); flex-shrink: 0; }
-.bstat-blue .bstat-icon { background: var(--blue-soft); color: var(--blue); }
-.bstat-emerald .bstat-icon { background: var(--emerald-soft); color: var(--emerald); }
-.bstat-amber .bstat-icon { background: var(--amber-soft); color: var(--amber); }
-.bstat-info strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 800; line-height: 1.2; }
-.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
-
 .content-grid { display: grid; gap: 1.25rem; margin-top: 1.25rem; }
 
 .card-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; }
 .card-hdr { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 0.85rem 1.2rem; border-bottom: 1px solid var(--border); }
 .card-hdr-left { display: grid; gap: 0.15rem; }
-.card-badge { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--blue); }
+.card-badge { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
 .card-title { margin: 0; color: var(--contrast); font-size: 0.95rem; font-weight: 800; }
-.card-hdr-link { font-size: 0.82rem; font-weight: 700; color: var(--blue); text-decoration: none; background: none; border: none; cursor: pointer; padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); }
-.card-hdr-link:hover { background: var(--blue-soft); }
+.card-hdr-link { font-size: 0.82rem; font-weight: 700; color: var(--emerald); text-decoration: none; background: none; border: none; cursor: pointer; padding: 0.3rem 0.6rem; border-radius: var(--radius-sm); }
+.card-hdr-link:hover { background: var(--emerald-soft); }
 .card-body { padding: 1rem 1.2rem 1.2rem; }
-
-.links-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.9rem; }
-.link-card { display: flex; align-items: center; gap: 0.9rem; padding: 1rem 1.1rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); text-decoration: none; transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
-.link-card:hover { border-color: var(--border-s); transform: translateY(-2px); box-shadow: 0 8px 20px -12px rgba(10,20,45,0.18); }
-.link-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--radius-md); flex-shrink: 0; }
-.link-blue .link-icon { background: var(--blue-soft); color: var(--blue); }
-.link-emerald .link-icon { background: var(--emerald-soft); color: var(--emerald); }
-.link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
-.link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 800; margin-bottom: 2px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.76rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.15s ease; }
-.link-card:hover .link-arrow { transform: translateX(2px); color: var(--contrast); }
 
 .highlights-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.75rem; }
 .hcard { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; }
@@ -741,28 +632,20 @@ onMounted(() => {
 
 .priority-view-list { display: grid; gap: 0.5rem; }
 .priority-view-row { display: flex; align-items: center; gap: 0.65rem; padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text); }
-.priority-view-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--blue-soft); color: var(--blue); font-size: 0.68rem; font-weight: 800; flex-shrink: 0; }
+.priority-view-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--emerald-soft); color: var(--emerald); font-size: 0.68rem; font-weight: 800; flex-shrink: 0; }
 
 .priority-remove { background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; padding: 0.4rem; border-radius: var(--radius-sm); display: grid; place-items: center; }
 .priority-remove:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
-.add-priority-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; padding: 0.5rem 0.7rem; border: 1px dashed var(--border-s); border-radius: var(--radius-sm); background: transparent; color: var(--blue); font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: inherit; }
-.add-priority-btn:hover { background: var(--blue-soft); border-color: var(--blue); }
+.add-priority-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; padding: 0.5rem 0.7rem; border: 1px dashed var(--border-s); border-radius: var(--radius-sm); background: transparent; color: var(--emerald); font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+.add-priority-btn:hover { background: var(--emerald-soft); border-color: var(--emerald); }
 
 @media (min-width: 900px) { .donate-dash.sidebar-open { padding-left: 260px; } }
-@media (max-width: 900px) {
-  .banner-stats { grid-template-columns: repeat(3,1fr); }
-  .links-grid { grid-template-columns: repeat(2,1fr); }
-}
 @media (max-width: 560px) {
-  .links-grid { grid-template-columns: 1fr; }
   .highlights-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
   .dash-main { padding: 1rem; }
   .banner-content { flex-direction: column; }
-  .banner-stats { grid-template-columns: 1fr; }
-  .bstat { border-right: none; border-bottom: 1px solid var(--border); }
-  .bstat:last-child { border-bottom: none; }
 }
 @media (max-width: 600px) {
   .banner-actions { width: 100%; }
@@ -774,7 +657,7 @@ onMounted(() => {
 .editor-fields .field-label { font-size: 0.78rem; font-weight: 800; color: var(--text); }
 .editor-fields .field input,
 .editor-fields .field textarea {
-  width: 100%; padding: 0.5rem 0.7rem; border: 1px solid var(--blue); border-radius: var(--radius-sm);
+  width: 100%; padding: 0.5rem 0.7rem; border: 1px solid var(--emerald); border-radius: var(--radius-sm);
   background: var(--surface); color: var(--text); font-family: inherit; font-size: 0.86rem; resize: vertical; outline: none;
 }
 .editor-fields .field input:focus,
@@ -788,8 +671,8 @@ onMounted(() => {
 }
 .edit-image-btn {
   flex-shrink: 0; padding: 0.5rem 0.7rem; border: 1px solid var(--border-s); border-radius: var(--radius-sm);
-  background: var(--surface); color: var(--blue); font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit;
+  background: var(--surface); color: var(--emerald); font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit;
   white-space: nowrap;
 }
-.edit-image-btn:hover { background: var(--blue-soft); }
+.edit-image-btn:hover { background: var(--emerald-soft); }
 </style>
