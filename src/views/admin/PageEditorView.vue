@@ -1193,6 +1193,8 @@ const sectionCountLabel = computed(() => {
 
 const isImpactPage = computed(() => activePage.value.group === 'Impact')
 
+const activePageDirty = computed(() => isDirty(requestedSlug.value))
+
 onMounted(() => {
   void loadPages()
 })

@@ -316,11 +316,6 @@ interface CTAContent {
   secondaryBtnUrl: string
 }
 
-interface QuoteContent {
-  text: string
-  cite: string
-}
-
 interface PartnerItem {
   name: string
   type: string
@@ -330,7 +325,6 @@ import { supabase } from '@/lib/supabase'
 import { useEnvironmentProgram } from '@/composables/useEnvironmentProgram'
 
 const {
-  program: dbProgram,
   metrics: dbMetrics,
   sections: dbSections,
   partners: dbPartners,
