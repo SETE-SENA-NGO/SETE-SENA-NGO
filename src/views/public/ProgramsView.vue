@@ -390,7 +390,7 @@ onBeforeUnmount(() => {
   }
 }
 .eyebrow {
-  color: var(--primary-light);
+  color: rgb(53, 177, 127);
   letter-spacing: 0.15em;
   font-size: 0.8rem;
   font-weight: 700;

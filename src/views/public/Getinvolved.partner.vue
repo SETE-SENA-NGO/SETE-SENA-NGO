@@ -1240,9 +1240,9 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.65rem;
   margin: 0 0 2.4rem;
-  border: 1px solid color-mix(in srgb, var(--primary-color) 38%, transparent);
+  border: 0px solid color-mix(in srgb, var(--primary-color) 38%, transparent);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
+  background:none;
   color: var(--primary-dark);
   padding: 0.62rem 1.15rem;
   font-size: 0.78rem;
@@ -1251,7 +1251,7 @@ onUnmounted(() => {
   line-height: 1;
   text-transform: uppercase;
   box-shadow: 0 8px 18px
-    color-mix(in srgb, var(--primary-color) 12%, transparent);
+    color-mix(in srgb,  12%, transparent);
 }
 
 .portfolio-pill span {

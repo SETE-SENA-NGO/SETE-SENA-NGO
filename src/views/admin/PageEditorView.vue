@@ -1175,6 +1175,8 @@ const activePage = computed<PageDraft>(() => {
 
 const activePageDirty = computed(() => isDirty(activePage.value.slug))
 
+const activePageDirty = computed(() => isDirty(activePage.value.slug))
+
 const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
 
 const previewItems = computed(() => {

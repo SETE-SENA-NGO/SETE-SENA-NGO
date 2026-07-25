@@ -866,9 +866,11 @@ const scrollToTop = () => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  
 }
 
 .hero-static .hero-badge {
+  
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -877,10 +879,10 @@ const scrollToTop = () => {
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--primary-color);
-  background: rgba(45, 122, 90, 0.08);
+  /* background: rgba(45, 122, 90, 0.08); */
   padding: 0.4rem 1.4rem;
   border-radius: 999px;
-  border: 1px solid rgba(45, 122, 90, 0.1);
+  border: 0px solid rgba(45, 122, 90, 0.1);
   margin-bottom: 1rem;
 }
 
