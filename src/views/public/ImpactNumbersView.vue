@@ -491,7 +491,7 @@ onBeforeUnmount(() => {
 }
 
 .stat-card {
-    background: #f3f7f5;
+    background: #135333;
     border: 1px solid rgba(30, 80, 60, 0.08);
     border-radius: 1.25rem;
     padding: 1.75rem 1.5rem;
@@ -509,7 +509,7 @@ onBeforeUnmount(() => {
 .stat-card.card-visible {
     opacity: 1;
     transform: translateY(0) scale(1);
-    background: rgb(255, 255, 255);
+    background: rgb(38, 114, 81);
 }
 
 .stat-card:hover {
@@ -538,7 +538,7 @@ onBeforeUnmount(() => {
   margin: 0.3rem 0 0;
   font-size: 0.92rem;
   line-height: 1.6;
-  color: #bfb6af;
+  color: #fbf9f8;
 }
 
 /* ─── map ─── */
