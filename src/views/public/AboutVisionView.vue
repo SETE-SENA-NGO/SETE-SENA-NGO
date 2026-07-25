@@ -529,9 +529,9 @@ onBeforeUnmount(() => {
   color: var(--primary-dark);
   margin-bottom: 0.75rem;
   padding: 0.35rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--primary-dark) 25%, transparent);
+  border: 0px solid color-mix(in srgb, var(--primary-dark) 25%, transparent);
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--primary-dark) 8%, transparent);
+  background: color-mix(in srgb, 8%, transparent);
 }
 
 .section-header h2 {

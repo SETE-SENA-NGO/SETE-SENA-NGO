@@ -418,7 +418,7 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
   color: var(--primary-color);
   margin-bottom: 0.75rem;
   padding: 0.35rem 1rem;
-  border: 1px solid rgba(27, 163, 79, 0.15);
+  border: 0px solid rgba(27, 163, 79, 0.15);
   border-radius: 9999px;
   background: var(--primary-light);
 }
@@ -490,9 +490,9 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
   color: #ffffff;
   margin-bottom: 1.25rem;
   padding: 0.35rem 1.1rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 0px solid rgba(255, 255, 255, 0.3);
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.1);
+  background: none;
   backdrop-filter: none;
 }
 
