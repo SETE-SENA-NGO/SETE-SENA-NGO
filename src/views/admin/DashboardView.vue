@@ -1297,3 +1297,25 @@ const pillarStats = computed(() => {
   }
 }
 </style>
+
+<!-- Non-scoped dark mode override to ensure dark background applies in admin-dark mode -->
+<style>
+.admin-dark .admin-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .main {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .dashboard-card {
+  background: #0a1a14 !important;
+}
+.admin-dark .admin-page .dashboard-panel {
+  background: #0a1a14 !important;
+}
+.admin-dark .admin-page .overview-header {
+  background: #0a1a14 !important;
+}
+</style>

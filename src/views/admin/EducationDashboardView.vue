@@ -666,14 +666,14 @@ onMounted(async () => {
                       <span class="img-path">Reading / background photo</span>
                     </div>
                     <div class="img-upload-area">
-                      <ImagePickerField
+                      <!-- <ImagePickerField
                         v-model="page.galleryImages[1].url"
                         label="Upload or paste URL"
                         hint=""
                         hide-preview
                         @success="onGalleryImageSaved"
                         @error="(msg) => addToast(msg, 'error')"
-                      />
+                      /> -->
                     </div>
                   </div>
                 </div>

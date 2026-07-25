@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { imageUrls } from '@/lib/imageUrls'
 import { supabase } from '@/lib/supabase'
 
 const cpHeroRef = ref(imageUrls.programs.childProtection)
 const cpHero1Ref = ref(imageUrls.programs.childProtection1)
-const cpHero2Ref = ref(imageUrls.programs.childProtection2)
 const cpHero3Ref = ref(imageUrls.programs.childProtection3)
-
-const familyNetworkImage = computed(() => cpHero3Ref.value)
-const childProtectionImage = computed(() => cpHeroRef.value)
-const childProtectionPeerImage = computed(() => cpHero1Ref.value)
 
 const FALLBACK_STATS = [
   { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin', image: imageUrls.programs.childProtection },
@@ -195,7 +190,16 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
     introText.value = meta.intro.trim()
   }
 
-  // Gallery images — from meta.gallery (array of {label, url} like Education)
+  // Hero image — from meta.heroImageUrl (saved by Child Protection admin dashboard)
+  // Since the admin only has one image field, update all three collage images
+  if (typeof meta.heroImageUrl === 'string' && meta.heroImageUrl.trim()) {
+    const url = meta.heroImageUrl.trim()
+    cpHeroRef.value = url
+    cpHero1Ref.value = url
+    cpHero3Ref.value = url
+  }
+
+  // Gallery images — from meta.gallery (array of {label, url} for backward compat)
   let galleryUrls: string[] = []
   if (Array.isArray(meta.gallery) && meta.gallery.length > 0) {
     galleryUrls = meta.gallery
@@ -204,8 +208,7 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
     // Map gallery URLs to CP hero refs for the story collage
     if (galleryUrls.length > 0) cpHeroRef.value = galleryUrls[0]
     if (galleryUrls.length > 1) cpHero1Ref.value = galleryUrls[1]
-    if (galleryUrls.length > 2) cpHero2Ref.value = galleryUrls[2]
-    if (galleryUrls.length > 3) cpHero3Ref.value = galleryUrls[3]
+    if (galleryUrls.length > 2) cpHero3Ref.value = galleryUrls[2]
   }
 
   // Stats band
@@ -543,7 +546,7 @@ onBeforeUnmount(() => {
           <div class="col-image">
             <div class="story-collage" ref="collageEl">
               <div class="story-collage-main">
-                <img src="/images/programs/child-protection3.jpg" alt="Child Protection Network volunteer speaking with a family" />
+                <img :src="cpHero3Ref" alt="Child Protection Network volunteer speaking with a family" />
                 <span class="story-collage-heart">
                   <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 20.5s-7.6-4.8-10.2-9.4C.4 8.2 1.7 4.8 5 3.9c2-.5 3.9.3 5 2 .1-.1.1-.2.2-.3 1.1-1.6 3-2.5 5-2 3.3.9 4.6 4.3 3.2 7.2C19.6 15.7 12 20.5 12 20.5z"/>
@@ -553,10 +556,10 @@ onBeforeUnmount(() => {
 
               <!-- Two square photos, crossing/staggered, overlapping the bottom of the circle -->
               <div class="story-collage-sub story-collage-sub--left">
-                <img src="/images/programs/child-protection.jpg" alt="" />
+                <img :src="cpHeroRef" alt="" />
               </div>
               <div class="story-collage-sub story-collage-sub--right">
-                <img src="/images/programs/child-protection1.jpg" alt="" />
+                <img :src="cpHero1Ref" alt="" />
               </div>
             </div>
           </div>

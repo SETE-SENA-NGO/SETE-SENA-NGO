@@ -236,6 +236,7 @@ function prepareForSave(content: ContactPageContent): ContactPageContent {
     },
     telegram: {
       ...content.telegram,
+      url: normalizeTelegramUrl(content.telegram.url),
       qrImage: normalizeMediaUrl(content.telegram.qrImage),
     },
     visit: {
@@ -276,6 +277,36 @@ function validateDraft() {
 
 function resolveImageUrl(url: string, fallback: string) {
   return url.trim() ? url : fallback
+}
+
+/**
+ * Accepts either a full Telegram URL or a plain username and returns a clean
+ * `https://t.me/<username>` link. Strips a leading `@`, trims whitespace, and
+ * lower-cases the username. Empty input is preserved so the field can be cleared.
+ */
+function normalizeTelegramUrl(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+
+  // Already a Telegram URL — keep it, but normalise scheme/host and strip `@` from the path.
+  // The trailing group must contain at least one non-slash character so `https://t.me/`
+  // matches the bare-host branch below instead of being parsed as a handle.
+  const urlMatch = trimmed.match(/^(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/([^/?#\s]+.*)?$/i)
+  if (urlMatch) {
+    const rawHandle = (urlMatch[1] ?? '').replace(/^@/, '').split(/[/?#]/)[0] ?? ''
+    if (!rawHandle) return 'https://t.me/'
+    return `https://t.me/${rawHandle}`
+  }
+
+  // Otherwise treat the input as a bare username. Strip leading `@`, drop any
+  // path/query/fragment, and trim.
+  const handle = trimmed
+    .replace(/^@+/, '')
+    .split(/[/?#]/)[0]
+    ?.trim() ?? ''
+
+  if (!handle) return 'https://t.me/'
+  return `https://t.me/${handle}`
 }
 </script>
 
@@ -512,7 +543,7 @@ function resolveImageUrl(url: string, fallback: string) {
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Contact form</p>
-                <h2 id="telegram-qr-heading">Telegram QR code</h2>
+                <h2 id="telegram-qr-heading">Telegram contact</h2>
               </div>
               <MessageSquare :size="20" aria-hidden="true" />
             </div>
@@ -523,20 +554,41 @@ function resolveImageUrl(url: string, fallback: string) {
               </figure>
 
               <div class="form-stack">
-                <label class="field">
-                  <span>Telegram QR image</span>
-                  <input v-model="draft.telegram.qrImage" type="url" :placeholder="imageHint" />
-                </label>
-                <label class="upload-box">
-                  <Upload :size="17" aria-hidden="true" />
-                  <span>{{ uploadingKey === 'telegram-qr' ? 'Uploading QR...' : 'Upload Telegram QR' }}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    :disabled="uploadingKey === 'telegram-qr'"
-                    @change="uploadImage($event, 'telegram-qr', (url) => (draft.telegram.qrImage = url))"
-                  />
-                </label>
+                <div class="form-grid">
+                  <label class="field wide">
+                    <span>Telegram link (URL or username)</span>
+                    <input
+                      v-model="draft.telegram.url"
+                      type="text"
+                      placeholder="https://t.me/"
+                      @blur="draft.telegram.url = normalizeTelegramUrl(draft.telegram.url)"
+                    />
+                    <small class="field-hint">
+                      Just copy the username from your Telegram profile past into this box.
+                    </small>
+                  </label>
+                </div>
+                <label class="upload-box upload-box--primary">
+                    <Upload :size="17" aria-hidden="true" />
+                    <span>{{ uploadingKey === 'telegram-qr' ? 'Uploading QR...' : 'Upload QR image' }}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      :disabled="uploadingKey === 'telegram-qr'"
+                      @change="uploadImage($event, 'telegram-qr', (url) => (draft.telegram.qrImage = url))"
+                    />
+                  </label>
+
+                <div class="upload-actions">
+                  <label class="field">
+                    <span>Button label</span>
+                    <input
+                      v-model="draft.telegram.openLabel"
+                      type="text"
+                      placeholder="Open Telegram"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
           </section>
@@ -548,9 +600,23 @@ function resolveImageUrl(url: string, fallback: string) {
 
 <style scoped>
 .contact-admin {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-primary: var(--admin-theme-primary);
+  --admin-primary-deep: var(--admin-theme-primary-deep);
+  --admin-danger: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
+
   min-height: 100vh;
-  background: var(--admin-theme-bg);
-  color: var(--admin-theme-text);
+  background: var(--admin-bg);
+  color: var(--admin-text);
   transition: padding-left 0.25s ease;
 }
 
@@ -876,6 +942,69 @@ function resolveImageUrl(url: string, fallback: string) {
   padding: 0.55rem;
 }
 
+.upload-actions {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.upload-box--primary {
+  cursor: pointer;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  border: 1px dashed color-mix(in srgb, var(--admin-theme-primary) 55%, transparent);
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface)),
+    color-mix(in srgb, var(--admin-theme-primary) 4%, var(--admin-theme-surface))
+  );
+  color: var(--admin-theme-primary);
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.upload-box--primary:hover {
+  transform: translateY(-1px);
+  border-color: var(--admin-theme-primary);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--admin-theme-primary) 22%, var(--admin-theme-surface)),
+    color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface))
+  );
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
+}
+
+.upload-box--primary:focus-within {
+  outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 25%, transparent);
+  outline-offset: 2px;
+}
+
+.upload-box--primary span {
+  color: var(--admin-theme-primary);
+}
+
+.upload-box--primary input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.field-hint {
+  color: var(--admin-theme-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .offices-list {
   padding: 1rem;
 }
@@ -936,6 +1065,22 @@ function resolveImageUrl(url: string, fallback: string) {
 
 .office-form-grid {
   padding: 0.9rem;
+}
+
+:global(.admin-dark) .contact-admin {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-primary: var(--admin-theme-primary);
+  --admin-primary-deep: var(--admin-theme-primary-deep);
+  --admin-danger: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
 }
 
 :global(.admin-dark) .btn-primary {

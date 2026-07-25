@@ -877,8 +877,8 @@ function cloneCard(card: SupportCard): SupportCard {
 <style scoped>
 .getinvolved-admin {
   min-height: 100vh;
-  background: var(--admin-theme-bg);
-  color: var(--admin-theme-text);
+  background: var(--admin-bg);
+  color: var(--admin-text);
   transition: padding-left 0.25s ease;
 }
 
