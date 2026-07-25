@@ -1,4 +1,4 @@
-<template>
+  <template>
   <div class="login-page">
     <div class="login-wrapper">
       <!-- LEFT PANEL (55%) – Santi Sena brand with dark theme -->
@@ -24,30 +24,17 @@
               Welcome <span class="highlight">Back!</span>
             </h1>
             <p class="description">
-              Sign in to continue your journey with Santi Sena —<br />
-              Where Tradition Meets Growth.
+              Sign in to continue your journey with Santi Sena <br />
+                   
+            </p>
+            <p class="description" style="margin-left: 215px;">
+           
+                    Where Tradition Meets Growth.
             </p>
             <div class="accent-line"></div>
           </div>
 
-          <!-- Feature cards -->
-          <div class="feature-cards">
-            <div class="feature-card">
-              <span class="material-icons-outlined feature-icon">security</span>
-              <h4>Secure</h4>
-              <p>Your data is safe with us.</p>
-            </div>
-            <div class="feature-card">
-              <span class="material-icons-outlined feature-icon">bolt</span>
-              <h4>Fast</h4>
-              <p>Ultra-fast performance.</p>
-            </div>
-            <div class="feature-card">
-              <span class="material-icons-outlined feature-icon">person_outline</span>
-              <h4>User Friendly</h4>
-              <p>Simple &amp; clean interface.</p>
-            </div>
-          </div>
+
         </div>
 
         <!-- Footer -->
@@ -127,9 +114,6 @@
                 <input id="remember-me" v-model="remember" name="remember-me" type="checkbox" autocomplete="off" />
                 <span>Remember Me</span>
               </label>
-              <button type="button" class="forgot-link" :disabled="loading" @click="handlePasswordReset">
-                Forgot Password?
-              </button>
             </div>
 
             <!-- Submit -->
@@ -156,7 +140,6 @@ import leftBgLogo from '@/assets/santi_sena_logo.png'
 // Use the same “white seal” logo style as the public navbar.
 // The navbar uses the seal image with a white disc background.
 import publicLogo from '@/assets/santi_sena_icon.ico'
-import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 
 const santiSenaLogo = publicLogo
@@ -207,30 +190,6 @@ const handleLogin = async () => {
     } else {
       errorMessage.value = rawMessage || 'Email or password is incorrect.'
     }
-  } finally {
-    loading.value = false
-  }
-}
-
-const handlePasswordReset = async () => {
-  errorMessage.value = null
-  successMessage.value = null
-
-  const trimmedEmail = email.value.trim()
-  if (!trimmedEmail) {
-    errorMessage.value = 'Enter your email first, then request a password reset.'
-    return
-  }
-
-  loading.value = true
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-      redirectTo: `${window.location.origin}/admin/login`,
-    })
-    if (error) throw error
-    successMessage.value = 'Password reset email sent. Check your inbox.'
-  } catch {
-    errorMessage.value = 'Could not send password reset email. Please try again later.'
   } finally {
     loading.value = false
   }
@@ -309,6 +268,7 @@ const handlePasswordReset = async () => {
   display: flex;
   flex-direction: column;
   flex: 1;
+  justify-content: center;
 }
 
 .brand-header {
@@ -333,6 +293,10 @@ const handlePasswordReset = async () => {
   background: #ffffff;
   display: grid;
   place-items: center;
+   margin-left: 290px;
+   margin-bottom: 10px;
+
+
 }
 
 .logo-image {
@@ -340,6 +304,7 @@ const handlePasswordReset = async () => {
   height: 62px;
   object-fit: contain;
   display: block;
+
 }
 
 
@@ -347,6 +312,7 @@ const handlePasswordReset = async () => {
 .sub-brand {
   object-fit: contain;
   filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.25));
+  
 }
 
 .sub-brand {
@@ -356,6 +322,9 @@ const handlePasswordReset = async () => {
   letter-spacing: 1.5px;
   margin-left: 4px;
   text-transform: uppercase;
+  margin-left: 199px;
+  /* margin-: 200px; */
+
 }
 
 .welcome-section {
@@ -366,7 +335,8 @@ const handlePasswordReset = async () => {
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.02em;
-  margin-bottom: 6px;
+  /* margin-top: 100px; */
+  margin-left: 165px;
 }
 .welcome-section .highlight {
   color: #2ecc71;
@@ -378,6 +348,9 @@ const handlePasswordReset = async () => {
   color: rgba(174, 183, 184, 0.85);
   max-width: 400px;
   line-height: 1.7;
+  margin-left: 150px;
+  margin-top: 18px;
+
 }
 
 .accent-line {
@@ -387,48 +360,8 @@ const handlePasswordReset = async () => {
   border-radius: 4px;
   margin-top: 16px;
   box-shadow: 0 0 16px rgba(46, 204, 113, 0.5);
-}
+  margin-left: 310px;
 
-/* Feature cards */
-.feature-cards {
-  display: flex;
-  gap: 14px;
-  margin-top: 12px;
-  flex-wrap: wrap;
-}
-
-.feature-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(46, 204, 113, 0.1);
-  border-radius: 20px;
-  padding: 18px 20px;
-  flex: 1;
-  min-width: 110px;
-  transition: background 0.3s, border-color 0.3s;
-}
-.feature-card:hover {
-  background: rgba(46, 204, 113, 0.06);
-  border-color: rgba(46, 204, 113, 0.2);
-}
-.feature-icon {
-  font-size: 28px;
-  color: #2ecc71;
-  margin-bottom: 6px;
-  filter: drop-shadow(0 0 6px rgba(46, 204, 113, 0.3));
-}
-.feature-card h4 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 2px;
-}
-.feature-card p {
-  font-size: 12px;
-  font-weight: 400;
-  color: rgba(174, 183, 184, 0.65);
-  line-height: 1.4;
 }
 
 .left-footer {
@@ -439,6 +372,8 @@ const handlePasswordReset = async () => {
   text-align: center;
   padding-top: 16px;
   border-top: 1px solid rgba(63, 73, 74, 0.3);
+  margin-left: 20px;
+
 }
 
 /* ── RIGHT PANEL (45%) ── */
@@ -637,27 +572,6 @@ const handlePasswordReset = async () => {
   border: 1px solid rgba(63, 73, 74, 0.4);
   border-radius: 4px;
 }
-.forgot-link {
-  border: 0;
-  background: transparent;
-  font-size: 14px;
-  color: #56ff02;
-  cursor: pointer;
-  font-family: inherit;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.2s;
-}
-.forgot-link:hover {
-  color: #040404;
-  text-decoration: underline;
-}
-
-.forgot-link:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
 .btn-login {
   padding: 16px;
   border-radius: 30px;
@@ -815,15 +729,6 @@ const handlePasswordReset = async () => {
   .welcome-section .description br {
     display: none;
   }
-
-  .feature-cards {
-    flex-wrap: wrap;
-  }
-
-  .feature-card {
-    flex: 1 1 30%;
-    min-width: 100px;
-  }
 }
 
 @media (max-width: 720px) {
@@ -861,15 +766,6 @@ const handlePasswordReset = async () => {
     margin-bottom: 20px;
   }
 
-  .feature-cards {
-    gap: 10px;
-  }
-
-  .feature-card {
-    padding: 14px;
-    border-radius: 16px;
-  }
-
   .right-panel {
     padding: 22px 16px;
   }
@@ -901,11 +797,6 @@ const handlePasswordReset = async () => {
 
   .welcome-section .description {
     font-size: 14px;
-  }
-
-  .feature-card {
-    flex: 1 1 100%;
-    min-width: 0;
   }
 
   .right-panel {
@@ -947,10 +838,6 @@ const handlePasswordReset = async () => {
   .brand-header,
   .welcome-section {
     margin-bottom: 18px;
-  }
-
-  .feature-card {
-    padding: 14px 16px;
   }
 
   .login-card {
