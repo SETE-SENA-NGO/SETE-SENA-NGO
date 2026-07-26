@@ -509,6 +509,15 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
 
   return Array.isArray(data) ? data[0] : data
 }
+
+function userHeaders(config, authorization) {
+  return {
+    apikey: config.anonKey,
+    authorization,
+    'content-type': 'application/json',
+  }
+}
+
 async function ensureMediaAssetsReady(config, authorization) {
   const response = await fetch(`${config.url}/rest/v1/media_assets?select=id&limit=1`, {
     method: 'GET',
@@ -533,14 +542,6 @@ async function ensureMediaAssetsReady(config, authorization) {
     supabaseStatus: response.status,
     supabaseMessage: message,
   })
-}
-
-function userHeaders(config, authorization) {
-  return {
-    apikey: config.anonKey,
-    authorization,
-    'content-type': 'application/json',
-  }
 }
 
 async function getMediaAsset(config, { id, authorization }) {

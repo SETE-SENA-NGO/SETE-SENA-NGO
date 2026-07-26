@@ -1,7 +1,7 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ImageUploader from '@/components/admin/ImageUploader.vue'
@@ -15,6 +15,7 @@ import {
 
 const ui = useUiStore()
 const { locale } = useI18n()
+const route = useRoute()
 
 const activeLocale = computed(() => (locale.value === 'kh' ? 'kh' : 'en'))
 
@@ -22,12 +23,58 @@ const loading = ref(false)
 const saving = ref(false)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 
-// ── Image upload — reuses the same ImageUploader.vue component as the
-// Donate admin page (Supabase storage via media.store.ts → upload()).
-// Toggle map: which goal's uploader panel is currently open.
-const imageEditorsOpen = reactive<Record<string, boolean>>({})
-function toggleImageEditor(key: string) {
-  imageEditorsOpen[key] = !imageEditorsOpen[key]
+// ── Image upload — reuses the same Google Drive upload flow as the
+// Media Library page (media.store.ts → uploadToGoogleDrive → Netlify
+// function /api/google-drive-upload). No separate storage bucket needed.
+const uploadingIndex = ref<number | null>(null)
+const dragIndex = ref<number | null>(null)
+const uploadError = ref<string | null>(null)
+
+async function uploadGoalImage(file: File, index: number) {
+  if (!file.type.startsWith('image/')) {
+    uploadError.value = 'Please choose an image file.'
+    return
+  }
+  const target = goals[index]
+  if (!target) return
+
+  uploadingIndex.value = index
+  uploadError.value = null
+  try {
+    const displayName = `${target.title || 'Program goal'} image`
+    const item = await media.uploadToGoogleDrive(file, displayName)
+    target.image = item.url
+    notice.value = {
+      type: 'success',
+      message: 'Image uploaded to Google Drive. Click "Save & view page" to publish it.',
+    }
+  } catch (e: unknown) {
+    console.error('uploadGoalImage error:', e)
+    uploadError.value = e instanceof Error ? e.message : 'Image upload failed.'
+  } finally {
+    uploadingIndex.value = null
+  }
+}
+
+function onFileInputChange(e: Event, index: number) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (file) uploadGoalImage(file, index)
+  input.value = ''
+}
+
+function onImageDrop(e: DragEvent, index: number) {
+  dragIndex.value = null
+  const file = e.dataTransfer?.files?.[0]
+  if (file) uploadGoalImage(file, index)
+}
+
+function onImageDragOver(index: number) {
+  dragIndex.value = index
+}
+
+function onImageDragLeave(index: number) {
+  if (dragIndex.value === index) dragIndex.value = null
 }
 
 // Public route this admin page edits.
@@ -121,41 +168,53 @@ const form2 = reactive({
   ],
 })
 
-const quickLinks = [
-  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber', external: false },
-  { title: 'Open Live Page', desc: 'View the published Programs page', to: '', color: 'blue', external: true },
-]
-
 // ── Editing state — only one box editable at a time ─────────
 const bannerEditing = ref(false)
 const goalsEditing = ref(false)
+// Per-card editing: lets a single goal card (Goal 01, Goal 02, ...) be
+// opened for editing on its own, without switching all four into edit mode.
+const goalEditOpen = reactive<Record<number, boolean>>({})
+function toggleGoalEdit(index: number) {
+  goalEditOpen[index] = !goalEditOpen[index]
+}
+const anyGoalEditing = computed(() => goalsEditing.value || Object.values(goalEditOpen).some(Boolean))
 const prioritiesEditing = ref(false)
+
+function clearGoalEditOpen() {
+  Object.keys(goalEditOpen).forEach((key) => {
+    goalEditOpen[Number(key)] = false
+  })
+}
 
 function toggleBanner() {
   bannerEditing.value = !bannerEditing.value
   goalsEditing.value = false
   prioritiesEditing.value = false
+  clearGoalEditOpen()
 }
 
 function toggleGoals() {
   goalsEditing.value = !goalsEditing.value
   bannerEditing.value = false
   prioritiesEditing.value = false
+  clearGoalEditOpen()
 }
 
 function togglePriorities() {
   prioritiesEditing.value = !prioritiesEditing.value
   bannerEditing.value = false
   goalsEditing.value = false
+  clearGoalEditOpen()
 }
 
 function closeEditors() {
   bannerEditing.value = false
   goalsEditing.value = false
   prioritiesEditing.value = false
+  clearGoalEditOpen()
 }
 
-const anyEditing = computed(() => bannerEditing.value || goalsEditing.value || prioritiesEditing.value)
+const anyEditing = computed(() => bannerEditing.value || anyGoalEditing.value || prioritiesEditing.value)
 
 function addPriority() {
   form2.priorities.push('')
@@ -308,6 +367,7 @@ async function viewPage() {
   try {
     await savePage()
     if (notice.value?.type !== 'error') {
+      localStorage.setItem('admin_return_path', route.path)
       window.open(publicPageUrl.value, '_blank', 'noopener,noreferrer')
     }
   } catch (e) {
@@ -347,14 +407,6 @@ watch(activeLocale, () => {
         <!-- BANNER -->
         <header class="dash-banner">
           <div class="banner-inner">
-            <div class="banner-breadcrumb">
-              <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-label">Modules</span>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-current">Programs</span>
-            </div>
-
             <div class="banner-content">
               <div class="banner-text" :class="{ 'banner-text-editing': bannerEditing }">
                 <div v-if="!bannerEditing" class="banner-badge">
@@ -383,65 +435,11 @@ watch(activeLocale, () => {
                 </button>
               </div>
             </div>
-
-            <div v-if="!anyEditing" class="banner-stats">
-              <div v-for="goal in goals" :key="goal.title" class="bstat" :class="'bstat-' + goal.color">
-                <div class="bstat-icon">
-                  <svg v-if="goal.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2 2 6 2s6-.9 6-2v-5"/></svg>
-                  <svg v-else-if="goal.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  <svg v-else-if="goal.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ goal.title }}</strong>
-                  <small>{{ goal.tag }}</small>
-                </div>
-              </div>
-            </div>
           </div>
         </header>
 
         <!-- CONTENT GRID -->
         <div class="content-grid">
-            <!-- Quick Links -->
-            <section v-if="!anyEditing" class="card-section">
-              <div class="card-hdr">
-                <div class="card-hdr-left">
-                  <span class="card-badge">Quick access</span>
-                  <h2 class="card-title">Frequent actions</h2>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="links-grid">
-                  <template v-for="link in quickLinks" :key="link.title">
-                    <a v-if="link.external" :href="publicPageUrl" target="_blank" rel="noopener noreferrer" class="link-card" :class="'link-' + link.color">
-                      <span class="link-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      </span>
-                      <div class="link-text">
-                        <strong>{{ link.title }}</strong>
-                        <small>{{ link.desc }}</small>
-                      </div>
-                      <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                    </a>
-                    <RouterLink v-else :to="link.to" class="link-card" :class="'link-' + link.color">
-                      <span class="link-icon">
-                        <svg v-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        <svg v-else-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                        <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                      </span>
-                      <div class="link-text">
-                        <strong>{{ link.title }}</strong>
-                        <small>{{ link.desc }}</small>
-                      </div>
-                      <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                    </RouterLink>
-                  </template>
-                </div>
-              </div>
-            </section>
-
             <!-- ══════════ BOX 1: PROGRAM GOALS ══════════ -->
             <section v-if="!bannerEditing && !prioritiesEditing" class="card-section">
               <div class="card-hdr">
@@ -453,17 +451,22 @@ watch(activeLocale, () => {
                 <button v-if="goalsEditing" class="card-hdr-link" type="button" @click="toggleGoals">Done</button>
               </div>
               <div class="card-body">
-                <!-- compact view — mirrors the public page: image, intro, what we do,
-                     why it matters, and quote all show at a glance -->
-                <div v-if="!goalsEditing" class="highlights-grid">
-                  <div v-for="goal in goals" :key="goal.title" class="hcard" :class="'hcard-' + goal.color">
+                <!-- Each goal card now carries its own Edit/Done control, so
+                     Goal 01, Goal 02, Goal 03 and Goal 04 can each be opened
+                     for editing independently — the header "Edit cards"
+                     button still opens all four at once if that's faster. -->
+                <div class="highlights-grid">
+                  <div v-for="(goal, index) in goals" :key="goal.title" class="hcard" :class="'hcard-' + goal.color">
                     <div class="hcard-top">
-                      <span class="hcard-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-                      </span>
                       <span class="hcard-count">{{ goal.tag }}</span>
+                      <button type="button" class="hcard-edit-link" @click="toggleGoalEdit(index)">
+                        {{ (goalsEditing || goalEditOpen[index]) ? 'Done' : 'Edit' }}
+                      </button>
                     </div>
-                    <div class="hcard-body">
+
+                    <!-- compact view — mirrors the public page: image, intro, what we do,
+                         why it matters, and quote all show at a glance -->
+                    <div v-if="!goalsEditing && !goalEditOpen[index]" class="hcard-body">
                       <strong>{{ goal.title }}</strong>
                       <small>{{ goal.intro }}</small>
 
@@ -479,20 +482,9 @@ watch(activeLocale, () => {
 
                       <blockquote v-if="goal.quote" class="hcard-quote">"{{ goal.quote }}"</blockquote>
                     </div>
-                  </div>
-                </div>
 
-                <!-- full editable form: title, intro, what we do, why it matters, quote, image -->
-                <div v-else class="goal-edit-list">
-                  <div v-for="(goal, index) in goals" :key="goal.title" class="goal-edit-block" :class="'hcard-' + goal.color">
-                    <div class="goal-edit-hdr">
-                      <span class="hcard-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-                      </span>
-                      <span class="hcard-count">{{ goal.tag }}</span>
-                    </div>
-
-                    <div class="editor-fields">
+                    <!-- full editable form for just this card: title, intro, what we do, why it matters, quote, image -->
+                    <div v-else class="editor-fields hcard-edit-fields">
                       <label class="field">
                         <span class="field-label">Title</span>
                         <input v-model="goal.title" type="text" placeholder="Goal title" />
@@ -537,7 +529,7 @@ watch(activeLocale, () => {
             </section>
 
             <!-- ══════════ BOX 2: HOW WE KEEP THE TREE ALIVE ══════════ -->
-            <section v-if="!bannerEditing && !goalsEditing" class="card-section">
+            <section v-if="!bannerEditing && !anyGoalEditing" class="card-section">
               <div class="card-hdr">
                 <div class="card-hdr-left">
                   <span class="card-badge">Operational priorities</span>
@@ -579,8 +571,9 @@ watch(activeLocale, () => {
   --surface: #ffffff;
   --border: #e8edf6;
   --border-s: #d4dcee;
-  --text: #2b54c5;
-  --contrast: #0d9656;
+  --text: #1a1a1a;
+  --contrast: #1a1a1a;
+  --label-accent: #1a1a1a;
   --muted: #6a7fa0;
   --blue: #2563eb;
   --blue-glow: rgba(37,99,235,0.18);
@@ -593,7 +586,7 @@ watch(activeLocale, () => {
   --violet-soft: #f3efff;
   --slate: #64748b;
   --slate-soft: #f0f3f8;
-  --btn-primary-bg: #0a142d;
+  --btn-primary-bg: #0d9656;
   --btn-primary-text: #ffffff;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -613,6 +606,7 @@ watch(activeLocale, () => {
   --border-s: #274434;
   --text: #c8d2e6;
   --contrast: #eaf0f8;
+  --label-accent: #10b981;
   --muted: #7a8aaa;
   --blue: #10b981;
   --blue-glow: rgba(16,185,129,0.2);
@@ -656,17 +650,6 @@ watch(activeLocale, () => {
   border-radius: var(--radius-xl);
   overflow: hidden;
 }
-.banner-breadcrumb {
-  display: flex; align-items: center; gap: 0.4rem;
-  padding: 0.6rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.76rem; font-weight: 700;
-}
-.bcrumb-link { color: var(--blue); text-decoration: none; }
-.bcrumb-link:hover { text-decoration: underline; }
-.bcrumb-sep { color: var(--muted); width: 10px; }
-.bcrumb-label { color: var(--muted); }
-.bcrumb-current { color: var(--contrast); }
 
 .banner-content {
   display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
@@ -677,7 +660,7 @@ watch(activeLocale, () => {
 .banner-badge {
   display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content;
   font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue); background: var(--blue-soft);
+  color: var(--emerald); background: var(--emerald-soft);
   padding: 0.2rem 0.7rem; border-radius: 999px;
 }
 .banner-title {
@@ -687,27 +670,6 @@ watch(activeLocale, () => {
 }
 .banner-desc { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.55; }
 .banner-actions { display: flex; gap: 0.45rem; flex-shrink: 0; flex-wrap: wrap; }
-
-.banner-stats {
-  display: grid; grid-template-columns: repeat(4,1fr);
-  border-top: 1px solid var(--border);
-}
-.bstat {
-  display: flex; align-items: center; gap: 0.7rem;
-  padding: 0.9rem 1.1rem;
-  border-right: 1px solid var(--border);
-}
-.bstat:last-child { border-right: none; }
-.bstat-icon {
-  width: 36px; height: 36px; display: grid; place-items: center;
-  border-radius: var(--radius-sm); flex-shrink: 0;
-}
-.bstat-blue .bstat-icon { background: var(--blue-soft); color: var(--blue); }
-.bstat-emerald .bstat-icon { background: var(--emerald-soft); color: var(--emerald); }
-.bstat-amber .bstat-icon { background: var(--amber-soft); color: var(--amber); }
-.bstat-violet .bstat-icon { background: var(--violet-soft); color: var(--violet); }
-.bstat-info strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 800; line-height: 1.2; }
-.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
 
 /* ─── CONTENT GRID ─── */
 .content-grid {
@@ -727,44 +689,16 @@ watch(activeLocale, () => {
 .card-hdr-left { display: grid; gap: 0.15rem; }
 .card-badge {
   font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue);
+  color: var(--emerald);
 }
 .card-title { margin: 0; color: var(--contrast); font-size: 0.95rem; font-weight: 800; }
 .card-hdr-link {
-  font-size: 0.82rem; font-weight: 700; color: var(--blue); text-decoration: none;
+  font-size: 0.82rem; font-weight: 700; color: var(--emerald); text-decoration: none;
   background: none; border: none; cursor: pointer;
   padding: 0.3rem 0.6rem; border-radius: var(--radius-sm);
 }
-.card-hdr-link:hover { background: var(--blue-soft); }
+.card-hdr-link:hover { background: var(--emerald-soft); }
 .card-body { padding: 1rem 1.2rem 1.2rem; }
-
-/* ─── LINKS GRID ─── */
-.links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.9rem; }
-.link-card {
-  display: flex; align-items: center; gap: 0.9rem;
-  padding: 1rem 1.1rem; border-radius: var(--radius-md);
-  border: 1px solid var(--border); background: var(--surface);
-  text-decoration: none;
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-}
-.link-card:hover {
-  border-color: var(--border-s);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -12px rgba(10,20,45,0.18);
-}
-.link-icon {
-  width: 44px; height: 44px; display: grid; place-items: center;
-  border-radius: var(--radius-md); flex-shrink: 0;
-}
-.link-blue .link-icon { background: var(--blue-soft); color: var(--blue); }
-.link-emerald .link-icon { background: var(--emerald-soft); color: var(--emerald); }
-.link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
-.link-violet .link-icon { background: var(--violet-soft); color: var(--violet); }
-.link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 800; margin-bottom: 2px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.76rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.15s ease; }
-.link-card:hover .link-arrow { transform: translateX(2px); color: var(--contrast); }
 
 /* ─── HIGHLIGHTS GRID (compact view of Our programs) ─── */
 .highlights-grid {
@@ -780,10 +714,17 @@ watch(activeLocale, () => {
 .hcard-violet { --hc: var(--violet); }
 .hcard-slate { --hc: var(--slate); }
 .hcard-top {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
   padding: 0.55rem 0.7rem;
   border-bottom: 1px solid var(--border);
 }
+.hcard-top .hcard-count { margin-right: auto; }
+.hcard-edit-link {
+  font-size: 0.8rem; font-weight: 800; color: var(--emerald);
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  padding: 0.15rem 0.45rem; border-radius: 6px; white-space: nowrap;
+}
+.hcard-edit-link:hover { background: var(--emerald-soft); }
 .hcard-icon {
   width: 26px; height: 26px; display: grid; place-items: center;
   border-radius: 6px;
@@ -796,7 +737,7 @@ watch(activeLocale, () => {
   background: var(--surface); border: 1px solid var(--border);
 }
 .hcard-body { padding: 0.5rem 0.7rem 0.7rem; display: grid; gap: 0.15rem; }
-.hcard-body strong { color: var(--contrast); font-size: 0.8rem; font-weight: 800; }
+.hcard-body strong { color: #0d9656; font-size: 0.8rem; font-weight: 800; }
 .hcard-body small { color: var(--muted); font-size: 0.7rem; font-weight: 600; line-height: 1.4; }
 
 /* thumbnail shown above the title in the compact goal card */
@@ -823,7 +764,7 @@ watch(activeLocale, () => {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--hc, var(--blue));
+  color: var(--label-accent);
   margin-bottom: 0.15rem;
 }
 .hcard-detail p {
@@ -836,7 +777,7 @@ watch(activeLocale, () => {
 .hcard-quote {
   margin: 0.55rem 0 0;
   padding-left: 0.6rem;
-  border-left: 2px solid var(--hc, var(--blue));
+  border-left: 2px solid var(--label-accent);
   font-size: 0.72rem;
   font-style: italic;
   color: var(--text);
@@ -865,7 +806,7 @@ watch(activeLocale, () => {
 .priority-view-number {
   display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; border-radius: 50%;
-  background: var(--blue-soft); color: var(--blue);
+  background: var(--emerald-soft); color: var(--emerald);
   font-size: 0.68rem; font-weight: 800; flex-shrink: 0;
 }
 
@@ -904,17 +845,10 @@ watch(activeLocale, () => {
 @media (min-width: 900px) { .edu-dash.sidebar-open { padding-left: 260px; } }
 @media (max-width: 900px) {
   .banner-stats { grid-template-columns: repeat(2,1fr); }
-  .links-grid { grid-template-columns: repeat(2,1fr); }
-}
-@media (max-width: 560px) {
-  .links-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
   .dash-main { padding: 1rem; }
   .banner-content { flex-direction: column; }
-  .banner-stats { grid-template-columns: 1fr; }
-  .bstat { border-right: none; border-bottom: 1px solid var(--border); }
-  .bstat:last-child { border-bottom: none; }
   .highlights-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {

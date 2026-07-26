@@ -486,6 +486,23 @@ onBeforeUnmount(() => {
   font-family: var(--font-family-base);
 }
 
+/* Dark mode override - lighter background for readability */
+html.dark .vision-page,
+:root.dark .vision-page,
+.admin-dark .vision-page {
+  --color-cream: #0f1a16;
+  --color-cream-soft: #13211b;
+  --color-white: #1a2c24;
+  --color-ink: #e6f0eb;
+  --color-ink-soft: #a0bcb0;
+  --color-border: #244033;
+  --primary-color: #4ade80;
+  --primary-dark: #74e0ae;
+  --primary-light: #1a3d2e;
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
 .container {
   max-width: var(--container-max-width);
   margin: 0 auto;
@@ -529,9 +546,9 @@ onBeforeUnmount(() => {
   color: var(--primary-dark);
   margin-bottom: 0.75rem;
   padding: 0.35rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--primary-dark) 25%, transparent);
+  border: 0px solid color-mix(in srgb, var(--primary-dark) 25%, transparent);
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--primary-dark) 8%, transparent);
+  background: color-mix(in srgb, 8%, transparent);
 }
 
 .section-header h2 {
@@ -1054,29 +1071,28 @@ onBeforeUnmount(() => {
 }
 
 .btn-primary {
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #c7c7c8;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-
-.btn-primary:hover {
-  background: #dedede;
-  border-color: #b2b2b2;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-}
-
-.btn-outline {
   background: var(--primary-color);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid transparent;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.btn-outline:hover {
-  border-color: #ffffff;
+.btn-primary:hover {
   background: var(--primary-dark);
   box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.btn-outline:hover {
+  border-color: var(--color-ink-soft);
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
 
 /* =====================
@@ -1112,12 +1128,12 @@ onBeforeUnmount(() => {
     grid-template-columns: 1fr;
   }
   .btn-outline {
-    color: #334155;
-    border: 1px solid #cbd5e1;
+    border-color: var(--color-border);
+    color: var(--color-ink-soft);
   }
   .btn-outline:hover {
-    border-color: #94a3b8;
-    background: rgba(0, 0, 0, 0.02);
+    border-color: var(--color-ink-soft);
+    background: color-mix(in srgb, var(--color-ink) 6%, transparent);
   }
 }
 

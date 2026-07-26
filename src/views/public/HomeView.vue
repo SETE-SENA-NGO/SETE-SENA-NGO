@@ -396,6 +396,7 @@ useScrollReveal()
     background 0.2s ease,
     border-color 0.2s ease,
     opacity 0.2s ease;
+    
 }
 
 .btn--primary {

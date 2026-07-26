@@ -521,6 +521,11 @@ function resetToDefaults() {
   transition: padding-left 0.25s ease;
 }
 
+.manager-hero {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--admin-primary) 6%, var(--admin-surface)), var(--admin-surface));
+  border-color: var(--admin-border);
+}
+
 .admin-layout {
   min-height: 100vh;
 }
@@ -692,6 +697,7 @@ function resetToDefaults() {
 
 .editor-panel {
   border: 1px solid var(--admin-border);
+  border-left: 3px solid var(--admin-primary);
   border-radius: 8px;
   background: var(--admin-surface);
   overflow: hidden;
@@ -703,7 +709,7 @@ function resetToDefaults() {
   justify-content: space-between;
   gap: 1rem;
   border-bottom: 1px solid var(--admin-border);
-  background: color-mix(in srgb, var(--admin-surface-soft) 44%, var(--admin-surface));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--admin-primary) 5%, var(--admin-surface)), var(--admin-surface));
   padding: 0.85rem 1rem;
 }
 
@@ -847,22 +853,6 @@ function resetToDefaults() {
   font-size: 0.78rem;
 }
 
-:global(.admin-dark) .vision-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-}
-
 @media (min-width: 900px) {
   .vision-admin.sidebar-open {
     padding-left: 260px;
@@ -892,43 +882,6 @@ function resetToDefaults() {
     width: 100%;
   }
 }
-</style>
 
-<!-- Non-scoped dark mode overrides for About / Vision & Mission -->
-<style>
-.admin-dark .vision-admin {
-  background: #06100F !important;
-}
-.admin-dark .vision-admin .admin-layout {
-  background: #06100F !important;
-}
-.admin-dark .vision-admin .manager-main {
-  background: #06100F !important;
-}
-.admin-dark .manager-hero,
-.admin-dark .vision-form-card {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-}
-.admin-dark .btn,
-.admin-dark .btn-primary,
-.admin-dark .btn-secondary,
-.admin-dark .btn-ghost {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
-}
-.admin-dark .btn-primary {
-  background: #38c982 !important;
-  border-color: #74e0ae !important;
-  color: #06100F !important;
-}
-.admin-dark input,
-.admin-dark textarea,
-.admin-dark select {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
-}
 </style>
 

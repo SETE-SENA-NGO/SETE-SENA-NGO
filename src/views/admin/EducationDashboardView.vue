@@ -3,18 +3,21 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   BookOpen,
-  ChevronDown,
   ExternalLink,
   FolderOpen,
   Image as ImageIcon,
   Layers,
   Plus,
   Save,
-  Trash2,
+  Users,
 } from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import ImagePickerField from '@/components/admin/ImagePickerField.vue'
+import CollapsiblePanel from '@/components/admin/CollapsiblePanel.vue'
+import ImageSlotEditor from '@/components/admin/ImageSlotEditor.vue'
+import SectionItemEditor from '@/components/admin/SectionItemEditor.vue'
+import StatItemEditor from '@/components/admin/StatItemEditor.vue'
+import TeamCardEditor from '@/components/admin/TeamCardEditor.vue'
 import { supabase } from '@/lib/supabase'
 import { imageUrls } from '@/lib/imageUrls'
 import { useUiStore } from '@/stores/ui.store'
@@ -147,10 +150,6 @@ const expandedPanels = ref<Record<string, boolean>>({
   'content': true,
   'team': true,
 })
-
-function togglePanel(id: string) {
-  expandedPanels.value[id] = !expandedPanels.value[id]
-}
 
 /* ─── Derived view data ─────────────────────────── */
 const imageSlots = computed(() =>
@@ -496,10 +495,6 @@ function onGalleryImageSaved(msg: string) {
   void savePageContent()
 }
 
-function parsedItemsForSection(section: EditableSection): string[] {
-  return section.items ? section.items.split('\n').map(l => l.trim()).filter(Boolean) : []
-}
-
 function formatDate(value: string) {
   if (!value) return 'Not saved yet'
   const date = new Date(value)
@@ -567,248 +562,138 @@ onMounted(async () => {
 
         <div v-else class="content-grid">
           <!-- ═══ Quick links ═══ -->
-          <section class="editor-panel quick-links-panel" aria-labelledby="quick-links-heading">
-            <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
-              <div>
-                <p class="panel-kicker">Shortcuts</p>
-                <h2 id="quick-links-heading">Related tools</h2>
-              </div>
-              <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }" aria-hidden="true" />
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['quick-links']" class="panel-body quick-links-body">
-                <RouterLink class="quick-link" to="/admin/media">
-                  <FolderOpen :size="18" aria-hidden="true" />
-                  <div>
-                    <strong>Media Library</strong>
-                    <span>Upload images for this page</span>
-                  </div>
-                </RouterLink>
-                <RouterLink class="quick-link" to="/admin/modules/programs">
-                  <Layers :size="18" aria-hidden="true" />
-                  <div>
-                    <strong>Program Records</strong>
-                    <span>Manage education data entries</span>
-                  </div>
-                </RouterLink>
-              </div>
-            </Transition>
-          </section>
+          <CollapsiblePanel
+            v-model:expanded="expandedPanels['quick-links']"
+            title="Related tools"
+            kicker="Shortcuts"
+            heading-id="quick-links-heading"
+          >
+            <template #icon>
+              <FolderOpen :size="18" aria-hidden="true" />
+            </template>
+
+            <div class="quick-links-body">
+              <RouterLink class="quick-link" to="/admin/media">
+                <FolderOpen :size="18" aria-hidden="true" />
+                <div>
+                  <strong>Media Library</strong>
+                  <span>Upload images for this page</span>
+                </div>
+              </RouterLink>
+              <RouterLink class="quick-link" to="/admin/modules/programs">
+                <Layers :size="18" aria-hidden="true" />
+                <div>
+                  <strong>Program Records</strong>
+                  <span>Manage education data entries</span>
+                </div>
+              </RouterLink>
+            </div>
+          </CollapsiblePanel>
 
           <!-- ═══ Page images ═══ -->
-          <section class="editor-panel" aria-labelledby="images-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['page-images']" @click="togglePanel('page-images')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <ImageIcon :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Public page</p>
-                  <h2 id="images-heading">Page images</h2>
-                </div>
-              </div>
-              <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['page-images'] }" aria-hidden="true" />
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['page-images']" class="panel-body">
-                <p class="panel-desc">Upload a photo from your computer or paste a URL for each section below. Clear a slot to fall back to the default image.</p>
-                <p v-if="missingImageWarning()" class="field-hint field-hint-warning">{{ missingImageWarning() }}</p>
+          <CollapsiblePanel
+            v-model:expanded="expandedPanels['page-images']"
+            title="Page images"
+            kicker="Public page"
+            heading-id="images-heading"
+          >
+            <template #icon>
+              <ImageIcon :size="18" aria-hidden="true" />
+            </template>
 
-                <div class="image-slot-grid">
-                  <article v-for="(slot, index) in imageSlots" :key="slot.index" class="image-slot" :class="{ filled: !!slot.url }">
-                    <header class="image-slot-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <div class="image-slot-heading">
-                        <h3>{{ slot.badge }}</h3>
-                        <p>{{ slot.hint }}</p>
-                      </div>
-                      <button v-if="slot.url" type="button" class="icon-btn danger" aria-label="Remove image" @click="clearGalleryImage(slot.index)">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </header>
-                    <div class="image-slot-body">
-                      <figure class="image-preview slot-preview">
-                        <img v-if="slot.url" :src="slot.url" :alt="slot.label" />
-                        <div v-else class="slot-empty">
-                          <ImageIcon :size="22" aria-hidden="true" />
-                          <span>No image set</span>
-                        </div>
-                      </figure>
-                      <ImagePickerField
-                        v-model="page.galleryImages[slot.index]!.url"
-                        label="Upload or paste URL"
-                        hide-preview
-                        @success="onGalleryImageSaved"
-                        @error="(msg) => ui.addToast(msg, 'error')"
-                      />
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+            <p class="panel-desc">Upload a photo from your computer or paste a URL for each section below. Clear a slot to fall back to the default image.</p>
+            <p v-if="missingImageWarning()" class="field-hint field-hint-warning">{{ missingImageWarning() }}</p>
+
+            <div class="image-slot-grid">
+              <ImageSlotEditor
+                v-for="(slot, index) in imageSlots"
+                :key="slot.index"
+                v-model="page.galleryImages[slot.index]!.url"
+                :index="index"
+                :badge="slot.badge"
+                :hint="slot.hint"
+                :alt="slot.label"
+                @clear="clearGalleryImage(slot.index)"
+                @saved="onGalleryImageSaved"
+                @error="(msg) => ui.addToast(msg, 'error')"
+              />
+            </div>
+          </CollapsiblePanel>
 
           <!-- ═══ Stats band ═══ -->
-          <section class="editor-panel" aria-labelledby="stats-heading">
-            <div class="panel-header">
-              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('stats')">
-                <div class="panel-icon-wrap">
-                  <Layers :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Stats band</p>
-                  <h2 id="stats-heading">Impact statistics</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <button type="button" class="btn btn-secondary btn-sm" @click="statsBand.push({ number: '', label: '', description: '' })">
-                  <Plus :size="15" aria-hidden="true" />
-                  <span>Add stat</span>
-                </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('stats')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }" />
-                </button>
-              </div>
-            </div>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['stats']" class="panel-body">
-                <p class="panel-desc">Edit the statistics shown on the public Education page.</p>
+          <CollapsiblePanel
+            v-model:expanded="expandedPanels['stats']"
+            title="Impact statistics"
+            kicker="Stats band"
+            heading-id="stats-heading"
+          >
+            <template #icon>
+              <Layers :size="18" aria-hidden="true" />
+            </template>
+            <template #actions>
+              <button type="button" class="btn btn-secondary btn-sm" @click="statsBand.push({ number: '', label: '', description: '' })">
+                <Plus :size="15" aria-hidden="true" />
+                <span>Add stat</span>
+              </button>
+            </template>
 
-                <div class="stack-list">
-                  <article v-for="(stat, index) in statsBand" :key="index" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>Stat {{ index + 1 }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove stat" @click="confirmDeleteStat(index)">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </header>
-                    <div class="sub-editor-body form-grid">
-                      <label class="field">
-                        <span>Number</span>
-                        <input v-model="stat.number" type="text" placeholder="e.g. 120+" />
-                      </label>
-                      <label class="field">
-                        <span>Label</span>
-                        <input v-model="stat.label" type="text" placeholder="e.g. PRE-SCHOOL CHILDREN" />
-                      </label>
-                      <label class="field wide">
-                        <span>Description</span>
-                        <input v-model="stat.description" type="text" placeholder="Brief description of this statistic" />
-                      </label>
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+            <p class="panel-desc">Edit the statistics shown on the public Education page.</p>
+            <div class="stack-list">
+              <StatItemEditor
+                v-for="(stat, index) in statsBand"
+                :key="index"
+                v-model="statsBand[index]!"
+                :index="index"
+                @remove="confirmDeleteStat(index)"
+              />
+            </div>
+          </CollapsiblePanel>
 
           <!-- ═══ Content sections ═══ -->
-          <section class="editor-panel" aria-labelledby="sections-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['content']" @click="togglePanel('content')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <BookOpen :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Content</p>
-                  <h2 id="sections-heading">What we do, approach &amp; why it matters</h2>
-                </div>
-              </div>
-              <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['content'] }" aria-hidden="true" />
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['content']" class="panel-body">
-                <p class="panel-desc">Edit the main content blocks shown on the public Education page.</p>
+          <CollapsiblePanel
+            v-model:expanded="expandedPanels['content']"
+            title="What we do, approach &amp; why it matters"
+            kicker="Content"
+            heading-id="sections-heading"
+          >
+            <template #icon>
+              <BookOpen :size="18" aria-hidden="true" />
+            </template>
 
-                <div class="stack-list">
-                  <article v-for="section in contentSections" :key="section.id" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="section-badge">{{ section.label }}</span>
-                      <h3>{{ section.heading || 'No heading yet' }}</h3>
-                    </header>
-                    <div class="sub-editor-body">
-                      <label class="field wide">
-                        <span>Heading</span>
-                        <input v-model="section.heading" type="text" :placeholder="'Heading for ' + section.label" />
-                      </label>
-                      <label class="field wide">
-                        <span>Body / description</span>
-                        <textarea v-model="section.body" rows="3" :placeholder="'Description for ' + section.label"></textarea>
-                      </label>
-                      <label class="field wide">
-                        <span>Bullet items <em>(one per line)</em></span>
-                        <textarea v-model="section.items" rows="5" placeholder="Community pre-schools&#10;Mobile libraries&#10;Scholarships for poor children"></textarea>
-                      </label>
-                      <div v-if="parsedItemsForSection(section).length" class="item-chips">
-                        <span v-for="item in parsedItemsForSection(section)" :key="item" class="item-chip">{{ item }}</span>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+            <p class="panel-desc">Edit the main content blocks shown on the public Education page.</p>
+            <div class="stack-list">
+              <SectionItemEditor v-for="section in contentSections" :key="section.id" :section="section" />
+            </div>
+          </CollapsiblePanel>
 
           <!-- ═══ Team cards ═══ -->
-          <section class="editor-panel" aria-labelledby="team-heading">
-            <div class="panel-header">
-              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('team')">
-                <div class="panel-icon-wrap">
-                  <FolderOpen :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Organizational structure</p>
-                  <h2 id="team-heading">Team cards</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <button type="button" class="btn btn-secondary btn-sm" @click="teamCards.push({ role: '', icon: 'chart', desc: '' })">
-                  <Plus :size="15" aria-hidden="true" />
-                  <span>Add card</span>
-                </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('team')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['team'] }" />
-                </button>
-              </div>
-            </div>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['team']" class="panel-body">
-                <p class="panel-desc">Edit the team shown in the "Who delivers education on the ground" section.</p>
+          <CollapsiblePanel
+            v-model:expanded="expandedPanels['team']"
+            title="Team cards"
+            kicker="Organizational structure"
+            heading-id="team-heading"
+          >
+            <template #icon>
+              <Users :size="18" aria-hidden="true" />
+            </template>
+            <template #actions>
+              <button type="button" class="btn btn-secondary btn-sm" @click="teamCards.push({ role: '', icon: 'chart', desc: '' })">
+                <Plus :size="15" aria-hidden="true" />
+                <span>Add card</span>
+              </button>
+            </template>
 
-                <div class="stack-list">
-                  <article v-for="(card, index) in teamCards" :key="index" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>{{ card.role || 'Untitled role' }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove card" @click="confirmDeleteTeamCard(index)">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </header>
-                    <div class="sub-editor-body form-grid">
-                      <label class="field">
-                        <span>Role / title</span>
-                        <input v-model="card.role" type="text" placeholder="e.g. Program Director" />
-                      </label>
-                      <label class="field">
-                        <span>Icon</span>
-                        <select v-model="card.icon">
-                          <option value="compass">Compass</option>
-                          <option value="map">Map / Location</option>
-                          <option value="heart">Heart</option>
-                          <option value="chart">Chart / Analytics</option>
-                        </select>
-                      </label>
-                      <label class="field wide">
-                        <span>Description</span>
-                        <textarea v-model="card.desc" rows="2" placeholder="Describe this team member's role..."></textarea>
-                      </label>
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+            <p class="panel-desc">Edit the team shown in the "Who delivers education on the ground" section.</p>
+            <div class="stack-list">
+              <TeamCardEditor
+                v-for="(card, index) in teamCards"
+                :key="index"
+                v-model="teamCards[index]!"
+                :index="index"
+                @remove="confirmDeleteTeamCard(index)"
+              />
+            </div>
+          </CollapsiblePanel>
         </div>
       </main>
     </div>
@@ -917,9 +802,7 @@ onMounted(async () => {
 }
 
 .manager-hero h1,
-.manager-hero p,
-.editor-panel h2,
-.editor-panel p {
+.manager-hero p {
   margin: 0;
 }
 
@@ -959,9 +842,7 @@ onMounted(async () => {
   color: var(--admin-theme-danger);
 }
 
-/* ─── Eyebrow & kicker ──────────────────────────── */
-.eyebrow,
-.panel-kicker {
+.eyebrow {
   color: var(--admin-theme-primary-deep);
   font-size: 0.7rem;
   font-weight: 800;
@@ -970,8 +851,7 @@ onMounted(async () => {
 }
 
 /* ─── Buttons ───────────────────────────────────── */
-.btn,
-.icon-btn {
+.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -995,18 +875,15 @@ onMounted(async () => {
     transform 0.18s ease;
 }
 
-.btn:hover,
-.icon-btn:hover {
+.btn:hover {
   transform: translateY(-1px);
 }
 
-.btn:active,
-.icon-btn:active {
+.btn:active {
   transform: translateY(0);
 }
 
-.btn:disabled,
-.icon-btn:disabled {
+.btn:disabled {
   cursor: not-allowed;
   opacity: 0.55;
   transform: none !important;
@@ -1023,42 +900,22 @@ onMounted(async () => {
   box-shadow: 0 8px 24px color-mix(in srgb, var(--admin-theme-primary) 32%, transparent);
 }
 
-.btn-secondary,
-.icon-btn {
+.btn-secondary {
   border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
   background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
   color: var(--admin-theme-contrast);
+}
+
+.btn-secondary:hover {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
 }
 
 .btn-sm {
   min-height: 34px;
   padding: 0.4rem 0.65rem;
   font-size: 0.78rem;
-}
-
-.icon-btn {
-  width: 34px;
-  min-height: 34px;
-  padding: 0;
-}
-
-.icon-btn.danger {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 60%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
-}
-
-.btn-secondary:hover,
-.icon-btn:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.icon-btn.danger:hover {
-  border-color: var(--admin-theme-danger);
-  background: var(--admin-theme-danger);
-  color: #ffffff;
 }
 
 /* ─── State / loading ───────────────────────────── */
@@ -1079,98 +936,6 @@ onMounted(async () => {
   margin-top: 1rem;
 }
 
-/* ─── Editor panels ─────────────────────────────── */
-.editor-panel {
-  overflow: hidden;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
-  transition: box-shadow 0.2s ease;
-}
-
-.editor-panel:hover {
-  box-shadow:
-    var(--admin-theme-shadow),
-    0 2px 8px color-mix(in srgb, var(--admin-theme-primary) 6%, transparent);
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface)) 0%,
-    color-mix(in srgb, var(--admin-theme-primary) 4%, var(--admin-theme-surface)) 100%
-  );
-  padding: 0.8rem 1rem;
-}
-
-.panel-header-clickable {
-  width: 100%;
-  border: none;
-  border-bottom: 1px solid var(--admin-theme-border);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.panel-header-clickable:hover {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--admin-theme-surface-soft) 70%, var(--admin-theme-surface)) 0%,
-    color-mix(in srgb, var(--admin-theme-primary) 7%, var(--admin-theme-surface)) 100%
-  );
-}
-
-.panel-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.panel-header-left-clickable {
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.panel-header-left-clickable:hover {
-  opacity: 0.78;
-}
-
-.panel-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.panel-icon-wrap {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.panel-header h2 {
-  color: var(--admin-theme-contrast);
-  font-size: 1rem;
-  font-weight: 850;
-}
-
-.panel-body {
-  padding: 1rem;
-}
-
 .panel-desc {
   color: var(--admin-theme-muted);
   font-size: 0.82rem;
@@ -1178,55 +943,8 @@ onMounted(async () => {
   margin-bottom: 0.85rem;
 }
 
-/* ─── Chevron ──────────────────────────────────── */
-.chevron {
-  flex-shrink: 0;
-  color: var(--admin-theme-muted);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.chevron-up {
-  transform: rotate(-180deg);
-}
-
-.icon-btn.icon-btn-ghost {
-  border-color: transparent;
-  background: transparent;
-  color: var(--admin-theme-muted);
-  width: 32px;
-  min-height: 32px;
-}
-
-.icon-btn.icon-btn-ghost:hover {
-  color: var(--admin-theme-primary-deep);
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, transparent);
-}
-
-/* ─── Collapse transition ──────────────────────── */
-.collapse-enter-active {
-  transition: opacity 0.2s ease, max-height 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow: hidden;
-}
-
-.collapse-leave-active {
-  transition: opacity 0.15s ease, max-height 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow: hidden;
-}
-
-.collapse-enter-from,
-.collapse-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-
-.collapse-enter-to,
-.collapse-leave-from {
-  max-height: 6000px;
-}
-
 /* ─── Quick links ───────────────────────────────── */
 .quick-links-body {
-  padding: 1rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.65rem;
@@ -1278,248 +996,16 @@ onMounted(async () => {
   margin: -0.35rem 0 0.85rem;
 }
 
-/* ─── Input fields ──────────────────────────────── */
-.field,
-.upload-box {
-  display: grid;
-  gap: 0.35rem;
-  color: var(--admin-theme-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.field span,
-.upload-box span {
-  color: var(--admin-theme-contrast-soft);
-}
-
-.field em {
-  font-style: normal;
-  color: var(--admin-theme-muted);
-  font-weight: 600;
-}
-
-.field input,
-.field textarea,
-.field select {
-  width: 100%;
-  border: 1px solid var(--admin-theme-border-strong);
-  border-radius: 7px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.65rem 0.75rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.field textarea {
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.field input:focus,
-.field textarea:focus,
-.field select:focus {
-  border-color: var(--admin-theme-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
-  outline: none;
-}
-
-/* ─── Layout grids ──────────────────────────────── */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.wide {
-  grid-column: 1 / -1;
-}
-
-/* ─── Stacked cards (stats, sections, team) ─────── */
+/* ─── Stacked cards / image grid layout wrappers ── */
 .stack-list {
   display: grid;
   gap: 0.75rem;
 }
 
-.sub-editor {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 9px;
-  background: var(--admin-theme-surface);
-  overflow: hidden;
-  transition: border-color 0.18s ease;
-}
-
-.sub-editor:hover {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
-}
-
-.sub-editor-header {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--admin-theme-surface-soft) 40%, var(--admin-theme-surface)) 0%,
-    color-mix(in srgb, var(--admin-theme-primary) 3%, var(--admin-theme-surface)) 100%
-  );
-  padding: 0.75rem 0.85rem;
-}
-
-.sub-editor-header h3 {
-  flex: 1;
-  margin: 0;
-  color: var(--admin-theme-contrast);
-  font-size: 0.94rem;
-  font-weight: 900;
-}
-
-.item-number {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
-  border-radius: 6px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.74rem;
-  font-weight: 900;
-}
-
-.section-badge {
-  flex-shrink: 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  padding: 0.2rem 0.6rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.sub-editor-body {
-  padding: 0.9rem;
-  display: grid;
-  gap: 0.75rem;
-}
-
-/* ─── Bullet chips ──────────────────────────────── */
-.item-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  padding-top: 0.15rem;
-}
-
-.item-chip {
-  display: inline-block;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 18%, var(--admin-theme-border));
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.73rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-/* ─── Image slots ───────────────────────────────── */
 .image-slot-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 0.85rem;
-}
-
-.image-slot {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 9px;
-  background: var(--admin-theme-surface);
-  overflow: hidden;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.image-slot.filled {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
-}
-
-.image-slot:hover {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 35%, var(--admin-theme-border));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--admin-theme-primary) 8%, transparent);
-}
-
-.image-slot-header {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
-  padding: 0.7rem 0.8rem;
-}
-
-.image-slot-heading {
-  flex: 1;
-  min-width: 0;
-}
-
-.image-slot-heading h3,
-.image-slot-heading p {
-  margin: 0;
-}
-
-.image-slot-heading h3 {
-  color: var(--admin-theme-contrast);
-  font-size: 0.86rem;
-  font-weight: 900;
-}
-
-.image-slot-heading p {
-  color: var(--admin-theme-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.image-slot-body {
-  padding: 0.85rem;
-  display: grid;
-  gap: 0.65rem;
-}
-
-.image-preview {
-  margin: 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 26%, var(--admin-theme-border));
-  border-radius: 7px;
-  background: var(--admin-theme-surface-soft);
-}
-
-.slot-preview {
-  aspect-ratio: 4 / 3;
-}
-
-.slot-preview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.slot-empty {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  color: var(--admin-theme-muted);
-  opacity: 0.7;
-  font-size: 0.76rem;
-  font-weight: 700;
 }
 
 /* ─── Dark mode ─────────────────────────────────── */
@@ -1551,23 +1037,6 @@ onMounted(async () => {
   );
 }
 
-:global(.admin-dark) .panel-header,
-:global(.admin-dark) .sub-editor-header {
-  background: linear-gradient(
-    135deg,
-    var(--admin-theme-surface) 0%,
-    color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 100%
-  );
-}
-
-:global(.admin-dark) .panel-header-clickable:hover {
-  background: linear-gradient(
-    135deg,
-    var(--admin-theme-surface) 0%,
-    color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) 100%
-  );
-}
-
 /* ─── Responsive ────────────────────────────────── */
 @media (min-width: 900px) {
   .education-admin.sidebar-open {
@@ -1581,10 +1050,7 @@ onMounted(async () => {
     padding-top: calc(60px + 1rem);
   }
 
-  .manager-hero,
-  .panel-header,
-  .sub-editor-header,
-  .image-slot-header {
+  .manager-hero {
     align-items: stretch;
     flex-direction: column;
   }
@@ -1592,10 +1058,6 @@ onMounted(async () => {
   .hero-actions,
   .hero-actions .btn {
     width: 100%;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
   }
 
   .hero-content-wrap {

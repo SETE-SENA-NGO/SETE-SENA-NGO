@@ -47,28 +47,6 @@ const fallbackArticles: NewsArticle[] = [
     trending: true,
   },
   {
-    id: 'sample-2',
-    slug: 'forest-guardians-celebrate-500-hectares',
-    title: 'Forest Guardians celebrate 500 hectares of protected land',
-    summary:
-      'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
-    content: `<p>After years of dedicated conservation efforts, the community forestry committees in Prey Veng have officially protected 500 hectares of forest. The area is now home to diverse wildlife and serves as a vital carbon sink.</p><p>The achievement was celebrated with a ceremony attended by provincial authorities and local villagers, who have worked tirelessly to replant trees and prevent illegal logging.</p>`,
-    image: '/src/assets/maps/wash.png',
-    date: '2025-02-28',
-    category: 'Environment',
-    author: 'Santi Sena Environment Team',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
-    authorBio:
-      'The Environment Team works with communities to protect natural resources and promote sustainable land use.',
-    readTime: '4 min read',
-    views: 856,
-    likes: 64,
-    tags: ['Environment', 'Conservation', 'Biodiversity'],
-    featured: false,
-    trending: false,
-  },
-  {
     id: 'sample-3',
     slug: 'youth-leaders-trained-in-child-protection-advocacy',
     title: 'Youth leaders trained in child protection advocacy',
@@ -111,28 +89,6 @@ const fallbackArticles: NewsArticle[] = [
     tags: ['Livelihood', 'Savings', 'Financial Inclusion'],
     featured: false,
     trending: true,
-  },
-  {
-    id: 'sample-5',
-    slug: 'new-partnership-to-expand-clean-water-access',
-    title: 'New partnership to expand clean water access',
-    summary:
-      'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
-    content: `<p>Santi Sena has signed a memorandum of understanding with WaterAid to bring safe drinking water to 15 additional villages in Kratie province. The initiative includes the construction of boreholes, water purification systems, and community training on hygiene practices.</p><p>This partnership will directly benefit over 2,000 families and is expected to reduce waterborne diseases significantly.</p>`,
-    image: '/src/assets/maps/water.png',
-    date: '2025-01-05',
-    category: 'WASH',
-    author: 'Santi Sena WASH Team',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
-    authorBio:
-      'The WASH Team focuses on improving water, sanitation, and hygiene practices in underserved communities.',
-    readTime: '5 min read',
-    views: 678,
-    likes: 51,
-    tags: ['WASH', 'Water', 'Health'],
-    featured: false,
-    trending: false,
   },
 ]
 
@@ -399,13 +355,6 @@ const copyLink = () => {
                 </svg>
                 {{ article.readTime }}
               </span>
-              <span class="meta-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                {{ article.views }} views
-              </span>
             </div>
 
             <div class="header-accent"></div>
@@ -543,12 +492,6 @@ const copyLink = () => {
             <div class="sidebar-card stats-card">
               <h4>Article stats</h4>
               <div class="stat-row">
-                <span>{{ article.views }} views</span>
-              </div>
-              <div class="stat-row">
-                <span>{{ article.likes }} likes</span>
-              </div>
-              <div class="stat-row">
                 <span>{{ article.readTime }}</span>
               </div>
               <div class="stat-row">
@@ -592,7 +535,7 @@ const copyLink = () => {
 
             <!-- Newsletter mini -->
             <div class="sidebar-card newsletter-mini">
-              <h4>📬 Never miss a story</h4>
+              <h4> Never miss a story</h4>
               <p>Get the latest updates delivered to your inbox.</p>
               <div class="newsletter-mini-form">
                 <input
@@ -733,7 +676,7 @@ const copyLink = () => {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--primary-color);
-  background: rgba(45, 122, 90, 0.08);
+  /* background: rgba(45, 122, 90, 0.08); */
   padding: 0.3rem 1.2rem;
   border-radius: 999px;
   margin-bottom: 0.75rem;
@@ -1153,6 +1096,10 @@ const copyLink = () => {
   font-size: 0.8rem;
   font-family: inherit;
   background: var(--color-cream);
+}
+
+.mini-input::placeholder {
+  color:rgb(146, 143, 143);
 }
 
 .mini-input:focus {

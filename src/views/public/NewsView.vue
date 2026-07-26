@@ -34,24 +34,7 @@ const fallbackArticles: NewsArticle[] = [
     trending: true,
     tags: [],
   },
-  {
-    id: 'sample-2',
-    slug: 'forest-guardians-celebrate-500-hectares',
-    title: 'Forest Guardians celebrate 500 hectares of protected land',
-    summary: 'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
-    content: '',
-    image: 'src/assets/maps/wash.png',
-    date: '2025-02-28',
-    category: 'Environment',
-    author: 'Santi Sena Environment Team',
-    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
-    featured: false,
-    readTime: '4 min read',
-    views: 856,
-    likes: 64,
-    trending: false,
-    tags: [],
-  },
+
   {
     id: 'sample-3',
     slug: 'youth-leaders-trained-in-child-protection-advocacy',
@@ -86,24 +69,6 @@ const fallbackArticles: NewsArticle[] = [
     views: 2134,
     likes: 156,
     trending: true,
-    tags: [],
-  },
-  {
-    id: 'sample-5',
-    slug: 'new-partnership-to-expand-clean-water-access',
-    title: 'New partnership to expand clean water access',
-    summary: 'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
-    content: '',
-    image: 'src/assets/maps/water.png',
-    date: '2025-01-05',
-    category: 'WASH',
-    author: 'Santi Sena WASH Team',
-    authorAvatar: 'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
-    featured: false,
-    readTime: '5 min read',
-    views: 678,
-    likes: 51,
-    trending: false,
     tags: [],
   },
 ]
@@ -235,8 +200,6 @@ async function saveNewCard() {
 }
 
 // ─── State ──────────────────────────────────────────────────────────
-const savedArticles = ref<string[]>([])
-const likedArticles = ref<string[]>([])
 const newsletterEmail = ref('')
 
 // Featured + regular articles
@@ -334,27 +297,6 @@ onBeforeUnmount(() => {
 })
 
 // ─── Actions ───────────────────────────────────────────────────────
-const toggleSave = (id: string) => {
-  const index = savedArticles.value.indexOf(id)
-  if (index > -1) {
-    savedArticles.value.splice(index, 1)
-  } else {
-    savedArticles.value.push(id)
-  }
-}
-
-const toggleLike = (id: string) => {
-  const index = likedArticles.value.indexOf(id)
-  if (index > -1) {
-    likedArticles.value.splice(index, 1)
-  } else {
-    likedArticles.value.push(id)
-  }
-}
-
-const isSaved = (id: string) => savedArticles.value.includes(id)
-const isLiked = (id: string) => likedArticles.value.includes(id)
-
 const toastMessage = ref('')
 const showToast = ref(false)
 let toastTimer: number | null = null
@@ -366,27 +308,6 @@ const showToastNow = (message: string) => {
   toastTimer = window.setTimeout(() => {
     showToast.value = false
   }, 2200)
-}
-
-const shareArticle = (title: string) => {
-  if (navigator.share) {
-    navigator
-      .share({
-        title,
-        text: `Check out this article: ${title}`,
-        url: window.location.href,
-      })
-      .catch(() => {})
-  } else {
-    navigator.clipboard
-      ?.writeText(window.location.href)
-      .then(() => {
-        showToastNow('Link copied to clipboard!')
-      })
-      .catch(() => {
-        showToastNow('Could not copy link. Please copy manually.')
-      })
-  }
 }
 
 const subscribeNewsletter = () => {
@@ -440,7 +361,7 @@ const scrollToTop = () => {
         </div>
         <h1>Stories that <span class="highlight">matter</span></h1>
         <p class="hero-subtitle">
-          Discover the impact of our work with communities across Cambodia.
+          Discover the impact of our work  across Cambodia.
         </p>
         <div class="hero-stats">
           <div class="hero-stat">
@@ -568,21 +489,6 @@ const scrollToTop = () => {
                 <span class="news-author">{{ featuredArticle.author }}</span>
               </div>
               <div class="featured-metrics">
-                <span class="metric">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                  {{ featuredArticle.views }}
-                </span>
-                <span class="metric">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                    />
-                  </svg>
-                  {{ featuredArticle.likes }}
-                </span>
                 <span class="metric read-time">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10" />
@@ -600,40 +506,6 @@ const scrollToTop = () => {
                   <path d="M12 5l7 7-7 7" />
                 </svg>
               </button>
-              <div class="action-group">
-                <button
-                  class="action-btn icon-btn"
-                  :class="{ active: isSaved(featuredArticle.id) }"
-                  @click.prevent="toggleSave(featuredArticle.id)"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                  </svg>
-                </button>
-                <button
-                  class="action-btn icon-btn"
-                  :class="{ active: isLiked(featuredArticle.id) }"
-                  @click.prevent="toggleLike(featuredArticle.id)"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  class="action-btn icon-btn"
-                  @click.prevent="shareArticle(featuredArticle.title)"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="18" cy="5" r="3" />
-                    <circle cx="6" cy="12" r="3" />
-                    <circle cx="18" cy="19" r="3" />
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                  </svg>
-                </button>
-              </div>
             </div>
           </div>
         </RouterLink>
@@ -747,23 +619,6 @@ const scrollToTop = () => {
                   </div>
                   <span class="news-author">{{ item.author }}</span>
                 </div>
-                <div class="news-metrics">
-                  <span class="metric">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    {{ item.views }}
-                  </span>
-                  <span class="metric">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                      />
-                    </svg>
-                    {{ item.likes }}
-                  </span>
-                </div>
               </div>
             </div>
           </RouterLink>
@@ -862,13 +717,15 @@ const scrollToTop = () => {
 .hero-static-inner {
   max-width: 820px;
   margin: 0 auto;
-  padding: 0 1.5rem 0 clamp(2rem, 10vw, 8rem);
+  padding: 0 1.5rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
 }
 
 .hero-static .hero-badge {
+  
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -877,10 +734,10 @@ const scrollToTop = () => {
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--primary-color);
-  background: rgba(45, 122, 90, 0.08);
+  /* background: rgba(45, 122, 90, 0.08); */
   padding: 0.4rem 1.4rem;
   border-radius: 999px;
-  border: 1px solid rgba(45, 122, 90, 0.1);
+  border: 0px solid rgba(45, 122, 90, 0.1);
   margin-bottom: 1rem;
 }
 
@@ -903,22 +760,21 @@ const scrollToTop = () => {
   color: var(--primary-dark);
   letter-spacing: -0.03em;
   line-height: 1.05;
-  margin: 0 0 0.5rem;
 }
 
 .hero-static h1 .highlight {
-  background: linear-gradient(135deg, var(--gold-light), var(--gold));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #2d7a5a;
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  background-clip: unset;
 }
 
 .hero-static .hero-subtitle {
   font-size: 1.1rem;
   line-height: 1.7;
   color: var(--color-ink-soft);
-  max-width: 680px;
-  margin: 0 0 2rem;
+  max-width: 1000px;
 }
 
 .hero-static .hero-stats {
@@ -1518,13 +1374,14 @@ const scrollToTop = () => {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  
 }
 
 .newsletter-input {
   padding: 0.5rem 1.2rem;
   border: none;
   border-radius: 999px;
-  background: rgb(224, 227, 226);
+  background: white;
   color: #050505;
   font-size: 0.85rem;
   min-width: 200px;
@@ -1533,7 +1390,8 @@ const scrollToTop = () => {
 }
 
 .newsletter-input::placeholder {
-  color: rgba(20, 16, 16, 0.975);
+  color: rgb(142, 138, 138);
+  
 }
 
 .newsletter-input:focus {
@@ -1712,13 +1570,18 @@ const scrollToTop = () => {
     padding: 3rem 1.5rem 2rem;
   }
   .hero-static-inner {
-    padding-left: clamp(1rem, 4vw, 2rem);
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
   .hero-static h1 {
     font-size: 2rem;
   }
   .hero-static .hero-stats {
     gap: 1.5rem;
+    justify-content: center;
+  }
+  .hero-static .hero-stat {
+    align-items: center;
   }
   .hero-static .stat-number {
     font-size: 1.2rem;
@@ -1730,9 +1593,7 @@ const scrollToTop = () => {
   .read-more-btn {
     justify-content: center;
   }
-  .action-group {
-    justify-content: center;
-  }
+  
   .newsletter-card {
     flex-direction: column;
     text-align: center;
@@ -1789,7 +1650,8 @@ const scrollToTop = () => {
     gap: 0.5rem;
   }
   .hero-static-inner {
-    padding-left: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   .hero-static h1 {
     font-size: 1.8rem;
@@ -1806,10 +1668,11 @@ const scrollToTop = () => {
   .hero-static .hero-stats {
     gap: 0.75rem;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
   }
   .hero-static .hero-stat {
     width: 100%;
+    align-items: center;
   }
   .hero-static h1 {
     font-size: 1.5rem;
@@ -1817,6 +1680,9 @@ const scrollToTop = () => {
   .hero-static .hero-badge {
     font-size: 0.5rem;
     padding: 0.3rem 1rem;
+  }
+  .hero-static .hero-stat {
+    align-items: center;
   }
 }
 

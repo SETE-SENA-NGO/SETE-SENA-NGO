@@ -502,8 +502,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   color: var(--about-saffron);
   padding: 0.4rem 1rem;
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--about-saffron) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--about-saffron) 18%, transparent);
+  /* background: color-mix(in srgb, var(--about-saffron) 12%, transparent); */
+  border: 0px solid color-mix(in srgb, var(--about-saffron) 18%, transparent);
 }
 
 /* ─── Scroll-Reveal — only opacity (no transform conflict with hover) ─── */
