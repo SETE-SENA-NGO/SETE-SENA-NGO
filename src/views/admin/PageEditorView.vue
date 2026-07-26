@@ -1785,7 +1785,7 @@ function formatDate(value: string) {
                         <table class="impact-table">
                           <thead>
                             <tr>
-                              <th class="col-drag"></th>
+                              <th v-if="section.id !== 'timeline-events'" class="col-drag"></th>
                               <th
                                 v-for="(header, hIdx) in getColumnHeaders(section.id, getSectionColCount(section))"
                                 :key="hIdx"
@@ -1797,7 +1797,7 @@ function formatDate(value: string) {
                           </thead>
                           <tbody>
                             <tr v-for="(row, rIdx) in parseItemsToRows(section.items)" :key="rIdx">
-                              <td class="col-drag">
+                              <td v-if="section.id !== 'timeline-events'" class="col-drag">
                                 <div class="impact-row-arrows">
                                   <button
                                     type="button"
