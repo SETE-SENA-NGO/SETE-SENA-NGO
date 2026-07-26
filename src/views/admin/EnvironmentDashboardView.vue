@@ -1,6 +1,22 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import {
+  BookOpen,
+  ChevronDown,
+  ExternalLink,
+  FolderOpen,
+  Image as ImageIcon,
+  Images,
+  Layers,
+  ListChecks,
+  MessageSquareQuote,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+  TreePine,
+} from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ImagePickerField from '@/components/admin/ImagePickerField.vue'
@@ -11,54 +27,7 @@ import { useAuthStore } from '@/stores/auth.store'
 const ui = useUiStore()
 const auth = useAuthStore()
 
-/* ─── Tabs ─────────────────────────────────────── */
-type TabId = 'overview' | 'hero' | 'sections' | 'initiatives' | 'process' | 'gallery' | 'partners' | 'cta'
-const activeTab = ref<TabId>('overview')
-
-const tabs: { id: TabId; label: string; icon: string }[] = [
-  { id: 'overview', label: 'Overview', icon: 'grid' },
-  { id: 'hero', label: 'Hero & Stats', icon: 'file' },
-  { id: 'sections', label: 'Page Sections', icon: 'layout' },
-  { id: 'initiatives', label: 'Initiatives', icon: 'layers' },
-  { id: 'process', label: 'Process', icon: 'check' },
-  { id: 'gallery', label: 'Gallery', icon: 'image' },
-  { id: 'partners', label: 'Our Support', icon: 'heart' },
-  { id: 'cta', label: 'CTA & Quote', icon: 'message' },
-]
-
-/* ─── Quick Links (Overview tab) ────────────────── */
-interface QuickLink {
-  title: string
-  desc: string
-  to: string
-  tabId?: TabId
-  color: string
-}
-
-const quickLinks: QuickLink[] = [
-  { title: 'Edit Hero & Stats', desc: 'Headline, intro & stats band', to: '#', tabId: 'hero', color: 'emerald' },
-  { title: 'Edit Page Sections', desc: 'What we do, approach & why', to: '#', tabId: 'sections', color: 'blue' },
-  { title: 'Edit Initiatives', desc: 'Key initiative cards with images', to: '#', tabId: 'initiatives', color: 'amber' },
-  { title: 'Edit Process Steps', desc: '4-step process for how we work', to: '#', tabId: 'process', color: 'violet' },
-  { title: 'Edit Field Gallery', desc: 'Gallery images with captions', to: '#', tabId: 'gallery', color: 'violet' },
-  { title: 'Edit Our Support', desc: 'Partner organizations & supporters', to: '#', tabId: 'partners', color: 'blue' },
-  { title: 'Edit CTA & Quote', desc: 'Call to action & testimonial', to: '#', tabId: 'cta', color: 'emerald' },
-  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
-  { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'violet' },
-]
-
-/* ─── Toast ─────────────────────────────────────── */
-interface Toast { message: string; type: 'success' | 'error' | 'info'; id: number }
-const toasts = ref<Toast[]>([])
-let toastId = 0
-
-function addToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
-  const id = ++toastId
-  toasts.value.push({ message, type, id })
-  setTimeout(() => { toasts.value = toasts.value.filter(t => t.id !== id) }, 3000)
-}
-
-/* ─── Page Content Types ────────────────────────── */
+/* ─── Page content types ─────────────────────────── */
 interface EditableSection {
   id: string
   label: string
@@ -80,6 +49,53 @@ interface PageDraft {
   secondaryAction: string
   sections: EditableSection[]
   updatedAt: string
+}
+
+interface InitiativeItem {
+  title: string
+  text: string
+  img: string
+  tag: string
+}
+
+interface ProcessStep {
+  number: string
+  title: string
+  icon: string
+  text: string
+}
+
+interface GalleryImage {
+  src: string
+  caption: string
+  span: string
+}
+
+interface CTAContent {
+  label: string
+  heading: string
+  description: string
+  primaryBtnText: string
+  primaryBtnUrl: string
+  secondaryBtnText: string
+  secondaryBtnUrl: string
+}
+
+interface QuoteContent {
+  text: string
+  cite: string
+}
+
+interface PartnerItem {
+  name: string
+  type: string
+  description: string
+}
+
+interface StatItem {
+  number: string
+  label: string
+  description: string
 }
 
 /* ─── Default Environment Page ──────────────────── */
@@ -129,62 +145,12 @@ function createDefaultEnvironmentPage(): PageDraft {
   }
 }
 
-/* ─── Content Section Interfaces ────────────────── */
-interface InitiativeItem {
-  title: string
-  text: string
-  img: string
-  tag: string
-}
-
-interface ProcessStep {
-  number: string
-  title: string
-  icon: string
-  text: string
-}
-
-interface GalleryImage {
-  src: string
-  caption: string
-  span: string
-}
-
-interface CTAContent {
-  label: string
-  heading: string
-  description: string
-  primaryBtnText: string
-  primaryBtnUrl: string
-  secondaryBtnText: string
-  secondaryBtnUrl: string
-}
-
-interface QuoteContent {
-  text: string
-  cite: string
-}
-
-interface PartnerItem {
-  name: string
-  type: string
-  description: string
-}
-
-/* ─── Stats Band ────────────────────────────────── */
-interface StatItem {
-  number: string
-  label: string
-  description: string
-}
-
 const statsBand = ref<StatItem[]>([
   { number: '571', label: 'HECTARES PROTECTED', description: 'Community forest agreements and restored land.' },
   { number: '18', label: 'VILLAGES SERVED', description: 'With biogas, water access and climate adaptation.' },
   { number: '2,500+', label: 'HOUSEHOLDS REACHED', description: 'With clean water and renewable energy solutions.' },
 ])
 
-/* ─── New Content Refs ───────────────────────────── */
 const initiatives = ref<InitiativeItem[]>([
   { title: 'Reforestation Projects', text: 'Planting native tree species to restore degraded forests. We\'ve planted over 500,000 trees across 12 communities.', img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80', tag: 'Conservation' },
   { title: 'Environmental Education', text: 'Developing curriculum and training programs for schools to build environmental literacy from an early age.', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80', tag: 'Education' },
@@ -224,7 +190,6 @@ const quoteContent = ref<QuoteContent>({
   cite: '— SETE SENA Environmental Team',
 })
 
-/* ─── Our Support (Partners) ────────────────────── */
 const partners = ref<PartnerItem[]>([
   { name: 'UN Environment', type: 'International Partner', description: '' },
   { name: 'Green Cambodia', type: 'Local NGO', description: '' },
@@ -241,6 +206,109 @@ const page = ref<PageDraft>(createDefaultEnvironmentPage())
 const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
 const STORAGE_KEY = 'env-dashboard-page'
+
+/* ─── Collapsible panels ───────────────────────── */
+const expandedPanels = ref<Record<string, boolean>>({
+  'quick-links': true,
+  'hero-header': true,
+  'stats': true,
+  'content': true,
+  'initiatives': true,
+  'process': true,
+  'gallery': true,
+  'partners': true,
+  'quote': true,
+  'cta': true,
+})
+
+function togglePanel(id: string) {
+  expandedPanels.value[id] = !expandedPanels.value[id]
+}
+
+function editPanel(id: string) {
+  // Ensure panel is expanded
+  expandedPanels.value[id] = true
+  // Use next tick to let Vue render the contents, then scroll
+  void nextTick(() => {
+    const panel = document.querySelector(`[data-panel-id="${id}"]`)
+    if (!panel) return
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // Focus the first input or textarea
+    const firstInput = panel.querySelector('input, textarea, select') as HTMLElement | null
+    if (firstInput) {
+      firstInput.focus({ preventScroll: true })
+      // Brief highlight animation
+      firstInput.classList.add('edit-flash')
+      setTimeout(() => firstInput.classList.remove('edit-flash'), 800)
+    }
+  })
+}
+
+/* ─── Confirmation helpers ─────────────────────── */
+function confirmDeleteStat(index: number) {
+  const stat = statsBand.value[index]
+  const label = stat?.label?.trim() || `Stat ${index + 1}`
+  ui.openModal(
+    'Delete statistic',
+    `Permanently delete <strong>${stat?.number || ''} ${label}</strong>? This action cannot be undone.`,
+    () => {
+      statsBand.value.splice(index, 1)
+      ui.addToast(`Statistic "${label}" deleted.`, 'success')
+    },
+  )
+}
+
+function confirmDeleteInitiative(index: number) {
+  const item = initiatives.value[index]
+  const title = item?.title?.trim() || `Initiative ${index + 1}`
+  ui.openModal(
+    'Delete initiative',
+    `Permanently delete <strong>${title}</strong>? This action cannot be undone.`,
+    () => {
+      initiatives.value.splice(index, 1)
+      ui.addToast(`Initiative "${title}" deleted.`, 'success')
+    },
+  )
+}
+
+function confirmDeleteProcessStep(index: number) {
+  const step = processSteps.value[index]
+  const title = step?.title?.trim() || `Step ${index + 1}`
+  ui.openModal(
+    'Delete step',
+    `Permanently delete <strong>${title}</strong> from the process steps? This action cannot be undone.`,
+    () => {
+      processSteps.value.splice(index, 1)
+      ui.addToast(`Step "${title}" deleted.`, 'success')
+    },
+  )
+}
+
+function confirmDeleteGalleryImage(index: number) {
+  const img = galleryImages.value[index]
+  const caption = img?.caption?.trim() || `Image ${index + 1}`
+  ui.openModal(
+    'Remove image',
+    `Permanently delete <strong>${caption}</strong> from the gallery? This action cannot be undone.`,
+    () => {
+      galleryImages.value.splice(index, 1)
+      ui.addToast(`Image "${caption}" removed.`, 'success')
+    },
+  )
+}
+
+function confirmDeletePartner(index: number) {
+  const partner = partners.value[index]
+  const name = partner?.name?.trim() || `Partner ${index + 1}`
+  ui.openModal(
+    'Delete partner',
+    `Permanently remove <strong>${name}</strong> from the partner list? This action cannot be undone.`,
+    () => {
+      partners.value.splice(index, 1)
+      ui.addToast(`Partner "${name}" removed.`, 'success')
+    },
+  )
+}
 
 /* ─── LocalStorage fallback ────────────────────── */
 function loadFromLocalStorage(): void {
@@ -478,18 +546,18 @@ async function savePageContent() {
     // If upsert fails with RLS, try insert first then update separately
     if (error && error.message?.includes('row-level security')) {
       console.warn('Upsert blocked by RLS, trying insert/update separately...')
-      
+
       const { error: insertError } = await supabase
         .from('programs')
         .insert(payload)
-      
+
       if (insertError && insertError.message?.includes('duplicate key')) {
         // Row exists — try update instead
         const { error: updateError } = await supabase
           .from('programs')
           .update(payload)
           .eq('slug', p.slug)
-        
+
         if (updateError) {
           error = updateError
         } else {
@@ -504,7 +572,7 @@ async function savePageContent() {
 
     if (error) {
       console.warn('Supabase save failed:', error)
-      addToast(`DB write blocked: ${error.message}`, 'error')
+      ui.addToast(`DB write blocked: ${error.message}`, 'error')
       saveToLocalStorage()
       storageMode.value = 'local'
       savedSnapshot.value = snapshotData()
@@ -514,10 +582,10 @@ async function savePageContent() {
 
     storageMode.value = 'supabase'
     savedSnapshot.value = snapshotData()
-    addToast(`${p.title} page saved!`, 'success')
+    ui.addToast(`${p.title} page saved!`, 'success')
   } catch (e: unknown) {
     console.error('Save crashed:', e)
-    addToast('Saved to browser (database error)', 'info')
+    ui.addToast('Saved to browser (database error)', 'info')
     storageMode.value = 'local'
     savedSnapshot.value = snapshotData()
   } finally {
@@ -532,12 +600,6 @@ function parsedItemsForSection(section: EditableSection): string[] {
     : []
 }
 
-/* ─── Init ──────────────────────────────────────── */
-onMounted(async () => {
-  await auth.init()
-  await loadPageContent()
-})
-
 /* ─── Helper: format date ───────────────────────── */
 function formatDate(value: string) {
   if (!value) return 'Not saved yet'
@@ -545,991 +607,1497 @@ function formatDate(value: string) {
   if (Number.isNaN(date.getTime())) return 'Not saved yet'
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
+
+/* ─── Init ──────────────────────────────────────── */
+onMounted(async () => {
+  try {
+    await auth.init()
+  } catch (e) {
+    console.warn('[EnvironmentDashboard] auth.init() failed:', e)
+  }
+  await loadPageContent()
+})
 </script>
 
 <template>
-  <div :class="['env-dash', { 'sidebar-open': ui.sidebarOpen }]">
+  <div :class="['env-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
-    <div class="dash-layout">
+    <div class="admin-layout">
       <AdminSidebar />
-      <main class="dash-main">
-        <!-- Toasts -->
-        <div class="toast-container">
-          <TransitionGroup name="toast">
-            <div v-for="t in toasts" :key="t.id" :class="['toast', `toast-${t.type}`]">
-              <svg v-if="t.type === 'success'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <svg v-else-if="t.type === 'error'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              <span>{{ t.message }}</span>
-            </div>
-          </TransitionGroup>
-        </div>
 
-        <!-- BANNER -->
-        <header class="dash-banner">
-          <div class="banner-glow" aria-hidden="true"></div>
-          <div class="banner-particles" aria-hidden="true">
-            <span></span><span></span><span></span><span></span>
+      <main class="manager-main">
+        <header class="manager-hero">
+          <div class="hero-glow" aria-hidden="true"></div>
+          <div class="hero-accent-line" aria-hidden="true"></div>
+          <div class="hero-content-wrap">
+            <div class="hero-icon-wrap">
+              <TreePine :size="22" aria-hidden="true" />
+            </div>
+            <div class="manager-title">
+              <p class="eyebrow">Environment Program</p>
+              <h1>Manage Environment page</h1>
+              <div class="manager-meta" aria-label="Editable environment summary">
+                <span>{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</span>
+                <span>{{ statsBand.length }} stats</span>
+                <span>{{ initiatives.length }} initiatives</span>
+                <span>{{ galleryImages.length }} gallery photos</span>
+                <span v-if="isDirty" class="meta-dirty">Unsaved changes</span>
+                <span v-else-if="page.updatedAt">Saved {{ formatDate(page.updatedAt) }}</span>
+              </div>
+            </div>
           </div>
-          <div class="banner-inner">
-            <div class="banner-breadcrumb">
-              <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-label">Programs</span>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-current">Environment</span>
-            </div>
-            <div class="banner-content">
-              <div class="banner-text">
-                <div class="banner-badge">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
-                  Environment Program
-                  <span v-if="storageMode === 'local'" class="banner-badge local-badge">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    Local only
-                  </span>
-                  <span v-else class="banner-badge cloud-badge">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
-                    Database
-                  </span>
-                </div>
-                <h1 class="banner-title">Environment Dashboard</h1>
-                <p class="banner-desc">Edit your environment page content — hero, stats, and page sections — then save to publish.</p>
-              </div>
-              <div class="banner-actions">
-                <button class="btn btn-primary" :disabled="saving || loading" @click="savePageContent">
-                  <svg v-if="saving" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
-                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                  {{ saving ? 'Saving...' : 'Save All Changes' }}
-                </button>
-                <RouterLink class="btn btn-ghost" to="/programs/environment">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  View Page
-                </RouterLink>
-              </div>
-            </div>
-
-            <!-- Quick stats bar -->
-            <div class="banner-stats">
-              <div class="bstat bstat-emerald">
-                <div class="bstat-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22v-8"/><path d="M12 2C8 2 4 6 4 10c0 3 2 5.5 4 7l4-3 4 3c2-1.5 4-4 4-7 0-4-4-8-8-8z"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ statsBand[0]?.number || '0' }}</strong>
-                  <small>Hectares protected</small>
-                  <span class="bstat-desc">Forest & restored land</span>
-                </div>
-              </div>
-              <div class="bstat bstat-blue">
-                <div class="bstat-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ statsBand[1]?.number || '0' }}</strong>
-                  <small>Villages served</small>
-                  <span class="bstat-desc">With climate adaptation</span>
-                </div>
-              </div>
-              <div class="bstat bstat-amber">
-                <div class="bstat-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ statsBand[2]?.number || '0' }}</strong>
-                  <small>Households reached</small>
-                  <span class="bstat-desc">With clean water & energy</span>
-                </div>
-              </div>
-              <div class="bstat bstat-violet">
-                <div class="bstat-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ isDirty ? 'Unsaved' : 'Saved' }}</strong>
-                  <small>Status</small>
-                  <span class="bstat-desc">{{ formatDate(page.updatedAt) }}</span>
-                </div>
-              </div>
-            </div>
+          <div class="hero-actions">
+            <RouterLink class="btn btn-secondary" to="/programs/environment">
+              <ExternalLink :size="16" aria-hidden="true" />
+              <span>View page</span>
+            </RouterLink>
+            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty" @click="savePageContent">
+              <Save :size="16" aria-hidden="true" />
+              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
+            </button>
           </div>
         </header>
 
-        <!-- TAB NAVIGATION -->
-        <nav class="tab-nav" aria-label="Environment management tabs">
-          <button v-for="tab in tabs" :key="tab.id" :class="['tab-btn', { active: activeTab === tab.id }]" @click="activeTab = tab.id">
-            <svg v-if="tab.icon === 'grid'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            <svg v-else-if="tab.icon === 'file'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-            {{ tab.label }}
-          </button>
-          <span class="tab-spacer"></span>
-          <span v-if="isDirty" class="tab-dirty">Unsaved changes</span>
-        </nav>
+        <div v-if="loading" class="state-card">Loading Environment content...</div>
 
-        <!-- ================ TAB: OVERVIEW ================ -->
-        <section v-if="activeTab === 'overview'" class="tab-content">
-          <div class="quick-links-grid">
-            <RouterLink v-for="link in quickLinks" :key="link.title" :to="link.to || '/admin'" class="link-card" :class="'link-' + link.color"
-              @click.prevent="link.tabId ? activeTab = link.tabId : undefined">
-              <div class="link-icon">
-                <svg v-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>
-                <svg v-else-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <div v-else class="content-grid">
+          <!-- ═══ Quick links ═══ -->
+          <section class="editor-panel quick-links-panel" aria-labelledby="quick-links-heading">
+            <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
+              <div class="panel-header-left">
+                <div class="panel-icon-wrap">
+                  <FolderOpen :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Shortcuts</p>
+                  <h2 id="quick-links-heading">Related tools</h2>
+                </div>
               </div>
-              <div class="link-text"><strong>{{ link.title }}</strong><small>{{ link.desc }}</small></div>
-              <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-            </RouterLink>
-          </div>
+              <div class="panel-header-actions">
+                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
+                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }" aria-hidden="true" />
+              </div>
+            </button>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['quick-links']" class="panel-body quick-links-body">
+                <RouterLink class="quick-link" to="/admin/media">
+                  <FolderOpen :size="18" aria-hidden="true" />
+                  <div>
+                    <strong>Media Library</strong>
+                    <span>Upload images for this page</span>
+                  </div>
+                </RouterLink>
+                <RouterLink class="quick-link" to="/admin/modules/programs">
+                  <Layers :size="18" aria-hidden="true" />
+                  <div>
+                    <strong>Program Records</strong>
+                    <span>Manage environment data entries</span>
+                  </div>
+                </RouterLink>
+              </div>
+            </Transition>
+          </section>
 
-          <div class="overview-cards">
-            <div class="overview-card-item">
-              <span class="oc-label">Hero & Header</span>
-              <p class="oc-text"><strong>Headline:</strong> {{ page.headline.slice(0, 60) }}{{ page.headline.length > 60 ? '...' : '' }}</p>
-              <p class="oc-text"><strong>Eyebrow:</strong> {{ page.eyebrow || 'Not set' }}</p>
-              <button class="oc-action" @click="activeTab = 'hero'">Edit →</button>
-            </div>
-            <div class="overview-card-item">
-              <span class="oc-label">Stats Band</span>
-              <p class="oc-text">{{ statsBand.length }} stats configured: {{ statsBand.map(s => s.number).join(', ') }}</p>
-              <button class="oc-action" @click="activeTab = 'hero'">Edit →</button>
-            </div>
-            <div class="overview-card-item">
-              <span class="oc-label">Page Sections</span>
-              <p class="oc-text">{{ page.sections.length }} content sections: {{ page.sections.map(s => s.label).join(', ') }}</p>
-              <button class="oc-action" @click="activeTab = 'sections'">Edit →</button>
-            </div>
-            <div class="overview-card-item">
-              <span class="oc-label">Our Support</span>
-              <p class="oc-text">{{ partners.length }} partners configured: {{ partners.map(p => p.name).join(', ') }}</p>
-              <button class="oc-action" @click="activeTab = 'partners'">Edit →</button>
-            </div>
-            <div class="overview-card-item">
-              <span class="oc-label">Last Saved</span>
-              <p class="oc-text">{{ formatDate(page.updatedAt) }}</p>
-              <button class="oc-action" :disabled="saving || loading" @click="savePageContent">Save now →</button>
-            </div>
-          </div>
-        </section>
+          <!-- ═══ Hero & header ═══ -->
+          <section class="editor-panel" aria-labelledby="hero-heading">
+            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['hero-header']" @click="togglePanel('hero-header')">
+              <div class="panel-header-left">
+                <div class="panel-icon-wrap">
+                  <TreePine :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Public page</p>
+                  <h2 id="hero-heading">Hero &amp; header</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
+                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['hero-header'] }" aria-hidden="true" />
+              </div>
+            </button>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['hero-header']" class="image-editor-grid">
+                <figure class="image-preview hero-preview">
+                  <img v-if="page.heroImageUrl" :src="page.heroImageUrl" alt="" />
+                  <div v-else class="slot-empty">
+                    <ImageIcon :size="22" aria-hidden="true" />
+                    <span>No image set</span>
+                  </div>
+                </figure>
 
-        <!-- ================ TAB: HERO & STATS ================ -->
-        <section v-if="activeTab === 'hero'" class="tab-content">
-          <div v-if="loading" class="loading-text">Loading content...</div>
-          <template v-else>
-          <div class="section-card">
-            <div class="sc-header">
-              <h2>Hero & Header Content</h2>
-              <p>Edit the main header shown at the top of the public Environment page. These fields control the page title, subtitle, and introductory paragraph.</p>
-            </div>
-            <div class="sc-body">
-              <div class="form-row">
-                <label class="field">
-                  <span class="field-label">Eyebrow / Badge</span>
-                  <input v-model="page.eyebrow" placeholder="e.g. Environment" />
-                  <span class="field-hint">Small label above the main headline</span>
-                </label>
-                <div class="field field-block">
-                  <span class="field-label">Hero Image</span>
+                <div class="form-stack">
+                  <div class="form-grid">
+                    <label class="field">
+                      <span>Eyebrow / badge</span>
+                      <input v-model="page.eyebrow" type="text" placeholder="e.g. Environment" />
+                    </label>
+                    <label class="field wide">
+                      <span>Headline (main title)</span>
+                      <input v-model="page.headline" type="text" placeholder="Protecting the land that sustains villages." />
+                    </label>
+                    <label class="field wide">
+                      <span>Intro / description</span>
+                      <textarea v-model="page.intro" rows="3" placeholder="Community forestry, biogas digesters, rainwater harvesting and WASH."></textarea>
+                    </label>
+                  </div>
+
                   <ImagePickerField
                     v-model="page.heroImageUrl"
-                    label="Hero Image"
+                    label="Upload or paste URL"
                     hint="Background image for the hero section"
-                    @success="(msg) => addToast(msg, 'success')"
-                    @error="(msg) => addToast(msg, 'error')"
+                    hide-preview
+                    @success="(msg) => ui.addToast(msg, 'success')"
+                    @error="(msg) => ui.addToast(msg, 'error')"
                   />
                 </div>
               </div>
-              <label class="field field-block">
-                <span class="field-label">Headline (main title)</span>
-                <input v-model="page.headline" placeholder="Protecting the land that sustains villages." />
-              </label>
-              <label class="field field-block">
-                <span class="field-label">Intro / Description</span>
-                <textarea v-model="page.intro" rows="3" placeholder="Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time."></textarea>
-              </label>
-            </div>
-          </div>
+            </Transition>
+          </section>
 
-          <div class="section-card" style="margin-top: 1.25rem;">
-            <div class="sc-header">
-              <h2>Stats Band</h2>
-              <p>Configure the three statistics that appear below the hero section on the public Environment page. Each stat has a number, label, and description.</p>
-            </div>
-            <div class="sc-body">
-              <div v-for="(stat, index) in statsBand" :key="index" class="stat-editor">
-                <div class="stat-editor-hdr">
-                  <span class="stat-editor-num">Stat {{ index + 1 }}</span>
-                  <button class="btn-icon" @click="statsBand.splice(index, 1)" title="Remove stat">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
+          <!-- ═══ Stats band ═══ -->
+          <section class="editor-panel" data-panel-id="stats" aria-labelledby="stats-heading">
+            <div class="panel-header">
+              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('stats')">
+                <div class="panel-icon-wrap">
+                  <Layers :size="18" aria-hidden="true" />
                 </div>
-                <div class="form-row">
-                  <label class="field">
-                    <span class="field-label">Number</span>
-                    <input v-model="stat.number" placeholder="e.g. 571" />
-                  </label>
-                  <label class="field">
-                    <span class="field-label">Label</span>
-                    <input v-model="stat.label" placeholder="e.g. HECTARES PROTECTED" />
-                  </label>
+                <div>
+                  <p class="panel-kicker">Stats band</p>
+                  <h2 id="stats-heading">Impact statistics</h2>
                 </div>
-                <label class="field field-block">
-                  <span class="field-label">Description</span>
-                  <input v-model="stat.description" placeholder="Brief description of this statistic" />
-                </label>
               </div>
-              <button class="btn btn-ghost add-stat-btn" @click="statsBand.push({ number: '', label: '', description: '' })">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Stat
-              </button>
+              <div class="panel-header-actions">
+                <button type="button" class="icon-btn-pencil" aria-label="Jump to edit stats" @click.stop="editPanel('stats')">
+                  <Pencil :size="15" aria-hidden="true" />
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" @click="statsBand.push({ number: '', label: '', description: '' })">
+                  <Plus :size="15" aria-hidden="true" />
+                  <span>Add stat</span>
+                </button>
+                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('stats')">
+                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }" />
+                </button>
+              </div>
             </div>
-          </div>
-        </template>
-        </section>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['stats']" class="panel-body">
+                <p class="panel-desc">Edit the statistics shown on the public Environment page.</p>
 
-        <!-- ================ TAB: PAGE SECTIONS ================ -->
-        <section v-if="activeTab === 'sections'" class="tab-content">
-          <div class="section-card">
-            <div class="sc-header">
-              <h2>Page Content Sections</h2>
-              <p>Edit the main content blocks of the Environment page — What We Do, Our Approach, and Why It Matters. Each section has a heading, body text, and optional list items.</p>
-            </div>
-            <div class="sc-body">
-              <div v-if="loading" class="loading-text">Loading sections...</div>
-              <div v-else class="sections-list">
-                <div v-for="(section, index) in page.sections" :key="section.id" class="section-edit-card">
-                  <details :open="index === 0">
-                    <summary class="sec-summary">
-                      <div class="sec-summary-left">
-                        <span class="sec-badge">{{ section.label }}</span>
-                        <span class="sec-heading-preview">{{ section.heading || 'No heading' }}</span>
-                      </div>
-                      <svg class="sec-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                    </summary>
-                    <div class="sec-body">
-                      <label class="field field-block">
-                        <span class="field-label">Heading</span>
-                        <input v-model="section.heading" :placeholder="'Heading for ' + section.label" />
+                <div class="stack-list">
+                  <article v-for="(stat, index) in statsBand" :key="index" class="sub-editor">
+                    <header class="sub-editor-header">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <h3>Stat {{ index + 1 }}</h3>
+                      <button type="button" class="icon-btn danger" aria-label="Remove stat" @click="confirmDeleteStat(index)">
+                        <Trash2 :size="15" aria-hidden="true" />
+                      </button>
+                    </header>
+                    <div class="sub-editor-body form-grid">
+                      <label class="field">
+                        <span>Number</span>
+                        <input v-model="stat.number" type="text" placeholder="e.g. 571" />
                       </label>
-                      <label class="field field-block">
-                        <span class="field-label">Body / Description</span>
+                      <label class="field">
+                        <span>Label</span>
+                        <input v-model="stat.label" type="text" placeholder="e.g. HECTARES PROTECTED" />
+                      </label>
+                      <label class="field wide">
+                        <span>Description</span>
+                        <input v-model="stat.description" type="text" placeholder="Brief description of this statistic" />
+                      </label>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </Transition>
+          </section>
+
+          <!-- ═══ Page sections ═══ -->
+          <section class="editor-panel" aria-labelledby="sections-heading">
+            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['content']" @click="togglePanel('content')">
+              <div class="panel-header-left">
+                <div class="panel-icon-wrap">
+                  <BookOpen :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Content</p>
+                  <h2 id="sections-heading">What we do, approach &amp; why it matters</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
+                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['content'] }" aria-hidden="true" />
+              </div>
+            </button>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['content']" class="panel-body">
+                <p class="panel-desc">Edit the main content blocks shown on the public Environment page.</p>
+
+                <div class="stack-list">
+                  <article v-for="section in page.sections" :key="section.id" class="sub-editor">
+                    <header class="sub-editor-header">
+                      <span class="section-badge">{{ section.label }}</span>
+                      <h3>{{ section.heading || 'No heading yet' }}</h3>
+                    </header>
+                    <div class="sub-editor-body">
+                      <label class="field wide">
+                        <span>Heading</span>
+                        <input v-model="section.heading" type="text" :placeholder="'Heading for ' + section.label" />
+                      </label>
+                      <label class="field wide">
+                        <span>Body / description</span>
                         <textarea v-model="section.body" rows="3" :placeholder="'Description for ' + section.label"></textarea>
                       </label>
-                      <label class="field field-block">
-                        <span class="field-label">Bullet items <span class="field-hint">(one per line)</span></span>
-                        <textarea
-                          v-model="section.items"
-                          rows="5"
-                          placeholder="Community forestry agreements&#10;Biogas digester installation&#10;Rainwater harvesting systems"
-                        ></textarea>
+                      <label class="field wide">
+                        <span>Bullet items <em>(one per line)</em></span>
+                        <textarea v-model="section.items" rows="5" placeholder="Community forestry agreements&#10;Biogas digester installation&#10;Rainwater harvesting systems"></textarea>
                       </label>
-                      <div v-if="section.items" class="item-preview">
-                        <span class="field-label">Preview ({{ parsedItemsForSection(section).length }} items)</span>
-                        <div class="item-chips">
-                          <span v-for="item in parsedItemsForSection(section)" :key="item" class="item-chip">{{ item }}</span>
+                      <div v-if="parsedItemsForSection(section).length" class="item-chips">
+                        <span v-for="item in parsedItemsForSection(section)" :key="item" class="item-chip">{{ item }}</span>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </Transition>
+          </section>
+
+          <!-- ═══ Key initiatives ═══ -->
+          <section class="editor-panel" data-panel-id="initiatives" aria-labelledby="initiatives-heading">
+            <div class="panel-header">
+              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('initiatives')">
+                <div class="panel-icon-wrap">
+                  <ImageIcon :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Highlights</p>
+                  <h2 id="initiatives-heading">Key initiatives</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <button type="button" class="icon-btn-pencil" aria-label="Jump to edit initiatives" @click.stop="editPanel('initiatives')">
+                  <Pencil :size="15" aria-hidden="true" />
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" @click="initiatives.push({ title: '', text: '', img: '', tag: '' })">
+                  <Plus :size="15" aria-hidden="true" />
+                  <span>Add initiative</span>
+                </button>
+                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('initiatives')">
+                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['initiatives'] }" />
+                </button>
+              </div>
+            </div>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['initiatives']" class="panel-body">
+                <p class="panel-desc">Edit the initiative cards shown on the public Environment page.</p>
+
+                <div class="stack-list">
+                  <article v-for="(item, index) in initiatives" :key="index" class="sub-editor">
+                    <header class="sub-editor-header">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <h3>{{ item.title || 'Untitled initiative' }}</h3>
+                      <button type="button" class="icon-btn danger" aria-label="Remove initiative" @click="confirmDeleteInitiative(index)">
+                        <Trash2 :size="15" aria-hidden="true" />
+                      </button>
+                    </header>
+                    <div class="sub-editor-body">
+                      <div class="image-editor-grid image-editor-grid--compact">
+                        <figure class="image-preview initiative-preview">
+                          <img v-if="item.img" :src="item.img" alt="" />
+                          <div v-else class="slot-empty">
+                            <ImageIcon :size="20" aria-hidden="true" />
+                            <span>No image</span>
+                          </div>
+                        </figure>
+                        <div class="form-stack">
+                          <div class="form-grid">
+                            <label class="field">
+                              <span>Title</span>
+                              <input v-model="item.title" type="text" placeholder="e.g. Reforestation Projects" />
+                            </label>
+                            <label class="field">
+                              <span>Tag</span>
+                              <input v-model="item.tag" type="text" placeholder="e.g. Conservation" />
+                            </label>
+                            <label class="field wide">
+                              <span>Description</span>
+                              <textarea v-model="item.text" rows="2" placeholder="Brief description..."></textarea>
+                            </label>
+                          </div>
+                          <ImagePickerField
+                            v-model="item.img"
+                            :label="item.title || `Initiative ${index + 1} image`"
+                            hide-preview
+                            @success="(msg) => ui.addToast(msg, 'success')"
+                            @error="(msg) => ui.addToast(msg, 'error')"
+                          />
                         </div>
                       </div>
                     </div>
-                  </details>
+                  </article>
                 </div>
               </div>
-            </div>
-          </div>
+            </Transition>
+          </section>
 
-          <div class="section-card" style="margin-top: 1.25rem;">
-            <div class="sc-header">
-              <h2>Related Actions</h2>
-            </div>
-            <div class="sc-body">
-              <div class="side-actions">
-                <RouterLink class="side-btn" to="/admin/media">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  Media Library — Upload images for the Environment page
-                </RouterLink>
-                <RouterLink class="side-btn" to="/admin/modules/programs">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                  Program Records — Manage environment data entries
-                </RouterLink>
-                <RouterLink class="side-btn" to="/programs/environment">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  View Live Page — See your changes on the public site
-                </RouterLink>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ================ TAB: INITIATIVES ================ -->
-        <section v-if="activeTab === 'initiatives'" class="tab-content">
-          <div class="section-card">
-            <div class="sc-header">
-              <h2>Key Initiatives</h2>
-              <p>Edit the <strong>6 initiative cards</strong> shown on the public Environment page. Each card has a title, description, image URL, and tag label.</p>
-            </div>
-            <div class="sc-body">
-              <div v-if="loading" class="loading-text">Loading initiatives...</div>
-              <template v-else>
-                <div v-for="(item, index) in initiatives" :key="index" class="sub-editor-card">
-                  <div class="sub-editor-hdr">
-                    <span class="sub-num">Initiative {{ index + 1 }}</span>
-                    <button class="btn-icon" @click="initiatives.splice(index, 1)" title="Remove initiative">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </div>
-                  <div class="form-row">
-                    <label class="field">
-                      <span class="field-label">Title</span>
-                      <input v-model="item.title" placeholder="e.g. Reforestation Projects" />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Tag</span>
-                      <input v-model="item.tag" placeholder="e.g. Conservation" />
-                    </label>
-                  </div>
-                  <label class="field field-block">
-                    <span class="field-label">Description</span>
-                    <textarea v-model="item.text" rows="2" placeholder="Brief description..."></textarea>
-                  </label>
-                  <div class="field field-block">
-                    <span class="field-label">Initiative Image</span>
-                    <ImagePickerField
-                      v-model="item.img"
-                      :label="item.title || `Initiative ${index + 1}`"
-                      @success="(msg) => addToast(msg, 'success')"
-                      @error="(msg) => addToast(msg, 'error')"
-                    />
-                  </div>
+          <!-- ═══ Process steps ═══ -->
+          <section class="editor-panel" data-panel-id="process" aria-labelledby="process-heading">
+            <div class="panel-header">
+              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('process')">
+                <div class="panel-icon-wrap">
+                  <Layers :size="18" aria-hidden="true" />
                 </div>
-                <button class="btn btn-ghost add-stat-btn" @click="initiatives.push({ title: '', text: '', img: '', tag: '' })">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Add Initiative
+                <div>
+                  <p class="panel-kicker">How we work</p>
+                  <h2 id="process-heading">Process steps</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <button type="button" class="icon-btn-pencil" aria-label="Jump to edit process steps" @click.stop="editPanel('process')">
+                  <Pencil :size="15" aria-hidden="true" />
                 </button>
-              </template>
-            </div>
-          </div>
-        </section>
-
-        <!-- ================ TAB: PROCESS ================ -->
-        <section v-if="activeTab === 'process'" class="tab-content">
-          <div class="section-card">
-            <div class="sc-header">
-              <h2>Process Steps</h2>
-              <p>Edit the <strong>4-step process</strong> shown under "How We Work". Each step has a number, icon, title, and description.</p>
-            </div>
-            <div class="sc-body">
-              <div v-if="loading" class="loading-text">Loading process steps...</div>
-              <template v-else>
-                <div v-for="(step, index) in processSteps" :key="index" class="sub-editor-card">
-                  <div class="sub-editor-hdr">
-                    <span class="sub-num">Step {{ step.number || index + 1 }}</span>
-                    <button class="btn-icon" @click="processSteps.splice(index, 1)" title="Remove step">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </div>
-                  <div class="form-row">
-                    <label class="field">
-                      <span class="field-label">Number</span>
-                      <input v-model="step.number" placeholder="e.g. 01" />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Title</span>
-                      <input v-model="step.title" placeholder="e.g. Assessment" />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Icon</span>
-                      <select v-model="step.icon">
-                        <option value="search">Search / Magnifier</option>
-                        <option value="map">Map / Pin</option>
-                        <option value="play">Play / Action</option>
-                        <option value="check">Check / Done</option>
-                      </select>
-                    </label>
-                  </div>
-                  <label class="field field-block">
-                    <span class="field-label">Description</span>
-                    <textarea v-model="step.text" rows="2" placeholder="Step description..."></textarea>
-                  </label>
-                </div>
-                <button class="btn btn-ghost add-stat-btn" @click="processSteps.push({ number: '', title: '', icon: 'search', text: '' })">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Add Step
+                <button type="button" class="btn btn-secondary btn-sm" @click="processSteps.push({ number: '', title: '', icon: 'search', text: '' })">
+                  <Plus :size="15" aria-hidden="true" />
+                  <span>Add step</span>
                 </button>
-              </template>
-            </div>
-          </div>
-        </section>
-
-        <!-- ================ TAB: GALLERY ================ -->
-        <section v-if="activeTab === 'gallery'" class="tab-content">
-          <div class="section-card">
-            <div class="sc-header">
-              <h2>Field Gallery</h2>
-              <p>Edit the gallery images shown on the public page. Each image has a URL, caption, and span (1 or 2 columns). Upload images from your computer or paste a URL.</p>
-            </div>
-            <div class="sc-body">
-              <!-- Gallery Stats -->
-              <div class="gallery-stats-bar">
-                <span class="gsb-item"><strong>{{ galleryImages.length }}</strong> images</span>
-                <span class="gsb-item"><strong>{{ galleryImages.filter(i => i.src?.trim()).length }}</strong> with images</span>
-                <span class="gsb-item gsb-missing" v-if="galleryImages.filter(i => !i.src?.trim()).length > 0">
-                  <strong>{{ galleryImages.filter(i => !i.src?.trim()).length }}</strong> missing images
-                </span>
+                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('process')">
+                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['process'] }" />
+                </button>
               </div>
+            </div>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['process']" class="panel-body">
+                <p class="panel-desc">Edit the step-by-step process shown under "How We Work".</p>
 
-              <!-- ====== VISUAL GALLERY PREVIEW ====== -->
-              <div class="gallery-preview-section">
-                <div class="gps-header">
-                  <span class="gps-badge">Field Gallery</span>
-                  <h3 class="gps-title">Our Work in Pictures</h3>
-                  <p class="gps-desc">A glimpse into our environmental projects across Cambodia.</p>
-                </div>
-                <div class="gps-grid">
-                  <div
-                    v-for="(img, i) in galleryImages"
-                    :key="i"
-                    class="gps-item"
-                    :class="{ 'gps-empty': !img.src?.trim(), 'gps-span-2': img.span === '2' }"
-                    :style="{ '--g-span': img.span || '1' }"
-                  >
-                    <template v-if="img.src?.trim()">
-                      <img :src="img.src" :alt="img.caption" class="gps-preview-img" />
-                      <div class="gps-overlay"><span class="gps-caption">{{ img.caption }}</span></div>
-                    </template>
-                    <template v-else>
-                      <div class="gps-empty-state">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        <p class="gps-empty-text"><strong>No image</strong></p>
-                      </div>
-                    </template>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ====== IMAGE EDITOR CARDS ====== -->
-              <div class="gallery-editor-list">
-                <div v-for="(img, index) in galleryImages" :key="index" class="sub-editor-card">
-                  <div class="sub-editor-hdr">
-                    <span class="sub-num">
-                      Image {{ index + 1 }}
-                      <span v-if="img.span === '2'" class="gallery-span-badge">Wide</span>
-                      <span v-if="!img.src?.trim()" class="gallery-missing-badge">No image</span>
-                    </span>
-                    <div class="sub-editor-actions">
-                      <button class="btn-icon" @click="galleryImages.splice(index, 1)" title="Remove image">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <div class="stack-list">
+                  <article v-for="(step, index) in processSteps" :key="index" class="sub-editor">
+                    <header class="sub-editor-header">
+                      <span class="item-number">{{ step.number || String(index + 1).padStart(2, '0') }}</span>
+                      <h3>{{ step.title || 'Untitled step' }}</h3>
+                      <button type="button" class="icon-btn danger" aria-label="Remove step" @click="confirmDeleteProcessStep(index)">
+                        <Trash2 :size="15" aria-hidden="true" />
                       </button>
+                    </header>
+                    <div class="sub-editor-body form-grid">
+                      <label class="field">
+                        <span>Number</span>
+                        <input v-model="step.number" type="text" placeholder="e.g. 01" />
+                      </label>
+                      <label class="field">
+                        <span>Title</span>
+                        <input v-model="step.title" type="text" placeholder="e.g. Assessment" />
+                      </label>
+                      <label class="field">
+                        <span>Icon</span>
+                        <select v-model="step.icon">
+                          <option value="search">Search / Magnifier</option>
+                          <option value="map">Map / Pin</option>
+                          <option value="play">Play / Action</option>
+                          <option value="check">Check / Done</option>
+                        </select>
+                      </label>
+                      <label class="field wide">
+                        <span>Description</span>
+                        <textarea v-model="step.text" rows="2" placeholder="Step description..."></textarea>
+                      </label>
                     </div>
-                  </div>
-                  <div class="form-row">
-                    <label class="field">
-                      <span class="field-label">Caption</span>
-                      <input v-model="img.caption" placeholder="e.g. Reforestation in rural Cambodia" />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Span</span>
-                      <select v-model="img.span">
-                        <option value="1">1 column</option>
-                        <option value="2">2 columns (wider)</option>
-                      </select>
-                    </label>
-                  </div>
-                  <div class="field field-block">
-                    <span class="field-label">Gallery Image</span>
-                    <ImagePickerField
-                      v-model="img.src"
-                      :label="img.caption || `Gallery Image ${index + 1}`"
-                      @success="(msg) => addToast(msg, 'success')"
-                      @error="(msg) => addToast(msg, 'error')"
-                    />
-                  </div>
+                  </article>
                 </div>
               </div>
+            </Transition>
+          </section>
 
-              <button class="btn btn-ghost add-stat-btn" @click="galleryImages.push({ src: '', caption: '', span: '1' })">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Add Image
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- ================ TAB: OUR SUPPORT (PARTNERS) ================ -->
-        <section v-if="activeTab === 'partners'" class="tab-content">
-          <div class="section-card">
-            <div class="sc-header">
-              <h2>Our Support — Partner Organizations</h2>
-              <p>Edit the partner organizations shown in the "Our Supporters" section on the public Environment page. Each entry has a name, a type/relationship label, and an optional description.</p>
-            </div>
-            <div class="sc-body">
-              <div v-if="loading" class="loading-text">Loading partners...</div>
-              <template v-else>
-                <div v-for="(partner, index) in partners" :key="index" class="sub-editor-card">
-                  <div class="sub-editor-hdr">
-                    <span class="sub-num">Partner {{ index + 1 }}</span>
-                    <button class="btn-icon" @click="partners.splice(index, 1)" title="Remove partner">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </div>
-                  <div class="form-row">
-                    <label class="field">
-                      <span class="field-label">Name</span>
-                      <input v-model="partner.name" placeholder="e.g. UN Environment" />
-                    </label>
-                    <label class="field">
-                      <span class="field-label">Type / Relationship</span>
-                      <input v-model="partner.type" placeholder="e.g. International Partner" />
-                    </label>
-                  </div>
-                  <label class="field field-block">
-                    <span class="field-label">Description <span class="field-hint">(optional)</span></span>
-                    <textarea v-model="partner.description" rows="2" placeholder="Brief description of the partnership..."></textarea>
-                  </label>
+          <!-- ═══ Field gallery ═══ -->
+          <section class="editor-panel" data-panel-id="gallery" aria-labelledby="gallery-heading">
+            <div class="panel-header">
+              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('gallery')">
+                <div class="panel-icon-wrap">
+                  <Images :size="18" aria-hidden="true" />
                 </div>
-                <button class="btn btn-ghost add-stat-btn" @click="partners.push({ name: '', type: '', description: '' })">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Add Partner
+                <div>
+                  <p class="panel-kicker">Field gallery</p>
+                  <h2 id="gallery-heading">Gallery images</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <button type="button" class="icon-btn-pencil" aria-label="Jump to edit gallery" @click.stop="editPanel('gallery')">
+                  <Pencil :size="15" aria-hidden="true" />
                 </button>
-              </template>
+                <button type="button" class="btn btn-secondary btn-sm" @click="galleryImages.push({ src: '', caption: '', span: '1' })">
+                  <Plus :size="15" aria-hidden="true" />
+                  <span>Add image</span>
+                </button>
+                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('gallery')">
+                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['gallery'] }" />
+                </button>
+              </div>
             </div>
-          </div>
-        </section>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['gallery']" class="panel-body">
+                <p class="panel-desc">
+                  Upload a photo or paste a URL for each gallery slot. Set the span to "2 columns" for a wider tile on the public page.
+                  {{ galleryImages.filter(i => !i.src?.trim()).length }} of {{ galleryImages.length }} slots are missing an image.
+                </p>
 
-        <!-- ================ TAB: CTA & QUOTE ================ -->
-        <section v-if="activeTab === 'cta'" class="tab-content">
-          <div class="section-card">
-            <div class="sc-header">
-              <h2>Quote / Testimonial</h2>
-              <p>Edit the quote block that appears between the gallery and team sections on the public page.</p>
-            </div>
-            <div class="sc-body">
-              <label class="field field-block">
-                <span class="field-label">Quote Text</span>
-                <textarea v-model="quoteContent.text" rows="3" placeholder="Enter the quote..."></textarea>
-              </label>
-              <label class="field field-block">
-                <span class="field-label">Citation / Author</span>
-                <input v-model="quoteContent.cite" placeholder="e.g. — SETE SENA Environmental Team" />
-              </label>
-            </div>
-          </div>
+                <div class="image-slot-grid">
+                  <article v-for="(img, index) in galleryImages" :key="index" class="image-slot" :class="{ filled: !!img.src }">
+                    <header class="image-slot-header">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <div class="image-slot-heading">
+                        <h3>{{ img.caption || 'Untitled photo' }}</h3>
+                        <p>{{ img.span === '2' ? 'Wide (2 columns)' : 'Standard (1 column)' }}</p>
+                      </div>
+                      <button type="button" class="icon-btn danger" aria-label="Remove image" @click="confirmDeleteGalleryImage(index)">
+                        <Trash2 :size="15" aria-hidden="true" />
+                      </button>
+                    </header>
+                    <div class="image-slot-body">
+                      <figure class="image-preview slot-preview">
+                        <img v-if="img.src" :src="img.src" :alt="img.caption" />
+                        <div v-else class="slot-empty">
+                          <ImageIcon :size="22" aria-hidden="true" />
+                          <span>No image set</span>
+                        </div>
+                      </figure>
+                      <div class="form-grid">
+                        <label class="field">
+                          <span>Caption</span>
+                          <input v-model="img.caption" type="text" placeholder="e.g. Reforestation in rural Cambodia" />
+                        </label>
+                        <label class="field">
+                          <span>Span</span>
+                          <select v-model="img.span">
+                            <option value="1">1 column</option>
+                            <option value="2">2 columns (wider)</option>
+                          </select>
+                        </label>
+                      </div>
+                      <ImagePickerField
+                        v-model="img.src"
+                        :label="img.caption || `Gallery image ${index + 1}`"
+                        hide-preview
+                        @success="(msg) => ui.addToast(msg, 'success')"
+                        @error="(msg) => ui.addToast(msg, 'error')"
+                      />
+                    </div>
+                  </article>
+                </div>
 
-          <div class="section-card" style="margin-top: 1.25rem;">
-            <div class="sc-header">
-              <h2>CTA Section</h2>
-              <p>Edit the Call to Action section at the bottom of the Environment page — the label, heading, description, and both button links.</p>
-            </div>
-            <div class="sc-body">
-              <div class="form-row">
-                <label class="field">
-                  <span class="field-label">Label / Eyebrow</span>
-                  <input v-model="ctaContent.label" placeholder="e.g. Take Action" />
-                </label>
-                <label class="field">
-                  <span class="field-label">Heading</span>
-                  <input v-model="ctaContent.heading" placeholder="e.g. Join the Environmental Movement" />
-                </label>
+                <button type="button" class="btn btn-secondary add-image-btn" @click="galleryImages.push({ src: '', caption: '', span: '1' })">
+                  <Plus :size="16" aria-hidden="true" />
+                  <span>Add image</span>
+                </button>
               </div>
-              <label class="field field-block">
-                <span class="field-label">Description</span>
-                <textarea v-model="ctaContent.description" rows="2" placeholder="CTA description..."></textarea>
-              </label>
-              <div class="form-row">
-                <label class="field">
-                  <span class="field-label">Primary Button Text</span>
-                  <input v-model="ctaContent.primaryBtnText" placeholder="e.g. Get Involved" />
-                </label>
-                <label class="field">
-                  <span class="field-label">Primary Button URL</span>
-                  <input v-model="ctaContent.primaryBtnUrl" placeholder="e.g. /get-involved" />
-                </label>
-              </div>
-              <div class="form-row">
-                <label class="field">
-                  <span class="field-label">Secondary Button Text</span>
-                  <input v-model="ctaContent.secondaryBtnText" placeholder="e.g. Support Us" />
-                </label>
-                <label class="field">
-                  <span class="field-label">Secondary Button URL</span>
-                  <input v-model="ctaContent.secondaryBtnUrl" placeholder="e.g. /get-involved/donate" />
-                </label>
-              </div>
-            </div>
+            </Transition>
+          </section>
 
-            <div class="side-card">
-              <div class="side-card-hdr">
-                <span class="side-card-badge env-badge">Actions</span>
-                <h3>Manage</h3>
+          <!-- ═══ Our support (partners) ═══ -->
+          <section class="editor-panel" aria-labelledby="partners-heading">
+            <div class="panel-header">
+              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('partners')">
+                <div class="panel-icon-wrap">
+                  <FolderOpen :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Our support</p>
+                  <h2 id="partners-heading">Partner organizations</h2>
+                </div>
               </div>
-              <RouterLink class="side-btn" to="/admin/modules/programs">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                Program records
-              </RouterLink>
-              <RouterLink class="side-btn" to="/admin/editor/programs-environment">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit page content
-              </RouterLink>
-              <RouterLink class="side-btn" to="/admin/media">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                Media library
-              </RouterLink>
+              <div class="panel-header-actions">
+                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
+                <button type="button" class="btn btn-secondary btn-sm" @click="partners.push({ name: '', type: '', description: '' })">
+                  <Plus :size="15" aria-hidden="true" />
+                  <span>Add partner</span>
+                </button>
+                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('partners')">
+                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['partners'] }" />
+                </button>
+              </div>
             </div>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['partners']" class="panel-body">
+                <p class="panel-desc">Edit the partner organizations shown in the "Our Supporters" section.</p>
+
+                <div class="stack-list">
+                  <article v-for="(partner, index) in partners" :key="index" class="sub-editor">
+                    <header class="sub-editor-header">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <h3>{{ partner.name || 'Untitled partner' }}</h3>
+                      <button type="button" class="icon-btn danger" aria-label="Remove partner" @click="confirmDeletePartner(index)">
+                        <Trash2 :size="15" aria-hidden="true" />
+                      </button>
+                    </header>
+                    <div class="sub-editor-body form-grid">
+                      <label class="field">
+                        <span>Name</span>
+                        <input v-model="partner.name" type="text" placeholder="e.g. UN Environment" />
+                      </label>
+                      <label class="field">
+                        <span>Type / relationship</span>
+                        <input v-model="partner.type" type="text" placeholder="e.g. International Partner" />
+                      </label>
+                      <label class="field wide">
+                        <span>Description <em>(optional)</em></span>
+                        <textarea v-model="partner.description" rows="2" placeholder="Brief description of the partnership..."></textarea>
+                      </label>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </Transition>
+          </section>
+
+          <!-- ═══ Quote ═══ -->
+          <section class="editor-panel" aria-labelledby="quote-heading">
+            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['quote']" @click="togglePanel('quote')">
+              <div class="panel-header-left">
+                <div class="panel-icon-wrap">
+                  <MessageSquareQuote :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Testimonial</p>
+                  <h2 id="quote-heading">Quote</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
+                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quote'] }" aria-hidden="true" />
+              </div>
+            </button>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['quote']" class="panel-body form-grid">
+                <label class="field wide">
+                  <span>Quote text</span>
+                  <textarea v-model="quoteContent.text" rows="3" placeholder="Enter the quote..."></textarea>
+                </label>
+                <label class="field wide">
+                  <span>Citation / author</span>
+                  <input v-model="quoteContent.cite" type="text" placeholder="e.g. — SETE SENA Environmental Team" />
+                </label>
+              </div>
+            </Transition>
+          </section>
+
+          <!-- ═══ CTA section ═══ -->
+          <section class="editor-panel" aria-labelledby="cta-heading">
+            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['cta']" @click="togglePanel('cta')">
+              <div class="panel-header-left">
+                <div class="panel-icon-wrap">
+                  <ListChecks :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Call to action</p>
+                  <h2 id="cta-heading">CTA section</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
+                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['cta'] }" aria-hidden="true" />
+              </div>
+            </button>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['cta']" class="panel-body form-grid">
+                <label class="field">
+                  <span>Label / eyebrow</span>
+                  <input v-model="ctaContent.label" type="text" placeholder="e.g. Take Action" />
+                </label>
+                <label class="field">
+                  <span>Heading</span>
+                  <input v-model="ctaContent.heading" type="text" placeholder="e.g. Join the Environmental Movement" />
+                </label>
+                <label class="field wide">
+                  <span>Description</span>
+                  <textarea v-model="ctaContent.description" rows="2" placeholder="CTA description..."></textarea>
+                </label>
+                <label class="field">
+                  <span>Primary button text</span>
+                  <input v-model="ctaContent.primaryBtnText" type="text" placeholder="e.g. Get Involved" />
+                </label>
+                <label class="field">
+                  <span>Primary button URL</span>
+                  <input v-model="ctaContent.primaryBtnUrl" type="text" placeholder="e.g. /get-involved" />
+                </label>
+                <label class="field">
+                  <span>Secondary button text</span>
+                  <input v-model="ctaContent.secondaryBtnText" type="text" placeholder="e.g. Support Us" />
+                </label>
+                <label class="field">
+                  <span>Secondary button URL</span>
+                  <input v-model="ctaContent.secondaryBtnUrl" type="text" placeholder="e.g. /get-involved/donate" />
+                </label>
+              </div>
+            </Transition>
+          </section>
         </div>
-        </section>
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
-.env-dash {
-  --bg: var(--admin-theme-bg);
-  --surface: var(--admin-theme-surface);
-  --border: var(--admin-theme-border);
-  --border-s: var(--admin-theme-border-strong);
-  --text: var(--admin-theme-text);
-  --contrast: var(--admin-theme-contrast);
-  --muted: var(--admin-theme-muted);
-  --emerald: var(--admin-theme-primary);
-  --emerald-glow: color-mix(in srgb, var(--admin-theme-primary) 25%, transparent);
-  --emerald-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
-  --blue: var(--admin-theme-teal);
-  --blue-glow: color-mix(in srgb, var(--admin-theme-teal) 25%, transparent);
-  --blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
-  --amber: var(--admin-theme-gold);
-  --amber-glow: color-mix(in srgb, var(--admin-theme-gold) 25%, transparent);
-  --amber-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
-  --violet: #7c3aed;
-  --violet-glow: rgba(124,58,237,0.25);
-  --violet-soft: color-mix(in srgb, #7c3aed 12%, transparent);
-  --red: var(--admin-theme-danger);
-  --red-soft: color-mix(in srgb, var(--admin-theme-danger) 12%, transparent);
-  --shadow-xs: var(--admin-theme-shadow);
-  --shadow-sm: var(--admin-theme-shadow);
-  --shadow-md: var(--admin-theme-shadow);
-  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
-  min-height: 100vh; background: var(--bg); color: var(--text);
-  transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-:global(.admin-dark) .env-dash {
-  --bg: #06100F; --surface: #0a1a14; --border: #1d3b33; --border-s: #263252;
-  --text: #c8e6d8; --contrast: #eaf5f0; --muted: #7aaa94;
-  --blue: #3b82f6; --blue-soft: #0f2924;
-  --emerald: #10b981; --emerald-glow: rgba(16,185,129,0.22); --emerald-soft: #0f3d2e;
-  --amber: #f59e0b; --amber-soft: #2a1f0f;
-  --violet: #a78bfa; --violet-soft: #1a1630;
-  --slate: #7aa396; --slate-soft: #0f1f1a;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.35);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.45);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.55);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.65);
-}
-.dash-layout { display: flex; }
-.dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; }
+.env-admin {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-primary: var(--admin-theme-primary);
+  --admin-primary-deep: var(--admin-theme-primary-deep);
+  --admin-danger: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
 
-.toast-container { position: fixed; top: 72px; right: 1.5rem; z-index: 200; display: grid; gap: 0.4rem; }
-.toast { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; box-shadow: var(--shadow-md); background: var(--surface); border: 1px solid var(--border); }
-.toast-success { border-color: var(--emerald); color: var(--emerald); }
-.toast-error { border-color: var(--red); color: var(--red); }
-.toast-info { border-color: var(--blue); color: var(--blue); }
-.toast-enter-active, .toast-leave-active { transition: all 0.25s ease; }
-.toast-enter-from { opacity: 0; transform: translateX(30px); }
-.toast-leave-to { opacity: 0; transform: translateX(30px); }
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  transition: padding-left 0.25s ease;
+}
 
-.btn {
-  display: inline-flex; align-items: center; gap: 0.45rem;
-  min-height: 36px; padding: 0.4rem 1rem;
-  border-radius: var(--radius-sm); font-weight: 750; font-size: 0.82rem;
-  cursor: pointer; text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
-  border: 1px solid transparent; font-family: inherit;
+.admin-layout {
+  min-height: 100vh;
 }
-.btn:hover { transform: translateY(-1px); }
-.btn-primary.env-primary {
-  background: linear-gradient(135deg, #059669, #10b981);
-  color: #fff; box-shadow: 0 4px 14px rgba(5,150,105,0.3);
-}
-.btn-primary.env-primary:hover { box-shadow: 0 6px 24px rgba(5,150,105,0.4); }
-.btn-ghost {
-  background: rgba(255,255,255,0.7); color: var(--contrast);
-  border-color: var(--border); backdrop-filter: blur(8px);
-}
-.btn-ghost:hover { background: var(--surface); border-color: var(--border-s); box-shadow: var(--shadow-sm); }
-:global(.admin-dark) .btn-ghost { background: rgba(16,24,38,0.7); border-color: var(--border); }
-.btn:disabled { opacity: 0.5; cursor: wait; }
-.btn-icon {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: var(--radius-sm);
-  border: 1px solid transparent; background: transparent;
-  color: var(--muted); cursor: pointer; transition: all 0.15s ease;
-}
-.btn-icon:hover { background: var(--red-soft); color: var(--red); border-color: var(--red-soft); }
-@keyframes spin { to { transform: rotate(360deg); } }
-.spin { animation: spin 0.8s linear infinite; }
 
-.dash-banner { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); overflow: hidden; }
-.banner-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 400px 200px at 10% 30%, rgba(5,150,105,0.08) 0%, transparent 70%), radial-gradient(ellipse 300px 200px at 90% 80%, rgba(37,99,235,0.05) 0%, transparent 70%); pointer-events: none; }
-.banner-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.banner-particles span {
-  position: absolute; width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(5,150,105,0.1);
+.manager-main {
+  min-height: 100vh;
+  padding: 1.25rem;
+  padding-top: calc(60px + 1.25rem);
 }
-.banner-particles span:nth-child(1) { top: 15%; left: 10%; animation: float 8s ease-in-out infinite; }
-.banner-particles span:nth-child(2) { top: 60%; right: 15%; width: 4px; height: 4px; animation: float 6s ease-in-out infinite reverse; }
-.banner-particles span:nth-child(3) { bottom: 20%; left: 40%; width: 5px; height: 5px; animation: float 10s ease-in-out infinite 2s; }
-.banner-particles span:nth-child(4) { top: 25%; right: 30%; animation: float 7s ease-in-out infinite 1s; }
-@keyframes float {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
-  50% { transform: translateY(-12px) scale(1.2); opacity: 0.8; }
-}
-.banner-inner { position: relative; z-index: 1; }
-.banner-breadcrumb {
-  display: flex; align-items: center; gap: 0.4rem;
-  padding: 0.6rem 1.25rem;
-  background: rgba(255,255,255,0.5); backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-  font-size: 0.76rem; font-weight: 700;
-}
-:global(.admin-dark) .banner-breadcrumb { background: rgba(16,24,38,0.5); }
-.bcrumb-link { color: var(--blue); text-decoration: none; }
-.bcrumb-link:hover { text-decoration: underline; }
-.bcrumb-sep { color: var(--muted); width: 10px; }
-.bcrumb-label { color: var(--muted); }
-.bcrumb-current { color: var(--contrast); }
-.banner-content {
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
-  padding: 1.25rem 1.25rem 0.75rem;
-}
-.banner-text { display: grid; gap: 0.3rem; }
-.banner-badge {
-  display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content;
-  font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--emerald); background: var(--emerald-soft);
-  padding: 0.2rem 0.7rem; border-radius: 999px;
-}
-.banner-title {
-  margin: 0; color: var(--contrast);
-  font-size: clamp(1.35rem,2.8vw,1.85rem); font-weight: 900;
-  letter-spacing: -0.025em; line-height: 1.1;
-}
-.banner-desc { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.5; max-width: 460px; }
-.banner-actions { display: flex; gap: 0.45rem; flex-shrink: 0; flex-wrap: wrap; }
-.banner-stats { display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid var(--border); }
-.bstat {
-  display: flex; align-items: center; gap: 0.7rem;
-  padding: 0.75rem 1rem;
-  border-right: 1px solid var(--border);
-  text-decoration: none; transition: all 0.2s ease;
-}
-.bstat:last-child { border-right: none; }
-.bstat:hover { background: var(--surface); }
-.bstat-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius-sm); flex-shrink: 0; transition: transform 0.2s ease; }
-.bstat:hover .bstat-icon { transform: scale(1.08); }
-.bstat-emerald .bstat-icon { background: var(--emerald-soft); color: var(--emerald); }
-.bstat-emerald:hover .bstat-icon { box-shadow: 0 0 0 4px var(--emerald-glow); }
-.bstat-blue .bstat-icon { background: var(--blue-soft); color: var(--blue); }
-.bstat-blue:hover .bstat-icon { box-shadow: 0 0 0 4px var(--blue-glow); }
-.bstat-amber .bstat-icon { background: var(--amber-soft); color: var(--amber); }
-.bstat-amber:hover .bstat-icon { box-shadow: 0 0 0 4px var(--amber-glow); }
-.bstat-violet .bstat-icon { background: var(--violet-soft); color: var(--violet); }
-.bstat-violet:hover .bstat-icon { box-shadow: 0 0 0 4px var(--violet-glow); }
-.bstat-info strong { display: block; color: var(--contrast); font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
-.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
-.bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 500; margin-top: 1px; }
 
-.tab-nav { display: flex; align-items: center; gap: 0.35rem; margin-top: 1.25rem; padding: 0 0.25rem; overflow-x: auto; }
-.tab-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--muted); font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; font-family: inherit; }
-.tab-btn:hover { border-color: var(--border-s); color: var(--contrast); }
-.tab-btn.active { background: var(--emerald-soft); border-color: var(--emerald); color: var(--emerald); }
-:global(.admin-dark) .tab-btn.active { background: rgba(16,185,129,0.1); }
-.tab-spacer { flex: 1; }
-.tab-dirty { font-size: 0.72rem; font-weight: 700; color: var(--amber); padding: 0.25rem 0.6rem; border-radius: 999px; background: var(--amber-soft); white-space: nowrap; }
-
-.tab-content { margin-top: 1.25rem; }
-
-.quick-links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; }
-.link-card { display: flex; align-items: center; gap: 0.7rem; padding: 0.8rem 0.9rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); text-decoration: none; cursor: pointer; transition: all 0.2s cubic-bezier(0.16,1,0.3,1); }
-.link-card:hover { border-color: var(--border-s); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
-.link-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--radius-sm); flex-shrink: 0; }
-.link-emerald .link-icon { background: var(--emerald-soft); color: var(--emerald); }
-.link-blue .link-icon { background: var(--blue-soft); color: var(--blue); }
-.link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
-.link-violet .link-icon { background: var(--violet-soft); color: var(--violet); }
-.link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 800; margin-bottom: 1px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.2s ease; }
-.link-card:hover .link-arrow { transform: translateX(3px); color: var(--emerald); }
-
-.overview-cards { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.85rem; margin-top: 1.25rem; }
-.overview-card-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; transition: box-shadow 0.2s ease; }
-.overview-card-item:hover { box-shadow: var(--shadow-sm); }
-.oc-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
-.oc-text { color: var(--muted); font-size: 0.85rem; margin: 0.35rem 0; line-height: 1.4; }
-.oc-action { background: none; border: none; color: var(--blue); font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0; font-family: inherit; }
-.oc-action:hover { text-decoration: underline; }
-
-.section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); overflow: hidden; }
-.sc-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-.sc-header h2 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--contrast); }
-.sc-header p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.82rem; }
-.sc-body { padding: 1.25rem; }
-
-.field { display: grid; gap: 0.25rem; }
-.field-block { grid-column: 1 / -1; }
-.field-label { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.field-hint { font-size: 0.7rem; font-weight: 500; color: var(--muted); font-style: italic; text-transform: none; letter-spacing: normal; }
-.field input, .field textarea, .field select { padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--contrast); font-size: 0.88rem; font-family: inherit; transition: border-color 0.15s ease; width: 100%; }
-.field input:focus, .field textarea:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 2px var(--emerald-glow); }
-:global(.admin-dark) .field input, :global(.admin-dark) .field textarea { background: var(--bg); }
-.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem; }
-.add-stat-btn { margin-top: 0.75rem; }
-
-/* ─── GALLERY PREVIEW ─── */
-.gallery-stats-bar { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.gsb-item { font-size: 0.82rem; color: var(--muted); }
-.gsb-item strong { color: var(--contrast); }
-.gsb-missing { color: var(--red, #dc2626); }
-
-.gallery-preview-section {
-  background: var(--env-preview-bg, linear-gradient(135deg, #0a1f18 0%, #0d3328 50%, #0f3d2e 100%));
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  overflow: hidden;
-}
-.gps-header { text-align: center; margin-bottom: 1.25rem; }
-.gps-badge {
-  display: inline-block;
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #d4a017;
-  padding: 0.25rem 0.75rem;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  margin-bottom: 0.5rem;
-}
-.gps-title { font-size: 1.1rem; font-weight: 800; color: #ffffff; margin-bottom: 0.35rem; }
-.gps-desc { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin: 0; }
-
-.gps-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
-  grid-auto-rows: 100px;
-}
-.gps-item {
+/* ─── Hero banner ───────────────────────────────── */
+.manager-hero {
   position: relative;
-  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    var(--admin-theme-surface) 0%,
+    color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 100%
+  );
+  box-shadow: var(--admin-theme-shadow);
   overflow: hidden;
-  grid-column: span var(--g-span, 1);
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  transition: border-color 0.2s;
 }
-.gps-item.gps-span-2 { grid-column: span 2; }
-.gps-item.gps-empty {
-  border: 1.5px dashed rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.03);
+
+.hero-glow {
+  position: absolute;
+  top: -40px;
+  right: -30px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--admin-theme-primary) 20%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
 }
-.gps-preview-img {
+
+.hero-accent-line {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--admin-theme-primary-deep) 0%,
+    color-mix(in srgb, var(--admin-theme-primary) 40%, transparent) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.hero-content-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.hero-icon-wrap {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
+}
+
+.manager-hero h1,
+.manager-hero p,
+.editor-panel h2,
+.editor-panel p {
+  margin: 0;
+}
+
+.manager-hero h1 {
+  color: var(--admin-theme-contrast);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.manager-title {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.manager-meta,
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.manager-meta span {
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 20%, var(--admin-theme-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+  padding: 0.18rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.manager-meta span.meta-dirty {
+  border-color: color-mix(in srgb, var(--admin-theme-danger) 50%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-danger) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-danger);
+}
+
+/* ─── Eyebrow & kicker ──────────────────────────── */
+.eyebrow,
+.panel-kicker {
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ─── Buttons ───────────────────────────────────── */
+.btn,
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 0.4rem;
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.btn:hover,
+.icon-btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active,
+.icon-btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled,
+.icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none !important;
+}
+
+.btn-primary {
+  border-color: var(--admin-theme-primary-deep);
+  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
+  color: #ffffff;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--admin-theme-primary) 32%, transparent);
+}
+
+.btn-secondary,
+.icon-btn {
+  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
+  color: var(--admin-theme-contrast);
+}
+
+.btn-sm {
+  min-height: 34px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.icon-btn {
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+}
+
+.icon-btn.danger {
+  border-color: color-mix(in srgb, var(--admin-theme-danger) 60%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
+  color: var(--admin-theme-danger);
+}
+
+.btn-secondary:hover,
+.icon-btn:hover {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+}
+
+.icon-btn.danger:hover {
+  border-color: var(--admin-theme-danger);
+  background: var(--admin-theme-danger);
+  color: #ffffff;
+}
+
+/* ─── State / loading ───────────────────────────── */
+.state-card {
+  margin-top: 1rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 10px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-muted);
+  padding: 1rem;
+  font-weight: 700;
+}
+
+/* ─── Content grid ──────────────────────────────── */
+.content-grid {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+/* ─── Editor panels ─────────────────────────────── */
+.editor-panel {
+  overflow: hidden;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 10px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
+  transition: box-shadow 0.2s ease;
+}
+
+.editor-panel:hover {
+  box-shadow:
+    var(--admin-theme-shadow),
+    0 2px 8px color-mix(in srgb, var(--admin-theme-primary) 6%, transparent);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--admin-theme-border);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface)) 0%,
+    color-mix(in srgb, var(--admin-theme-primary) 4%, var(--admin-theme-surface)) 100%
+  );
+  padding: 0.8rem 1rem;
+}
+
+.panel-header-clickable {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--admin-theme-border);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.panel-header-clickable:hover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--admin-theme-surface-soft) 70%, var(--admin-theme-surface)) 0%,
+    color-mix(in srgb, var(--admin-theme-primary) 7%, var(--admin-theme-surface)) 100%
+  );
+}
+
+.panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.panel-header-left-clickable {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.panel-header-left-clickable:hover {
+  opacity: 0.78;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.panel-icon-wrap {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+}
+
+.panel-header h2 {
+  color: var(--admin-theme-contrast);
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.panel-body {
+  padding: 1rem;
+}
+
+.panel-desc {
+  color: var(--admin-theme-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin-bottom: 0.85rem;
+}
+
+/* ─── Chevron ──────────────────────────────────── */
+.edit-icon {
+  flex-shrink: 0;
+  color: var(--admin-theme-primary-deep);
+  opacity: 0.5;
+  transition: opacity 0.18s ease;
+}
+
+.panel-header:hover .edit-icon {
+  opacity: 1;
+}
+
+.icon-btn-pencil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-theme-primary-deep);
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.18s ease, background 0.18s ease;
+}
+
+.panel-header:hover .icon-btn-pencil,
+.icon-btn-pencil:hover,
+.icon-btn-pencil:focus-visible {
+  opacity: 1;
+}
+
+.icon-btn-pencil:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--admin-theme-muted);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.chevron-up {
+  transform: rotate(-180deg);
+}
+
+.icon-btn.icon-btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--admin-theme-muted);
+  width: 32px;
+  min-height: 32px;
+}
+
+.icon-btn.icon-btn-ghost:hover {
+  color: var(--admin-theme-primary-deep);
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, transparent);
+}
+
+/* ─── Collapse transition ──────────────────────── */
+.collapse-enter-active {
+  transition: opacity 0.2s ease, max-height 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.collapse-leave-active {
+  transition: opacity 0.15s ease, max-height 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.collapse-enter-to,
+.collapse-leave-from {
+  max-height: 6000px;
+}
+
+/* ─── Quick links ───────────────────────────────── */
+.quick-links-body {
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+}
+
+.quick-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-primary-deep);
+  padding: 0.75rem 0.85rem;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.quick-link:hover {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
+  transform: translateY(-1px);
+}
+
+.quick-link strong {
+  display: block;
+  color: var(--admin-theme-contrast);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.quick-link span {
+  display: block;
+  color: var(--admin-theme-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+/* ─── Field hints ───────────────────────────────── */
+.field-hint {
+  color: var(--admin-theme-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* ─── Input fields ──────────────────────────────── */
+.field,
+.upload-box {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--admin-theme-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.field span,
+.upload-box span {
+  color: var(--admin-theme-contrast-soft);
+}
+
+.field em {
+  font-style: normal;
+  color: var(--admin-theme-muted);
+  font-weight: 600;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  border: 1px solid var(--admin-theme-border-strong);
+  border-radius: 7px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 0.75rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: var(--admin-theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
+  outline: none;
+}
+
+.edit-flash {
+  animation: edit-flash-pulse 0.8s ease;
+}
+
+@keyframes edit-flash-pulse {
+  0% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--admin-theme-primary) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
+  }
+}
+
+/* ─── Layout grids ──────────────────────────────── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+/* ─── Image editors ─────────────────────────────── */
+.image-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(320px, 1.3fr);
+  gap: 1.1rem;
+  padding: 1.1rem;
+}
+
+.image-editor-grid--compact {
+  padding: 0;
+  grid-template-columns: minmax(160px, 0.5fr) minmax(240px, 1.5fr);
+}
+
+.image-preview {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 26%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: var(--admin-theme-surface-soft);
+}
+
+.image-preview img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
 }
-.gps-item:hover .gps-preview-img { transform: scale(1.05); }
-.gps-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(10,31,24,0.7) 0%, transparent 50%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  display: flex;
-  align-items: flex-end;
-  padding: 0.65rem;
+
+.hero-preview {
+  aspect-ratio: 16 / 10;
 }
-.gps-item:hover .gps-overlay { opacity: 1; }
-.gps-caption { color: #ffffff; font-size: 0.65rem; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.3); line-height: 1.2; }
-.gps-empty-state {
-  display: grid;
-  place-items: center;
+
+.initiative-preview {
+  aspect-ratio: 4 / 3;
+}
+
+.slot-empty {
   height: 100%;
-  color: rgba(255,255,255,0.2);
-  text-align: center;
-  padding: 0.5rem;
-}
-.gps-empty-text { font-size: 0.65rem; margin: 0.25rem 0 0; color: rgba(255,255,255,0.25); }
-
-.gallery-editor-list { display: grid; gap: 0.75rem; }
-.sub-editor-actions { display: flex; align-items: center; gap: 0.25rem; }
-.gallery-span-badge {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  font-size: 0.6rem;
+  justify-content: center;
+  gap: 0.3rem;
+  color: var(--admin-theme-muted);
+  opacity: 0.7;
+  font-size: 0.76rem;
   font-weight: 700;
+}
+
+.form-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* ─── Stacked cards (stats, sections, etc.) ─────── */
+.stack-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.sub-editor {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 9px;
+  background: var(--admin-theme-surface);
+  overflow: hidden;
+  transition: border-color 0.18s ease;
+}
+
+.sub-editor:hover {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
+}
+
+.sub-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-bottom: 1px solid var(--admin-theme-border);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--admin-theme-surface-soft) 40%, var(--admin-theme-surface)) 0%,
+    color-mix(in srgb, var(--admin-theme-primary) 3%, var(--admin-theme-surface)) 100%
+  );
+  padding: 0.75rem 0.85rem;
+}
+
+.sub-editor-header h3 {
+  flex: 1;
+  margin: 0;
+  color: var(--admin-theme-contrast);
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+
+.item-number {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  border-radius: 6px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.section-badge {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: var(--emerald-soft, rgba(15,143,105,0.1));
-  color: var(--emerald, #0f8f69);
-  margin-left: 0.4rem;
-  vertical-align: middle;
 }
-.gallery-missing-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.6rem;
+
+.sub-editor-body {
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* ─── Bullet chips ──────────────────────────────── */
+.item-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-top: 0.15rem;
+}
+
+.item-chip {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 18%, var(--admin-theme-border));
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.73rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: var(--red-soft, rgba(220,38,38,0.1));
-  color: var(--red, #dc2626);
-  margin-left: 0.4rem;
-  vertical-align: middle;
+  line-height: 1.3;
 }
 
-.stat-editor { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; }
-.stat-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-.stat-editor-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
+/* ─── Image slots (gallery) ─────────────────────── */
+.image-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.85rem;
+}
 
-.sections-list { display: grid; gap: 0.75rem; }
-.section-edit-card { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; transition: border-color 0.15s ease; }
-.section-edit-card:hover { border-color: var(--border-s); }
-.sec-summary { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; cursor: pointer; list-style: none; user-select: none; }
-.sec-summary::-webkit-details-marker { display: none; }
-.sec-summary-left { display: flex; align-items: center; gap: 0.7rem; }
-.sec-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); background: var(--emerald-soft); padding: 0.15rem 0.5rem; border-radius: 4px; }
-.sec-heading-preview { font-size: 0.88rem; font-weight: 600; color: var(--contrast); }
-.sec-chevron { color: var(--muted); transition: transform 0.2s ease; }
-details[open] .sec-chevron { transform: rotate(180deg); }
-.sec-body { padding: 0 1rem 1rem; display: grid; gap: 0.75rem; }
+.image-slot {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 9px;
+  background: var(--admin-theme-surface);
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
 
-.item-preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; }
-.item-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.3rem; }
-.item-chip { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; background: var(--emerald-soft); color: var(--emerald); font-size: 0.75rem; font-weight: 600; }
+.image-slot.filled {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
+}
 
-.sub-editor-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; }
-.sub-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-.sub-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--emerald); }
+.image-slot:hover {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 35%, var(--admin-theme-border));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--admin-theme-primary) 8%, transparent);
+}
 
+.image-slot-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-bottom: 1px solid var(--admin-theme-border);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
+  padding: 0.7rem 0.8rem;
+}
 
-.side-actions { display: grid; gap: 0.45rem; }
-.side-btn { display: flex; align-items: center; gap: 0.45rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: all 0.15s ease; }
-.side-btn:hover { border-color: var(--border-s); background: var(--bg); color: var(--contrast); box-shadow: var(--shadow-xs); }
+.image-slot-heading {
+  flex: 1;
+  min-width: 0;
+}
 
-.loading-text { color: var(--muted); font-style: italic; padding: 1.5rem 0; text-align: center; }
-.cloud-badge { background: var(--emerald-soft) !important; color: var(--emerald) !important; }
-.local-badge { background: var(--amber-soft) !important; color: var(--amber) !important; }
+.image-slot-heading h3,
+.image-slot-heading p {
+  margin: 0;
+}
 
-@media (min-width: 900px) { .env-dash.sidebar-open { padding-left: 260px; } }
-@media (max-width: 900px) { .banner-stats { grid-template-columns: repeat(2,1fr); } .quick-links-grid { grid-template-columns: 1fr; } .overview-cards { grid-template-columns: 1fr; } }
-@media (max-width: 720px) { .dash-main { padding: 1rem; } .banner-content { flex-direction: column; } .banner-stats { grid-template-columns: 1fr; } .bstat { border-right: none; border-bottom: 1px solid var(--border); } .bstat:last-child { border-bottom: none; } }
-@media (max-width: 600px) { .banner-actions { width: 100%; } .banner-actions .btn { flex: 1; justify-content: center; } }
+.image-slot-heading h3 {
+  color: var(--admin-theme-contrast);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.image-slot-heading p {
+  color: var(--admin-theme-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.image-slot-body {
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.slot-preview {
+  aspect-ratio: 4 / 3;
+}
+
+.add-image-btn {
+  margin-top: 0.85rem;
+}
+
+/* ─── Dark mode ─────────────────────────────────── */
+:global(.admin-dark) .env-admin {
+  --admin-bg: var(--admin-theme-bg);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-primary: var(--admin-theme-primary);
+  --admin-primary-deep: var(--admin-theme-primary-deep);
+  --admin-danger: var(--admin-theme-danger);
+  --admin-shadow: var(--admin-theme-shadow);
+}
+
+:global(.admin-dark) .btn-primary {
+  color: #071311;
+}
+
+:global(.admin-dark) .manager-hero {
+  background: linear-gradient(
+    135deg,
+    var(--admin-theme-surface) 0%,
+    color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface)) 100%
+  );
+}
+
+:global(.admin-dark) .panel-header,
+:global(.admin-dark) .sub-editor-header {
+  background: linear-gradient(
+    135deg,
+    var(--admin-theme-surface) 0%,
+    color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 100%
+  );
+}
+
+:global(.admin-dark) .panel-header-clickable:hover {
+  background: linear-gradient(
+    135deg,
+    var(--admin-theme-surface) 0%,
+    color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) 100%
+  );
+}
+
+/* ─── Responsive ────────────────────────────────── */
+@media (min-width: 900px) {
+  .env-admin.sidebar-open {
+    padding-left: 260px;
+  }
+}
+
+@media (max-width: 900px) {
+  .manager-main {
+    padding: 1rem;
+    padding-top: calc(60px + 1rem);
+  }
+
+  .manager-hero,
+  .panel-header,
+  .sub-editor-header,
+  .image-slot-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hero-actions,
+  .hero-actions .btn {
+    width: 100%;
+  }
+
+  .form-grid,
+  .image-editor-grid,
+  .image-editor-grid--compact {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-content-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
 </style>
