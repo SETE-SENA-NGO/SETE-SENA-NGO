@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ContentEditor from '@/components/admin/ContentEditor.vue'
 import DataTable from '@/components/admin/DataTable.vue'
 import { useContentStore } from '@/stores/content.store'
+import { useUiStore } from '@/stores/ui.store'
 import type { PageContent } from '@/types/content'
 
 const store = useContentStore()
+const ui = useUiStore()
 const selectedPage = ref<PageContent | null>(null)
 
 const columns = [
@@ -56,7 +59,7 @@ function onSaved(page: PageContent) {
 </script>
 
 <template>
-  <div class="admin-page">
+  <div :class="['admin-page', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -66,6 +69,7 @@ function onSaved(page: PageContent) {
           <button type="button" @click="createPage">New page</button>
           <button type="button" @click="editGetInvolvedPage">Get involved JSON</button>
           <button type="button" @click="editPartnerPage">Partner page JSON</button>
+          <RouterLink to="/admin/vision-mission" class="toolbar-link">Vision & Mission</RouterLink>
         </div>
         <div class="grid">
           <ContentEditor :page="selectedPage" @saved="onSaved" />
@@ -81,18 +85,26 @@ function onSaved(page: PageContent) {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--admin-theme-bg);
+  color: var(--admin-theme-text);
+  transition: padding-left 0.25s ease;
 }
 .admin-layout {
   display: flex;
 }
 .main {
   flex: 1;
+  width: 100%;
   padding: 1.5rem;
-  max-width: 1200px;
+}
+.main h1 {
+  color: var(--admin-theme-contrast);
+  font-size: 1.6rem;
+  font-weight: 800;
 }
 @media (min-width: 900px) {
-  .main {
-    margin-left: max(10%, 180px);
+  .admin-page.sidebar-open {
+    padding-left: 260px;
   }
 }
 .grid {
@@ -106,14 +118,58 @@ function onSaved(page: PageContent) {
   margin: 0 0 1rem;
 }
 .toolbar button {
-  border: 1px solid var(--border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 0.45rem;
-  background: var(--panel);
-  color: var(--text);
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
   cursor: pointer;
   padding: 0.55rem 0.8rem;
+  font-family: inherit;
+  font-size: inherit;
+  transition: background 0.15s ease;
 }
 .toolbar button:hover {
-  background: #27272a;
+  background: var(--admin-theme-surface-soft);
+}
+.toolbar-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 0.45rem;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+  text-decoration: none;
+  font: inherit;
+  font-size: inherit;
+  transition: background 0.15s ease;
+}
+.toolbar-link:hover {
+  background: var(--admin-theme-surface-soft);
+}
+</style>
+
+<!-- Non-scoped dark mode overrides for Pages Manager page -->
+<style>
+.admin-dark .admin-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .main {
+  background: #06100F !important;
+}
+.admin-dark .toolbar button,
+.admin-dark .toolbar-link {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .toolbar button:hover,
+.admin-dark .toolbar-link:hover {
+  background: #0b1b17 !important;
+  border-color: #2d554a !important;
 }
 </style>

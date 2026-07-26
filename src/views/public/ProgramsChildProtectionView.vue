@@ -1,79 +1,73 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import Slideshow from '@/components/shared/Slideshow.vue'
+import { imageUrls } from '@/lib/imageUrls'
+import { supabase } from '@/lib/supabase'
 
-const slideItems = [
-  { image: '/images/programs/child-protection.jpg', caption: '' },
-  { image: '/images/programs/child-protection1.jpg', caption: '' },
-  { image: '/images/programs/child-protection2.jpg', caption: '' },
-  { image: '/images/programs/child-protection3.jpg', caption: '' },
+const cpHeroRef = ref(imageUrls.programs.childProtection)
+const cpHero1Ref = ref(imageUrls.programs.childProtection1)
+const cpHero3Ref = ref(imageUrls.programs.childProtection3)
+
+const FALLBACK_STATS = [
+  { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin', image: imageUrls.programs.childProtection },
+  { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.', icon: 'users', image: imageUrls.programs.childProtection1 },
+  { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.', icon: 'phone', image: imageUrls.programs.childProtection2 },
 ]
 
-const stats = [
-  { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.', icon: 'pin', image: '/images/programs/child-protection.jpg' },
-  { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.', icon: 'users', image: '/images/programs/child-protection1.jpg' },
-  { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.', icon: 'phone', image: '/images/programs/child-protection2.jpg' },
+interface WorkItem {
+  title: string
+  text: string
+  image: string
+  color: string
+}
+
+const FALLBACK_WHAT_WE_DO: WorkItem[] = [
+  { title: 'Anti-Trafficking Campaigns', text: 'Anti-child-trafficking campaigns at borders, markets and schools', image: imageUrls.programs.childProtection, color: '#0a7d5c' },
+  { title: 'Child Protection Networks', text: 'Village Child Protection Networks (CPN) trained in identification and referral', image: imageUrls.programs.childProtection1, color: '#2c7be5' },
+  { title: 'Child Rights Advocacy', text: 'Child rights advocacy with commune councils and provincial authorities', image: imageUrls.programs.childProtection2, color: '#e8871e' },
+  { title: 'Peer Educators', text: 'Peer-educator youth groups on safe migration, health and rights', image: imageUrls.programs.childProtection3, color: '#8b5cf6' },
+  { title: 'Family Reintegration', text: 'Family reintegration support for children returning from unsafe labour', image: imageUrls.programs.childProtection, color: '#e0475a' },
+  { title: 'Safeguarding Training', text: 'Safeguarding training for every teacher, monk and volunteer we work with', image: imageUrls.programs.childProtection1, color: '#c9a227' },
 ]
 
-// "What we do" — six focus areas, each with a photo, title and description.
-const whatWeDo = [
-  {
-    title: 'Anti-Trafficking Campaigns',
-    text: 'Anti-child-trafficking campaigns at borders, markets and schools',
-    image: '/images/programs/child-protection.jpg',
-    color: '#0a7d5c',
-  },
-  {
-    title: 'Child Protection Networks',
-    text: 'Village Child Protection Networks (CPN) trained in identification and referral',
-    image: '/images/programs/child-protection1.jpg',
-    color: '#2c7be5',
-  },
-  {
-    title: 'Child Rights Advocacy',
-    text: 'Child rights advocacy with commune councils and provincial authorities',
-    image: '/images/programs/child-protection2.jpg',
-    color: '#e8871e',
-  },
-  {
-    title: 'Peer Educators',
-    text: 'Peer-educator youth groups on safe migration, health and rights',
-    image: '/images/programs/child-protection3.jpg',
-    color: '#8b5cf6',
-  },
-  {
-    title: 'Family Reintegration',
-    text: 'Family reintegration support for children returning from unsafe labour',
-    image: '/images/programs/child-protection.jpg',
-    color: '#e0475a',
-  },
-  {
-    title: 'Safeguarding Training',
-    text: 'Safeguarding training for every teacher, monk and volunteer we work with',
-    image: '/images/programs/child-protection1.jpg',
-    color: '#c9a227',
-  },
-]
-
-// A referral case moves through three real stages described in "Our approach" below —
-// this list just breaks that same sentence into steps for the pathway diagram.
 const pathway = [
+  { step: 'Village, at dawn', text: 'A trusted community member — mother, monk, teacher or commune council member — identifies a case early.', icon: 'village' },
+  { step: 'Trained & connected', text: 'That network is trained, coached and connected by Santi Sena to formal referral pathways.', icon: 'link' },
+  { step: 'Province, by dusk', text: 'The case reaches the provincial social affairs office the same day it was identified.', icon: 'office' },
+]
+
+/* ─── Dynamic data from DB ─────────────────────── */
+const FALLBACK_TEAM_CARDS = [
   {
-    step: 'Village, at dawn',
-    text: 'A trusted community member — mother, monk, teacher or commune council member — identifies a case early.',
-    icon: 'village',
+    role: 'Program Director',
+    desc: 'Oversees child protection programs, advocacy, and partnerships across provinces.',
+    icon: 'compass',
   },
   {
-    step: 'Trained & connected',
-    text: 'That network is trained, coached and connected by Santi Sena to formal referral pathways.',
-    icon: 'link',
+    role: 'Field Coordinators',
+    desc: 'Manage child protection networks, peer education and safe migration training in target villages.',
+    icon: 'map',
   },
   {
-    step: 'Province, by dusk',
-    text: 'The case reaches the provincial social affairs office the same day it was identified.',
-    icon: 'office',
+    role: 'Safeguarding Trainers',
+    desc: 'Deliver training for teachers, monks and volunteers on child rights and case referral.',
+    icon: 'heart',
+  },
+  {
+    role: 'Monitoring & Evaluation',
+    desc: 'Track case outcomes, network coverage and community impact across provinces.',
+    icon: 'chart',
   },
 ]
+
+const dynamicStats = ref<Array<{ number: string; label: string; description: string; icon: string; image: string }>>(FALLBACK_STATS)
+const whatWeDoItems = ref<WorkItem[]>(FALLBACK_WHAT_WE_DO)
+const teamCards = ref(FALLBACK_TEAM_CARDS)
+const introText = ref(
+  'Cross-border migration, poverty and family separation put rural Cambodian children at risk of unsafe labour and trafficking. Santi Sena works with villages, schools and pagodas to build the safety net closest to the child — before anything goes wrong.'
+)
+const approachText = ref(
+  'Every network is anchored by the people children already trust — mothers, monks, teachers, commune council members. We train, coach and connect them to formal referral pathways so a case identified in a village at dawn reaches the provincial social affairs office by dusk.'
+)
 
 // Generic scroll-reveal: every ref below gets an `in-view` class added the
 // first time it enters the viewport, then is unobserved. One shared observer
@@ -91,7 +85,284 @@ let revealObserver: IntersectionObserver | undefined
 let parallaxRaf = 0
 let parallaxTicking = false
 
+/* Subtle parallax: the story collage drifts slightly slower than scroll speed */
+function updateParallax() {
+  parallaxTicking = false
+  const el = collageEl.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const viewportCenter = window.innerHeight / 2
+  const elCenter = rect.top + rect.height / 2
+  const offset = (viewportCenter - elCenter) * 0.06
+  el.style.transform = `translateY(${offset}px)`
+}
+
+function onScroll() {
+  if (!parallaxTicking) {
+    parallaxTicking = true
+    parallaxRaf = requestAnimationFrame(updateParallax)
+  }
+}
+
+/* ─── Parse page body JSON into reactive refs ─── */
+const STAT_ICON_MAP: Record<string, string> = {
+  group: 'users',
+  educator: 'users',
+  network: 'pin',
+  campaign: 'pin',
+  hotline: 'phone',
+  advocacy: 'phone',
+}
+
+function labelToIcon(label: string): string {
+  const lower = label.toLowerCase()
+  for (const [key, icon] of Object.entries(STAT_ICON_MAP)) {
+    if (lower.includes(key)) return icon
+  }
+  return 'pin'
+}
+
+function applyPageBody(body: string) {
+  try {
+    const parsed = JSON.parse(body) as Record<string, unknown>
+    if (parsed.kind !== 'santi-sena-page-content') return
+
+    const sections = parsed.sections as Array<Record<string, unknown>> | undefined
+    if (!Array.isArray(sections)) return
+
+    // Stats — from 'child-protection-stats' section items
+    const statsSection = sections.find((s) => s.id === 'child-protection-stats')
+    if (statsSection && typeof statsSection.items === 'string' && statsSection.items.trim()) {
+      const lines = statsSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        dynamicStats.value = lines.map((line: string, i: number) => {
+          const number = line.match(/^[\d,/+]+/)?.[0] || ''
+          const label = line.replace(/^[\d,/+]+\s*/, '').toUpperCase() || 'STAT'
+          return {
+            number,
+            label,
+            description: line,
+            icon: labelToIcon(label),
+            image: FALLBACK_STATS[i % FALLBACK_STATS.length]?.image || imageUrls.programs.childProtection,
+          }
+        })
+      }
+    }
+
+    // What we do — from 'child-protection-work' section items
+    const workSection = sections.find((s) => s.id === 'child-protection-work')
+    if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
+      const lines = workSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        whatWeDoItems.value = lines.map((title: string, i: number) => ({
+          title,
+          text: (typeof workSection.body === 'string' ? workSection.body : '') || FALLBACK_WHAT_WE_DO[i]?.text || '',
+          image: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.childProtection,
+          color: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.color || '#0a7d5c',
+        }))
+      }
+    }
+
+    // Team — from 'child-protection-team' section items
+    const teamSection = sections.find((s) => s.id === 'child-protection-team')
+    if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
+      const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        teamCards.value = lines.map(line => {
+          const parts = line.split('|').map((p: string) => p.trim())
+          return {
+            role: parts[0] || '',
+            icon: parts[1] || 'chart',
+            desc: parts[2] || parts[0] || '',
+          }
+        })
+      }
+    }
+  } catch {
+    // Invalid JSON — keep fallbacks
+  }
+}
+
+/* ─── Load from programs table metadata ───────── */
+function applyProgramMetadata(meta: Record<string, unknown>) {
+  // Hero intro
+  if (typeof meta.intro === 'string' && meta.intro.trim()) {
+    introText.value = meta.intro.trim()
+  }
+
+  // Hero image — from meta.heroImageUrl (saved by Child Protection admin dashboard)
+  // Since the admin only has one image field, update all three collage images
+  if (typeof meta.heroImageUrl === 'string' && meta.heroImageUrl.trim()) {
+    const url = meta.heroImageUrl.trim()
+    cpHeroRef.value = url
+    cpHero1Ref.value = url
+    cpHero3Ref.value = url
+  }
+
+  // Gallery images — from meta.gallery (array of {label, url} for backward compat)
+  let galleryUrls: string[] = []
+  if (Array.isArray(meta.gallery) && meta.gallery.length > 0) {
+    galleryUrls = meta.gallery
+      .map((g: Record<string, unknown>) => typeof g.url === 'string' ? g.url.trim() : '')
+      .filter(Boolean)
+    // Map gallery URLs to CP hero refs for the story collage
+    if (galleryUrls.length > 0) cpHeroRef.value = galleryUrls[0]
+    if (galleryUrls.length > 1) cpHero1Ref.value = galleryUrls[1]
+    if (galleryUrls.length > 2) cpHero3Ref.value = galleryUrls[2]
+  }
+
+  // Stats band
+  if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+    dynamicStats.value = meta.statsBand.map((s: Record<string, unknown>, i: number) => ({
+      number: String(s.number ?? ''),
+      label: String(s.label ?? ''),
+      description: String(s.description ?? ''),
+      icon: labelToIcon(String(s.label ?? '')),
+      image: galleryUrls[i] || FALLBACK_STATS[i % FALLBACK_STATS.length]?.image || imageUrls.programs.childProtection,
+    }))
+  }
+
+  // Sections
+  if (Array.isArray(meta.sections)) {
+    const sections = meta.sections as Array<Record<string, unknown>>
+
+    // What we do — from 'child-protection-work' section items
+    const workSection = sections.find((s) => s.id === 'child-protection-work')
+    if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
+      const lines = workSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        whatWeDoItems.value = lines.map((title: string, i: number) => ({
+          title,
+          text: (typeof workSection.body === 'string' ? workSection.body : '') || FALLBACK_WHAT_WE_DO[i]?.text || '',
+          image: galleryUrls[i] || FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.childProtection,
+          color: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.color || '#0a7d5c',
+        }))
+      }
+    }
+
+    // Approach — from 'child-protection-approach' section body
+    const approachSection = sections.find((s) => s.id === 'child-protection-approach')
+    if (approachSection && typeof approachSection.body === 'string' && approachSection.body.trim()) {
+      approachText.value = approachSection.body.trim()
+    }
+
+    // Team — from 'child-protection-team' section items
+    const teamSection = sections.find((s) => s.id === 'child-protection-team')
+    if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
+      const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      if (lines.length > 0) {
+        teamCards.value = lines.map(line => {
+          const parts = line.split('|').map((p: string) => p.trim())
+          return {
+            role: parts[0] || '',
+            icon: parts[1] || 'chart',
+            desc: parts[2] || parts[0] || '',
+          }
+        })
+      }
+    }
+  }
+}
+
+async function loadFromProgramsTable() {
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('metadata')
+      .eq('slug', 'programs-child-protection')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[CPView] Programs load failed:', error.message)
+      return
+    }
+
+    if (data && data.metadata) {
+      applyProgramMetadata(data.metadata as Record<string, unknown>)
+    }
+  } catch (e) {
+    console.warn('[CPView] Programs load crashed:', e)
+  }
+}
+
+/* ─── Load from pages table ───────────────────── */
+async function loadFromDb() {
+  // Optional legacy `pages` body applies first as a base layer.
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('body')
+      .eq('slug', 'programs-child-protection')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[CPView] DB load failed:', error.message)
+    } else if (data && data.body) {
+      applyPageBody(data.body as string)
+    }
+  } catch (e) {
+    console.warn('[CPView] DB load crashed:', e)
+  }
+
+  // The programs table metadata (edited from the admin Child Protection
+  // dashboard) is always applied last, so admin edits are the source of
+  // truth for this page — matching the Education program flow.
+  await loadFromProgramsTable()
+}
+
+/* ─── Real-time subscription ───────────────────── */
+let realtimeChannelCP: ReturnType<typeof supabase.channel> | null = null
+let realtimeProgramsChannel: ReturnType<typeof supabase.channel> | null = null
+
+function setupRealtime() {
+  realtimeChannelCP = supabase
+    .channel('cp-page-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'pages',
+        filter: 'slug=eq.programs-child-protection',
+      },
+      (payload) => {
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (typeof row.body === 'string') {
+            applyPageBody(row.body)
+          }
+        }
+      },
+    )
+    .subscribe()
+
+  // Also subscribe to programs table changes
+  realtimeProgramsChannel = supabase
+    .channel('cp-programs-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'programs',
+        filter: 'slug=eq.programs-child-protection',
+      },
+      (payload) => {
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (row.metadata) {
+            applyProgramMetadata(row.metadata as Record<string, unknown>)
+          }
+        }
+      },
+    )
+    .subscribe()
+}
+
 onMounted(() => {
+  void loadFromDb()
+  setupRealtime()
+
   const revealTargets = [
     trustBarEl.value,
     introEl.value,
@@ -115,37 +386,22 @@ onMounted(() => {
 
   revealTargets.forEach((el) => revealObserver?.observe(el))
 
-  // Subtle parallax: the story collage drifts slightly slower than scroll
-  // speed, adding depth without being distracting, in both scroll directions.
-  const updateParallax = () => {
-    parallaxTicking = false
-    const el = collageEl.value
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const viewportCenter = window.innerHeight / 2
-    const elCenter = rect.top + rect.height / 2
-    const offset = (viewportCenter - elCenter) * 0.06
-    el.style.transform = `translateY(${offset}px)`
-  }
-
-  const onScroll = () => {
-    if (!parallaxTicking) {
-      parallaxTicking = true
-      parallaxRaf = requestAnimationFrame(updateParallax)
-    }
-  }
-
   window.addEventListener('scroll', onScroll, { passive: true })
   updateParallax()
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('scroll', onScroll)
-    cancelAnimationFrame(parallaxRaf)
-  })
 })
 
 onBeforeUnmount(() => {
   revealObserver?.disconnect()
+  window.removeEventListener('scroll', onScroll)
+  cancelAnimationFrame(parallaxRaf)
+  if (realtimeChannelCP) {
+    supabase.removeChannel(realtimeChannelCP)
+    realtimeChannelCP = null
+  }
+  if (realtimeProgramsChannel) {
+    supabase.removeChannel(realtimeProgramsChannel)
+    realtimeProgramsChannel = null
+  }
 })
 </script>
 
@@ -154,7 +410,7 @@ onBeforeUnmount(() => {
     <!-- Trust bar -->
     <section class="trust-bar">
       <div class="container trust-bar-inner" ref="trustBarEl">
-        <div v-for="stat in stats" :key="stat.label" class="trust-card">
+        <div v-for="(stat, idx) in dynamicStats" :key="'cp-' + idx + '-' + stat.label" class="trust-card">
           <img :src="stat.image" :alt="stat.label" class="trust-card-img" />
           <div class="trust-card-overlay" aria-hidden="true"></div>
           <span class="trust-card-icon">
@@ -186,10 +442,7 @@ onBeforeUnmount(() => {
       <div class="container" ref="introEl">
         <div class="intro-rule" aria-hidden="true"></div>
         <p class="intro-text text-center">
-          Cross-border migration, poverty and family separation put rural Cambodian
-          children at risk of unsafe labour and trafficking. Santi Sena works with
-          villages, schools and pagodas to build the safety net closest to the child
-          — before anything goes wrong.
+          {{ introText }}
         </p>
       </div>
     </section>
@@ -202,7 +455,7 @@ onBeforeUnmount(() => {
           <h2 class="section-title text-center">What we do</h2>
 
           <div class="do-grid" ref="doGridEl">
-            <div v-for="item in whatWeDo" :key="item.title" class="do-card">
+            <div v-for="item in whatWeDoItems" :key="item.title" class="do-card">
               <div class="do-image">
                 <img :src="item.image" :alt="item.title" />
               </div>
@@ -219,12 +472,7 @@ onBeforeUnmount(() => {
       <div class="container">
         <p class="section-eyebrow text-center">Our method</p>
         <h2 class="section-title text-center">Our approach</h2>
-        <p class="approach-text text-center">
-          Every network is anchored by the people children already trust — mothers,
-          monks, teachers, commune council members. We train, coach and connect them
-          to formal referral pathways so a case identified in a village at dawn
-          reaches the provincial social affairs office by dusk.
-        </p>
+        <p class="approach-text text-center">{{ approachText }}</p>
 
         <ol class="pathway" ref="pathwayEl">
           <svg class="pathway-wave" viewBox="0 0 100 220" preserveAspectRatio="none">
@@ -258,6 +506,39 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
+    <!-- Team / Organizational Structure -->
+    <section class="section-cream">
+      <div class="container">
+        <p class="section-eyebrow text-center">Organizational Structure</p>
+        <h2 class="section-title text-center">Who delivers child protection on the ground</h2>
+
+        <div class="team-grid">
+          <div v-for="(member, index) in teamCards" :key="member.role" class="team-card" :style="{ transitionDelay: `${index * 0.08}s` }">
+            <div class="team-icon-wrap">
+              <svg v-if="member.icon === 'compass'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+                <path d="M16 8l-3 5-5 3 3-5 5-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              <svg v-else-if="member.icon === 'map'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2a7 7 0 017 7.5C19 14.8 12 21 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6" />
+              </svg>
+              <svg v-else-if="member.icon === 'heart'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21l-1.5-1.4C5.4 15.4 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1A5.7 5.7 0 0116.5 3C19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.9-8.5 11.1L12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 20v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="10" cy="7" r="4" stroke="currentColor" stroke-width="1.6" />
+                <path d="M18 8l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3 class="team-role">{{ member.role }}</h3>
+            <p class="team-desc">{{ member.desc }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Story + CTA -->
     <section class="section-light">
       <div class="container">
@@ -265,7 +546,7 @@ onBeforeUnmount(() => {
           <div class="col-image">
             <div class="story-collage" ref="collageEl">
               <div class="story-collage-main">
-                <img src="/images/programs/child-protection3.jpg" alt="Child Protection Network volunteer speaking with a family" />
+                <img :src="cpHero3Ref" alt="Child Protection Network volunteer speaking with a family" />
                 <span class="story-collage-heart">
                   <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 20.5s-7.6-4.8-10.2-9.4C.4 8.2 1.7 4.8 5 3.9c2-.5 3.9.3 5 2 .1-.1.1-.2.2-.3 1.1-1.6 3-2.5 5-2 3.3.9 4.6 4.3 3.2 7.2C19.6 15.7 12 20.5 12 20.5z"/>
@@ -275,10 +556,10 @@ onBeforeUnmount(() => {
 
               <!-- Two square photos, crossing/staggered, overlapping the bottom of the circle -->
               <div class="story-collage-sub story-collage-sub--left">
-                <img src="/images/programs/child-protection.jpg" alt="" />
+                <img :src="cpHeroRef" alt="" />
               </div>
               <div class="story-collage-sub story-collage-sub--right">
-                <img src="/images/programs/child-protection1.jpg" alt="" />
+                <img :src="cpHero1Ref" alt="" />
               </div>
             </div>
           </div>
@@ -810,6 +1091,73 @@ onBeforeUnmount(() => {
 }
 
 .cta-row { display: flex; }
+
+/* ===== Team / Organizational Structure ===== */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.team-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(22, 52, 42, 0.06);
+  box-shadow: 0 8px 24px -12px rgba(22, 52, 42, 0.12);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  text-align: center;
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 24px 40px -16px rgba(22, 52, 42, 0.22);
+  border-color: var(--primary-color);
+}
+
+.team-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.team-card:hover .team-icon-wrap {
+  background: var(--primary-color);
+  color: #ffffff;
+  transform: scale(1.1) rotate(-4deg);
+}
+
+.team-icon-wrap svg { width: 24px; height: 24px; }
+
+.team-role {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0 0 0.6rem;
+  line-height: 1.3;
+}
+
+.team-desc {
+  color: var(--color-ink-soft, #555);
+  line-height: 1.6;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .team-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .team-grid { grid-template-columns: 1fr; }
+}
 
 /* ===== Buttons ===== */
 .btn-primary {

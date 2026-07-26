@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n'
 import { localizeContentValue } from '@/i18n/contentTranslations'
 import type { SupportedLocale } from '@/i18n'
 import { fetchPublishedNews, fetchPublishedNewsArticle } from '@/lib/newsContent'
+import type { NewsArticle } from '@/lib/newsContent'
+import { useAuthStore } from '@/stores/auth.store'
 
 const route = useRoute()
 const { locale } = useI18n()
@@ -16,10 +18,11 @@ const articleId = computed(() => {
   return typeof id === 'string' ? id : '1'
 })
 
-// ── Extended dummy data ──
-const articles = [
+// ─── Fallback sample data (shown when no published news from admin) ─
+const fallbackArticles: NewsArticle[] = [
   {
-    id: '1',
+    id: 'sample-1',
+    slug: 'new-community-pre-school-opens-in-svay-rieng',
     title: 'New community pre‑school opens in Svay Rieng',
     summary:
       'With support from local partners, Santi Sena inaugurated a new pre‑school serving 60 children in a remote village.',
@@ -33,36 +36,19 @@ const articles = [
     date: '2025-03-15',
     category: 'Education',
     author: 'Santi Sena Communications Team',
-    authorBio:
-      'The Communications Team shares stories of impact from the field, highlighting the voices of communities and partners.',
+    authorBio: 'The Communications Team shares stories of impact from the field, highlighting the voices of communities and partners.',
     readTime: '3 min read',
     authorAvatar:
       'https://scontent.fpnh19-1.fna.fbcdn.net/v/t1.6435-9/35900553_1047076135445733_7189013137327128576_n.jpg?stp=dst-jpg_tt6&cstp=mx707x707&ctp=s707x707&_nc_cat=111&ccb=1-7&_nc_sid=833d8c&_nc_ohc=xb5UYMAIeNMQ7kNvwEt7Q8i&_nc_oc=AdqPikyD0Z1y3BAiT_OcMuGkjgnSqV9DKQN43x6GvgKfwJquYQEAiosG5Di3wIMKqPo&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=36yLmpqg5kk7J_nxSrPEWA&_nc_ss=7b289&oh=00_AQBhUQK4Hktg9RkMOkEmODVtVSUIyB6SuY8s0oDQX39Pdg&oe=6A7C0C58',
     views: 1247,
     likes: 89,
     tags: ['Education', 'Community', 'Early Childhood'],
+    featured: true,
+    trending: true,
   },
   {
-    id: '2',
-    title: 'Forest Guardians celebrate 500 hectares of protected land',
-    summary:
-      'Community forestry committees have successfully conserved 500 hectares of forest, boosting biodiversity and livelihoods.',
-    content: `<p>After years of dedicated conservation efforts, the community forestry committees in Prey Veng have officially protected 500 hectares of forest. The area is now home to diverse wildlife and serves as a vital carbon sink.</p><p>The achievement was celebrated with a ceremony attended by provincial authorities and local villagers, who have worked tirelessly to replant trees and prevent illegal logging.</p>`,
-    image: '/src/assets/maps/wash.png',
-    date: '2025-02-28',
-    category: 'Environment',
-    author: 'Santi Sena Environment Team',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506530593_3179455962207729_7906865104877534081_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=5mQl5LmMygsQ7kNvwGIGKj4&_nc_oc=AdpoAa3DuGZZFRwBtdn79A7geXSQ5qaPjkhibcODSGQcyZT8NqVtbWwbxX_VxsCDRFs&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=_4hsYoxY5A2Au4YHk1j0xg&_nc_ss=7b289&oh=00_AQDJoPrS0ht2yVVpTjacF8cLwnkjCZAY9kwuv66_r3v-BQ&oe=6A5A679F',
-    authorBio:
-      'The Environment Team works with communities to protect natural resources and promote sustainable land use.',
-    readTime: '4 min read',
-    views: 856,
-    likes: 64,
-    tags: ['Environment', 'Conservation', 'Biodiversity'],
-  },
-  {
-    id: '3',
+    id: 'sample-3',
+    slug: 'youth-leaders-trained-in-child-protection-advocacy',
     title: 'Youth leaders trained in child protection advocacy',
     summary:
       'Over 40 young volunteers completed a training on child rights and protection, ready to act as peer educators in their villages.',
@@ -79,9 +65,12 @@ const articles = [
     views: 523,
     likes: 42,
     tags: ['Child Protection', 'Youth', 'Advocacy'],
+    featured: false,
+    trending: false,
   },
   {
-    id: '4',
+    id: 'sample-4',
+    slug: 'saving-for-change-groups-reach-10000-members',
     title: 'Saving‑for‑Change groups reach 10,000 members',
     summary:
       'The village savings program now boasts more than 10,000 active members, providing financial security to hundreds of families.',
@@ -98,48 +87,42 @@ const articles = [
     views: 2134,
     likes: 156,
     tags: ['Livelihood', 'Savings', 'Financial Inclusion'],
-  },
-  {
-    id: '5',
-    title: 'New partnership to expand clean water access',
-    summary:
-      'Santi Sena partners with WaterAid to bring safe drinking water to 15 additional villages in Kratie province.',
-    content: `<p>Santi Sena has signed a memorandum of understanding with WaterAid to bring safe drinking water to 15 additional villages in Kratie province. The initiative includes the construction of boreholes, water purification systems, and community training on hygiene practices.</p><p>This partnership will directly benefit over 2,000 families and is expected to reduce waterborne diseases significantly.</p>`,
-    image: '/src/assets/maps/water.png',
-    date: '2025-01-05',
-    category: 'WASH',
-    author: 'Santi Sena WASH Team',
-    authorAvatar:
-      'https://scontent.fpnh19-1.fna.fbcdn.net/v/t39.30808-6/506686989_3180477048772287_5998299243352970740_n.jpg?stp=dst-jpg_tt6&cstp=mx2048x1536&ctp=s2048x1536&_nc_cat=111&ccb=1-7&_nc_sid=127cfc&_nc_ohc=3bsX9ehYnOwQ7kNvwGjsu0z&_nc_oc=AdrWMcO3CYPFu2u_ujNxDyCbrMd7xkG8WTEsiEy-FxqXUjUDa2pgBfV4bK2PGirnaCU&_nc_zt=23&_nc_ht=scontent.fpnh19-1.fna&_nc_gid=JX13CMJg7q0Ca4PkxObg_g&_nc_ss=7b289&oh=00_AQCdlfPvqNIYjaV9AnBBH5kH-CzESfLgwiWWJ5EiIc1fnQ&oe=6A5A4DBB',
-    authorBio:
-      'The WASH Team focuses on improving water, sanitation, and hygiene practices in underserved communities.',
-    readTime: '5 min read',
-    views: 678,
-    likes: 51,
-    tags: ['WASH', 'Water', 'Health'],
+    featured: false,
+    trending: true,
   },
 ]
 
-type Article = {
-  id: string
-  title: string
-  summary: string
-  content: string
-  image: string
-  date: string
-  category: string
-  author: string
-  authorAvatar?: string
-  authorBio?: string
-  readTime: string
-  views: number
-  likes: number
-  tags?: string[]
+// ─── Auth & Admin content editing ───────────────────────────────
+const auth = useAuthStore()
+void auth.init()
+const isAdmin = computed(() => auth.isAdmin)
+
+const editContentMode = ref(false)
+const editContentValue = ref('')
+let originalContent = ''
+
+function openContentEdit() {
+  if (!article.value) return
+  originalContent = article.value.content
+  editContentValue.value = article.value.content
+  editContentMode.value = true
 }
 
-const sourceArticle = ref<Article | null>(null)
-const sourceArticles = ref<Article[]>(articles as Article[])
-const article = computed<Article | null>(() => {
+function cancelContentEdit() {
+  editContentMode.value = false
+  editContentValue.value = originalContent
+}
+
+async function saveContentEdit() {
+  if (!article.value) return
+  article.value.content = editContentValue.value
+  editContentMode.value = false
+  showAlertToast('Content saved successfully.')
+}
+
+const sourceArticle = ref<NewsArticle | null>(null)
+const sourceArticles = ref<NewsArticle[]>(fallbackArticles)
+const article = computed<NewsArticle | null>(() => {
   const currentArticle = sourceArticle.value
   if (!currentArticle) return null
 
@@ -147,14 +130,14 @@ const article = computed<Article | null>(() => {
     ? localizeContentValue(currentArticle, activeLocale.value)
     : currentArticle
 })
-const allArticles = computed<Article[]>(() => {
+const allArticles = computed<NewsArticle[]>(() => {
   return activeLocale.value === 'kh'
     ? localizeContentValue(sourceArticles.value, activeLocale.value)
     : sourceArticles.value
 })
 
 onMounted(async () => {
-  const fallback = (articles as Article[]).find((a) => a.id === articleId.value) ?? null
+  const fallback = fallbackArticles.find((a) => a.id === articleId.value) ?? null
 
   try {
     const [loadedArticle, publishedNews] = await Promise.all([
@@ -278,6 +261,52 @@ const copyLink = () => {
       </div>
     </transition>
 
+    <!-- ─── ADMIN TOOLBAR ────────────────────────────────────── -->
+    <div v-if="isAdmin" class="admin-detail-toolbar">
+      <div class="admin-detail-toolbar-inner">
+        <div class="admin-detail-toolbar-left">
+          <span class="admin-detail-badge">Admin</span>
+          <span class="admin-detail-divider"></span>
+          <span class="admin-detail-label">Editing news content</span>
+        </div>
+        <div class="admin-detail-toolbar-right">
+          <button
+            v-if="!editContentMode"
+            type="button"
+            class="admin-detail-edit-btn"
+            @click="openContentEdit"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Edit Content
+          </button>
+          <template v-if="editContentMode">
+            <button
+              type="button"
+              class="admin-detail-cancel-btn"
+              @click="cancelContentEdit"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="admin-detail-save-btn"
+              @click="saveContentEdit"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Save Content
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── HEADER with wave image ─── -->
     <header class="detail-header" v-if="article">
       <div class="container">
@@ -326,13 +355,6 @@ const copyLink = () => {
                 </svg>
                 {{ article.readTime }}
               </span>
-              <span class="meta-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                {{ article.views }} views
-              </span>
             </div>
 
             <div class="header-accent"></div>
@@ -358,7 +380,24 @@ const copyLink = () => {
         <div class="article-grid">
           <!-- Left: Main content -->
           <div class="detail-content">
-            <div class="content-body" v-html="article.content"></div>
+            <!-- Admin content editor: show textarea when editing -->
+            <div v-if="editContentMode" class="admin-content-editor">
+              <div class="admin-editor-header">
+                <span class="admin-editor-label">Editing content (HTML)</span>
+              </div>
+              <textarea
+                v-model="editContentValue"
+                class="admin-editor-textarea"
+                rows="12"
+                placeholder="Enter HTML content here..."
+              ></textarea>
+              <div class="admin-editor-preview">
+                <span class="admin-editor-label">Preview</span>
+                <div class="admin-editor-preview-body" v-html="editContentValue"></div>
+              </div>
+            </div>
+            <!-- Normal content display -->
+            <div v-else class="content-body" v-html="article.content"></div>
 
             <!-- Tags -->
             <div class="tags-section" v-if="article.tags && article.tags.length">
@@ -453,12 +492,6 @@ const copyLink = () => {
             <div class="sidebar-card stats-card">
               <h4>Article stats</h4>
               <div class="stat-row">
-                <span>{{ article.views }} views</span>
-              </div>
-              <div class="stat-row">
-                <span>{{ article.likes }} likes</span>
-              </div>
-              <div class="stat-row">
                 <span>{{ article.readTime }}</span>
               </div>
               <div class="stat-row">
@@ -502,7 +535,7 @@ const copyLink = () => {
 
             <!-- Newsletter mini -->
             <div class="sidebar-card newsletter-mini">
-              <h4>📬 Never miss a story</h4>
+              <h4> Never miss a story</h4>
               <p>Get the latest updates delivered to your inbox.</p>
               <div class="newsletter-mini-form">
                 <input
@@ -565,20 +598,14 @@ const copyLink = () => {
 </template>
 
 <style scoped>
-/* ── Variables ── */
 :root {
-  --color-cream: #faf8f5;
-  --color-border: #e8e3dc;
-  --color-ink: #1e1a16;
-  --color-ink-soft: #5a524a;
-  --primary-color: #2d7a5a;
-  --primary-dark: #1a3d2e;
-  --primary-light: #aad6c7;
   --gold: #c9a84c;
   --gold-light: #e8d5a3;
+  --gold-glow: rgba(201, 168, 76, 0.15);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 8px 32px rgba(30, 26, 22, 0.06);
   --shadow-lg: 0 16px 56px rgba(30, 26, 22, 0.1);
+  --shadow-xl: 0 24px 80px rgba(30, 26, 22, 0.14);
   --radius-md: 20px;
   --radius-lg: 28px;
   --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -649,11 +676,10 @@ const copyLink = () => {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--primary-color);
-  background: rgba(45, 122, 90, 0.08);
+  /* background: rgba(45, 122, 90, 0.08); */
   padding: 0.3rem 1.2rem;
   border-radius: 999px;
   margin-bottom: 0.75rem;
-
 }
 
 .header-title {
@@ -663,8 +689,6 @@ const copyLink = () => {
   margin: 0 0 0.5rem;
   letter-spacing: -0.02em;
   line-height: 1.1;
-
-
 }
 
 .header-summary {
@@ -722,30 +746,18 @@ const copyLink = () => {
   will-change: transform;
 }
 
-/* ── Wave animation ── */
 .image-wrapper.wave {
   animation: waveFloat 4s ease-in-out infinite;
 }
 
 @keyframes waveFloat {
-  0% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-8px) rotate(1.5deg);
-  }
-  50% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  75% {
-    transform: translateY(8px) rotate(-1.5deg);
-  }
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
+  0% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(1.5deg); }
+  50% { transform: translateY(0px) rotate(0deg); }
+  75% { transform: translateY(8px) rotate(-1.5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
 }
 
-/* ── Hover: deeper shadow, scale, and stronger wave ── */
 .image-wrapper.wave:hover {
   animation: waveFloatHover 1.6s ease-in-out infinite;
   box-shadow: 0 24px 64px rgba(11, 61, 46, 0.25);
@@ -753,21 +765,11 @@ const copyLink = () => {
 }
 
 @keyframes waveFloatHover {
-  0% {
-    transform: translateY(0px) rotate(0deg) scale(1.02);
-  }
-  25% {
-    transform: translateY(-12px) rotate(2.5deg) scale(1.04);
-  }
-  50% {
-    transform: translateY(0px) rotate(0deg) scale(1.02);
-  }
-  75% {
-    transform: translateY(12px) rotate(-2.5deg) scale(1.04);
-  }
-  100% {
-    transform: translateY(0px) rotate(0deg) scale(1.02);
-  }
+  0% { transform: translateY(0px) rotate(0deg) scale(1.02); }
+  25% { transform: translateY(-12px) rotate(2.5deg) scale(1.04); }
+  50% { transform: translateY(0px) rotate(0deg) scale(1.02); }
+  75% { transform: translateY(12px) rotate(-2.5deg) scale(1.04); }
+  100% { transform: translateY(0px) rotate(0deg) scale(1.02); }
 }
 
 .header-round-image {
@@ -870,7 +872,6 @@ const copyLink = () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
-
   opacity: 0;
   transform: translateY(20px) scale(0.97);
   transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
@@ -918,29 +919,12 @@ const copyLink = () => {
   height: 20px;
 }
 
-.share-btn.facebook {
-  background: #1877f2;
-  color: #fff;
-}
-.share-btn.twitter {
-  background: #1da1f2;
-  color: #fff;
-}
-.share-btn.linkedin {
-  background: #0a66c2;
-  color: #fff;
-}
-.share-btn.email {
-  background: #6c5ce7;
-  color: #fff;
-}
-.share-btn.copy {
-  background: var(--primary-color);
-  color: #fff;
-}
-.share-btn.copy:hover {
-  background: var(--primary-dark);
-}
+.share-btn.facebook { background: #1877f2; color: #fff; }
+.share-btn.twitter { background: #1da1f2; color: #fff; }
+.share-btn.linkedin { background: #0a66c2; color: #fff; }
+.share-btn.email { background: #6c5ce7; color: #fff; }
+.share-btn.copy { background: var(--primary-color); color: #fff; }
+.share-btn.copy:hover { background: var(--primary-dark); }
 
 /* ── Author Bio ── */
 .author-bio-card {
@@ -953,7 +937,6 @@ const copyLink = () => {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   border-radius: 20px;
-
   opacity: 0;
   transform: translateY(20px) scale(0.97);
   transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
@@ -1008,7 +991,6 @@ const copyLink = () => {
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
   border-radius: 20px;
-
   opacity: 0;
   transform: translateY(20px) scale(0.97);
   transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
@@ -1038,9 +1020,7 @@ const copyLink = () => {
   color: var(--color-ink-soft);
 }
 
-.stats-card .stat-row:last-child {
-  border-bottom: none;
-}
+.stats-card .stat-row:last-child { border-bottom: none; }
 
 .related-sidebar-item {
   display: flex;
@@ -1049,14 +1029,9 @@ const copyLink = () => {
   border-bottom: 1px solid var(--color-border);
   text-decoration: none;
   color: inherit;
-  transition: opacity 0.2s;
-
   opacity: 0;
   transform: translateY(12px);
-  transition:
-    opacity 0.4s ease,
-    transform 0.4s ease,
-    border-color 0.2s;
+  transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.2s;
 }
 
 .related-sidebar-item.card-visible {
@@ -1064,13 +1039,8 @@ const copyLink = () => {
   transform: translateY(0);
 }
 
-.related-sidebar-item:hover {
-  opacity: 0.7;
-}
-
-.related-sidebar-item:last-child {
-  border-bottom: none;
-}
+.related-sidebar-item:hover { opacity: 0.7; }
+.related-sidebar-item:last-child { border-bottom: none; }
 
 .related-sidebar-image {
   flex: 0 0 60px;
@@ -1085,9 +1055,7 @@ const copyLink = () => {
   object-fit: cover;
 }
 
-.related-sidebar-info {
-  flex: 1;
-}
+.related-sidebar-info { flex: 1; }
 
 .related-sidebar-category {
   font-size: 0.6rem;
@@ -1130,6 +1098,10 @@ const copyLink = () => {
   background: var(--color-cream);
 }
 
+.mini-input::placeholder {
+  color:rgb(146, 143, 143);
+}
+
 .mini-input:focus {
   outline: none;
   border-color: var(--primary-color);
@@ -1147,9 +1119,7 @@ const copyLink = () => {
   transition: background 0.2s;
 }
 
-.mini-btn:hover {
-  background: var(--primary-dark);
-}
+.mini-btn:hover { background: var(--primary-dark); }
 
 /* ── Footer Nav ── */
 .detail-footer-nav {
@@ -1172,9 +1142,7 @@ const copyLink = () => {
   transition: border-color 0.2s;
 }
 
-.footer-link:hover {
-  border-color: currentColor;
-}
+.footer-link:hover { border-color: currentColor; }
 
 .footer-link svg {
   width: 18px;
@@ -1228,9 +1196,7 @@ const copyLink = () => {
   color: var(--primary-color);
   font-weight: 600;
   text-decoration: none;
-  transition:
-    background 0.25s,
-    color 0.25s;
+  transition: background 0.25s, color 0.25s;
 }
 
 .btn--read:hover {
@@ -1278,9 +1244,7 @@ const copyLink = () => {
   font-size: 0.9rem;
 }
 
-.toast--success {
-  border-color: rgba(74, 222, 128, 0.35);
-}
+.toast--success { border-color: rgba(74, 222, 128, 0.35); }
 
 .toast-enter-active,
 .toast-leave-active {
@@ -1301,68 +1265,246 @@ const copyLink = () => {
 
 /* ── Responsive ── */
 @media (max-width: 992px) {
-  .article-grid {
-    grid-template-columns: 1fr;
-  }
-  .detail-sidebar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-  .header-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  .header-right {
-    order: -1;
-  }
-  .image-wrapper {
-    max-width: 200px;
-  }
+  .article-grid { grid-template-columns: 1fr; }
+  .detail-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .header-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .header-right { order: -1; }
+  .image-wrapper { max-width: 200px; }
 }
 
 @media (max-width: 768px) {
-  .detail-header {
-    padding: 2rem 0 1.5rem;
-  }
-  .header-title {
-    font-size: 1.8rem;
-  }
-  .header-meta {
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .detail-content {
-    padding: 1.25rem;
-  }
-  .detail-sidebar {
-    grid-template-columns: 1fr;
-  }
-  .author-bio-card {
-    flex-direction: column;
-    text-align: center;
-  }
-  .share-section {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .share-buttons {
-    justify-content: center;
-  }
-  .image-wrapper {
-    max-width: 150px;
-  }
+  .detail-header { padding: 2rem 0 1.5rem; }
+  .header-title { font-size: 1.8rem; }
+  .header-meta { flex-direction: column; gap: 0.4rem; }
+  .detail-content { padding: 1.25rem; }
+  .detail-sidebar { grid-template-columns: 1fr; }
+  .author-bio-card { flex-direction: column; text-align: center; }
+  .share-section { flex-direction: column; align-items: stretch; }
+  .share-buttons { justify-content: center; }
+  .image-wrapper { max-width: 150px; }
 }
 
 @media (max-width: 480px) {
-  .header-summary {
-    font-size: 0.95rem;
+  .header-summary { font-size: 0.95rem; }
+  .content-body { font-size: 0.95rem; }
+  .image-wrapper { max-width: 120px; }
+}
+
+/* ── Admin Detail Toolbar ── */
+.admin-detail-toolbar {
+  background: linear-gradient(135deg, #071311 0%, #0f2d25 100%);
+  border-bottom: 1px solid rgba(53, 208, 190, 0.22);
+  color: #f2fbf6;
+  font-size: 0.82rem;
+  position: relative;
+}
+
+.admin-detail-toolbar::after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(53, 208, 190, 0.35), transparent);
+  content: '';
+}
+
+.admin-detail-toolbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.45rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 40px;
+}
+
+.admin-detail-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.admin-detail-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.admin-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #74e0ae;
+  flex-shrink: 0;
+}
+
+.admin-detail-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.admin-detail-label {
+  color: #94a3b8;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-detail-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(116, 224, 174, 0.25);
+  border-radius: 8px;
+  background: rgba(116, 224, 174, 0.08);
+  color: #b9ead5;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-detail-edit-btn:hover {
+  background: rgba(116, 224, 174, 0.18);
+  border-color: rgba(116, 224, 174, 0.45);
+  color: #f2fbf6;
+}
+
+.admin-detail-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(116, 224, 174, 0.5);
+  border-radius: 8px;
+  background: rgba(116, 224, 174, 0.2);
+  color: #f2fbf6;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-detail-save-btn:hover {
+  background: rgba(116, 224, 174, 0.35);
+  border-color: rgba(116, 224, 174, 0.7);
+}
+
+.admin-detail-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  padding: 0.35rem 0.8rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-detail-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2fbf6;
+}
+
+/* ── Admin Content Editor (inside detail content) ── */
+.admin-content-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-editor-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.35rem;
+}
+
+.admin-editor-textarea {
+  width: 100%;
+  min-height: 280px;
+  padding: 1rem;
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  font-family: 'Courier New', Courier, monospace;
+  background: #f8fbf6;
+  color: var(--color-ink);
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.admin-editor-textarea:focus {
+  outline: none;
+  border-color: var(--primary-dark);
+  box-shadow: 0 0 0 3px rgba(45, 122, 90, 0.1);
+}
+
+.admin-editor-preview {
+  padding: 1rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.admin-editor-preview-body {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--color-ink);
+}
+
+.admin-editor-preview-body p {
+  margin: 0 0 1.2rem 0;
+}
+
+@media (max-width: 600px) {
+  .admin-detail-toolbar-inner {
+    padding: 0.35rem 0.75rem;
+    min-height: 36px;
   }
-  .content-body {
-    font-size: 0.95rem;
+  .admin-detail-label {
+    display: none;
   }
-  .image-wrapper {
-    max-width: 120px;
+  .admin-detail-divider {
+    display: none;
+  }
+  .admin-detail-edit-btn,
+  .admin-detail-save-btn,
+  .admin-detail-cancel-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
   }
 }
 </style>

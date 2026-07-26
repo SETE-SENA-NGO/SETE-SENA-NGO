@@ -10,6 +10,12 @@ import {
 } from '@/lib/donationSettings'
 import { subscribeToTableChanges } from '@/lib/realtime'
 
+// The root template has two siblings (the page + the teleported zoom
+// modal), so Vue can't auto-inherit fallthrough attrs onto a single root.
+// ManagedPublicPageView passes a `content` prop this page doesn't use
+// (it fetches its own donation data), so opting out is correct here.
+defineOptions({ inheritAttrs: false })
+
 type Tab = 'qr'
 const activeTab = ref<Tab>('qr')
 const { locale } = useI18n()
@@ -133,6 +139,23 @@ const methods = computed<PayMethod[]>(() => {
     : defaultDonationMethods()
   return source.map((method) => toPayMethod(method, activeLocale.value))
 })
+
+const zoomedQr = ref<{ url: string; alt: string } | null>(null)
+
+function openQrZoom(url: string, alt: string) {
+  zoomedQr.value = { url, alt }
+}
+
+function closeQrZoom() {
+  zoomedQr.value = null
+}
+
+function handleZoomKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') closeQrZoom()
+}
+
+onMounted(() => window.addEventListener('keydown', handleZoomKeydown))
+onUnmounted(() => window.removeEventListener('keydown', handleZoomKeydown))
 </script>
 
 <template>
@@ -177,7 +200,15 @@ const methods = computed<PayMethod[]>(() => {
             :style="{ borderColor: m.headerColor }"
           >
             <template v-if="m.qrUrl">
-              <img class="qr-image" :src="m.qrUrl" :alt="`${m.bank} donation QR code`" />
+              <button
+                type="button"
+                class="qr-image-button"
+                :aria-label="`Enlarge ${m.bank} donation QR code`"
+                @click="openQrZoom(m.qrUrl, `${m.bank} donation QR code`)"
+              >
+                <img class="qr-image" :src="m.qrUrl" :alt="`${m.bank} donation QR code`" />
+                <span class="qr-zoom-hint">Tap to enlarge</span>
+              </button>
               <span class="qr-caption" :style="{ color: m.headerColor }">SCAN TO DONATE</span>
             </template>
             <template v-else>
@@ -231,6 +262,17 @@ const methods = computed<PayMethod[]>(() => {
       </div>
     </div>
   </div>
+
+  <Teleport to="body">
+    <div v-if="zoomedQr" class="qr-zoom-overlay" @click.self="closeQrZoom">
+      <div class="qr-zoom-panel">
+        <button type="button" class="qr-zoom-close" aria-label="Close" @click="closeQrZoom">
+          &times;
+        </button>
+        <img :src="zoomedQr.url" :alt="zoomedQr.alt" class="qr-zoom-image" />
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -373,15 +415,32 @@ const methods = computed<PayMethod[]>(() => {
 .qr-box.has-qr {
   border-style: solid;
   opacity: 1;
-  padding: 1rem;
+  padding: 1.25rem;
+  background: #fff;
+}
+.qr-image-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: zoom-in;
 }
 .qr-image {
-  max-width: 200px;
-  max-height: 200px;
   width: 100%;
+  max-width: 260px;
+  max-height: 420px;
   object-fit: contain;
   border-radius: 0.5rem;
   background: #fff;
+}
+.qr-zoom-hint {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  letter-spacing: 0.02em;
 }
 .qr-icon {
   font-size: 2rem;
@@ -511,5 +570,49 @@ const methods = computed<PayMethod[]>(() => {
   margin-top: 0.35rem;
   color: var(--color-ink-soft);
   font-size: 0.9rem;
+}
+
+.qr-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 25, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  z-index: 1000;
+}
+.qr-zoom-panel {
+  position: relative;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  max-width: min(90vw, 480px);
+  max-height: 90vh;
+  display: flex;
+}
+.qr-zoom-image {
+  width: 100%;
+  max-height: calc(90vh - 3rem);
+  object-fit: contain;
+  border-radius: 0.5rem;
+}
+.qr-zoom-close {
+  position: absolute;
+  top: -1rem;
+  right: -1rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: none;
+  background: #1d3d5c;
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 </style>

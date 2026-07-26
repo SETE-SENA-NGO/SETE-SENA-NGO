@@ -235,15 +235,22 @@ const defaultPages: PageDraft[] = [
         id: 'vision-strive',
         label: 'What we strive for',
         heading: 'What We Strive For',
-        body: 'Inclusive growth, community empowerment and sustainable resilience.',
-        items: 'Inclusive Growth\nCommunity Empowerment\nSustainable Resilience',
+        body: 'Peace With Justice, Community Ownership and Sustainable Livelihoods.',
+        items: 'Peace With Justice | A Cambodia where peace, justice and harmony are lived in daily village life, not only written in plans.\nCommunity Ownership | Villagers, monks, local authorities, schools and community organizations lead the work together.\nSustainable Livelihoods | Families build better lives through education, child protection, rural income and care for natural resources.',
       },
       {
         id: 'vision-guides',
-        label: 'Guiding values',
-        heading: 'What Guides Us',
-        body: 'Integrity, respect, collaboration and innovation guide daily practice.',
-        items: 'Integrity\nRespect\nCollaboration\nInnovation',
+        label: 'Mission',
+        heading: 'How The Mission Becomes Practical',
+        body: 'Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics. Its work connects moral leadership with practical programs in education, livelihoods, environment and child protection.',
+        items: 'Work with monks, villagers, local government and schools\nStrengthen education, savings groups and rural livelihoods\nProtect children from trafficking, unsafe migration and exploitation\nPreserve community forests, water resources and local resilience',
+      },
+      {
+        id: 'mission-content',
+        label: 'Mission',
+        heading: 'How The Mission Becomes Practical',
+        body: 'Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics. Its work connects moral leadership with practical programs in education, livelihoods, environment and child protection.',
+        items: 'Work with monks, villagers, local government and schools\nStrengthen education, savings groups and rural livelihoods\nProtect children from trafficking, unsafe migration and exploitation\nPreserve community forests, water resources and local resilience',
       },
     ],
     updatedAt: '',
@@ -260,6 +267,14 @@ const defaultPages: PageDraft[] = [
     primaryAction: '',
     secondaryAction: '',
     sections: [
+      {
+        id: 'organization-facts',
+        label: 'Key Facts',
+        heading: 'The Peace Army by the numbers',
+        body: 'Santi Sena is a growing organization with professional staff, deep community roots, and trusted partnerships across southeastern Cambodia.',
+        items:
+          '30+ | Full-time staff | Advanced degrees in management, agriculture, education and rural development.\n3 | Provinces | Svay Rieng \u00b7 Prey Veng \u00b7 Kratie.\n10+ | Donor partners | UNDP, ADB, Oxfam and eight more managed grants.',
+      },
       {
         id: 'organization-structure',
         label: 'Structure',
@@ -1069,8 +1084,8 @@ const loading = ref(false)
 const savingSlug = ref<string | null>(null)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 const savedSnapshot = ref<Record<string, string>>({})
-const previewVisible = ref(true)
 const activeSectionIndex = ref<number | null>(null)
+const previewVisible = ref(false)
 
 // ─── Visual Table Editor Helpers ─────────────────────────────────
 const showRawItems = ref<Record<string, boolean>>({})
@@ -1195,6 +1210,7 @@ const activePage = computed<PageDraft>(() => {
 })
 
 const activePageDirty = computed(() => isDirty(activePage.value.slug))
+
 const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
 
 const previewItems = computed(() => {
@@ -2335,17 +2351,17 @@ function formatDate(value: string) {
   --admin-bg: #f1f5f9;
   --admin-bg-deep: #e2e8f0;
   --admin-surface: #ffffff;
-  --admin-surface-soft: #f8fafc;
+  --admin-surface-soft: #f1f7f4;
   --admin-contrast: #0f172a;
-  --admin-contrast-soft: #1e293b;
+  --admin-contrast-soft: #475569;
   --admin-text: #334155;
   --admin-muted: #64748b;
   --admin-muted-light: #94a3b8;
-  --admin-border: #e2e8f0;
+  --admin-border: #dce8e0;
   --admin-border-strong: #cbd5e1;
-  --admin-blue: #2563eb;
-  --admin-blue-soft: #eff6ff;
-  --admin-violet: #7c3aed;
+  --admin-blue: #0f8f69;
+  --admin-blue-soft: #e3f5ef;
+  --admin-violet: #6d28d9;
   --admin-violet-soft: #f5f3ff;
   --admin-amber: #d97706;
   --admin-amber-soft: #fffbeb;
@@ -2370,22 +2386,23 @@ function formatDate(value: string) {
 }
 
 :global(.admin-dark) .editor-page {
-  --admin-bg: #0b1120;
-  --admin-bg-deep: #111827;
-  --admin-surface: #1a2332;
-  --admin-surface-soft: #0f172a;
-  --admin-contrast: #f1f5f9;
-  --admin-contrast-soft: #e2e8f0;
-  --admin-text: #cbd5e1;
-  --admin-muted: #94a3b8;
-  --admin-muted-light: #64748b;
-  --admin-border: #1e293b;
-  --admin-border-strong: #334155;
-  --admin-blue-soft: rgba(37, 99, 235, 0.12);
-  --admin-violet-soft: rgba(124, 58, 237, 0.12);
-  --admin-amber-soft: rgba(217, 119, 6, 0.12);
-  --admin-green-soft: rgba(22, 163, 74, 0.12);
-  --admin-red-soft: rgba(220, 38, 38, 0.12);
+  --admin-bg: var(--admin-theme-bg);
+  --admin-bg-deep: var(--admin-theme-bg-deep);
+  --admin-surface: var(--admin-theme-surface);
+  --admin-surface-soft: var(--admin-theme-surface-soft);
+  --admin-contrast: var(--admin-theme-contrast);
+  --admin-contrast-soft: var(--admin-theme-contrast-soft);
+  --admin-text: var(--admin-theme-text);
+  --admin-muted: var(--admin-theme-muted);
+  --admin-muted-light: var(--admin-theme-muted-light);
+  --admin-border: var(--admin-theme-border);
+  --admin-border-strong: var(--admin-theme-border-strong);
+  --admin-blue: var(--admin-theme-teal);
+  --admin-blue-soft: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent);
+  --admin-violet-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+  --admin-amber-soft: color-mix(in srgb, var(--admin-theme-gold) 12%, transparent);
+  --admin-green-soft: color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
+  --admin-red-soft: color-mix(in srgb, var(--admin-theme-danger) 12%, transparent);
   --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   --admin-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
@@ -2489,6 +2506,10 @@ function formatDate(value: string) {
   max-width: 100%;
 }
 
+.editor-page:not(.sidebar-open) .editor-column {
+  max-width: 100%;
+}
+
 /* ==============================
    EDITOR HEADER
    ============================== */
@@ -2562,7 +2583,7 @@ function formatDate(value: string) {
 
 .route-badge {
   color: var(--admin-blue);
-  background: var(--admin-blue-soft);
+  background: rgb(212, 221, 221);
 }
 
 .locale-badge {
@@ -2602,7 +2623,7 @@ function formatDate(value: string) {
 }
 
 .save-indicator.dirty .save-dot {
-  background: var(--admin-amber);
+  background: rgb(174, 174, 137);
 }
 
 .save-label {
@@ -4540,5 +4561,80 @@ input::placeholder, textarea::placeholder {
   .impact-block-actions {
     justify-content: flex-end;
   }
+}
+</style>
+
+<!-- Non-scoped dark mode overrides for page editor (Home, About, Programs, News) -->
+<style>
+.admin-dark .editor-page {
+  background: #06100F !important;
+}
+.admin-dark .editor-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .editor-page .main {
+  background: #06100F !important;
+}
+.admin-dark .editor-header,
+.admin-dark .editor-container,
+.admin-dark .impact-hero-bar,
+.admin-dark .impact-panel,
+.admin-dark .impact-content-grid {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .notice {
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .impact-saved-pill {
+  background: #38c982 !important;
+  color: #06100F !important;
+}
+.admin-dark .impact-unsaved-pill {
+  background: #e0b15a !important;
+  color: #06100F !important;
+}
+/* Force dark mode variables with high specificity */
+html.admin-dark .editor-page,
+html.admin-dark .editor-page .form-card,
+html.admin-dark .editor-page .card-header,
+html.admin-dark .editor-page .step,
+html.admin-dark .editor-page .section-block,
+html.admin-dark .editor-page .section-toolbar,
+html.admin-dark .editor-page .section-summary {
+  --admin-surface-soft: #0b1b17 !important;
+  --admin-contrast: #f2fbf6 !important;
+  --admin-contrast-soft: #b9ead5 !important;
+  --admin-border: #1d3b33 !important;
+  --admin-border-strong: #2d554a !important;
+  --admin-text: #c9ddd4 !important;
+  --admin-muted: #90aaa0 !important;
+  --admin-muted-light: #6d8d80 !important;
+  --admin-blue: #38c982 !important;
+  --admin-blue-soft: #0b1b17 !important;
+  --admin-green-soft: #0b1b17 !important;
+  --admin-amber-soft: #1a150b !important;
+  --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+  --admin-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4) !important;
 }
 </style>

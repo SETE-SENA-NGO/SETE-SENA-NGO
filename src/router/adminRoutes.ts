@@ -12,6 +12,7 @@ import LivelihoodDashboardView from '@/views/admin/LivelihoodDashboardView.vue'
 import ChildProtectionDashboardView from '@/views/admin/ChildProtectionDashboardView.vue'
 import ProgramsOverviewView from '@/views/admin/ProgramsOverviewView.vue'
 import DonationLView from '@/views/admin/DonationLView.vue'
+import DonateAdminView from '@/views/admin/DonateAdminView.vue'
 import SlideshowManagerView from '@/views/admin/SlideshowManagerView.vue'
 import GetinvolvedManagement from '@/views/admin/GetinvolvedManagement.vue'
 import PartnerManagement from '@/views/admin/PartnerManagement(involved).vue'
@@ -25,6 +26,7 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/editor/impact', redirect: '/admin/editor/impact-numbers', meta: { requiresAuth: true } },
   { path: '/admin/editor/get-involved-partner', component: PartnerManagement, meta: { requiresAuth: true } },
   { path: '/admin/partner-management', redirect: '/admin/editor/get-involved-partner', meta: { requiresAuth: true } },
+  { path: '/admin/editor/get-involved-donate', component: DonateAdminView, meta: { requiresAuth: true } },
   { path: '/admin/editor/:slug', component: PageEditorView, meta: { requiresAuth: true } },
   { path: '/admin/media', component: MediaLibraryView, meta: { requiresAuth: true } },
   { path: '/admin/modules/:module', component: AdminModuleView, meta: { requiresAuth: true } },

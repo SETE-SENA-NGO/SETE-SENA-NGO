@@ -1,15 +1,30 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import {
+  ArrowDown,
+  ArrowUp,
+  ExternalLink,
+  FileText,
+  Flag,
+  FolderHeart,
+  MapPin,
+  Plus,
+  RotateCcw,
+  Save,
+  Sparkles,
+  Trash2,
+  Upload,
+} from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import type { SupportedLocale } from '@/i18n'
 import { imageUploadHelpText, normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
 import type { PageContent } from '@/types/content'
-import type { SupportedLocale } from '@/i18n'
 
 type ActionLink = {
   label: string
@@ -63,9 +78,18 @@ type GetInvolvedPageContent = {
 
 const PAGE_SLUG = 'get-involved'
 const MAX_SUPPORT_CARDS = 8
+const MAX_JOURNEY_STEPS = 6
 
-function resolveImageUrl(url: string, fallback: string) {
+function resolveImageUrl(url: string, fallback: string): string {
   return url.trim() ? url : fallback
+}
+
+function getString(value: unknown): string {
+  return typeof value === 'string' ? value : ''
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 const fallbackContent: GetInvolvedPageContent = {
@@ -158,10 +182,10 @@ const { locale } = useI18n()
 const pageRow = ref<PageContent | null>(null)
 const loading = ref(true)
 const saving = ref(false)
-const uploadingHero = ref(false)
-const uploadingCardIndex = ref<number | null>(null)
+const uploadingKey = ref('')
 const loadError = ref('')
 const savedAt = ref('')
+const imageHint = imageUploadHelpText()
 
 const draft = reactive<GetInvolvedPageContent>(cloneContent(fallbackContent))
 
@@ -172,11 +196,53 @@ const activeLocaleName = computed(() =>
   activeLocale.value === 'kh' ? 'Khmer' : 'English',
 )
 const heroPreview = computed(() => resolveImageUrl(draft.hero.image, fallbackContent.hero.image))
-const imageHint = imageUploadHelpText()
 const canAddCard = computed(() => draft.supportCards.length < MAX_SUPPORT_CARDS)
+const canAddJourneyStep = computed(() => draft.journey.length < MAX_JOURNEY_STEPS)
+
+const sections = [
+  { id: 'getinvolved-hero', label: 'Hero', icon: Sparkles },
+  { id: 'getinvolved-cards', label: 'Cards', icon: FolderHeart },
+  { id: 'getinvolved-quote', label: 'Quote', icon: FileText },
+  { id: 'getinvolved-journey', label: 'Journey', icon: MapPin },
+  { id: 'getinvolved-closing', label: 'Closing', icon: Flag },
+] as const
+
+const activeSection = ref(sections[0].id)
+let sectionObserver: IntersectionObserver | null = null
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+function setupSectionObserver() {
+  sectionObserver?.disconnect()
+
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          activeSection.value = entry.target.id
+        }
+      }
+    },
+    { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
+  )
+
+  for (const s of sections) {
+    const el = document.getElementById(s.id)
+    if (el) sectionObserver.observe(el)
+  }
+}
 
 onMounted(() => {
+  contentStore.useLocalFallback()
   void loadPage()
+})
+
+onUnmounted(() => {
+  sectionObserver?.disconnect()
+  sectionObserver = null
 })
 
 watch(activeLocale, () => {
@@ -197,11 +263,17 @@ async function loadPage() {
     ui.addToast(loadError.value, 'error')
   } finally {
     loading.value = false
+    await nextTick()
+    setupSectionObserver()
   }
 }
 
 function replaceDraft(nextContent: GetInvolvedPageContent) {
-  draft.hero = cloneHero(nextContent.hero)
+  draft.hero = {
+    ...nextContent.hero,
+    primaryCta: { ...nextContent.hero.primaryCta },
+    secondaryCta: { ...nextContent.hero.secondaryCta },
+  }
   draft.supportCards = nextContent.supportCards.map(cloneCard)
   draft.quotePanel = { ...nextContent.quotePanel }
   draft.journey = nextContent.journey.map((item) => ({ ...item }))
@@ -249,46 +321,26 @@ async function savePage() {
   }
 }
 
-async function uploadHeroImage(event: Event) {
+async function uploadImage(event: Event, key: string, applyUrl: (url: string) => void) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
 
-  uploadingHero.value = true
+  uploadingKey.value = key
   try {
-    const uploaded = await media.uploadToGoogleDrive(file, 'Get Involved hero image')
-    draft.hero.image = uploaded.url
-    ui.addToast('Hero image uploaded.', 'success')
+    const uploaded = await media.uploadToGoogleDrive(file, `Get Involved ${key} image`)
+    applyUrl(normalizeMediaUrl(uploaded.url))
+    ui.addToast('Image uploaded.', 'success')
   } catch (error) {
-    ui.addToast(error instanceof Error ? error.message : 'Could not upload hero image.', 'error')
+    ui.addToast(error instanceof Error ? error.message : 'Could not upload image.', 'error')
   } finally {
-    uploadingHero.value = false
-    input.value = ''
-  }
-}
-
-async function uploadCardImage(event: Event, index: number) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-
-  uploadingCardIndex.value = index
-  try {
-    const uploaded = await media.uploadToGoogleDrive(file, `${draft.supportCards[index]?.title || 'Support card'} image`)
-    const card = draft.supportCards[index]
-    if (card) card.image = uploaded.url
-    ui.addToast('Card image uploaded.', 'success')
-  } catch (error) {
-    ui.addToast(error instanceof Error ? error.message : 'Could not upload card image.', 'error')
-  } finally {
-    uploadingCardIndex.value = null
+    uploadingKey.value = ''
     input.value = ''
   }
 }
 
 function addCard() {
   if (!canAddCard.value) return
-
   draft.supportCards.push({
     label: 'New support',
     title: 'New support card',
@@ -300,36 +352,51 @@ function addCard() {
   })
 }
 
-function removeCard(index: number) {
-  const card = draft.supportCards[index]
-  if (!card) return
+function addJourneyStep() {
+  if (!canAddJourneyStep.value) return
+  const stepNumber = draft.journey.length + 1
+  draft.journey.push({
+    step: String(stepNumber).padStart(2, '0'),
+    title: 'New journey step',
+    body: 'Describe this step in the journey.',
+  })
+}
 
+function removeItem<T extends { title?: string; name?: string }>(
+  items: T[],
+  index: number,
+  label: string,
+) {
+  const item = items[index]
+  if (!item) return
+
+  const itemTitle = item.title || item.name || 'this item'
   ui.openModal(
-    'Remove support card?',
-    `Remove "${card.title || 'this card'}" from the public Get Involved page?`,
+    `Remove ${label}?`,
+    `Remove "${itemTitle}" from the public Get Involved page?`,
     () => {
-      draft.supportCards.splice(index, 1)
-      ui.addToast('Support card removed.', 'warning')
+      items.splice(index, 1)
+      ui.addToast(`${label} removed.`, 'warning')
     },
   )
 }
 
-function moveCard(index: number, direction: -1 | 1) {
+function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   const target = index + direction
-  if (target < 0 || target >= draft.supportCards.length) return
+  if (target < 0 || target >= items.length) return
 
-  const current = draft.supportCards[index]
-  const next = draft.supportCards[target]
+  const current = items[index]
+  const next = items[target]
   if (!current || !next) return
 
-  draft.supportCards[index] = next
-  draft.supportCards[target] = current
+  items[index] = next
+  items[target] = current
 }
 
 function resetToDefaults() {
   ui.openModal(
     'Reset Get Involved content?',
-    'Restore the default hero image and support cards for this page?',
+    'Restore all content sections, cards, journey steps, and quotes to their defaults?',
     () => {
       replaceDraft(cloneContent(fallbackContent))
       ui.addToast('Default Get Involved draft restored.', 'info')
@@ -340,15 +407,21 @@ function resetToDefaults() {
 function prepareForSave(content: GetInvolvedPageContent): GetInvolvedPageContent {
   return {
     hero: {
-      ...cloneHero(content.hero),
+      ...content.hero,
       image: normalizeMediaUrl(content.hero.image),
+      primaryCta: { ...content.hero.primaryCta },
+      secondaryCta: { ...content.hero.secondaryCta },
     },
     supportCards: content.supportCards.map((card) => ({
-      ...cloneCard(card),
+      ...card,
       image: normalizeMediaUrl(card.image),
     })),
     quotePanel: { ...content.quotePanel },
-    journey: content.journey.map((item) => ({ ...item })),
+    journey: content.journey.map((item) => ({
+      step: item.step.trim() || '0',
+      title: item.title.trim(),
+      body: item.body.trim(),
+    })),
     closing: {
       ...content.closing,
       primaryCta: { ...content.closing.primaryCta },
@@ -364,9 +437,11 @@ function validateDraft() {
   const invalidCardIndex = draft.supportCards.findIndex(
     (card) => !card.title.trim() || !card.body.trim() || !card.image.trim(),
   )
+  if (invalidCardIndex >= 0) return `Card ${invalidCardIndex + 1} needs a title, body, and image.`
 
-  if (invalidCardIndex >= 0) {
-    return `Card ${invalidCardIndex + 1} needs a title, body, and image.`
+  if (!draft.journey.length) return 'Add at least one journey step.'
+  if (draft.journey.some((item) => !item.title.trim() || !item.body.trim())) {
+    return 'Each journey step needs a title and body.'
   }
 
   return ''
@@ -374,7 +449,6 @@ function validateDraft() {
 
 function parseCmsBody(body: string): Partial<GetInvolvedPageContent> | null {
   if (!body.trim()) return null
-
   try {
     const parsed = JSON.parse(body) as unknown
     return isRecord(parsed) ? (parsed as Partial<GetInvolvedPageContent>) : null
@@ -413,7 +487,6 @@ function mergeContent(
 
 function mergeCards(override: unknown, fallback: SupportCard[]) {
   if (!Array.isArray(override) || !override.length) return fallback.map(cloneCard)
-
   return override.filter(isRecord).map((card) => ({
     label: getString(card.label),
     title: getString(card.title),
@@ -426,7 +499,9 @@ function mergeCards(override: unknown, fallback: SupportCard[]) {
 }
 
 function mergeArray<T>(override: unknown, fallback: T[]) {
-  return Array.isArray(override) && override.length ? (override as T[]).map((item) => ({ ...item })) : fallback.map((item) => ({ ...item }))
+  return Array.isArray(override) && override.length
+    ? (override as T[]).map((item) => ({ ...item }))
+    : fallback.map((item) => ({ ...item }))
 }
 
 function mergeObject<T>(base: T, override: unknown): T {
@@ -435,7 +510,11 @@ function mergeObject<T>(base: T, override: unknown): T {
 
 function cloneContent(content: GetInvolvedPageContent): GetInvolvedPageContent {
   return {
-    hero: cloneHero(content.hero),
+    hero: {
+      ...content.hero,
+      primaryCta: { ...content.hero.primaryCta },
+      secondaryCta: { ...content.hero.secondaryCta },
+    },
     supportCards: content.supportCards.map(cloneCard),
     quotePanel: { ...content.quotePanel },
     journey: content.journey.map((item) => ({ ...item })),
@@ -447,29 +526,13 @@ function cloneContent(content: GetInvolvedPageContent): GetInvolvedPageContent {
   }
 }
 
-function cloneHero(content: GetInvolvedPageContent['hero']) {
-  return {
-    ...content,
-    primaryCta: { ...content.primaryCta },
-    secondaryCta: { ...content.secondaryCta },
-  }
-}
-
 function cloneCard(card: SupportCard): SupportCard {
   return { ...card }
-}
-
-function getString(value: unknown) {
-  return typeof value === 'string' ? value : ''
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 </script>
 
 <template>
-  <div :class="['get-involved-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <div :class="['getinvolved-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -478,81 +541,129 @@ function isRecord(value: unknown): value is Record<string, unknown> {
         <header class="manager-hero">
           <div class="manager-title">
             <p class="eyebrow">Get Involved</p>
-            <h1>Manage content</h1>
-            <div class="manager-meta" aria-label="Editable sections">
+            <h1>Manage get involved page</h1>
+            <div class="manager-meta" aria-label="Editable sections summary">
               <span>{{ activeLocaleName }} content</span>
-              <span>Hero image</span>
               <span>{{ draft.supportCards.length }} cards</span>
+              <span>{{ draft.journey.length }} steps</span>
+              <span v-if="savedAt">Saved</span>
             </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/get-involved">View page</RouterLink>
+            <RouterLink class="btn btn-secondary" to="/get-involved">
+              <ExternalLink :size="16" aria-hidden="true" />
+              <span>View page</span>
+            </RouterLink>
             <button type="button" class="btn btn-ghost" @click="resetToDefaults">
-              Reset draft
+              <RotateCcw :size="16" aria-hidden="true" />
+              <span>Reset draft</span>
             </button>
             <button type="button" class="btn btn-primary" :disabled="saving" @click="savePage">
-              {{ saving ? 'Saving...' : 'Save changes' }}
+              <Save :size="16" aria-hidden="true" />
+              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
             </button>
           </div>
         </header>
 
         <div v-if="loading" class="state-card">Loading Get Involved content...</div>
         <div v-else-if="loadError" class="state-card state-card-error">
-          {{ loadError }}
+          <span>{{ loadError }}</span>
           <button type="button" class="btn btn-secondary" @click="loadPage">Try again</button>
         </div>
 
         <div v-else class="content-grid">
-          <section class="editor-panel hero-panel" aria-labelledby="hero-image-heading">
+
+          <nav class="section-nav" aria-label="Get Involved page sections">
+            <button
+              v-for="sec in sections"
+              :key="sec.id"
+              type="button"
+              :class="['section-nav-btn', { active: activeSection === sec.id }]"
+              @click="scrollToSection(sec.id)"
+            >
+              <component :is="sec.icon" :size="15" aria-hidden="true" />
+              <span>{{ sec.label }}</span>
+            </button>
+          </nav>
+
+          <!-- ── HERO ── -->
+          <div :id="sections[0].id" class="section-group">
+            <p class="section-group-label">Hero</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="hero-heading">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Hero section</p>
-                <h2 id="hero-image-heading">Support village peace.</h2>
+                <h2 id="hero-heading">Support village peace.</h2>
               </div>
-              <span v-if="savedAt" class="saved-pill">Saved</span>
+              <Sparkles :size="20" aria-hidden="true" />
             </div>
 
-            <div class="hero-editor-grid">
+            <div class="image-editor-grid">
               <figure class="image-preview hero-preview">
                 <img :src="heroPreview" alt="" />
               </figure>
 
-              <div class="image-control-panel">
-                <div class="field-row">
+              <div class="form-stack">
+                <div class="form-grid">
                   <label class="field">
-                    <span>Hero image URL</span>
-                    <input
-                      id="get-involved-hero-image"
-                      v-model="draft.hero.image"
-                      name="get-involved-hero-image"
-                      type="url"
-                      :placeholder="imageHint"
-                    />
+                    <span>Small label</span>
+                    <input v-model="draft.hero.eyebrow" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Section heading</span>
+                    <input v-model="draft.hero.title" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Description</span>
+                    <textarea v-model="draft.hero.description" rows="3"></textarea>
+                  </label>
+                  <label class="field wide">
+                    <span>Image URL</span>
+                    <input v-model="draft.hero.image" type="url" :placeholder="imageHint" />
+                  </label>
+                  <label class="field">
+                    <span>Image alt text</span>
+                    <input v-model="draft.hero.alt" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Primary CTA label</span>
+                    <input v-model="draft.hero.primaryCta.label" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Secondary CTA label</span>
+                    <input v-model="draft.hero.secondaryCta.label" type="text" />
                   </label>
                 </div>
-                <label class="upload-field upload-box">
-                  <span>{{ uploadingHero ? 'Uploading image...' : 'Upload replacement image' }}</span>
+                <label class="upload-box">
+                  <Upload :size="17" aria-hidden="true" />
+                  <span>{{ uploadingKey === 'hero-image' ? 'Uploading...' : 'Upload hero image' }}</span>
                   <input
-                    id="get-involved-hero-upload"
-                    name="get-involved-hero-upload"
                     type="file"
                     accept="image/*"
-                    :disabled="uploadingHero"
-                    @change="uploadHeroImage"
+                    :disabled="uploadingKey === 'hero-image'"
+                    @change="uploadImage($event, 'hero-image', (url) => (draft.hero.image = url))"
                   />
                 </label>
               </div>
             </div>
           </section>
 
-          <section class="editor-panel cards-panel" aria-labelledby="support-cards-heading">
+          <!-- ── SUPPORT CARDS ── -->
+          <div :id="sections[1].id" class="section-group">
+            <p class="section-group-label">Cards</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="cards-heading">
             <div class="panel-header">
               <div>
-                <p class="panel-kicker">Cards section</p>
-                <h2 id="support-cards-heading">Support real community work.</h2>
+                <p class="panel-kicker">Support cards</p>
+                <h2 id="cards-heading">Support real community work.</h2>
               </div>
               <button type="button" class="btn btn-secondary" :disabled="!canAddCard" @click="addCard">
-                Add card
+                <Plus :size="16" aria-hidden="true" />
+                <span>Add card</span>
               </button>
             </div>
 
@@ -567,19 +678,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
                     </div>
                   </div>
                   <div class="card-actions">
-                    <button type="button" class="icon-btn" :disabled="index === 0" @click="moveCard(index, -1)">
-                      Up
+                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move card up" @click="moveItem(draft.supportCards, index, -1)">
+                      <ArrowUp :size="15" aria-hidden="true" />
                     </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      :disabled="index === draft.supportCards.length - 1"
-                      @click="moveCard(index, 1)"
-                    >
-                      Down
+                    <button type="button" class="icon-btn" :disabled="index === draft.supportCards.length - 1" aria-label="Move card down" @click="moveItem(draft.supportCards, index, 1)">
+                      <ArrowDown :size="15" aria-hidden="true" />
                     </button>
-                    <button type="button" class="icon-btn danger" @click="removeCard(index)">
-                      Remove
+                    <button type="button" class="icon-btn danger" aria-label="Remove card" @click="removeItem(draft.supportCards, index, 'card')">
+                      <Trash2 :size="15" aria-hidden="true" />
                     </button>
                   </div>
                 </header>
@@ -588,26 +694,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
                   <figure class="image-preview card-preview">
                     <img :src="resolveImageUrl(card.image, fallbackContent.supportCards[0]?.image ?? '')" alt="" />
                   </figure>
-
                   <div class="card-image-controls image-control-panel">
                     <label class="field">
                       <span>Image URL</span>
-                      <input
-                        :id="`get-involved-card-${index}-image`"
-                        v-model="card.image"
-                        :name="`get-involved-card-${index}-image`"
-                        type="url"
-                        :placeholder="imageHint"
-                      />
+                      <input v-model="card.image" type="url" :placeholder="imageHint" />
                     </label>
-                    <label class="upload-field upload-box">
-                      <span>{{ uploadingCardIndex === index ? 'Uploading image...' : 'Upload card image' }}</span>
+                    <label class="upload-box">
+                      <Upload :size="17" aria-hidden="true" />
+                      <span>{{ uploadingKey === `card-${index}` ? 'Uploading...' : 'Upload card image' }}</span>
                       <input
                         type="file"
-                        :name="`get-involved-card-${index}-upload`"
                         accept="image/*"
-                        :disabled="uploadingCardIndex === index"
-                        @change="uploadCardImage($event, index)"
+                        :disabled="uploadingKey === `card-${index}`"
+                        @change="uploadImage($event, `card-${index}`, (url) => (card.image = url))"
                       />
                     </label>
                   </div>
@@ -616,35 +715,159 @@ function isRecord(value: unknown): value is Record<string, unknown> {
                 <div class="card-form-grid">
                   <label class="field">
                     <span>Label</span>
-                    <input
-                      :id="`get-involved-card-${index}-label`"
-                      v-model="card.label"
-                      :name="`get-involved-card-${index}-label`"
-                      type="text"
-                    />
+                    <input v-model="card.label" type="text" />
                   </label>
                   <label class="field">
                     <span>Title</span>
-                    <input
-                      :id="`get-involved-card-${index}-title`"
-                      v-model="card.title"
-                      :name="`get-involved-card-${index}-title`"
-                      type="text"
-                    />
+                    <input v-model="card.title" type="text" />
+                  </label>
+                  <label class="field">
+                    <span>Image alt text</span>
+                    <input v-model="card.alt" type="text" />
                   </label>
                   <label class="field wide">
                     <span>Description</span>
-                    <textarea
-                      :id="`get-involved-card-${index}-body`"
-                      v-model="card.body"
-                      :name="`get-involved-card-${index}-body`"
-                      rows="3"
-                    ></textarea>
+                    <textarea v-model="card.body" rows="3"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Link text</span>
+                    <input v-model="card.cta" type="text" />
                   </label>
                 </div>
               </article>
             </div>
           </section>
+
+          <!-- ── QUOTE PANEL ── -->
+          <div :id="sections[2].id" class="section-group">
+            <p class="section-group-label">Quote</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="quote-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Quote panel</p>
+                <h2 id="quote-heading">Strategy quote and context</h2>
+              </div>
+              <FileText :size="20" aria-hidden="true" />
+            </div>
+
+            <div class="panel-body form-grid">
+              <label class="field wide">
+                <span>Quote</span>
+                <textarea v-model="draft.quotePanel.quote" rows="3"></textarea>
+              </label>
+              <label class="field wide">
+                <span>Credit / attribution</span>
+                <input v-model="draft.quotePanel.credit" type="text" />
+              </label>
+              <label class="field wide">
+                <span>Support heading</span>
+                <input v-model="draft.quotePanel.title" type="text" />
+              </label>
+              <label class="field wide">
+                <span>Context body</span>
+                <textarea v-model="draft.quotePanel.body" rows="4"></textarea>
+              </label>
+            </div>
+          </section>
+
+          <!-- ── JOURNEY ── -->
+          <div :id="sections[3].id" class="section-group">
+            <p class="section-group-label">Journey</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="journey-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Your path</p>
+                <h2 id="journey-heading">Journey steps</h2>
+              </div>
+              <button type="button" class="btn btn-secondary" :disabled="!canAddJourneyStep" @click="addJourneyStep">
+                <Plus :size="16" aria-hidden="true" />
+                <span>Add step</span>
+              </button>
+            </div>
+
+            <div class="cards-list two-col">
+              <article v-for="(step, index) in draft.journey" :key="index" class="card-editor">
+                <header class="card-editor-header">
+                  <div class="card-heading">
+                    <span class="card-number">{{ step.step || String(index + 1).padStart(2, '0') }}</span>
+                    <div>
+                      <h3>{{ step.title || 'New step' }}</h3>
+                      <p>{{ step.body ? step.body.slice(0, 40) + '...' : 'No description' }}</p>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move step up" @click="moveItem(draft.journey, index, -1)">
+                      <ArrowUp :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn" :disabled="index === draft.journey.length - 1" aria-label="Move step down" @click="moveItem(draft.journey, index, 1)">
+                      <ArrowDown :size="15" aria-hidden="true" />
+                    </button>
+                    <button type="button" class="icon-btn danger" aria-label="Remove step" @click="removeItem(draft.journey, index, 'journey step')">
+                      <Trash2 :size="15" aria-hidden="true" />
+                    </button>
+                  </div>
+                </header>
+
+                <div class="card-form-grid">
+                  <label class="field">
+                    <span>Step number</span>
+                    <input v-model="step.step" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Title</span>
+                    <input v-model="step.title" type="text" />
+                  </label>
+                  <label class="field wide">
+                    <span>Body</span>
+                    <textarea v-model="step.body" rows="2"></textarea>
+                  </label>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- ── CLOSING ── -->
+          <div :id="sections[4].id" class="section-group">
+            <p class="section-group-label">Closing</p>
+          </div>
+
+          <section class="editor-panel" aria-labelledby="closing-heading">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Next step</p>
+                <h2 id="closing-heading">Closing call to action</h2>
+              </div>
+              <Flag :size="20" aria-hidden="true" />
+            </div>
+
+            <div class="panel-body form-grid">
+              <label class="field">
+                <span>Small label</span>
+                <input v-model="draft.closing.eyebrow" type="text" />
+              </label>
+              <label class="field">
+                <span>Section heading</span>
+                <input v-model="draft.closing.title" type="text" />
+              </label>
+              <label class="field wide">
+                <span>Description</span>
+                <textarea v-model="draft.closing.body" rows="3"></textarea>
+              </label>
+              <label class="field">
+                <span>Primary CTA label</span>
+                <input v-model="draft.closing.primaryCta.label" type="text" />
+              </label>
+              <label class="field">
+                <span>Secondary CTA label</span>
+                <input v-model="draft.closing.secondaryCta.label" type="text" />
+              </label>
+            </div>
+          </section>
+
         </div>
       </main>
     </div>
@@ -652,10 +875,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 </template>
 
 <style scoped>
-.get-involved-admin {
+.getinvolved-admin {
   min-height: 100vh;
-  background: var(--admin-theme-bg);
-  color: var(--admin-theme-text);
+  background: var(--admin-bg);
+  color: var(--admin-text);
   transition: padding-left 0.25s ease;
 }
 
@@ -669,15 +892,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   padding-top: calc(60px + 1.25rem);
 }
 
+.manager-hero,
+.editor-panel {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
+}
+
 .manager-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
   padding: 1rem 1.1rem;
 }
 
@@ -699,10 +926,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   gap: 0.32rem;
 }
 
-.manager-meta {
+.manager-meta,
+.hero-actions,
+.card-actions,
+.panel-icons {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .manager-meta span {
@@ -724,18 +954,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   text-transform: uppercase;
 }
 
-.hero-actions,
-.card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
 .btn,
 .icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
   min-height: 38px;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -784,9 +1008,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 .icon-btn {
-  min-height: 32px;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.74rem;
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
 }
 
 .icon-btn.danger {
@@ -832,10 +1056,74 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   margin-top: 1rem;
 }
 
-.editor-panel {
+.section-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
   border: 1px solid var(--admin-theme-border);
   border-radius: 8px;
   background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
+  padding: 0.5rem 0.6rem;
+  position: sticky;
+  top: calc(60px + 0.5rem);
+  z-index: 40;
+}
+
+.section-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--admin-theme-muted);
+  padding: 0.4rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.section-nav-btn:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+}
+
+.section-nav-btn.active {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 32%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+}
+
+.section-group {
+  scroll-margin-top: 120px;
+}
+
+.section-group-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.6rem 0 0;
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.section-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 18%, var(--admin-theme-border));
+}
+
+.editor-panel {
   overflow: hidden;
 }
 
@@ -854,19 +1142,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   font-size: 1rem;
 }
 
-.saved-pill {
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 28%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 11%, transparent);
-  color: var(--admin-theme-primary-deep);
-  padding: 0.22rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 800;
+.panel-body {
+  padding: 1rem;
 }
 
-.hero-editor-grid {
+.image-editor-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 0.74fr) minmax(360px, 1.26fr);
+  grid-template-columns: minmax(300px, 0.72fr) minmax(360px, 1.28fr);
   gap: 1.1rem;
   padding: 1.1rem;
 }
@@ -893,35 +1175,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   aspect-ratio: 16 / 10;
 }
 
-.card-preview {
-  width: 170px;
-  aspect-ratio: 1.35;
-  flex: 0 0 auto;
-}
-
 .form-stack,
-.cards-list,
-.card-form-grid {
+.cards-list {
   display: grid;
   gap: 0.85rem;
 }
 
-.image-control-panel {
+.form-grid {
   display: grid;
-  align-content: start;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 42%, var(--admin-theme-surface));
-  padding: 0.9rem;
 }
 
-.field-row {
-  display: grid;
+.wide {
+  grid-column: 1 / -1;
 }
 
 .field,
-.upload-field {
+.upload-box {
   display: grid;
   gap: 0.35rem;
   color: var(--admin-theme-muted);
@@ -930,13 +1201,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 .field span,
-.upload-field span {
+.upload-box span {
   color: var(--admin-theme-contrast-soft);
 }
 
 .field input,
 .field textarea,
-.upload-field input {
+.upload-box input {
   width: 100%;
   border: 1px solid var(--admin-theme-border-strong);
   border-radius: 6px;
@@ -948,13 +1219,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   padding: 0.65rem 0.75rem;
 }
 
-.upload-box {
-  border: 1px dashed var(--admin-theme-border-strong);
-  border-radius: 7px;
-  background: var(--admin-theme-surface);
-  padding: 0.75rem;
-}
-
 .field textarea {
   resize: vertical;
   line-height: 1.5;
@@ -962,14 +1226,41 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 .field input:focus,
 .field textarea:focus,
-.upload-field input:focus {
+.upload-box input:focus {
   border-color: var(--admin-theme-primary);
   outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
+}
+
+.upload-box {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  border: 1px dashed var(--admin-theme-border-strong);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 38%, var(--admin-theme-surface));
+  padding: 0.75rem;
+}
+
+.upload-box input {
+  grid-column: 1 / -1;
+  padding: 0.55rem;
+}
+
+.image-control-panel {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 42%, var(--admin-theme-surface));
+  padding: 0.9rem;
 }
 
 .cards-list {
   gap: 0.95rem;
   padding: 1rem;
+}
+
+.cards-list.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .card-editor {
@@ -1024,6 +1315,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   color: var(--admin-theme-primary-deep);
   font-size: 0.74rem;
   font-weight: 900;
+  flex-shrink: 0;
 }
 
 .card-editor-top {
@@ -1034,18 +1326,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   padding: 0.9rem 0.9rem 0;
 }
 
+.card-preview {
+  width: 170px;
+  aspect-ratio: 1.35;
+  flex: 0 0 auto;
+}
+
 .card-image-controls {
   display: grid;
   gap: 0.85rem;
 }
 
 .card-form-grid {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
   padding: 0.9rem;
-}
-
-.wide {
-  grid-column: 1 / -1;
 }
 
 :global(.admin-dark) .btn-primary {
@@ -1053,8 +1349,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 @media (min-width: 900px) {
-  .get-involved-admin.sidebar-open {
+  .getinvolved-admin.sidebar-open {
     padding-left: 260px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .cards-list.two-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1064,29 +1366,26 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     padding-top: calc(60px + 1rem);
   }
 
-  .manager-hero,
-  .panel-header {
-    flex-direction: column;
+  .section-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .section-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .manager-hero,
   .panel-header,
   .card-editor-header {
     align-items: stretch;
-  }
-
-  .card-editor-header,
-  .card-actions {
-    justify-content: flex-start;
-  }
-
-  .card-editor-top {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .hero-actions,
-  .card-actions,
-  .hero-actions .btn {
+  .hero-actions .btn,
+  .card-actions {
     width: 100%;
   }
 
@@ -1094,13 +1393,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     flex: 1;
   }
 
-  .hero-editor-grid,
+  .image-editor-grid,
+  .form-grid,
   .card-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-editor-top {
     grid-template-columns: 1fr;
   }
 
   .card-preview {
     width: 100%;
+  }
+
+  .cards-list.two-col {
+    grid-template-columns: 1fr;
   }
 }
 </style>

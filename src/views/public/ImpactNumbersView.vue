@@ -389,7 +389,7 @@ onBeforeUnmount(() => {
   font-size: 0.7rem;
   font-weight: 700;
   color: #2d7a5a;
-  background: rgba(45, 122, 90, 0.08);
+  background: none;
   padding: 0.25rem 1rem;
   border-radius: 999px;
 }
@@ -445,7 +445,7 @@ onBeforeUnmount(() => {
   font-size: 0.7rem;
   font-weight: 700;
   color: #2d7a5a;
-  background: rgba(45, 122, 90, 0.08);
+  background: none;
   padding: 0.25rem 1.25rem;
   border-radius: 999px;
   margin-bottom: 1rem;
@@ -491,7 +491,7 @@ onBeforeUnmount(() => {
 }
 
 .stat-card {
-    background: #f3f7f5;
+    background: #135333;
     border: 1px solid rgba(30, 80, 60, 0.08);
     border-radius: 1.25rem;
     padding: 1.75rem 1.5rem;
@@ -509,6 +509,7 @@ onBeforeUnmount(() => {
 .stat-card.card-visible {
     opacity: 1;
     transform: translateY(0) scale(1);
+    background: rgb(38, 114, 81);
 }
 
 .stat-card:hover {
@@ -520,7 +521,7 @@ onBeforeUnmount(() => {
 .stat-card h3 {
   font-size: 2.4rem;
   font-weight: 700;
-  color: #1a4d38;
+  color: #f1f7f4;
   letter-spacing: -0.02em;
   line-height: 1;
   margin: 0;
@@ -530,14 +531,14 @@ onBeforeUnmount(() => {
   margin: 0.5rem 0 0.2rem;
   font-weight: 600;
   font-size: 1.05rem;
-  color: var(--color-ink, #1e1a16);
+  color:  #70d5b2;
 }
 
 .stat-card p {
   margin: 0.3rem 0 0;
   font-size: 0.92rem;
   line-height: 1.6;
-  color: var(--color-ink-soft, #554d47);
+  color: #fbf9f8;
 }
 
 /* ─── map ─── */

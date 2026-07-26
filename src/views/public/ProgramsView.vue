@@ -271,7 +271,7 @@ onBeforeUnmount(() => {
         class="goal-card"
         :class="{ reverse: index % 2 === 1 }"
       >
-        <div class="goal-media" :style="{ backgroundImage: `url(${goal.image})` }" />
+        <img :src="goal.image" class="goal-media" alt="" loading="lazy" decoding="async" />
         <div class="goal-overlay" />
 
         <div class="goal-content">
@@ -390,7 +390,7 @@ onBeforeUnmount(() => {
   }
 }
 .eyebrow {
-  color: var(--primary-light);
+  color: rgb(53, 177, 127);
   letter-spacing: 0.15em;
   font-size: 0.8rem;
   font-weight: 700;
@@ -438,12 +438,20 @@ onBeforeUnmount(() => {
   transform: translateY(0);
 }
 
+/* Real <img> instead of a CSS background-image: browsers keep <img> layers at
+   full raster resolution through a transform, so the photo stays sharp both
+   during and after the scroll-reveal zoom (the previous background-image +
+   transform:scale combo triggered a blurry GPU-compositing bug in Chromium). */
 .goal-media {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   transform: scale(1.14);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .goal-card.is-visible .goal-media {

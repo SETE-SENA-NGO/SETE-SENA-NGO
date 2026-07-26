@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import ImageCropModal from '@/components/admin/ImageCropModal.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
 import { imageUploadHelpText, isAllowedImageFile, isSameImage } from '@/lib/media'
@@ -58,6 +59,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   for (const id of Object.keys(previews)) revokePreview(id)
+  closeCropTarget()
 })
 
 function revokePreview(id: string) {
@@ -70,6 +72,9 @@ function revokePreview(id: string) {
 function displayedQr(method: DonationMethod) {
   return previews[method.id] || method.qrUrl
 }
+
+// Holds the just-picked (not yet cropped) file while the crop modal is open.
+const cropTarget = ref<{ methodId: string; file: File; src: string } | null>(null)
 
 async function onFileChange(method: DonationMethod, event: Event) {
   const input = event.target as HTMLInputElement
@@ -90,10 +95,31 @@ async function onFileChange(method: DonationMethod, event: Event) {
     return
   }
 
-  revokePreview(method.id)
-  pendingFiles[method.id] = file
-  previews[method.id] = URL.createObjectURL(file)
   delete cardMessages[method.id]
+  cropTarget.value = { methodId: method.id, file, src: URL.createObjectURL(file) }
+}
+
+function closeCropTarget() {
+  if (cropTarget.value) URL.revokeObjectURL(cropTarget.value.src)
+  cropTarget.value = null
+}
+
+function onCropConfirm(croppedFile: File) {
+  const methodId = cropTarget.value?.methodId
+  closeCropTarget()
+  if (!methodId) return
+
+  revokePreview(methodId)
+  pendingFiles[methodId] = croppedFile
+  previews[methodId] = URL.createObjectURL(croppedFile)
+}
+
+function reopenCrop(method: DonationMethod) {
+  const existing = pendingFiles[method.id]
+  if (!existing) return
+  // A fresh object URL for this crop session — independent of `previews`, so
+  // cancelling doesn't revoke the URL the card's thumbnail is still using.
+  cropTarget.value = { methodId: method.id, file: existing, src: URL.createObjectURL(existing) }
 }
 
 function removeQr(method: DonationMethod) {
@@ -216,6 +242,14 @@ async function saveCard(method: DonationMethod, index: number) {
                       {{ displayedQr(activeMethod) ? 'Replace QR image' : 'Upload QR image' }}
                     </label>
                     <button
+                      v-if="pendingFiles[activeMethod.id]"
+                      type="button"
+                      class="crop-btn"
+                      @click="reopenCrop(activeMethod)"
+                    >
+                      Adjust crop
+                    </button>
+                    <button
                       v-if="displayedQr(activeMethod)"
                       type="button"
                       class="remove-btn"
@@ -307,6 +341,17 @@ async function saveCard(method: DonationMethod, index: number) {
       </main>
     </div>
   </div>
+
+  <Teleport to="body">
+    <ImageCropModal
+      v-if="cropTarget"
+      :image-src="cropTarget.src"
+      :file-name="cropTarget.file.name"
+      :mime-type="cropTarget.file.type || 'image/png'"
+      @confirm="onCropConfirm"
+      @cancel="closeCropTarget"
+    />
+  </Teleport>
 </template>
 
 <style scoped>
@@ -562,6 +607,11 @@ h1 {
   border-radius: 999px;
 }
 
+:global(.admin-dark) .pending-tag {
+  background: rgba(217, 173, 47, 0.85);
+  color: #0c1f1a;
+}
+
 .qr-actions {
   display: flex;
   flex-wrap: wrap;
@@ -600,6 +650,23 @@ h1 {
   white-space: nowrap;
 }
 
+.crop-btn {
+  min-height: 42px;
+  border: 1.5px solid var(--admin-border-strong);
+  border-radius: 10px;
+  background: var(--admin-surface-soft);
+  color: var(--admin-text);
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.crop-btn:hover {
+  background: var(--admin-border);
+}
+
 .remove-btn {
   min-height: 42px;
   border: 1.5px solid rgba(225, 29, 72, 0.35);
@@ -615,6 +682,16 @@ h1 {
 
 .remove-btn:hover {
   background: rgba(225, 29, 72, 0.13);
+}
+
+:global(.admin-dark) .remove-btn {
+  border-color: rgba(251, 113, 133, 0.35);
+  background: rgba(251, 113, 133, 0.08);
+  color: #fb7185;
+}
+
+:global(.admin-dark) .remove-btn:hover {
+  background: rgba(251, 113, 133, 0.18);
 }
 
 .field {
@@ -695,6 +772,10 @@ h1 {
   color: #be123c;
 }
 
+:global(.admin-dark) .save-message.error {
+  color: #fb7185;
+}
+
 .save-btn {
   min-height: 46px;
   border: 1px solid var(--admin-blue);
@@ -753,5 +834,66 @@ h1 {
   h1 {
     font-size: 1.5rem;
   }
+}
+</style>
+
+<!-- Non-scoped dark mode overrides for Donation QR page -->
+<style>
+.admin-dark .admin-page {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .admin-layout {
+  background: #06100F !important;
+}
+.admin-dark .admin-page .main {
+  background: #06100F !important;
+}
+.admin-dark .donation-header,
+.admin-dark .method-card {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .btn,
+.admin-dark .btn-primary,
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .btn-primary {
+  background: #38c982 !important;
+  border-color: #74e0ae !important;
+  color: #06100F !important;
+}
+.admin-dark input:not([type="color"]),
+.admin-dark textarea,
+.admin-dark select {
+  background: #0a1a14 !important;
+  border-color: #1d3b33 !important;
+  color: #f2fbf6 !important;
+}
+.admin-dark .field label {
+  color: #c9ddd4 !important;
+}
+.admin-dark .qr-preview {
+  background: #0b1b17 !important;
+  border-color: #2d554a !important;
+}
+.admin-dark .method-switcher {
+  background: #0b1b17 !important;
+  border-color: #1d3b33 !important;
+}
+.admin-dark .switch-tab.active {
+  background: #0a1a14 !important;
+}
+.admin-dark .switch-tab:hover {
+  color: #f2fbf6 !important;
+}
+.admin-dark .card-save-bar {
+  border-color: #1d3b33 !important;
+}
+.admin-dark .save-message.success {
+  color: #74e0ae !important;
 }
 </style>
