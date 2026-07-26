@@ -1643,16 +1643,19 @@ function formatDate(value: string) {
               </div>
             </div>
             <div class="impact-hero-actions">
-              <RouterLink class="btn btn-secondary" :to="activePage.route">View page</RouterLink>
-              <button type="button" class="btn btn-ghost" @click="resetCurrentToDefault">Reset draft</button>
+              <RouterLink class="btn btn-secondary" :to="activePage.route">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <span>View page</span>
+              </RouterLink>
               <button
                 type="button"
                 class="btn btn-primary"
-                :disabled="savingSlug === activePage.slug || loading"
+                :disabled="savingSlug === activePage.slug || loading || !activePageDirty"
                 @click="saveCurrentPage"
               >
                 <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
-                {{ savingSlug === activePage.slug ? 'Saving...' : 'Save changes' }}
+                <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <span>{{ savingSlug === activePage.slug ? 'Saving...' : 'Save changes' }}</span>
               </button>
             </div>
           </header>
