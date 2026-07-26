@@ -25,7 +25,6 @@ import {
 const route = useRoute()
 const { locale } = useI18n()
 const contentStore = useContentStore()
-const content = ref<PublishedPageContent | null>(null)
 const loaded = ref(false)
 const loadError = ref('')
 const fallbackComponent = shallowRef<Component | null>(null)
@@ -43,6 +42,31 @@ const isHome = computed(() => slug.value === 'home')
 const activeLocale = computed<SupportedLocale>(() =>
   locale.value === 'kh' ? 'kh' : 'en',
 )
+
+const content = computed<PublishedPageContent | null>(() => {
+  if (!slug.value) return null
+
+  const key = `${activeLocale.value}:${slug.value}`
+  const fallbackKey = `en:${slug.value}`
+  const row = contentStore.pages[key] || contentStore.pages[fallbackKey]
+
+  if (!row) return null
+
+  const parsedContent = parsePublishedPage(row as PublishedPageRow)
+  const localizedContent =
+    parsedContent && activeLocale.value === 'kh'
+      ? localizeContentValue(parsedContent, activeLocale.value)
+      : parsedContent
+
+  return parsedContent && localizedContent
+    ? {
+        ...localizedContent,
+        slug: parsedContent.slug,
+        route: parsedContent.route,
+        group: parsedContent.group,
+      }
+    : (localizedContent as PublishedPageContent | null)
+})
 
 const statusMessage = computed(() => {
   if (!loaded.value) return 'Loading page content...'
@@ -217,7 +241,14 @@ onUnmounted(() => {
 
 async function loadPage() {
   if (!slug.value) {
-    content.value = null
+    loaded.value = true
+    return
+  }
+
+  const key = `${activeLocale.value}:${slug.value}`
+  const fallbackKey = `en:${slug.value}`
+
+  if (contentStore.pages[key] || contentStore.pages[fallbackKey]) {
     loaded.value = true
     return
   }
@@ -226,47 +257,13 @@ async function loadPage() {
   loadError.value = ''
 
   try {
-    const row =
-      (await fetchPublishedPage(slug.value, activeLocale.value)) ??
-      (activeLocale.value === 'kh'
-        ? await fetchPublishedPage(slug.value, 'en')
-        : null)
-
-    const parsedContent = row ? parsePublishedPage(row) : null
-    const localizedContent =
-      parsedContent && activeLocale.value === 'kh'
-        ? localizeContentValue(parsedContent, activeLocale.value)
-        : parsedContent
-
-    content.value =
-      parsedContent && localizedContent
-        ? {
-            ...localizedContent,
-            slug: parsedContent.slug,
-            route: parsedContent.route,
-            group: parsedContent.group,
-          }
-        : localizedContent
+    await contentStore.fetchBySlug(slug.value, activeLocale.value)
   } catch (error) {
-    content.value = null
     loadError.value =
       error instanceof Error ? error.message : 'Could not load page content.'
   } finally {
     loaded.value = true
   }
-}
-
-async function fetchPublishedPage(slug: string, pageLocale: SupportedLocale) {
-  const { data, error } = await supabase
-    .from('pages')
-    .select('slug, title, body, updated_at, locale')
-    .eq('slug', slug)
-    .eq('locale', pageLocale)
-    .maybeSingle()
-
-  if (error) throw error
-
-  return data ? (data as PublishedPageRow) : null
 }
 
 function actionRoute(index: number) {
