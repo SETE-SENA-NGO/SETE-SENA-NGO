@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -35,12 +35,15 @@ async function uploadGoalImage(file: File, index: number) {
     uploadError.value = 'Please choose an image file.'
     return
   }
+  const target = goals[index]
+  if (!target) return
+
   uploadingIndex.value = index
   uploadError.value = null
   try {
-    const displayName = `${goals[index].title || 'Program goal'} image`
+    const displayName = `${target.title || 'Program goal'} image`
     const item = await media.uploadToGoogleDrive(file, displayName)
-    goals[index].image = item.url
+    target.image = item.url
     notice.value = {
       type: 'success',
       message: 'Image uploaded to Google Drive. Click "Save & view page" to publish it.',

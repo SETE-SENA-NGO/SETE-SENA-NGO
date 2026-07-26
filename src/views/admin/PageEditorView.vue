@@ -1028,6 +1028,42 @@ async function handleImageCellUpload(event: Event, section: EditableSection, row
   }
 }
 
+function getRowLabel(sectionId: string): string {
+  const labelsMap: Record<string, string> = {
+    'impact-stats': 'Stat',
+    'timeline-stats': 'Stat',
+    'timeline-events': 'Milestone',
+    'numbers-overview': 'Stat',
+    'numbers-card-environment': 'Stat',
+    'numbers-card-education': 'Stat',
+    'numbers-card-livelihoods': 'Stat',
+    'partners-supporters': 'Partner',
+    'partners-government': 'Agency / Ministry',
+    'partners-local': 'Local Partner',
+    'partners-why': 'Highlight',
+    'donate-support': 'Method',
+    'donate-areas': 'Area',
+    'donate-contact': 'Contact Method',
+    'volunteer-pathways': 'Pathway',
+    'volunteer-skills': 'Skill',
+    'volunteer-steps': 'Step',
+    'partner-practice': 'Practice',
+    'partner-areas': 'Area',
+    'partner-commitments': 'Commitment',
+    'contact-offices': 'Office Contact',
+    'contact-form': 'Field',
+    'head-office-contact': 'Contact Detail',
+    'head-office-travel': 'Travel Note',
+    'head-office-guidance': 'Guidance Note',
+    'field-offices-list': 'Office',
+    'field-offices-visits': 'Visit Guideline',
+    'field-offices-hours': 'Hours Detail',
+    'qr-methods': 'QR Method',
+    'qr-notice': 'Notice Note',
+  }
+  return labelsMap[sectionId] || 'Row'
+}
+
 const drafts = ref<PageDraft[]>(defaultPages.map(clonePage))
 const loading = ref(false)
 const savingSlug = ref<string | null>(null)
@@ -1623,37 +1659,6 @@ function formatDate(value: string) {
 
           <!-- Content Grid -->
           <div class="impact-content-grid">
-            <!-- Page Identity Panel -->
-            <section class="impact-panel" aria-labelledby="impact-identity-heading">
-              <div class="impact-panel-header">
-                <div>
-                  <p class="impact-kicker">Page setup</p>
-                  <h2 id="impact-identity-heading">Page identity</h2>
-                </div>
-                <span v-if="!activePageDirty" class="impact-saved-pill">Saved</span>
-                <span v-else class="impact-unsaved-pill">Unsaved</span>
-              </div>
-              <div class="impact-panel-body">
-                <div class="impact-form-grid">
-                  <label class="impact-field">
-                    <span>Admin title</span>
-                    <input v-model="activePage.title" type="text" placeholder="Page title" />
-                  </label>
-                  <label class="impact-field">
-                    <span>Slug</span>
-                    <input :value="activePage.slug" type="text" disabled />
-                  </label>
-                  <label class="impact-field">
-                    <span>Route</span>
-                    <input :value="activePage.route" type="text" disabled />
-                  </label>
-                  <label class="impact-field">
-                    <span>Eyebrow</span>
-                    <input v-model="activePage.eyebrow" type="text" placeholder="Section eyebrow text" />
-                  </label>
-                </div>
-              </div>
-            </section>
 
             <!-- Hero Content Panel -->
             <section class="impact-panel" aria-labelledby="impact-hero-heading">
@@ -1718,9 +1723,6 @@ function formatDate(value: string) {
                       </button>
                       <button type="button" class="impact-icon-btn" :disabled="index === activePage.sections.length - 1" @click="moveSection(index, 1)" title="Move down">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                      </button>
-                      <button type="button" class="impact-icon-btn" @click="duplicateSection(index)" title="Duplicate">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                       </button>
                       <button type="button" class="impact-icon-btn danger" @click="removeSection(index)" title="Remove">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -1875,7 +1877,7 @@ function formatDate(value: string) {
                           @click="addRow(section, getSectionColCount(section))"
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                          Add Row
+                          Add {{ getRowLabel(section.id) }}
                         </button>
                       </div>
                     </div>

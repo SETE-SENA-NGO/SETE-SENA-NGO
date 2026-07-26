@@ -265,7 +265,7 @@ const sections = [
   { id: 'sec-support', label: 'Contact', icon: Phone },
 ] as const
 
-const activeSection = ref(sections[0].id)
+const activeSection = ref<string>(sections[0].id)
 let sectionObserver: IntersectionObserver | null = null
 
 function scrollToSection(id: string) {
