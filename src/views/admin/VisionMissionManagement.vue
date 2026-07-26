@@ -16,7 +16,8 @@
             </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/about/vision">View page</RouterLink>
+            <RouterLink class="btn btn-secondary" to="/admin">Dashboard</RouterLink>
+            <RouterLink class="btn btn-ghost" to="/about/vision">View Site (EN)</RouterLink>
             <button type="button" class="btn btn-ghost" @click="resetToDefaults">
               Reset draft
             </button>
@@ -32,9 +33,44 @@
           <button type="button" class="btn btn-secondary" @click="loadPage">Try again</button>
         </div>
 
-        <div v-else class="content-grid">
-          <!-- Vision Section -->
-          <section class="editor-panel" aria-labelledby="vision-heading">
+        <div v-else>
+          <!-- Tab Filter -->
+          <div class="tab-filters">
+            <button
+              type="button"
+              class="tab-filter-btn"
+              :class="{ active: activeTab === 'vision' }"
+              @click="activeTab = 'vision'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              Vision
+            </button>
+            <button
+              type="button"
+              class="tab-filter-btn"
+              :class="{ active: activeTab === 'mission' }"
+              @click="activeTab = 'mission'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Mission
+            </button>
+            <button
+              type="button"
+              class="tab-filter-btn"
+              :class="{ active: activeTab === 'values' }"
+              @click="activeTab = 'values'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Core Values
+            </button>
+          </div>
+
+          <div class="content-grid">
+          <!-- Tab-content sections wrapped in Transition -->
+          <Transition name="tab-fade" mode="out-in">
+            <div key="tab-panel">
+            <!-- Vision Section -->
+            <section v-if="activeTab === 'vision'" class="editor-panel" aria-labelledby="vision-heading">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Section 1</p>
@@ -85,8 +121,8 @@
             </div>
           </section>
 
-          <!-- Mission Section -->
-          <section class="editor-panel" aria-labelledby="mission-heading">
+            <!-- Mission Section -->
+            <section v-if="activeTab === 'mission'" class="editor-panel" aria-labelledby="mission-heading">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Section 2</p>
@@ -145,8 +181,8 @@
             </div>
           </section>
 
-          <!-- Core Values Section -->
-          <section class="editor-panel" aria-labelledby="values-heading">
+            <!-- Core Values Section -->
+            <section v-if="activeTab === 'values'" class="editor-panel" aria-labelledby="values-heading">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Section 3</p>
@@ -195,6 +231,8 @@
               </div>
             </div>
           </section>
+            </div>
+          </Transition>
         </div>
       </main>
     </div>
@@ -299,6 +337,8 @@ function createDefaultDraft(): DraftType {
 }
 
 const ui = useUiStore()
+
+const activeTab = ref<'vision' | 'mission' | 'values'>('vision')
 
 const pageRow = ref<{ id: string; body: string; updated_at: string } | null>(null)
 const loading = ref(true)
@@ -778,6 +818,61 @@ function resetToDefaults() {
 
 .field-block {
   margin-top: 0.85rem;
+}
+
+/* Tab Filters */
+.tab-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.tab-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 36px;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 8px;
+  background: var(--admin-surface);
+  color: var(--admin-muted);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.tab-filter-btn:hover {
+  border-color: var(--admin-primary);
+  color: var(--admin-primary-deep);
+  background: color-mix(in srgb, var(--admin-primary) 6%, var(--admin-surface));
+  transform: translateY(-1px);
+}
+
+.tab-filter-btn.active {
+  border-color: var(--admin-primary);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-primary) 10%, var(--admin-surface)), color-mix(in srgb, var(--admin-primary) 16%, var(--admin-surface)));
+  color: var(--admin-primary-deep);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--admin-primary) 14%, transparent);
+}
+
+/* Tab Fade Transition */
+.tab-fade-enter-active,
+.tab-fade-leave-active {
+  transition: all 0.25s ease;
+}
+
+.tab-fade-enter-from {
+  opacity: 0;
+  transform: translateX(12px);
+}
+
+.tab-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-12px);
 }
 
 /* Sub section header */

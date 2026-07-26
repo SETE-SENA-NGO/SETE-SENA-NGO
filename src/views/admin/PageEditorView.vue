@@ -1026,6 +1026,26 @@ const mediaStore = useMediaStore()
 
 const uploadingCell = ref<{ sectionId: string; rowIndex: number; colIndex: number } | null>(null)
 
+// ─── Step & Section Filter State ─────────────────────────────────
+const activeStep = ref<'identity' | 'content' | 'status'>('identity')
+const activeSectionFilter = ref<string | null>(null)
+
+const activePageDirty = computed(() => {
+  const page = activePage.value
+  return savedSnapshot.value[page.slug] !== snapshot(page)
+})
+
+const filteredSections = computed(() => {
+  if (!activeSectionFilter.value) return activePage.value.sections
+  return activePage.value.sections.filter(s => s.id === activeSectionFilter.value)
+})
+
+const sectionFilterOptions = computed(() => {
+  const sections = activePage.value.sections
+  if (!sections.length) return []
+  return sections.map(s => ({ id: s.id, label: s.label || 'Untitled block' }))
+})
+
 async function handleImageCellUpload(event: Event, section: EditableSection, rowIndex: number, colIndex: number) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
@@ -1050,6 +1070,7 @@ const savingSlug = ref<string | null>(null)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 const savedSnapshot = ref<Record<string, string>>({})
 const activeSectionIndex = ref<number | null>(null)
+
 
 // ─── Visual Table Editor Helpers ─────────────────────────────────
 const showRawItems = ref<Record<string, boolean>>({})
@@ -1174,9 +1195,7 @@ const activePage = computed<PageDraft>(() => {
 })
 
 
-const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
-
-const previewItems = computed(() => {
+const _unused_previewItems = computed(() => {
   return activePage.value.sections.map((section) => ({
     ...section,
     parsedItems: section.items
@@ -1215,11 +1234,6 @@ function clonePage(page: PageDraft): PageDraft {
     ...page,
     sections: page.sections.map((section) => ({ ...section })),
   }
-}
-
-function getPreviewRoute(page: PageDraft) {
-  if (page.previewRoute) return page.previewRoute
-  return page.route.replace(/:id\b/g, '1')
 }
 
 function cloneSection(section?: Partial<EditableSection>): EditableSection {
@@ -1282,6 +1296,7 @@ function ctaUrlForPage(page: PageDraft, actionIndex: 0 | 1) {
   return '/contact'
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isDirty(slug: string) {
   const page = drafts.value.find((item) => item.slug === slug)
   if (!page) return false
@@ -1972,27 +1987,54 @@ function formatDate(value: string) {
               <span class="status-right">{{ sectionCountLabel }} · {{ activePage.slug }}</span>
             </div>
 
-            <!-- Workflow Steps -->
+            <!-- ==============================
+                 CLICKABLE WORKFLOW STEPS
+                 ============================== -->
             <div class="workflow-steps">
-              <div class="step active completed">
+              <div
+                class="step"
+                :class="{ active: activeStep === 'identity', completed: activeStep !== 'identity' }"
+                @click="activeStep = 'identity'"
+                role="button"
+                tabindex="0"
+                @keydown.enter="activeStep = 'identity'"
+                @keydown.space.prevent="activeStep = 'identity'"
+              >
                 <div class="step-indicator">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg v-if="activeStep === 'identity'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <template v-else>1</template>
                 </div>
                 <div class="step-content">
                   <span class="step-label">Page</span>
                   <span class="step-desc">Identity</span>
                 </div>
               </div>
-              <div class="step active">
+              <div
+                class="step"
+                :class="{ active: activeStep === 'content' }"
+                @click="activeStep = 'content'"
+                role="button"
+                tabindex="0"
+                @keydown.enter="activeStep = 'content'"
+                @keydown.space.prevent="activeStep = 'content'"
+              >
                 <div class="step-indicator">2</div>
                 <div class="step-content">
                   <span class="step-label">Content</span>
                   <span class="step-desc">Blocks</span>
                 </div>
               </div>
-              <div class="step" :class="{ active: !activePageDirty }">
-                <div class="step-indicator" :class="{ success: !activePageDirty }">
-                  <svg v-if="!activePageDirty" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <div
+                class="step"
+                :class="{ active: activeStep === 'status' }"
+                @click="activeStep = 'status'"
+                role="button"
+                tabindex="0"
+                @keydown.enter="activeStep = 'status'"
+                @keydown.space.prevent="activeStep = 'status'"
+              >
+                <div class="step-indicator" :class="{ success: !activePageDirty && activeStep === 'status' }">
+                  <svg v-if="!activePageDirty && activeStep === 'status'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   <template v-else>3</template>
                 </div>
                 <div class="step-content">
@@ -2002,9 +2044,10 @@ function formatDate(value: string) {
               </div>
             </div>
 
-            <!-- Form Panels -->
-            <div class="form-panels">
-              <!-- Page Setup -->
+            <!-- Form Panels - Step 1: Identity -->
+            <template v-if="activeStep === 'identity'">
+              <div class="form-panels step-panel-enter">
+                <!-- Page Setup -->
               <section class="form-card">
                 <div class="card-header">
                   <div class="card-header-left">
@@ -2216,8 +2259,272 @@ function formatDate(value: string) {
                 </div>
               </section>
             </div>
+            </template>
 
-            <!-- Bottom Save Bar -->
+            <!-- ==============================
+                 STEP 2: Content Blocks
+                 ============================== -->
+            <template v-if="activeStep === 'content'">
+              <div class="form-panels step-panel-enter">
+
+                <!-- Section Filter Pills -->
+                <div v-if="sectionFilterOptions.length > 0" class="section-filter-bar">
+                  <button
+                    class="filter-pill"
+                    :class="{ active: activeSectionFilter === null }"
+                    @click="activeSectionFilter = null"
+                  >
+                    All blocks
+                  </button>
+                  <button
+                    v-for="opt in sectionFilterOptions"
+                    :key="opt.id"
+                    class="filter-pill"
+                    :class="{ active: activeSectionFilter === opt.id }"
+                    @click="activeSectionFilter = opt.id"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </div>
+
+                <!-- Page Sections (filtered) -->
+                <section class="form-card sections-card" aria-label="Page sections">
+                  <div class="card-header">
+                    <div class="card-header-left">
+                      <div class="card-icon card-icon-amber">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                      </div>
+                      <div>
+                        <span class="card-eyebrow">Content blocks</span>
+                        <h3 class="card-title">{{ sectionCountLabel }}</h3>
+                      </div>
+                    </div>
+                    <button class="btn btn-secondary add-section-btn" type="button" @click="addSection">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Add block
+                    </button>
+                  </div>
+
+                  <div class="card-body sections-body">
+                    <TransitionGroup name="section-list" tag="div" class="sections-list">
+                      <article
+                        v-for="(section, index) in filteredSections"
+                        :id="`edit-${section.id}`"
+                        :key="section.id"
+                        class="section-block"
+                        :class="{ 'section-active': activeSectionIndex === index }"
+                      >
+                        <details open @toggle="setActiveSectionFromToggle($event, index)">
+                          <summary class="section-summary">
+                            <div class="summary-drag">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                            </div>
+                            <div class="summary-content">
+                              <span class="summary-index">{{ index + 1 }}</span>
+                              <div class="summary-text">
+                                <strong>{{ section.label || 'Untitled block' }}</strong>
+                                <small v-if="section.heading">{{ section.heading }}</small>
+                                <small v-else class="empty-hint">No heading</small>
+                              </div>
+                            </div>
+                            <div class="summary-badge">
+                              {{ section.items ? `${section.items.split('\n').length} items` : 'Text' }}
+                            </div>
+                          </summary>
+
+                          <div class="section-body">
+                            <div class="section-toolbar">
+                              <div class="section-tabs">
+                                <span class="section-tab active">Content</span>
+                              </div>
+                              <div class="section-actions">
+                                <button
+                                  type="button"
+                                  class="btn-icon"
+                                  :disabled="index === 0"
+                                  aria-label="Move section up"
+                                  title="Move up"
+                                  @click.stop="moveSection(index, -1)"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn-icon"
+                                  :disabled="index === activePage.sections.length - 1"
+                                  aria-label="Move section down"
+                                  title="Move down"
+                                  @click.stop="moveSection(index, 1)"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
+                                <div class="btn-sep"></div>
+                                <button
+                                  type="button"
+                                  class="btn-icon"
+                                  aria-label="Duplicate section"
+                                  title="Duplicate"
+                                  @click.stop="duplicateSection(index)"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn-icon danger"
+                                  aria-label="Remove section"
+                                  title="Remove"
+                                  @click.stop="removeSection(index)"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div class="section-fields">
+                              <div class="form-grid">
+                                <label class="field">
+                                  <span class="field-label">Block label</span>
+                                  <input v-model="section.label" :name="`section-${section.id}-label`" placeholder="e.g. Mission, Stats" />
+                                </label>
+                                <label class="field">
+                                  <span class="field-label">Heading</span>
+                                  <input v-model="section.heading" :name="`section-${section.id}-heading`" placeholder="Section heading" />
+                                </label>
+                              </div>
+
+                              <label class="field field-block">
+                                <span class="field-label">Body</span>
+                                <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="3" placeholder="Descriptive body text"></textarea>
+                              </label>
+
+                              <div class="items-editor-container">
+                                <label class="field field-block" style="margin-top: 0;">
+                                  <span class="field-label">
+                                    Items
+                                    <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
+                                  </span>
+                                  <textarea
+                                    v-model="section.items"
+                                    :name="`section-${section.id}-items`"
+                                    rows="4"
+                                    placeholder="Item 1&#10;Item 2&#10;Title | Description"
+                                  ></textarea>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </details>
+                      </article>
+                    </TransitionGroup>
+
+                    <div v-if="!activePage.sections.length" class="empty-sections">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                      <p>No content blocks yet</p>
+                      <button class="btn btn-secondary" type="button" @click="addSection">Add your first block</button>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            </template>
+
+            <!-- ==============================
+                 STEP 3: Status / Publish
+                 ============================== -->
+            <template v-if="activeStep === 'status'">
+              <div class="form-panels step-panel-enter">
+
+                <!-- Publish Status Card -->
+                <section class="form-card">
+                  <div class="card-header">
+                    <div class="card-header-left">
+                      <div class="card-icon card-icon-blue">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      </div>
+                      <div>
+                        <span class="card-eyebrow">Status</span>
+                        <h3 class="card-title">Publish state</h3>
+                      </div>
+                    </div>
+                    <span class="status-pill" :class="{ dirty: activePageDirty }">
+                      {{ activePageDirty ? 'Unsaved' : 'Saved' }}
+                    </span>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-grid">
+                      <label class="field">
+                        <span class="field-label">Current state</span>
+                        <input :value="activePageDirty ? 'Unsaved changes' : 'Published'" disabled />
+                      </label>
+                      <label class="field">
+                        <span class="field-label">Last saved</span>
+                        <input :value="formatDate(activePage.updatedAt)" disabled />
+                      </label>
+                      <label class="field">
+                        <span class="field-label">Page slug</span>
+                        <input :value="activePage.slug" disabled />
+                      </label>
+                      <label class="field">
+                        <span class="field-label">Locale</span>
+                        <input :value="activeLocaleName" disabled />
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Quick Actions Card -->
+                <section class="form-card">
+                  <div class="card-header">
+                    <div class="card-header-left">
+                      <div class="card-icon card-icon-amber">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                      </div>
+                      <div>
+                        <span class="card-eyebrow">Actions</span>
+                        <h3 class="card-title">Quick actions</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                      <button
+                        class="btn btn-primary"
+                        type="button"
+                        :disabled="savingSlug === activePage.slug || loading"
+                        @click="saveCurrentPage"
+                      >
+                        <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                        <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        {{ savingSlug === activePage.slug ? 'Saving...' : 'Save page' }}
+                      </button>
+                      <button class="btn btn-ghost" type="button" @click="resetCurrentToDefault">Reset draft</button>
+                      <button
+                        class="btn btn-ghost"
+                        type="button"
+                        :disabled="loading"
+                        @click="loadPages"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Reload
+                      </button>
+                      <RouterLink
+                        v-if="activePage.route !== 'global'"
+                        class="btn btn-ghost"
+                        :to="activePage.route"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Preview
+                      </RouterLink>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            </template>
+
+            <!-- ==============================
+                 BOTTOM SAVE BAR (always visible)
+                 ============================== -->
             <div class="save-bar">
               <div class="save-bar-left">
                 <span class="save-dot-large" :class="{ dirty: activePageDirty }"></span>
@@ -2242,77 +2549,7 @@ function formatDate(value: string) {
             </div>
           </section>
 
-          <!-- Preview Column -->
-          <Transition name="preview-slide">
-            <aside v-if="previewVisible" class="preview-column" aria-label="Content preview">
-              <div class="preview-header">
-                <div class="preview-header-left">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <span>Live preview</span>
-                </div>
-                <button class="btn-icon-sm" type="button" @click="previewVisible = false" aria-label="Close preview">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              </div>
-
-              <div class="preview-content">
-                <!-- Hero Preview -->
-                <div class="preview-hero">
-                  <span class="preview-eyebrow">{{ activePage.eyebrow || 'Eyebrow text' }}</span>
-                  <h2 class="preview-headline">{{ activePage.headline || 'Headline' }}</h2>
-                  <p class="preview-intro">{{ activePage.intro || 'Intro text...' }}</p>
-                  <div v-if="activePage.primaryAction || activePage.secondaryAction" class="preview-actions">
-                    <span v-if="activePage.primaryAction" class="preview-btn preview-btn-primary">{{ activePage.primaryAction }}</span>
-                    <span v-if="activePage.secondaryAction" class="preview-btn preview-btn-secondary">{{ activePage.secondaryAction }}</span>
-                  </div>
-                </div>
-
-                <!-- Sections Preview -->
-                <div class="preview-sections">
-                  <div
-                    v-for="(section, idx) in previewItems"
-                    :key="section.id"
-                    class="preview-section"
-                    :class="{ 'preview-section-active': activeSectionIndex === idx }"
-                    @click="activeSectionIndex = idx"
-                  >
-                    <div class="preview-section-indicator" v-if="activeSectionIndex === idx"></div>
-                    <h3 class="preview-section-heading">{{ section.heading || 'Section heading' }}</h3>
-                    <p class="preview-section-body" v-if="section.body">{{ section.body }}</p>
-
-                    <!-- Items as cards/list -->
-                    <div v-if="section.parsedItems.length" class="preview-items">
-                      <template v-for="item in section.parsedItems" :key="item">
-                        <div v-if="item.includes('|')" class="preview-item-card">
-                          <strong>{{ item.split('|')[0]?.trim() }}</strong>
-                          <span>{{ item.split('|').slice(1).join('|').trim() }}</span>
-                        </div>
-                        <div v-else class="preview-item-simple">
-                          <span class="previewBullet"></span>
-                          <span>{{ item }}</span>
-                        </div>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="preview-footer">
-                <span>Auto-refreshes on edit</span>
-              </div>
-            </aside>
-          </Transition>
-
-          <!-- Preview toggle button (when preview is hidden) -->
-          <button
-            v-if="!previewVisible"
-            class="preview-toggle-btn"
-            type="button"
-            @click="previewVisible = true"
-            title="Show preview"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+          
         </div>
         </template>
       </main>
@@ -3343,246 +3580,62 @@ input::placeholder, textarea::placeholder {
   gap: 0.5rem;
 }
 
+/* Preview-related CSS removed */
+
 /* ==============================
-   PREVIEW COLUMN
+   SECTION FILTER PILLS
    ============================== */
-.preview-column {
-  width: 340px;
-  flex-shrink: 0;
-  position: sticky;
-  top: calc(60px + 1.25rem);
-  align-self: flex-start;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow-lg);
-  overflow: hidden;
+.section-filter-bar {
   display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 60px - 2.5rem);
-}
-
-.preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid var(--admin-border);
-  background: var(--admin-bg-deep);
-  flex-shrink: 0;
-}
-
-.preview-header-left {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.45rem;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
+  padding: 0.65rem 0;
 }
 
-.preview-header-left svg {
-  color: var(--admin-blue);
-}
-
-.preview-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 1rem;
-  display: grid;
-  gap: 1.25rem;
-}
-
-.preview-hero {
-  display: grid;
-  gap: 0.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--admin-border);
-}
-
-.preview-eyebrow {
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--admin-blue);
-}
-
-.preview-headline {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
-  line-height: 1.25;
-}
-
-.preview-intro {
-  margin: 0;
-  font-size: 0.78rem;
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 999px;
+  background: var(--admin-surface);
   color: var(--admin-muted);
-  line-height: 1.55;
-}
-
-.preview-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.15rem;
-}
-
-.preview-btn {
-  display: inline-block;
-  padding: 0.3rem 0.65rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.preview-btn-primary {
+.filter-pill:hover {
+  border-color: var(--admin-blue);
+  color: var(--admin-blue);
+  background: var(--admin-blue-soft);
+}
+
+.filter-pill.active {
+  border-color: var(--admin-blue);
   background: var(--admin-blue);
   color: #ffffff;
 }
 
-.preview-btn-secondary {
-  border: 1px solid var(--admin-border-strong);
-  color: var(--admin-contrast);
+/* ==============================
+   STEP PANEL ENTER ANIMATION
+   ============================== */
+.step-panel-enter {
+  animation: stepPanelFadeIn 0.3s ease;
 }
 
-.preview-sections {
-  display: grid;
-  gap: 1rem;
-}
-
-.preview-section {
-  position: relative;
-  cursor: pointer;
-  padding: 0.65rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.preview-section:hover {
-  background: var(--admin-surface-soft);
-}
-
-.preview-section-active {
-  border-color: var(--admin-blue) !important;
-  background: var(--admin-blue-soft) !important;
-}
-
-.preview-section-indicator {
-  position: absolute;
-  left: -1px;
-  top: 0.5rem;
-  bottom: 0.5rem;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--admin-blue);
-}
-
-.preview-section-heading {
-  margin: 0 0 0.35rem;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
-}
-
-.preview-section-body {
-  margin: 0 0 0.5rem;
-  font-size: 0.72rem;
-  color: var(--admin-muted);
-  line-height: 1.5;
-}
-
-.preview-items {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.preview-item-card {
-  padding: 0.45rem 0.55rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 6px;
-  background: var(--admin-surface-soft);
-}
-
-.preview-item-card strong {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
-  margin-bottom: 0.08rem;
-}
-
-.preview-item-card span {
-  font-size: 0.68rem;
-  color: var(--admin-muted);
-}
-
-.preview-item-simple {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  color: var(--admin-text);
-}
-
-.preview-bullet {
-  width: 4px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--admin-muted-light);
-  flex-shrink: 0;
-  margin-top: 0.3em;
-}
-
-.preview-footer {
-  padding: 0.5rem 0.85rem;
-  border-top: 1px solid var(--admin-border);
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--admin-muted-light);
-  text-align: center;
-  flex-shrink: 0;
-}
-
-/* Preview Slider Transitions */
-.preview-slide-enter-active,
-.preview-slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.preview-slide-enter-from,
-.preview-slide-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-/* Preview toggle button */
-.preview-toggle-btn {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 5rem;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface);
-  color: var(--admin-muted);
-  cursor: pointer;
-  box-shadow: var(--admin-shadow-lg);
-  z-index: 20;
-  transition: all 0.2s ease;
-}
-
-.preview-toggle-btn:hover {
-  color: var(--admin-blue);
-  border-color: var(--admin-blue);
-  box-shadow: var(--admin-shadow-xl);
-  transform: translateY(-2px);
+@keyframes stepPanelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ==============================

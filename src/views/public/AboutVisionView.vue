@@ -14,7 +14,7 @@
             class="vision-card"
             :class="{ 'card-visible': visibleCards.vision[i] }"
             :style="{ '--delay': `${i * 120}ms` }"
-            :ref="el => setRef(el, 'vision', i)"
+            :ref="(el) => setRef(el, 'vision', i)"
           >
             <div class="icon-wrapper">
               <svg
@@ -27,11 +27,11 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 v-html="card.svgPaths"
-              />
+              ></svg>
             </div>
             <h3>{{ card.title }}</h3>
             <p>{{ card.text }}</p>
-            <span class="card-shine" />
+            <span class="card-shine"></span>
           </div>
         </div>
       </div>
@@ -43,16 +43,16 @@
         <div class="mission-layout">
           <div class="mission-content reveal-left" :class="{ visible: missionVisible }">
             <span class="section-label">{{ missionLabel }}</span>
-             <h2>{{ missionHeading }}</h2>
-             <p class="mission-text">{{ missionBody }}</p>
-             <ul class="mission-list">
-               <li
-                 v-for="(item, i) in missionItems"
-                 :key="i"
-                 :style="{ '--delay': `${i * 100}ms` }"
-                 :class="{ visible: missionVisible }"
-                 class="mission-item-animate"
-               >
+            <h2>{{ missionHeading }}</h2>
+            <p class="mission-text">{{ missionBody }}</p>
+            <ul class="mission-list">
+              <li
+                v-for="(item, i) in missionItems"
+                :key="i"
+                :style="{ '--delay': `${i * 100}ms` }"
+                :class="{ visible: missionVisible }"
+                class="mission-item-animate"
+              >
                 <svg
                   width="18"
                   height="18"
@@ -63,7 +63,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 >
-                  <polyline points="20 6 9 17 4 12" />
+                  <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 {{ item }}
               </li>
@@ -102,7 +102,7 @@
             class="value-item"
             :class="{ 'value-visible': visibleCards.values[i] }"
             :style="{ '--delay': `${i * 100}ms` }"
-            :ref="el => setRef(el, 'values', i)"
+            :ref="(el) => setRef(el, 'values', i)"
           >
             <div class="value-number">{{ val.number }}</div>
             <h3>{{ val.title }}</h3>
@@ -129,10 +129,10 @@
           >
             <path
               d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"
-            />
+            ></path>
             <path
               d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"
-            />
+            ></path>
           </svg>
           <p class="quote-text">
             "Santi Sena means a group of persons working together for peace, livelihood improvement,
@@ -312,7 +312,7 @@ const statsRaw = [
 ]
 
 const stats = reactive(
-  statsRaw.map(s => ({ ...s, displayed: s.end + s.suffix }))
+  statsRaw.map((s) => ({ ...s, displayed: s.end + s.suffix })),
 )
 
 const defaultValues = [
@@ -324,7 +324,7 @@ const defaultValues = [
 
 const displayValues = ref([...defaultValues])
 
-/* ─── Visibility state ─────────────────────────── */
+/* Visibility state */
 const visibleCards = reactive({
   vision: Array(defaultVisionCards.length).fill(false),
   values: Array(defaultValues.length).fill(false),
@@ -334,38 +334,38 @@ const statsVisible = ref(false)
 const quoteVisible = ref(false)
 const ctaVisible = ref(false)
 
-/* ─── Refs ─────────────────────────────────────── */
-const cardRefs = reactive({ vision: [], values: [] })
+/* Refs */
+const cardRefs = reactive({ vision: [] as any[], values: [] as any[] })
 const missionVisualRef = ref(null)
 const quoteRef = ref(null)
 const ctaRef = ref(null)
 
-function setRef(el, group, idx) {
-  if (el) cardRefs[group][idx] = el
+function setRef(el: any, group: string, idx: number) {
+  if (el) (cardRefs as any)[group][idx] = el
 }
 
-/* ─── Intersection Observer ────────────────────── */
-const observers = []
+/* Intersection Observer */
+const observers: any[] = []
 
-function observe(el, callback, options = {}) {
+function observe(el: any, callback: () => void, options = {}) {
   if (!el) return
   const io = new IntersectionObserver(
-    entries => {
-      entries.forEach(e => {
+    (entries) => {
+      entries.forEach((e) => {
         if (e.isIntersecting) {
           callback()
           io.disconnect()
         }
       })
     },
-    { threshold: 0.18, ...options }
+    { threshold: 0.18, ...options },
   )
   io.observe(el)
   observers.push(io)
 }
 
-/* ─── Counter animation ────────────────────────── */
-function animateCounter(statObj) {
+/* Counter animation */
+function animateCounter(statObj: any) {
   const duration = 1400
   const start = statObj.end < 100 ? 0 : Math.round(statObj.end * 0.6)
   const step = (statObj.end - start) / (duration / 16)
@@ -378,7 +378,7 @@ function animateCounter(statObj) {
   requestAnimationFrame(tick)
 }
 
-/* ─── Real-time subscription ────────────────────── */
+/* Real-time subscription */
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 
 function setupRealtimeSubscription() {
@@ -395,7 +395,6 @@ function setupRealtimeSubscription() {
       (payload: any) => {
         if (payload.new?.body) {
           const body = payload.new.body as string
-          // Reset visibility so animations replay
           visibleCards.vision = []
           visibleCards.values = []
           applyCmsContent(body)
@@ -428,23 +427,24 @@ function onVisibilityChange() {
   }
 }
 
-/* ─── Mount ─────────────────────────────────────── */
+/* Mount */
 onMounted(async () => {
   await loadPageContentFromCms()
   setupRealtimeSubscription()
   document.addEventListener('visibilitychange', onVisibilityChange)
 
-  // Vision cards
-  cardRefs.vision.forEach((el, i) => {
+  cardRefs.vision.forEach((el: any, i: number) => {
     observe(el, () => {
-      setTimeout(() => { visibleCards.vision[i] = true }, i * 120)
+      setTimeout(() => {
+        visibleCards.vision[i] = true
+      }, i * 120)
     })
   })
 
-  // Mission
-  observe(document.querySelector('.mission-content'), () => { missionVisible.value = true })
+  observe(document.querySelector('.mission-content'), () => {
+    missionVisible.value = true
+  })
 
-  // Stats
   observe(missionVisualRef.value, () => {
     statsVisible.value = true
     statsRaw.forEach((raw, i) => {
@@ -452,22 +452,25 @@ onMounted(async () => {
     })
   })
 
-  // Values cards
-  cardRefs.values.forEach((el, i) => {
+  cardRefs.values.forEach((el: any, i: number) => {
     observe(el, () => {
-      setTimeout(() => { visibleCards.values[i] = true }, i * 100)
+      setTimeout(() => {
+        visibleCards.values[i] = true
+      }, i * 100)
     })
   })
 
-  // Quote
-  observe(quoteRef.value, () => { quoteVisible.value = true })
+  observe(quoteRef.value, () => {
+    quoteVisible.value = true
+  })
 
-  // CTA
-  observe(ctaRef.value, () => { ctaVisible.value = true })
+  observe(ctaRef.value, () => {
+    ctaVisible.value = true
+  })
 })
 
 onBeforeUnmount(() => {
-  observers.forEach(io => io.disconnect())
+  observers.forEach((io) => io.disconnect())
   document.removeEventListener('visibilitychange', onVisibilityChange)
   if (realtimeChannel) {
     supabase.removeChannel(realtimeChannel)
@@ -476,9 +479,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* =====================
-   Layout Helpers
-   ===================== */
+/* Layout Helpers */
 .vision-page {
   min-height: 100vh;
   background: var(--color-cream);
@@ -486,7 +487,7 @@ onBeforeUnmount(() => {
   font-family: var(--font-family-base);
 }
 
-/* Dark mode override - lighter background for readability */
+/* Dark mode override */
 html.dark .vision-page,
 :root.dark .vision-page,
 .admin-dark .vision-page {
@@ -518,7 +519,6 @@ html.dark .vision-page,
   margin-bottom: 2.5rem;
 }
 
-/* Section-header fade-in-down on page load */
 .reveal-header {
   opacity: 0;
   transform: translateY(-18px);
@@ -570,9 +570,7 @@ html.dark .vision-page,
   background: var(--color-cream-soft);
 }
 
-/* =====================
-   Hero
-   ===================== */
+/* Hero */
 .hero-overlay {
   position: absolute;
   inset: 0;
@@ -644,16 +642,13 @@ html.dark .vision-page,
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* =====================
-   Vision Grid
-   ===================== */
+/* Vision Grid */
 .vision-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
 }
 
-/* — entry animation — */
 .vision-card {
   background: var(--color-white);
   border: 1px solid var(--color-border);
@@ -662,8 +657,6 @@ html.dark .vision-page,
   position: relative;
   overflow: hidden;
   cursor: default;
-
-  /* initial hidden state */
   opacity: 0;
   transform: translateY(36px) scale(0.97);
   transition:
@@ -678,7 +671,6 @@ html.dark .vision-page,
   transform: translateY(0) scale(1);
 }
 
-/* — hover lift + glow — */
 .vision-card:hover {
   border-color: color-mix(in srgb, var(--primary-dark) 35%, transparent);
   box-shadow:
@@ -687,16 +679,10 @@ html.dark .vision-page,
   transform: translateY(-6px) scale(1.015);
 }
 
-/* — shimmer / shine overlay — */
 .card-shine {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    115deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.45) 50%,
-    transparent 60%
-  );
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.45) 50%, transparent 60%);
   background-size: 200% 100%;
   background-position: 200% 0;
   transition: background-position 0.6s ease;
@@ -708,7 +694,6 @@ html.dark .vision-page,
   background-position: -200% 0;
 }
 
-/* — icon bounce — */
 .icon-wrapper {
   width: 3rem;
   height: 3rem;
@@ -744,9 +729,7 @@ html.dark .vision-page,
   line-height: 1.65;
 }
 
-/* =====================
-   Mission
-   ===================== */
+/* Mission */
 .mission-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -754,7 +737,6 @@ html.dark .vision-page,
   align-items: center;
 }
 
-/* slide-in from left */
 .reveal-left {
   opacity: 0;
   transform: translateX(-40px);
@@ -796,7 +778,6 @@ html.dark .vision-page,
   color: var(--color-ink);
 }
 
-/* staggered fade-in for list items */
 .mission-item-animate {
   opacity: 0;
   transform: translateX(-18px);
@@ -814,7 +795,7 @@ html.dark .vision-page,
   flex-shrink: 0;
 }
 
-/* Stats Grid */
+/* Stats */
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -829,8 +810,6 @@ html.dark .vision-page,
   text-align: center;
   position: relative;
   overflow: hidden;
-
-  /* entry */
   opacity: 0;
   transform: translateY(20px) scale(0.96);
   transition:
@@ -851,7 +830,6 @@ html.dark .vision-page,
   transform: translateY(-4px) scale(1.02);
 }
 
-/* pulse ring on the stat number */
 .stat-number {
   display: block;
   font-size: 2rem;
@@ -870,9 +848,7 @@ html.dark .vision-page,
   color: var(--color-ink-soft);
 }
 
-/* =====================
-   Values
-   ===================== */
+/* Values */
 .values-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -886,8 +862,6 @@ html.dark .vision-page,
   padding: 2rem 1.5rem;
   position: relative;
   overflow: hidden;
-
-  /* entry */
   opacity: 0;
   transform: translateY(28px);
   transition:
@@ -908,7 +882,6 @@ html.dark .vision-page,
   transform: translateY(-5px);
 }
 
-/* accent bar slides in on hover */
 .value-item::before {
   content: '';
   position: absolute;
@@ -952,9 +925,7 @@ html.dark .vision-page,
   line-height: 1.6;
 }
 
-/* =====================
-   Quote
-   ===================== */
+/* Quote */
 .quote-section {
   padding: 4rem 0;
   background: var(--color-cream-soft);
@@ -985,8 +956,13 @@ html.dark .vision-page,
 }
 
 @keyframes floatIcon {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-5px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .quote-text {
@@ -1007,9 +983,7 @@ html.dark .vision-page,
   display: none;
 }
 
-/* =====================
-   CTA
-   ===================== */
+/* CTA */
 .cta-section {
   padding: 4rem 0;
   background: var(--color-cream-soft);
@@ -1074,30 +1048,28 @@ html.dark .vision-page,
   background: var(--primary-color);
   color: #ffffff;
   border: 1px solid transparent;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .btn-primary:hover {
   background: var(--primary-dark);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
 }
 
 .btn-outline {
   background: transparent;
   color: var(--color-ink);
   border: 1px solid var(--color-border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .btn-outline:hover {
   border-color: var(--color-ink-soft);
   background: color-mix(in srgb, var(--color-ink) 6%, transparent);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* =====================
-   Responsive
-   ===================== */
+/* Responsive */
 @media (max-width: 1024px) {
   .vision-grid {
     grid-template-columns: repeat(2, 1fr);
