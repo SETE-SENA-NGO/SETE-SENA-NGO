@@ -16,14 +16,18 @@
             </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/admin">Dashboard</RouterLink>
-            <RouterLink class="btn btn-ghost" to="/about">View Site (EN)</RouterLink>
-            <button type="button" class="btn btn-ghost" @click="resetToDefaults">
+            <v-btn variant="tonal" to="/about" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
+            <v-btn variant="tonal" @click="resetToDefaults">
+              <v-icon start>mdi-restore</v-icon>
               Reset draft
-            </button>
-            <button type="button" class="btn btn-primary" :disabled="saving" @click="savePage">
+            </v-btn>
+            <v-btn color="primary" variant="tonal" :disabled="saving" @click="savePage">
+              <v-icon start>mdi-content-save</v-icon>
               {{ saving ? 'Saving...' : 'Save changes' }}
-            </button>
+            </v-btn>
           </div>
         </header>
 
@@ -259,7 +263,6 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { supabase } from '@/lib/supabase'
@@ -764,34 +767,35 @@ onMounted(() => {
 .tab-filter-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 40px;
-  border-radius: 10px;
-  padding: 0.55rem 1.1rem;
-  font-weight: 750;
-  font-size: 0.85rem;
-  cursor: pointer;
-  text-decoration: none;
-  border: 1px solid transparent;
-  transition: all 0.15s ease, transform 0.15s ease;
-  white-space: nowrap;
+  gap: 0.4rem;
+  min-height: 36px;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 7px;
   background: var(--admin-theme-surface);
-  color: var(--admin-theme-contrast);
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  font-family: inherit;
+  color: var(--admin-theme-muted);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+  white-space: nowrap;
 }
 
 .tab-filter-btn:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
   color: var(--admin-theme-primary-deep);
 }
 
 .tab-filter-btn.active {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  color: #ffffff;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
 }
 
 .content-grid {

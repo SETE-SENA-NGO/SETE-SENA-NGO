@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted } from 'vue'
+import { computed, onMounted, ref, onUnmounted } from 'vue'
+import type { PublishedPageContent } from '@/lib/publishedContent'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import heroImpact from '@/assets/hero-impact.jpg'
 import logoUrl from '@/assets/santi_sena_logo.png'
@@ -7,53 +8,116 @@ import { useScrollReveal } from '@/composables/useScrollReveal'
 
 const { observe } = useScrollReveal({ threshold: 0.12 })
 
-const values = [
+const props = defineProps<{
+  content?: PublishedPageContent | null
+}>()
+
+function parseCmsItems(items: string): { name: string; body: string }[] {
+  return items
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const [title, ...rest] = item.split('|').map((p) => p.trim())
+      return { name: title || item, body: rest.join(' | ') || '' }
+    })
+}
+
+const defaultValues = [
   { name: 'Honesty', body: 'We have honesty with our donors, target group, operational partners and working group.' },
   { name: 'Non-discrimination', body: 'We do not have any discrimination for the disabled, religions, colors, races, respect to target group, and political factions.' },
   { name: 'Collective Benefits', body: 'We do not utilize property of organization for any private benefit, working tirelessly, sharing information and knowledge.' },
   { name: 'Flexibility', body: 'We respect and accept good comments from target groups, development partners which respond to goal and resources existed.' },
 ]
 
-const team = [
-  {
-    role: 'Board of Directors',
-    desc: 'Policy and oversight, including senior Buddhist leadership.',
-  },
+const defaultTeam = [
+  { role: 'Board of Directors', desc: 'Policy and oversight, including senior Buddhist leadership.' },
   { role: 'Executive Director', desc: 'Daily operations and strategic execution.' },
   { role: 'Management Committee', desc: 'Coordinates programs across provinces.' },
   { role: 'Technical Coordination', desc: 'Provides inputs across thematic areas.' },
-  {
-    role: 'Professional Staff',
-    desc: '30+ full-time and project-based experts in agriculture, education and rural development.',
-  },
+  { role: 'Professional Staff', desc: '30+ full-time and project-based experts in agriculture, education and rural development.' },
 ]
 
-const provinces = [
-  {
-    name: 'Svay Rieng',
-    tagline: 'Southeastern rice bowl',
-    villages: 86,
-    desc: 'Bordering Vietnam, known for its fertile rice plains and close-knit farming communities rebuilding after decades of hardship.',
-    accent: '#0f8f69',
-    accentLight: 'color-mix(in srgb, #0f8f69 12%, transparent)',
-  },
-  {
-    name: 'Prey Veng',
-    tagline: 'Heart of the floodplains',
-    villages: 97,
-    desc: 'The most populous southeastern province, where we run extensive water, sanitation and early childhood education programs.',
-    accent: '#0b5f49',
-    accentLight: 'color-mix(in srgb, #0b5f49 12%, transparent)',
-  },
-  {
-    name: 'Kratie',
-    tagline: 'Mekong river gateway',
-    villages: 110,
-    desc: 'Northeastern province along the Mekong, home to remote villages where we focus on sustainable agriculture and forest restoration.',
-    accent: '#1a7a5c',
-    accentLight: 'color-mix(in srgb, #1a7a5c 12%, transparent)',
-  },
+const defaultProvinces = [
+  { name: 'Svay Rieng', tagline: 'Southeastern rice bowl', villages: 86, desc: 'Bordering Vietnam, known for its fertile rice plains and close-knit farming communities rebuilding after decades of hardship.', accent: '#0f8f69', accentLight: 'color-mix(in srgb, #0f8f69 12%, transparent)' },
+  { name: 'Prey Veng', tagline: 'Heart of the floodplains', villages: 97, desc: 'The most populous southeastern province, where we run extensive water, sanitation and early childhood education programs.', accent: '#0b5f49', accentLight: 'color-mix(in srgb, #0b5f49 12%, transparent)' },
+  { name: 'Kratie', tagline: 'Mekong river gateway', villages: 110, desc: 'Northeastern province along the Mekong, home to remote villages where we focus on sustainable agriculture and forest restoration.', accent: '#1a7a5c', accentLight: 'color-mix(in srgb, #1a7a5c 12%, transparent)' },
 ]
+
+const cmsValues = computed(() => {
+  if (!props.content?.sections) return null
+  const section = props.content.sections.find((s) => s.id === 'about-values')
+  return section?.items ? parseCmsItems(section.items) : null
+})
+
+const cmsTeam = computed(() => {
+  if (!props.content?.sections) return null
+  const section = props.content.sections.find((s) => s.id === 'about-team')
+  return section?.items ? parseCmsItems(section.items) : null
+})
+
+const cmsProvinces = computed(() => {
+  if (!props.content?.sections) return null
+  const section = props.content.sections.find((s) => s.id === 'about-reach')
+  if (!section?.items) return null
+  const names = section.items.split('\n').map((item) => item.trim()).filter(Boolean)
+  return names.map((name) => {
+    const found = defaultProvinces.find((p) => p.name === name)
+    if (found) return found
+    return {
+      name,
+      tagline: '',
+      villages: 0,
+      desc: '',
+      accent: '#0f8f69',
+      accentLight: 'color-mix(in srgb, #0f8f69 12%, transparent)',
+    }
+  })
+})
+
+const cmsValuesHeading = computed(() => {
+  if (!props.content?.sections) return ''
+  const section = props.content.sections.find((s) => s.id === 'about-values')
+  return section?.heading || ''
+})
+
+const cmsValuesBody = computed(() => {
+  if (!props.content?.sections) return ''
+  const section = props.content.sections.find((s) => s.id === 'about-values')
+  return section?.body || ''
+})
+
+const cmsTeamHeading = computed(() => {
+  if (!props.content?.sections) return ''
+  const section = props.content.sections.find((s) => s.id === 'about-team')
+  return section?.heading || ''
+})
+
+const cmsTeamBody = computed(() => {
+  if (!props.content?.sections) return ''
+  const section = props.content.sections.find((s) => s.id === 'about-team')
+  return section?.body || ''
+})
+
+const cmsReachHeading = computed(() => {
+  if (!props.content?.sections) return ''
+  const section = props.content.sections.find((s) => s.id === 'about-reach')
+  return section?.heading || ''
+})
+
+const cmsReachBody = computed(() => {
+  if (!props.content?.sections) return ''
+  const section = props.content.sections.find((s) => s.id === 'about-reach')
+  return section?.body || ''
+})
+
+const valuesHeadingHtml = computed(() => cmsValuesHeading.value || 'Four <span class="highlight">values</span> that shape every program')
+const teamHeadingHtml = computed(() => cmsTeamHeading.value || 'A team of <span class="highlight">monks, managers</span> and master practitioners.')
+const reachHeadingHtml = computed(() => cmsReachHeading.value || '<span class="highlight">Three provinces.</span> Forty-three communes. Two hundred and ninety-three villages.')
+
+const values = computed(() => cmsValues.value ?? defaultValues)
+const team = computed(() => cmsTeam.value ?? defaultTeam)
+const provinces = computed(() => cmsProvinces.value ?? defaultProvinces)
 
 const storyRef = ref<HTMLElement | null>(null)
 const vmgRefs = ref<(HTMLElement | null)[]>([])
@@ -294,10 +358,9 @@ function setGeoRef(el: HTMLElement | null, index: number) {
         <div class="values-badge-row">
           <span class="section-badge">Core Values</span>
         </div>
-        <h2 class="values-section-heading">Four <span class="highlight">values</span> that shape every program</h2>
+        <h2 class="values-section-heading" v-html="valuesHeadingHtml"></h2>
         <p class="values-intro">
-          Our values were forged through decades of working alongside rural communities.
-          They guide every decision, partnership, and program we undertake.
+          {{ cmsValuesBody || 'Our values were forged through decades of working alongside rural communities. They guide every decision, partnership, and program we undertake.' }}
         </p>
         <div class="values-grid">
           <div v-for="(v, idx) in values" :key="v.name" :ref="(el) => setValueRef(el as HTMLElement | null, idx)"
@@ -345,11 +408,9 @@ function setGeoRef(el: HTMLElement | null, index: number) {
         <div class="org-grid">
           <div class="org-text">
             <span class="section-badge">Organizational Structure</span>
-            <h2 class="org-heading">A team of <span class="highlight">monks, managers</span> and master practitioners.
-            </h2>
+            <h2 class="org-heading" v-html="teamHeadingHtml"></h2>
             <p class="org-body">
-              From the Board of Directors to the field staff in Kratie, every level of Santi Sena is
-              accountable to the villagers we serve and the donors who trust us.
+              {{ cmsTeamBody || 'From the Board of Directors to the field staff in Kratie, every level of Santi Sena is accountable to the villagers we serve and the donors who trust us.' }}
             </p>
             <figure class="org-visual" aria-label="Santi Sena organization seal">
               <div class="org-logo-float">
@@ -384,11 +445,9 @@ function setGeoRef(el: HTMLElement | null, index: number) {
         <div class="geo-badge-row">
           <span class="section-badge">Where We Work</span>
         </div>
-        <h2 class="geo-heading"><span class="highlight">Three provinces.</span> Forty-three communes. Two hundred and
-          ninety-three villages.</h2>
+          <h2 class="geo-heading" v-html="reachHeadingHtml"></h2>
         <p class="geo-intro">
-          We work where the need is greatest: the southeastern provinces of Cambodia,
-          home to farming families and remote villages rebuilding after decades of hardship.
+          {{ cmsReachBody || 'We work where the need is greatest: the southeastern provinces of Cambodia, home to farming families and remote villages rebuilding after decades of hardship.' }}
         </p>
 
         <!-- Decorative connecting path -->
