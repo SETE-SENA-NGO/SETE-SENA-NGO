@@ -1,28 +1,20 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  ArrowDown,
-  ArrowUp,
-  ExternalLink,
-  FileText,
-  Flag,
-  FolderHeart,
-  MapPin,
-  Plus,
-  RotateCcw,
-  Save,
-  Sparkles,
-  Trash2,
-  Upload,
-} from 'lucide-vue-next'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminUploadButton from '@/components/admin/AdminUploadButton.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { SupportedLocale } from '@/i18n'
-import { imageUploadHelpText, normalizeMediaUrl } from '@/lib/media'
+import { normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
-import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
 import type { PageContent } from '@/types/content'
 
@@ -39,13 +31,6 @@ type SupportCard = {
   alt: string
   to: string
   cta: string
-}
-
-type QuotePanel = {
-  quote: string
-  credit: string
-  title: string
-  body: string
 }
 
 type JourneyStep = {
@@ -65,7 +50,6 @@ type GetInvolvedPageContent = {
     secondaryCta: ActionLink
   }
   supportCards: SupportCard[]
-  quotePanel: QuotePanel
   journey: JourneyStep[]
   closing: {
     eyebrow: string
@@ -141,13 +125,6 @@ const fallbackContent: GetInvolvedPageContent = {
       cta: 'Protection',
     },
   ],
-  quotePanel: {
-    quote:
-      'Santi Sena means people working together for peace, livelihoods, justice and environmental preservation.',
-    credit: 'From the Santi Sena profile and strategic plan',
-    title: 'Support here is not only a gift. It is cooperation with village systems.',
-    body: 'Santi Sena works with monks, villagers, local government, schools and partners in Svay Rieng, Prey Veng and Kratie. Choose the help you can offer and connect it to work communities can carry forward.',
-  },
   journey: [
     {
       step: '01',
@@ -175,19 +152,77 @@ const fallbackContent: GetInvolvedPageContent = {
 }
 
 const contentStore = useContentStore()
-const media = useMediaStore()
 const ui = useUiStore()
 const { locale } = useI18n()
+useAdminTheme()
+
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
 
 const pageRow = ref<PageContent | null>(null)
 const loading = ref(true)
 const saving = ref(false)
-const uploadingKey = ref('')
 const loadError = ref('')
-const savedAt = ref('')
-const imageHint = imageUploadHelpText()
 
 const draft = reactive<GetInvolvedPageContent>(cloneContent(fallbackContent))
+
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+  setupSectionWatch,
+  stopSectionWatch,
+  resetEditingState,
+} = useSectionEditor([
+  {
+    key: 'hero',
+    getSnapshot: () => ({
+      ...draft.hero,
+      primaryCta: { ...draft.hero.primaryCta },
+      secondaryCta: { ...draft.hero.secondaryCta },
+    }),
+    applySnapshot: (value) => {
+      draft.hero = value
+    },
+  },
+  {
+    key: 'cards',
+    getSnapshot: () => draft.supportCards.map(cloneCard),
+    applySnapshot: (value) => {
+      draft.supportCards = value
+    },
+  },
+  {
+    key: 'journey',
+    getSnapshot: () => draft.journey.map((item) => ({ ...item })),
+    applySnapshot: (value) => {
+      draft.journey = value
+    },
+  },
+  {
+    key: 'closing',
+    getSnapshot: () => ({
+      ...draft.closing,
+      primaryCta: { ...draft.closing.primaryCta },
+      secondaryCta: { ...draft.closing.secondaryCta },
+    }),
+    applySnapshot: (value) => {
+      draft.closing = value
+    },
+  },
+])
+
+const originalSnapshot = ref('')
+
+const hasChanges = computed(() => {
+  const current = JSON.stringify(cloneContent(draft))
+  return current !== originalSnapshot.value
+})
+
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify(cloneContent(draft))
+}
 
 const activeLocale = computed<SupportedLocale>(() =>
   locale.value === 'kh' ? 'kh' : 'en',
@@ -200,40 +235,15 @@ const canAddCard = computed(() => draft.supportCards.length < MAX_SUPPORT_CARDS)
 const canAddJourneyStep = computed(() => draft.journey.length < MAX_JOURNEY_STEPS)
 
 const sections = [
-  { id: 'getinvolved-hero', label: 'Hero', icon: Sparkles },
-  { id: 'getinvolved-cards', label: 'Cards', icon: FolderHeart },
-  { id: 'getinvolved-quote', label: 'Quote', icon: FileText },
-  { id: 'getinvolved-journey', label: 'Journey', icon: MapPin },
-  { id: 'getinvolved-closing', label: 'Closing', icon: Flag },
+  { id: 'getinvolved-hero', label: 'Hero', icon: 'mdi-creation' },
+  { id: 'getinvolved-cards', label: 'Cards', icon: 'mdi-folder-heart' },
+  { id: 'getinvolved-journey', label: 'Journey', icon: 'mdi-map-marker' },
+  { id: 'getinvolved-closing', label: 'Closing', icon: 'mdi-flag' },
 ] as const
 
-const activeSection = ref(sections[0].id)
-let sectionObserver: IntersectionObserver | null = null
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
 
-function scrollToSection(id: string) {
-  const el = document.getElementById(id)
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-function setupSectionObserver() {
-  sectionObserver?.disconnect()
-
-  sectionObserver = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          activeSection.value = entry.target.id
-        }
-      }
-    },
-    { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
-  )
-
-  for (const s of sections) {
-    const el = document.getElementById(s.id)
-    if (el) sectionObserver.observe(el)
-  }
-}
+useUnsavedChangesGuard(hasChanges)
 
 onMounted(() => {
   contentStore.useLocalFallback()
@@ -241,8 +251,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  sectionObserver?.disconnect()
-  sectionObserver = null
+  stopSectionWatch()
 })
 
 watch(activeLocale, () => {
@@ -250,6 +259,7 @@ watch(activeLocale, () => {
 })
 
 async function loadPage() {
+  resetEditingState()
   loading.value = true
   loadError.value = ''
 
@@ -257,14 +267,13 @@ async function loadPage() {
     const page = await contentStore.fetchBySlug(PAGE_SLUG, activeLocale.value)
     pageRow.value = page
     replaceDraft(mergeContent(fallbackContent, parseCmsBody(page?.body ?? '')))
-    savedAt.value = page?.updated_at ?? ''
+    updateSnapshot()
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Could not load Get Involved content.'
     ui.addToast(loadError.value, 'error')
   } finally {
     loading.value = false
-    await nextTick()
-    setupSectionObserver()
+    setupSectionWatch()
   }
 }
 
@@ -275,7 +284,6 @@ function replaceDraft(nextContent: GetInvolvedPageContent) {
     secondaryCta: { ...nextContent.hero.secondaryCta },
   }
   draft.supportCards = nextContent.supportCards.map(cloneCard)
-  draft.quotePanel = { ...nextContent.quotePanel }
   draft.journey = nextContent.journey.map((item) => ({ ...item }))
   draft.closing = {
     ...nextContent.closing,
@@ -312,30 +320,12 @@ async function savePage() {
 
     pageRow.value = saved
     replaceDraft(content)
-    savedAt.value = saved.updated_at
+    updateSnapshot()
     ui.addToast(`Get Involved ${activeLocaleName.value} content saved.`, 'success')
   } catch (error) {
     ui.addToast(error instanceof Error ? error.message : 'Could not save Get Involved content.', 'error')
   } finally {
     saving.value = false
-  }
-}
-
-async function uploadImage(event: Event, key: string, applyUrl: (url: string) => void) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-
-  uploadingKey.value = key
-  try {
-    const uploaded = await media.uploadToGoogleDrive(file, `Get Involved ${key} image`)
-    applyUrl(normalizeMediaUrl(uploaded.url))
-    ui.addToast('Image uploaded.', 'success')
-  } catch (error) {
-    ui.addToast(error instanceof Error ? error.message : 'Could not upload image.', 'error')
-  } finally {
-    uploadingKey.value = ''
-    input.value = ''
   }
 }
 
@@ -371,7 +361,7 @@ function removeItem<T extends { title?: string; name?: string }>(
   if (!item) return
 
   const itemTitle = item.title || item.name || 'this item'
-  ui.openModal(
+  confirmDialog(
     `Remove ${label}?`,
     `Remove "${itemTitle}" from the public Get Involved page?`,
     () => {
@@ -393,17 +383,6 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   items[target] = current
 }
 
-function resetToDefaults() {
-  ui.openModal(
-    'Reset Get Involved content?',
-    'Restore all content sections, cards, journey steps, and quotes to their defaults?',
-    () => {
-      replaceDraft(cloneContent(fallbackContent))
-      ui.addToast('Default Get Involved draft restored.', 'info')
-    },
-  )
-}
-
 function prepareForSave(content: GetInvolvedPageContent): GetInvolvedPageContent {
   return {
     hero: {
@@ -416,7 +395,6 @@ function prepareForSave(content: GetInvolvedPageContent): GetInvolvedPageContent
       ...card,
       image: normalizeMediaUrl(card.image),
     })),
-    quotePanel: { ...content.quotePanel },
     journey: content.journey.map((item) => ({
       step: item.step.trim() || '0',
       title: item.title.trim(),
@@ -474,7 +452,6 @@ function mergeContent(
       secondaryCta: mergeObject(base.hero.secondaryCta, hero.secondaryCta),
     },
     supportCards: mergeCards(override.supportCards, base.supportCards),
-    quotePanel: mergeObject(base.quotePanel, override.quotePanel),
     journey: mergeArray<JourneyStep>(override.journey, base.journey),
     closing: {
       ...base.closing,
@@ -516,7 +493,6 @@ function cloneContent(content: GetInvolvedPageContent): GetInvolvedPageContent {
       secondaryCta: { ...content.hero.secondaryCta },
     },
     supportCards: content.supportCards.map(cloneCard),
-    quotePanel: { ...content.quotePanel },
     journey: content.journey.map((item) => ({ ...item })),
     closing: {
       ...content.closing,
@@ -532,7 +508,7 @@ function cloneCard(card: SupportCard): SupportCard {
 </script>
 
 <template>
-  <div :class="['getinvolved-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['getinvolved-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -540,134 +516,99 @@ function cloneCard(card: SupportCard): SupportCard {
       <main class="manager-main">
         <header class="manager-hero">
           <div class="manager-title">
-            <p class="eyebrow">Get Involved</p>
             <h1>Manage get involved page</h1>
-            <div class="manager-meta" aria-label="Editable sections summary">
-              <span>{{ activeLocaleName }} content</span>
-              <span>{{ draft.supportCards.length }} cards</span>
-              <span>{{ draft.journey.length }} steps</span>
-              <span v-if="savedAt">Saved</span>
-            </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/get-involved">
-              <ExternalLink :size="16" aria-hidden="true" />
-              <span>View page</span>
-            </RouterLink>
-            <button type="button" class="btn btn-ghost" @click="resetToDefaults">
-              <RotateCcw :size="16" aria-hidden="true" />
-              <span>Reset draft</span>
-            </button>
-            <button type="button" class="btn btn-primary" :disabled="saving" @click="savePage">
-              <Save :size="16" aria-hidden="true" />
-              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
-            </button>
+            <v-btn variant="tonal" to="/get-involved" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">Loading Get Involved content...</div>
-        <div v-else-if="loadError" class="state-card state-card-error">
-          <span>{{ loadError }}</span>
-          <button type="button" class="btn btn-secondary" @click="loadPage">Try again</button>
-        </div>
-
-        <div v-else class="content-grid">
-
-          <nav class="section-nav" aria-label="Get Involved page sections">
-            <button
-              v-for="sec in sections"
-              :key="sec.id"
-              type="button"
-              :class="['section-nav-btn', { active: activeSection === sec.id }]"
-              @click="scrollToSection(sec.id)"
-            >
-              <component :is="sec.icon" :size="15" aria-hidden="true" />
-              <span>{{ sec.label }}</span>
-            </button>
-          </nav>
-
-          <!-- ── HERO ── -->
-          <div :id="sections[0].id" class="section-group">
-            <p class="section-group-label">Hero</p>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Get Involved content...</span>
+          </div>
+          <div v-else-if="loadError" key="error">
+            <v-alert type="error" variant="tonal" closable @click:close="loadError = ''">
+              <template #title>Could not load content</template>
+              <div class="d-flex align-center justify-space-between ga-2">
+                <span>{{ loadError }}</span>
+                <v-btn variant="tonal" size="small" @click="loadPage">Try again</v-btn>
+              </div>
+            </v-alert>
           </div>
 
-          <section class="editor-panel" aria-labelledby="hero-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Hero section</p>
-                <h2 id="hero-heading">Support village peace.</h2>
-              </div>
-              <Sparkles :size="20" aria-hidden="true" />
-            </div>
+          <div v-else key="content" class="content-grid">
 
+          <AdminSectionNav
+            :sections="sections"
+            :active-section="activeSection"
+            :has-changes="hasChanges"
+            :saving="saving"
+            aria-label="Get Involved page sections"
+            save-label="Save Change"
+            @navigate="scrollToSection"
+            @save="savePage"
+          />
+
+          <!-- ── HERO ── -->
+          <AdminEditorPanel
+            :id="sections[0].id"
+            kicker="Hero section"
+            heading="Support village peace."
+            :editing="!!editingSections.hero"
+            :collapsed="collapsedSections.hero"
+            @toggle-edit="toggleEdit('hero')"
+            @cancel="cancelEdit('hero')"
+            @toggle-collapse="toggleCollapse('hero')"
+          >
             <div class="image-editor-grid">
-              <figure class="image-preview hero-preview">
-                <img :src="heroPreview" alt="" />
-              </figure>
+              <div class="image-upload-panel">
+                <v-img :src="heroPreview" aspect-ratio="1.6" cover class="image-preview hero-preview" />
+                <AdminUploadButton
+                  :disabled="!editingSections.hero"
+                  description="Get Involved hero-image image"
+                  @update:model-value="(url) => (draft.hero.image = url)"
+                />
+              </div>
 
               <div class="form-stack">
                 <div class="form-grid">
-                  <label class="field">
-                    <span>Small label</span>
-                    <input v-model="draft.hero.eyebrow" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Section heading</span>
-                    <input v-model="draft.hero.title" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Description</span>
-                    <textarea v-model="draft.hero.description" rows="3"></textarea>
-                  </label>
-                  <label class="field wide">
-                    <span>Image URL</span>
-                    <input v-model="draft.hero.image" type="url" :placeholder="imageHint" />
-                  </label>
-                  <label class="field">
-                    <span>Image alt text</span>
-                    <input v-model="draft.hero.alt" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Primary CTA label</span>
-                    <input v-model="draft.hero.primaryCta.label" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Secondary CTA label</span>
-                    <input v-model="draft.hero.secondaryCta.label" type="text" />
-                  </label>
+                  <v-text-field v-model="draft.hero.eyebrow" label="Small label" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draft.hero.title" label="Section heading" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
+                  <v-textarea v-model="draft.hero.description" label="Description" rows="3" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-text-field v-model="draft.hero.alt" label="Image alt text" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-text-field v-model="draft.hero.primaryCta.label" label="Primary CTA label" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draft.hero.secondaryCta.label" label="Secondary CTA label" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
                 </div>
-                <label class="upload-box">
-                  <Upload :size="17" aria-hidden="true" />
-                  <span>{{ uploadingKey === 'hero-image' ? 'Uploading...' : 'Upload hero image' }}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    :disabled="uploadingKey === 'hero-image'"
-                    @change="uploadImage($event, 'hero-image', (url) => (draft.hero.image = url))"
-                  />
-                </label>
               </div>
             </div>
-          </section>
+          </AdminEditorPanel>
 
           <!-- ── SUPPORT CARDS ── -->
-          <div :id="sections[1].id" class="section-group">
-            <p class="section-group-label">Cards</p>
-          </div>
+          <AdminEditorPanel
+            :id="sections[1].id"
+            kicker="Support cards"
+            heading="Support real community work."
+            :editing="!!editingSections.cards"
+            :collapsed="collapsedSections.cards"
+            @toggle-edit="toggleEdit('cards')"
+            @cancel="cancelEdit('cards')"
+            @toggle-collapse="toggleCollapse('cards')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" key="add-card" color="accent" variant="flat" size="small" :disabled="!canAddCard" @click="addCard">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add card
+                </v-btn>
+              </v-fade-transition>
+            </template>
 
-          <section class="editor-panel" aria-labelledby="cards-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Support cards</p>
-                <h2 id="cards-heading">Support real community work.</h2>
-              </div>
-              <button type="button" class="btn btn-secondary" :disabled="!canAddCard" @click="addCard">
-                <Plus :size="16" aria-hidden="true" />
-                <span>Add card</span>
-              </button>
-            </div>
-
-            <div class="cards-list">
+            <v-slide-y-transition group tag="div" class="cards-list">
               <article v-for="(card, index) in draft.supportCards" :key="index" class="card-editor">
                 <header class="card-editor-header">
                   <div class="card-heading">
@@ -678,118 +619,61 @@ function cloneCard(card: SupportCard): SupportCard {
                     </div>
                   </div>
                   <div class="card-actions">
-                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move card up" @click="moveItem(draft.supportCards, index, -1)">
-                      <ArrowUp :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn" :disabled="index === draft.supportCards.length - 1" aria-label="Move card down" @click="moveItem(draft.supportCards, index, 1)">
-                      <ArrowDown :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn danger" aria-label="Remove card" @click="removeItem(draft.supportCards, index, 'card')">
-                      <Trash2 :size="15" aria-hidden="true" />
-                    </button>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.cards || index === 0" aria-label="Move card up" @click="moveItem(draft.supportCards, index, -1)">
+                      <v-icon>mdi-chevron-up</v-icon>
+                    </v-btn>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.cards || index === draft.supportCards.length - 1" aria-label="Move card down" @click="moveItem(draft.supportCards, index, 1)">
+                      <v-icon>mdi-chevron-down</v-icon>
+                    </v-btn>
+                    <v-btn v-if="editingSections.cards" icon color="error" variant="tonal" size="small" aria-label="Remove card" @click="removeItem(draft.supportCards, index, 'card')">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
                   </div>
                 </header>
 
                 <div class="card-editor-top">
-                  <figure class="image-preview card-preview">
-                    <img :src="resolveImageUrl(card.image, fallbackContent.supportCards[0]?.image ?? '')" alt="" />
-                  </figure>
-                  <div class="card-image-controls image-control-panel">
-                    <label class="field">
-                      <span>Image URL</span>
-                      <input v-model="card.image" type="url" :placeholder="imageHint" />
-                    </label>
-                    <label class="upload-box">
-                      <Upload :size="17" aria-hidden="true" />
-                      <span>{{ uploadingKey === `card-${index}` ? 'Uploading...' : 'Upload card image' }}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        :disabled="uploadingKey === `card-${index}`"
-                        @change="uploadImage($event, `card-${index}`, (url) => (card.image = url))"
-                      />
-                    </label>
+                  <div class="image-upload-panel card-image-upload">
+                    <v-img :src="resolveImageUrl(card.image, fallbackContent.supportCards[0]?.image ?? '')" aspect-ratio="1.35" cover class="image-preview card-preview" />
+                    <AdminUploadButton
+                      :disabled="!editingSections.cards"
+                      :description="`Get Involved card-${index} image`"
+                      @update:model-value="(url) => (card.image = url)"
+                    />
                   </div>
                 </div>
 
                 <div class="card-form-grid">
-                  <label class="field">
-                    <span>Label</span>
-                    <input v-model="card.label" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Title</span>
-                    <input v-model="card.title" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Image alt text</span>
-                    <input v-model="card.alt" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Description</span>
-                    <textarea v-model="card.body" rows="3"></textarea>
-                  </label>
-                  <label class="field">
-                    <span>Link text</span>
-                    <input v-model="card.cta" type="text" />
-                  </label>
+                  <v-text-field v-model="card.label" label="Label" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="card.title" label="Title" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="card.alt" label="Image alt text" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
+                  <v-textarea v-model="card.body" label="Description" rows="3" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-text-field v-model="card.cta" label="Link text" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
                 </div>
               </article>
-            </div>
-          </section>
-
-          <!-- ── QUOTE PANEL ── -->
-          <div :id="sections[2].id" class="section-group">
-            <p class="section-group-label">Quote</p>
-          </div>
-
-          <section class="editor-panel" aria-labelledby="quote-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Quote panel</p>
-                <h2 id="quote-heading">Strategy quote and context</h2>
-              </div>
-              <FileText :size="20" aria-hidden="true" />
-            </div>
-
-            <div class="panel-body form-grid">
-              <label class="field wide">
-                <span>Quote</span>
-                <textarea v-model="draft.quotePanel.quote" rows="3"></textarea>
-              </label>
-              <label class="field wide">
-                <span>Credit / attribution</span>
-                <input v-model="draft.quotePanel.credit" type="text" />
-              </label>
-              <label class="field wide">
-                <span>Support heading</span>
-                <input v-model="draft.quotePanel.title" type="text" />
-              </label>
-              <label class="field wide">
-                <span>Context body</span>
-                <textarea v-model="draft.quotePanel.body" rows="4"></textarea>
-              </label>
-            </div>
-          </section>
+            </v-slide-y-transition>
+          </AdminEditorPanel>
 
           <!-- ── JOURNEY ── -->
-          <div :id="sections[3].id" class="section-group">
-            <p class="section-group-label">Journey</p>
-          </div>
+          <AdminEditorPanel
+            :id="sections[2].id"
+            kicker="Your path"
+            heading="Journey steps"
+            :editing="!!editingSections.journey"
+            :collapsed="collapsedSections.journey"
+            @toggle-edit="toggleEdit('journey')"
+            @cancel="cancelEdit('journey')"
+            @toggle-collapse="toggleCollapse('journey')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" key="add-step" color="accent" variant="flat" size="small" :disabled="!canAddJourneyStep" @click="addJourneyStep">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add step
+                </v-btn>
+              </v-fade-transition>
+            </template>
 
-          <section class="editor-panel" aria-labelledby="journey-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Your path</p>
-                <h2 id="journey-heading">Journey steps</h2>
-              </div>
-              <button type="button" class="btn btn-secondary" :disabled="!canAddJourneyStep" @click="addJourneyStep">
-                <Plus :size="16" aria-hidden="true" />
-                <span>Add step</span>
-              </button>
-            </div>
-
-            <div class="cards-list two-col">
+            <v-slide-y-transition group tag="div" class="cards-list two-col">
               <article v-for="(step, index) in draft.journey" :key="index" class="card-editor">
                 <header class="card-editor-header">
                   <div class="card-heading">
@@ -800,78 +684,59 @@ function cloneCard(card: SupportCard): SupportCard {
                     </div>
                   </div>
                   <div class="card-actions">
-                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move step up" @click="moveItem(draft.journey, index, -1)">
-                      <ArrowUp :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn" :disabled="index === draft.journey.length - 1" aria-label="Move step down" @click="moveItem(draft.journey, index, 1)">
-                      <ArrowDown :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn danger" aria-label="Remove step" @click="removeItem(draft.journey, index, 'journey step')">
-                      <Trash2 :size="15" aria-hidden="true" />
-                    </button>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.journey || index === 0" aria-label="Move step up" @click="moveItem(draft.journey, index, -1)">
+                      <v-icon>mdi-chevron-up</v-icon>
+                    </v-btn>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.journey || index === draft.journey.length - 1" aria-label="Move step down" @click="moveItem(draft.journey, index, 1)">
+                      <v-icon>mdi-chevron-down</v-icon>
+                    </v-btn>
+                    <v-btn v-if="editingSections.journey" icon color="error" variant="tonal" size="small" aria-label="Remove step" @click="removeItem(draft.journey, index, 'journey step')">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
                   </div>
                 </header>
 
                 <div class="card-form-grid">
-                  <label class="field">
-                    <span>Step number</span>
-                    <input v-model="step.step" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Title</span>
-                    <input v-model="step.title" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Body</span>
-                    <textarea v-model="step.body" rows="2"></textarea>
-                  </label>
+                  <v-text-field v-model="step.step" label="Step number" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="step.title" label="Title" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-textarea v-model="step.body" label="Body" rows="2" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" class="field-wide" />
                 </div>
               </article>
-            </div>
-          </section>
+            </v-slide-y-transition>
+          </AdminEditorPanel>
 
           <!-- ── CLOSING ── -->
-          <div :id="sections[4].id" class="section-group">
-            <p class="section-group-label">Closing</p>
-          </div>
-
-          <section class="editor-panel" aria-labelledby="closing-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Next step</p>
-                <h2 id="closing-heading">Closing call to action</h2>
-              </div>
-              <Flag :size="20" aria-hidden="true" />
-            </div>
-
+          <AdminEditorPanel
+            :id="sections[3].id"
+            kicker="Next step"
+            heading="Closing call to action"
+            :editing="!!editingSections.closing"
+            :collapsed="collapsedSections.closing"
+            @toggle-edit="toggleEdit('closing')"
+            @cancel="cancelEdit('closing')"
+            @toggle-collapse="toggleCollapse('closing')"
+          >
             <div class="panel-body form-grid">
-              <label class="field">
-                <span>Small label</span>
-                <input v-model="draft.closing.eyebrow" type="text" />
-              </label>
-              <label class="field">
-                <span>Section heading</span>
-                <input v-model="draft.closing.title" type="text" />
-              </label>
-              <label class="field wide">
-                <span>Description</span>
-                <textarea v-model="draft.closing.body" rows="3"></textarea>
-              </label>
-              <label class="field">
-                <span>Primary CTA label</span>
-                <input v-model="draft.closing.primaryCta.label" type="text" />
-              </label>
-              <label class="field">
-                <span>Secondary CTA label</span>
-                <input v-model="draft.closing.secondaryCta.label" type="text" />
-              </label>
+              <v-text-field v-model="draft.closing.eyebrow" label="Small label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.closing.title" label="Section heading" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
+              <v-textarea v-model="draft.closing.body" label="Description" rows="3" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" class="field-wide" />
+              <v-text-field v-model="draft.closing.primaryCta.label" label="Primary CTA label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.closing.secondaryCta.label" label="Secondary CTA label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
             </div>
-          </section>
+          </AdminEditorPanel>
 
         </div>
+    </v-fade-transition>
       </main>
     </div>
-  </div>
+
+    <AdminConfirmDialog
+      v-model="confirmOpen"
+      :title="confirmData.title"
+      :body="confirmData.body"
+      @confirm="confirmData.onConfirm()"
+    />
+  </v-app>
 </template>
 
 <style scoped>
@@ -888,16 +753,7 @@ function cloneCard(card: SupportCard): SupportCard {
 
 .manager-main {
   min-height: 100vh;
-  padding: 1.25rem;
-  padding-top: calc(60px + 1.25rem);
-}
-
-.manager-hero,
-.editor-panel {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
+  padding: 1.5rem 2rem 2.5rem;
 }
 
 .manager-hero {
@@ -905,17 +761,15 @@ function cloneCard(card: SupportCard): SupportCard {
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 1rem 1.1rem;
-}
-
-.manager-hero h1,
-.manager-hero p,
-.editor-panel h2,
-.editor-panel p {
-  margin: 0;
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
 .manager-hero h1 {
+  margin: 0;
   color: var(--admin-theme-contrast);
   font-size: 1.32rem;
   line-height: 1.2;
@@ -926,235 +780,41 @@ function cloneCard(card: SupportCard): SupportCard {
   gap: 0.32rem;
 }
 
-.manager-meta,
-.hero-actions,
-.card-actions,
-.panel-icons {
+.hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.manager-meta span {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 999px;
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-muted);
-  padding: 0.18rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.eyebrow,
-.panel-kicker {
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.btn,
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0.55rem 0.8rem;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
-}
-
-.btn:hover,
-.icon-btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn:disabled,
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none;
-}
-
-.btn-primary {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  color: #ffffff;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
-}
-
-.btn-secondary,
-.btn-ghost,
-.icon-btn {
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
-  color: var(--admin-theme-contrast);
-}
-
-.btn-ghost {
-  background: var(--admin-theme-surface);
-}
-
-.icon-btn {
-  width: 34px;
-  min-height: 34px;
-  padding: 0;
-}
-
-.icon-btn.danger {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
-}
-
-.btn-secondary:hover,
-.btn-ghost:hover,
-.icon-btn:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.icon-btn.danger:hover {
-  border-color: var(--admin-theme-danger);
-  background: var(--admin-theme-danger);
-  color: #ffffff;
-}
-
-.state-card {
-  margin-top: 1rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
-  padding: 1rem;
-}
-
-.state-card-error {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  color: var(--admin-theme-danger);
-}
-
+/* ── Content grid ── */
 .content-grid {
   display: grid;
-  gap: 0.9rem;
+  gap: 1.1rem;
   margin-top: 1rem;
 }
 
-.section-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
-  padding: 0.5rem 0.6rem;
-  position: sticky;
-  top: calc(60px + 0.5rem);
-  z-index: 40;
-}
-
-.section-nav-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--admin-theme-muted);
-  padding: 0.4rem 0.7rem;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.section-nav-btn:hover {
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.section-nav-btn.active {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 32%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.section-group {
-  scroll-margin-top: 120px;
-}
-
-.section-group-label {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 0.6rem 0 0;
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.section-group-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 18%, var(--admin-theme-border));
-}
-
-.editor-panel {
-  overflow: hidden;
-}
-
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface));
-  padding: 0.85rem 1rem;
-}
-
-.panel-header h2 {
-  color: var(--admin-theme-contrast);
-  font-size: 1rem;
-}
-
+/* ── Collapsible panel body ── */
 .panel-body {
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
+/* ── Image editor grid ── */
 .image-editor-grid {
   display: grid;
   grid-template-columns: minmax(300px, 0.72fr) minmax(360px, 1.28fr);
-  gap: 1.1rem;
-  padding: 1.1rem;
+  gap: 1.25rem;
+  padding: 1.5rem;
 }
 
 .image-preview {
-  margin: 0;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
   border-radius: 7px;
@@ -1164,17 +824,7 @@ function cloneCard(card: SupportCard): SupportCard {
     0 12px 24px rgba(15, 95, 73, 0.11);
 }
 
-.image-preview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-preview {
-  aspect-ratio: 16 / 10;
-}
-
+/* ── Form layouts ── */
 .form-stack,
 .cards-list {
   display: grid;
@@ -1184,90 +834,41 @@ function cloneCard(card: SupportCard): SupportCard {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1.6rem 0.85rem;
 }
 
-.wide {
+.form-grid .field-wide {
   grid-column: 1 / -1;
 }
 
-.field,
-.upload-box {
+/* ── Image upload panel (preview + button) ── */
+.image-upload-panel {
   display: grid;
-  gap: 0.35rem;
-  color: var(--admin-theme-muted);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.field span,
-.upload-box span {
-  color: var(--admin-theme-contrast-soft);
-}
-
-.field input,
-.field textarea,
-.upload-box input {
-  width: 100%;
-  border: 1px solid var(--admin-theme-border-strong);
-  border-radius: 6px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.65rem 0.75rem;
-}
-
-.field textarea {
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.field input:focus,
-.field textarea:focus,
-.upload-box input:focus {
-  border-color: var(--admin-theme-primary);
-  outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
-}
-
-.upload-box {
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  border: 1px dashed var(--admin-theme-border-strong);
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 38%, var(--admin-theme-surface));
-  padding: 0.75rem;
-}
-
-.upload-box input {
-  grid-column: 1 / -1;
-  padding: 0.55rem;
-}
-
-.image-control-panel {
-  display: grid;
-  gap: 0.85rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 42%, var(--admin-theme-surface));
-  padding: 0.9rem;
+  gap: 0.75rem;
+  align-content: start;
 }
 
 .cards-list {
   gap: 0.95rem;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
 .cards-list.two-col {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* ── Card editor ── */
 .card-editor {
   border: 1px solid var(--admin-theme-border);
   border-radius: 8px;
   background: var(--admin-theme-surface);
   overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-editor:hover {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  box-shadow: 0 4px 14px rgba(15, 95, 73, 0.08);
 }
 
 .card-editor-header {
@@ -1277,7 +878,7 @@ function cloneCard(card: SupportCard): SupportCard {
   gap: 1rem;
   border-bottom: 1px solid var(--admin-theme-border);
   background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
-  padding: 0.75rem 0.85rem;
+  padding: 0.75rem 1.5rem;
 }
 
 .card-heading {
@@ -1319,33 +920,27 @@ function cloneCard(card: SupportCard): SupportCard {
 }
 
 .card-editor-top {
-  display: grid;
-  grid-template-columns: 170px minmax(280px, 1fr);
-  align-items: start;
-  gap: 1rem;
-  padding: 0.9rem 0.9rem 0;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.card-image-upload {
+  width: 200px;
 }
 
 .card-preview {
-  width: 170px;
+  width: 100%;
   aspect-ratio: 1.35;
-  flex: 0 0 auto;
-}
-
-.card-image-controls {
-  display: grid;
-  gap: 0.85rem;
 }
 
 .card-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-  padding: 0.9rem;
+  gap: 1.6rem 0.85rem;
+  padding: 1.25rem 1.5rem;
 }
 
-:global(.admin-dark) .btn-primary {
-  color: #071311;
+.card-form-grid .field-wide {
+  grid-column: 1 / -1;
 }
 
 @media (min-width: 900px) {
@@ -1366,31 +961,14 @@ function cloneCard(card: SupportCard): SupportCard {
     padding-top: calc(60px + 1rem);
   }
 
-  .section-nav {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .section-nav::-webkit-scrollbar {
-    display: none;
-  }
-
   .manager-hero,
-  .panel-header,
   .card-editor-header {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .hero-actions,
-  .hero-actions .btn,
-  .card-actions {
+  .hero-actions {
     width: 100%;
-  }
-
-  .card-actions .icon-btn {
-    flex: 1;
   }
 
   .image-editor-grid,
@@ -1399,11 +977,7 @@ function cloneCard(card: SupportCard): SupportCard {
     grid-template-columns: 1fr;
   }
 
-  .card-editor-top {
-    grid-template-columns: 1fr;
-  }
-
-  .card-preview {
+  .card-image-upload {
     width: 100%;
   }
 

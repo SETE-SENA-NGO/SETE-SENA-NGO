@@ -1,0 +1,101 @@
+/*
+  Global Vuetify fixes for the admin panel. These apply everywhere (no
+  :deep() needed - :deep() only matters inside a scoped SFC <style> block;
+  this file is loaded once, unscoped, in main.ts).
+*/
+
+/*
+  Vuetify fades disabled buttons to 26% opacity, which turns a tonal button
+  into an almost invisible smear. Keep it fully legible/shaped and show the
+  disabled state through color instead of opacity.
+*/
+.v-btn--disabled {
+  opacity: 1 !important;
+}
+
+.v-btn--disabled.v-btn--variant-tonal {
+  color: var(--admin-theme-muted) !important;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface)) !important;
+}
+
+.v-btn--disabled.v-btn--variant-outlined {
+  color: var(--admin-theme-muted) !important;
+  border-color: var(--admin-theme-border) !important;
+}
+
+.v-btn--disabled .v-btn__overlay {
+  opacity: 0 !important;
+}
+
+/* Outlined text field theme alignment */
+.v-field--variant-outlined {
+  background: var(--admin-theme-surface);
+}
+
+.v-field--variant-outlined .v-field__outline__start,
+.v-field--variant-outlined .v-field__outline__end,
+.v-field--variant-outlined .v-field__outline__notch::before,
+.v-field--variant-outlined .v-field__outline__notch::after {
+  border-color: var(--admin-theme-border-strong);
+}
+
+.v-field__input,
+textarea.v-field__input {
+  color: var(--admin-theme-contrast);
+  font-weight: 600;
+}
+
+.v-label.v-field-label {
+  color: var(--admin-theme-muted);
+  font-weight: 600;
+  opacity: 1;
+}
+
+/*
+  Vuetify's outlined floating label rests centered on the field's top
+  border (translateY(-50%)) - the classic "notched outline" look. Admin
+  fields here often double as read-only value displays, so the label reads
+  more like a field caption than a notch; lift it clear of the border
+  instead of overlapping it. The transform is purely visual (doesn't
+  reserve layout space), so form-grid/card-form-grid row gaps are widened
+  to match wherever this is used, or it would just collide with the field
+  in the row above.
+*/
+.v-field--variant-outlined .v-label.v-field-label--floating {
+  transform: translateY(-90%) !important;
+}
+
+/*
+  Vuetify dims disabled fields via opacity on the whole field, which fades
+  real content (not just affordance) to near-illegible gray. These fields
+  are used to show saved page content in "view" mode, so keep text at full
+  contrast and signal read-only via background + cursor instead.
+*/
+.v-input--disabled {
+  opacity: 1;
+}
+
+.v-field--disabled {
+  opacity: 1;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 55%, var(--admin-theme-surface));
+  cursor: not-allowed;
+}
+
+.v-field--disabled .v-field__input {
+  color: var(--admin-theme-contrast-soft);
+  -webkit-text-fill-color: var(--admin-theme-contrast-soft);
+  cursor: not-allowed;
+}
+
+.v-field--disabled .v-label.v-field-label {
+  color: var(--admin-theme-muted);
+  opacity: 1;
+}
+
+.v-field--disabled .v-field__outline__start,
+.v-field--disabled .v-field__outline__end,
+.v-field--disabled .v-field__outline__notch::before,
+.v-field--disabled .v-field__outline__notch::after {
+  border-color: var(--admin-theme-border);
+  opacity: 1;
+}
