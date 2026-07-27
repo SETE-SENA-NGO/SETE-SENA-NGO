@@ -1,24 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import {
-  ArrowDown,
-  ArrowUp,
-  ExternalLink,
-  Image as ImageIcon,
-  Mail,
-  MapPin,
-  MessageSquare,
-  Phone,
-  Plus,
-  RotateCcw,
-  Save,
-  Trash2,
-  Upload,
-} from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminUploadButton from '@/components/admin/AdminUploadButton.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { SupportedLocale } from '@/i18n'
 import {
   cloneContactContent,
@@ -29,28 +21,103 @@ import {
   type ContactOffice,
   type ContactPageContent,
 } from '@/lib/contactContent'
-import { imageUploadHelpText, normalizeMediaUrl } from '@/lib/media'
+import { normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
-import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
 import type { PageContent } from '@/types/content'
 
 const MAX_OFFICES = 8
 
 const contentStore = useContentStore()
-const media = useMediaStore()
 const ui = useUiStore()
 const { locale } = useI18n()
 
 const pageRow = ref<PageContent | null>(null)
 const loading = ref(true)
 const saving = ref(false)
-const uploadingKey = ref('')
 const loadError = ref('')
 const savedAt = ref('')
-const imageHint = imageUploadHelpText()
 
 const draft = reactive<ContactPageContent>(cloneContactContent(fallbackContactContent))
+
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+  setupSectionWatch,
+  stopSectionWatch,
+  resetEditingState,
+} = useSectionEditor([
+  {
+    key: 'main',
+    getSnapshot: () => ({
+      eyebrow: draft.headquarters.eyebrow,
+      type: draft.headquarters.type,
+      title: draft.headquarters.title,
+      intro: draft.headquarters.intro,
+      image: draft.headquarters.image,
+      imageAlt: draft.headquarters.imageAlt,
+    }),
+    applySnapshot: (value) => {
+      draft.headquarters.eyebrow = value.eyebrow
+      draft.headquarters.type = value.type
+      draft.headquarters.title = value.title
+      draft.headquarters.intro = value.intro
+      draft.headquarters.image = value.image
+      draft.headquarters.imageAlt = value.imageAlt
+    },
+  },
+  {
+    key: 'headOffice',
+    getSnapshot: () => ({
+      name: draft.headquarters.name,
+      hours: draft.headquarters.hours,
+      email: draft.headquarters.email,
+      phone: draft.headquarters.phone,
+      address: draft.headquarters.address,
+    }),
+    applySnapshot: (value) => {
+      draft.headquarters.name = value.name
+      draft.headquarters.hours = value.hours
+      draft.headquarters.email = value.email
+      draft.headquarters.phone = value.phone
+      draft.headquarters.address = value.address
+    },
+  },
+  {
+    key: 'offices',
+    getSnapshot: () => ({
+      officesIntro: { ...draft.officesIntro },
+      offices: draft.offices.map((office) => ({ ...office })),
+    }),
+    applySnapshot: (value) => {
+      draft.officesIntro = value.officesIntro
+      draft.offices = value.offices
+    },
+  },
+  {
+    key: 'telegram',
+    getSnapshot: () => ({ ...draft.telegram }),
+    applySnapshot: (value) => {
+      draft.telegram = value
+    },
+  },
+])
+
+const originalSnapshot = ref('')
+
+const hasChanges = computed(() => {
+  const current = JSON.stringify(cloneContactContent(draft))
+  return current !== originalSnapshot.value
+})
+
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify(cloneContactContent(draft))
+}
+
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
 
 const activeLocale = computed<SupportedLocale>(() =>
   locale.value === 'kh' ? 'kh' : 'en',
@@ -66,6 +133,17 @@ const telegramPreview = computed(() =>
   resolveImageUrl(draft.telegram.qrImage, fallbackContactContent.telegram.qrImage),
 )
 
+const sections = [
+  { id: 'contact-main', label: 'Main', icon: 'mdi-image-outline' },
+  { id: 'contact-head-office', label: 'Head office', icon: 'mdi-phone' },
+  { id: 'contact-offices', label: 'Offices', icon: 'mdi-map-marker-multiple' },
+  { id: 'contact-telegram', label: 'Telegram', icon: 'mdi-message-text' },
+] as const
+
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
+
+useUnsavedChangesGuard(hasChanges)
+
 onMounted(() => {
   void loadPage()
 })
@@ -75,6 +153,7 @@ watch(activeLocale, () => {
 })
 
 async function loadPage() {
+  resetEditingState()
   loading.value = true
   loadError.value = ''
 
@@ -83,11 +162,13 @@ async function loadPage() {
     pageRow.value = page
     replaceDraft(mergeContactContent(fallbackContactContent, parseContactCmsBody(page?.body ?? '')))
     savedAt.value = page?.updated_at ?? ''
+    updateSnapshot()
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Could not load Contact content.'
     ui.addToast(loadError.value, 'error')
   } finally {
     loading.value = false
+    setupSectionWatch()
   }
 }
 
@@ -135,29 +216,12 @@ async function savePage() {
     pageRow.value = saved
     replaceDraft(content)
     savedAt.value = saved.updated_at
+    updateSnapshot()
     ui.addToast(`Contact ${activeLocaleName.value} content saved.`, 'success')
   } catch (error) {
     ui.addToast(error instanceof Error ? error.message : 'Could not save Contact content.', 'error')
   } finally {
     saving.value = false
-  }
-}
-
-async function uploadImage(event: Event, key: string, applyUrl: (url: string) => void) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-
-  uploadingKey.value = key
-  try {
-    const uploaded = await media.uploadToGoogleDrive(file, `Contact ${key} image`)
-    applyUrl(uploaded.url)
-    ui.addToast('Image uploaded.', 'success')
-  } catch (error) {
-    ui.addToast(error instanceof Error ? error.message : 'Could not upload image.', 'error')
-  } finally {
-    uploadingKey.value = ''
-    input.value = ''
   }
 }
 
@@ -188,7 +252,7 @@ function removeOffice(index: number) {
   const office = draft.offices[index]
   if (!office) return
 
-  ui.openModal(
+  confirmDialog(
     'Remove office?',
     `Remove "${office.title || 'this office'}" from the public Contact page?`,
     () => {
@@ -211,7 +275,7 @@ function moveOffice(index: number, direction: -1 | 1) {
 }
 
 function resetToDefaults() {
-  ui.openModal(
+  confirmDialog(
     'Reset Contact content?',
     'Restore the default contact details, office info, Telegram QR and visitor guide?',
     () => {
@@ -311,7 +375,7 @@ function normalizeTelegramUrl(value: string): string {
 </script>
 
 <template>
-  <div :class="['contact-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['contact-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -319,160 +383,132 @@ function normalizeTelegramUrl(value: string): string {
       <main class="manager-main">
         <header class="manager-hero">
           <div class="manager-title">
-            <p class="eyebrow">Contact</p>
             <h1>Manage contact page</h1>
-            <div class="manager-meta" aria-label="Editable contact summary">
-              <span>{{ activeLocaleName }} content</span>
-              <span>{{ draft.offices.length }} offices</span>
-              <span v-if="savedAt">Saved</span>
+            <div class="manager-meta">
+              <v-chip size="small" variant="tonal" color="primary">{{ activeLocaleName }} content</v-chip>
+              <v-chip size="small" variant="tonal" color="primary">{{ draft.offices.length }} offices</v-chip>
+              <v-chip v-if="savedAt" size="small" variant="tonal" color="success">Saved</v-chip>
             </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/contact">
-              <ExternalLink :size="16" aria-hidden="true" />
-              <span>View page</span>
-            </RouterLink>
-            <button type="button" class="btn btn-ghost" @click="resetToDefaults">
-              <RotateCcw :size="16" aria-hidden="true" />
-              <span>Reset draft</span>
-            </button>
-            <button type="button" class="btn btn-primary" :disabled="saving" @click="savePage">
-              <Save :size="16" aria-hidden="true" />
-              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
-            </button>
+            <v-btn variant="tonal" to="/contact" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
+            <v-btn variant="tonal" @click="resetToDefaults">
+              <v-icon start>mdi-restore</v-icon>
+              Reset draft
+            </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">Loading Contact content...</div>
-        <div v-else-if="loadError" class="state-card state-card-error">
-          <span>{{ loadError }}</span>
-          <button type="button" class="btn btn-secondary" @click="loadPage">
-            Try again
-          </button>
-        </div>
-
-        <div v-else class="content-grid">
-          <section class="editor-panel" aria-labelledby="main-contact-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Main section</p>
-                <h2 id="main-contact-heading">Photo and page introduction</h2>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Contact content...</span>
+          </div>
+          <div v-else-if="loadError" key="error">
+            <v-alert type="error" variant="tonal" closable @click:close="loadError = ''">
+              <template #title>Could not load content</template>
+              <div class="d-flex align-center justify-space-between ga-2">
+                <span>{{ loadError }}</span>
+                <v-btn variant="tonal" size="small" @click="loadPage">Try again</v-btn>
               </div>
-              <ImageIcon :size="20" aria-hidden="true" />
-            </div>
+            </v-alert>
+          </div>
 
+          <div v-else key="content" class="content-grid">
+
+          <AdminSectionNav
+            :sections="sections"
+            :active-section="activeSection"
+            :has-changes="hasChanges"
+            :saving="saving"
+            aria-label="Contact page sections"
+            @navigate="scrollToSection"
+            @save="savePage"
+          />
+
+          <!-- ── MAIN ── -->
+          <AdminEditorPanel
+            :id="sections[0].id"
+            kicker="Main section"
+            heading="Photo and page introduction"
+            :editing="!!editingSections.main"
+            :collapsed="!!collapsedSections.main"
+            @toggle-edit="toggleEdit('main')"
+            @cancel="cancelEdit('main')"
+            @toggle-collapse="toggleCollapse('main')"
+          >
             <div class="image-editor-grid">
-              <figure class="image-preview hero-preview">
-                <img :src="headquartersPreview" alt="" />
-              </figure>
+              <div class="image-upload-panel">
+                <v-img :src="headquartersPreview" aspect-ratio="1.6" cover class="image-preview hero-preview" />
+                <AdminUploadButton
+                  :disabled="!editingSections.main"
+                  description="Contact main photo"
+                  @update:model-value="(url) => (draft.headquarters.image = url)"
+                />
+              </div>
 
               <div class="form-stack">
                 <div class="form-grid">
-                  <label class="field">
-                    <span>Small label</span>
-                    <input v-model="draft.headquarters.eyebrow" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Office type</span>
-                    <input v-model="draft.headquarters.type" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Section heading</span>
-                    <input v-model="draft.headquarters.title" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Intro text</span>
-                    <textarea v-model="draft.headquarters.intro" rows="3"></textarea>
-                  </label>
-                  <label class="field wide">
-                    <span>Main photo URL</span>
-                    <input v-model="draft.headquarters.image" type="url" :placeholder="imageHint" />
-                  </label>
-                  <label class="field wide">
-                    <span>Photo alt text</span>
-                    <input v-model="draft.headquarters.imageAlt" type="text" />
-                  </label>
+                  <v-text-field v-model="draft.headquarters.eyebrow" label="Small label" :disabled="!editingSections.main" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draft.headquarters.type" label="Office type" :disabled="!editingSections.main" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draft.headquarters.title" label="Section heading" :disabled="!editingSections.main" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-textarea v-model="draft.headquarters.intro" label="Intro text" rows="3" :disabled="!editingSections.main" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-text-field v-model="draft.headquarters.imageAlt" label="Photo alt text" :disabled="!editingSections.main" hide-details density="comfortable" variant="outlined" class="field-wide" />
                 </div>
-
-                <label class="upload-box">
-                  <Upload :size="17" aria-hidden="true" />
-                  <span>{{ uploadingKey === 'main-photo' ? 'Uploading photo...' : 'Upload main photo' }}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    :disabled="uploadingKey === 'main-photo'"
-                    @change="uploadImage($event, 'main-photo', (url) => (draft.headquarters.image = url))"
-                  />
-                </label>
               </div>
             </div>
-          </section>
+          </AdminEditorPanel>
 
-          <section class="editor-panel" aria-labelledby="head-office-details-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Head office details</p>
-                <h2 id="head-office-details-heading">Phone, email and address</h2>
-              </div>
-              <div class="panel-icons" aria-hidden="true">
-                <Phone :size="18" />
-                <Mail :size="18" />
-                <MapPin :size="18" />
-              </div>
-            </div>
-
+          <!-- ── HEAD OFFICE DETAILS ── -->
+          <AdminEditorPanel
+            :id="sections[1].id"
+            kicker="Head office details"
+            heading="Phone, email and address"
+            :editing="!!editingSections.headOffice"
+            :collapsed="!!collapsedSections.headOffice"
+            @toggle-edit="toggleEdit('headOffice')"
+            @cancel="cancelEdit('headOffice')"
+            @toggle-collapse="toggleCollapse('headOffice')"
+          >
             <div class="panel-body form-grid">
-              <label class="field">
-                <span>Display name</span>
-                <input v-model="draft.headquarters.name" type="text" />
-              </label>
-              <label class="field">
-                <span>Office hours</span>
-                <input v-model="draft.headquarters.hours" type="text" />
-              </label>
-              <label class="field">
-                <span>Email</span>
-                <input v-model="draft.headquarters.email" type="email" />
-              </label>
-              <label class="field">
-                <span>Phone</span>
-                <input v-model="draft.headquarters.phone" type="tel" />
-              </label>
-              <label class="field wide">
-                <span>Address</span>
-                <textarea v-model="draft.headquarters.address" rows="2"></textarea>
-              </label>
+              <v-text-field v-model="draft.headquarters.name" label="Display name" :disabled="!editingSections.headOffice" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.headquarters.hours" label="Office hours" :disabled="!editingSections.headOffice" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.headquarters.email" label="Email" type="email" :disabled="!editingSections.headOffice" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.headquarters.phone" label="Phone" type="tel" :disabled="!editingSections.headOffice" hide-details density="comfortable" variant="outlined" />
+              <v-textarea v-model="draft.headquarters.address" label="Address" rows="2" :disabled="!editingSections.headOffice" hide-details density="comfortable" variant="outlined" class="field-wide" />
             </div>
-          </section>
+          </AdminEditorPanel>
 
-          <section class="editor-panel" aria-labelledby="offices-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Office map section</p>
-                <h2 id="offices-heading">Office tabs and contact cards</h2>
-              </div>
-              <button type="button" class="btn btn-secondary" :disabled="!canAddOffice" @click="addOffice">
-                <Plus :size="16" aria-hidden="true" />
-                <span>Add office</span>
-              </button>
-            </div>
+          <!-- ── OFFICES ── -->
+          <AdminEditorPanel
+            :id="sections[2].id"
+            kicker="Office map section"
+            heading="Office tabs and contact cards"
+            :editing="!!editingSections.offices"
+            :collapsed="!!collapsedSections.offices"
+            @toggle-edit="toggleEdit('offices')"
+            @cancel="cancelEdit('offices')"
+            @toggle-collapse="toggleCollapse('offices')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddOffice" @click="addOffice">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add office
+                </v-btn>
+              </v-fade-transition>
+            </template>
 
             <div class="panel-body intro-fields">
-              <label class="field">
-                <span>Small label</span>
-                <input v-model="draft.officesIntro.eyebrow" type="text" />
-              </label>
-              <label class="field">
-                <span>Section heading</span>
-                <input v-model="draft.officesIntro.title" type="text" />
-              </label>
-              <label class="field wide">
-                <span>Intro text</span>
-                <textarea v-model="draft.officesIntro.body" rows="2"></textarea>
-              </label>
+              <v-text-field v-model="draft.officesIntro.eyebrow" label="Small label" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.officesIntro.title" label="Section heading" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" />
+              <v-textarea v-model="draft.officesIntro.body" label="Intro text" rows="2" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" class="field-wide" />
             </div>
 
-            <div class="offices-list">
+            <v-slide-y-transition group tag="div" class="offices-list">
               <article v-for="(office, index) in draft.offices" :key="office.id" class="office-editor">
                 <header class="office-editor-header">
                   <div class="office-heading">
@@ -483,137 +519,90 @@ function normalizeTelegramUrl(value: string): string {
                     </div>
                   </div>
                   <div class="card-actions">
-                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move office up" @click="moveOffice(index, -1)">
-                      <ArrowUp :size="15" aria-hidden="true" />
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      :disabled="index === draft.offices.length - 1"
-                      aria-label="Move office down"
-                      @click="moveOffice(index, 1)"
-                    >
-                      <ArrowDown :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn danger" aria-label="Remove office" @click="removeOffice(index)">
-                      <Trash2 :size="15" aria-hidden="true" />
-                    </button>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.offices || index === 0" aria-label="Move office up" @click="moveOffice(index, -1)">
+                      <v-icon>mdi-chevron-up</v-icon>
+                    </v-btn>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.offices || index === draft.offices.length - 1" aria-label="Move office down" @click="moveOffice(index, 1)">
+                      <v-icon>mdi-chevron-down</v-icon>
+                    </v-btn>
+                    <v-btn v-if="editingSections.offices" icon color="error" variant="tonal" size="small" aria-label="Remove office" @click="removeOffice(index)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
                   </div>
                 </header>
 
                 <div class="office-form-grid">
-                  <label class="field">
-                    <span>Tab label</span>
-                    <input v-model="office.tab" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Office type</span>
-                    <input v-model="office.type" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Office title</span>
-                    <input v-model="office.title" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Province label</span>
-                    <input v-model="office.provinceName" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Phone</span>
-                    <input v-model="office.phone" type="tel" />
-                  </label>
-                  <label class="field">
-                    <span>Email</span>
-                    <input v-model="office.email" type="email" />
-                  </label>
-                  <label class="field wide">
-                    <span>Address</span>
-                    <textarea v-model="office.address" rows="2"></textarea>
-                  </label>
-                  <label class="field wide">
-                    <span>Contact purpose</span>
-                    <textarea v-model="office.contact" rows="2"></textarea>
-                  </label>
+                  <v-text-field v-model="office.tab" label="Tab label" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="office.type" label="Office type" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="office.title" label="Office title" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="office.provinceName" label="Province label" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="office.phone" label="Phone" type="tel" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="office.email" label="Email" type="email" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" />
+                  <v-textarea v-model="office.address" label="Address" rows="2" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-textarea v-model="office.contact" label="Contact purpose" rows="2" :disabled="!editingSections.offices" hide-details density="comfortable" variant="outlined" class="field-wide" />
                 </div>
               </article>
-            </div>
-          </section>
+            </v-slide-y-transition>
+          </AdminEditorPanel>
 
-          <section class="editor-panel" aria-labelledby="telegram-qr-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Contact form</p>
-                <h2 id="telegram-qr-heading">Telegram contact</h2>
-              </div>
-              <MessageSquare :size="20" aria-hidden="true" />
-            </div>
-
+          <!-- ── TELEGRAM ── -->
+          <AdminEditorPanel
+            :id="sections[3].id"
+            kicker="Contact form"
+            heading="Telegram contact"
+            :editing="!!editingSections.telegram"
+            :collapsed="!!collapsedSections.telegram"
+            @toggle-edit="toggleEdit('telegram')"
+            @cancel="cancelEdit('telegram')"
+            @toggle-collapse="toggleCollapse('telegram')"
+          >
             <div class="image-editor-grid">
-              <figure class="image-preview qr-preview">
-                <img :src="telegramPreview" alt="" />
-              </figure>
+              <div class="image-upload-panel">
+                <v-img :src="telegramPreview" aspect-ratio="1" cover class="image-preview qr-preview" />
+                <AdminUploadButton
+                  :disabled="!editingSections.telegram"
+                  description="Contact Telegram QR"
+                  label="Upload QR image"
+                  @update:model-value="(url) => (draft.telegram.qrImage = url)"
+                />
+              </div>
 
               <div class="form-stack">
                 <div class="form-grid">
-                  <label class="field wide">
-                    <span>Telegram link (URL or username)</span>
-                    <input
-                      v-model="draft.telegram.url"
-                      type="text"
-                      placeholder="https://t.me/"
-                      @blur="draft.telegram.url = normalizeTelegramUrl(draft.telegram.url)"
-                    />
-                    <small class="field-hint">
-                      Just copy the username from your Telegram profile past into this box.
-                    </small>
-                  </label>
-                </div>
-                <label class="upload-box upload-box--primary">
-                    <Upload :size="17" aria-hidden="true" />
-                    <span>{{ uploadingKey === 'telegram-qr' ? 'Uploading QR...' : 'Upload QR image' }}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      :disabled="uploadingKey === 'telegram-qr'"
-                      @change="uploadImage($event, 'telegram-qr', (url) => (draft.telegram.qrImage = url))"
-                    />
-                  </label>
-
-                <div class="upload-actions">
-                  <label class="field">
-                    <span>Button label</span>
-                    <input
-                      v-model="draft.telegram.openLabel"
-                      type="text"
-                      placeholder="Open Telegram"
-                    />
-                  </label>
+                  <v-text-field
+                    v-model="draft.telegram.url"
+                    label="Telegram link (URL or username)"
+                    placeholder="https://t.me/"
+                    hint="Just copy the username from your Telegram profile into this box."
+                    persistent-hint
+                    :disabled="!editingSections.telegram"
+                    density="comfortable"
+                    variant="outlined"
+                    class="field-wide"
+                    @blur="draft.telegram.url = normalizeTelegramUrl(draft.telegram.url)"
+                  />
+                  <v-text-field v-model="draft.telegram.openLabel" label="Button label" placeholder="Open Telegram" :disabled="!editingSections.telegram" hide-details density="comfortable" variant="outlined" />
                 </div>
               </div>
             </div>
-          </section>
+          </AdminEditorPanel>
+
         </div>
+        </v-fade-transition>
       </main>
     </div>
-  </div>
+
+    <AdminConfirmDialog
+      v-model="confirmOpen"
+      :title="confirmData.title"
+      :body="confirmData.body"
+      @confirm="confirmData.onConfirm()"
+    />
+  </v-app>
 </template>
 
 <style scoped>
 .contact-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -626,16 +615,7 @@ function normalizeTelegramUrl(value: string): string {
 
 .manager-main {
   min-height: 100vh;
-  padding: 1.25rem;
-  padding-top: calc(60px + 1.25rem);
-}
-
-.manager-hero,
-.editor-panel {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
+  padding: 1.5rem 2rem 2.5rem;
 }
 
 .manager-hero {
@@ -643,17 +623,15 @@ function normalizeTelegramUrl(value: string): string {
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 1rem 1.1rem;
-}
-
-.manager-hero h1,
-.manager-hero p,
-.editor-panel h2,
-.editor-panel p {
-  margin: 0;
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
 .manager-hero h1 {
+  margin: 0;
   color: var(--admin-theme-contrast);
   font-size: 1.32rem;
   line-height: 1.2;
@@ -661,181 +639,50 @@ function normalizeTelegramUrl(value: string): string {
 
 .manager-title {
   display: grid;
-  gap: 0.32rem;
-}
-
-.manager-meta,
-.hero-actions,
-.card-actions,
-.panel-icons {
-  display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.manager-meta span {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 999px;
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-muted);
-  padding: 0.18rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.eyebrow,
-.panel-kicker {
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.btn,
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0.55rem 0.8rem;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
-}
-
-.btn:hover,
-.icon-btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn:disabled,
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none;
-}
-
-.btn-primary {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  color: #ffffff;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
-}
-
-.btn-secondary,
-.btn-ghost,
-.icon-btn {
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
-  color: var(--admin-theme-contrast);
-}
-
-.btn-ghost {
-  background: var(--admin-theme-surface);
-}
-
-.btn-small {
-  min-height: 32px;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.74rem;
-}
-
-.icon-btn {
-  width: 34px;
-  min-height: 34px;
-  padding: 0;
-}
-
-.icon-btn.danger {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
-}
-
-.btn-secondary:hover,
-.btn-ghost:hover,
-.icon-btn:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.icon-btn.danger:hover {
-  border-color: var(--admin-theme-danger);
-  background: var(--admin-theme-danger);
-  color: #ffffff;
-}
-
-.state-card {
-  margin-top: 1rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
-  padding: 1rem;
-}
-
-.state-card-error {
+.manager-meta {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  color: var(--admin-theme-danger);
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Content grid ── */
 .content-grid {
   display: grid;
-  gap: 0.9rem;
+  gap: 1.1rem;
   margin-top: 1rem;
 }
 
-.editor-panel {
-  overflow: hidden;
-}
-
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface));
-  padding: 0.85rem 1rem;
-}
-
-.panel-header h2 {
-  color: var(--admin-theme-contrast);
-  font-size: 1rem;
-}
-
-.panel-icons {
-  color: var(--admin-theme-primary-deep);
-}
-
+/* ── Collapsible panel body ── */
 .panel-body {
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
+/* ── Image editor grid ── */
 .image-editor-grid {
   display: grid;
   grid-template-columns: minmax(300px, 0.72fr) minmax(360px, 1.28fr);
-  gap: 1.1rem;
-  padding: 1.1rem;
+  gap: 1.25rem;
+  padding: 1.5rem;
 }
 
 .image-preview {
-  margin: 0;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
   border-radius: 7px;
@@ -845,29 +692,12 @@ function normalizeTelegramUrl(value: string): string {
     0 12px 24px rgba(15, 95, 73, 0.11);
 }
 
-.image-preview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-preview {
-  aspect-ratio: 16 / 10;
-}
-
 .qr-preview {
-  aspect-ratio: 1;
   max-width: 280px;
 }
 
-.qr-preview img {
-  object-fit: contain;
-  padding: 0.7rem;
-}
-
-.form-stack,
-.offices-list {
+/* ── Form layouts ── */
+.form-stack {
   display: grid;
   gap: 0.85rem;
 }
@@ -877,143 +707,44 @@ function normalizeTelegramUrl(value: string): string {
 .office-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1.6rem 0.85rem;
 }
 
 .intro-fields {
-  padding: 1rem 1rem 0;
+  padding: 1.5rem 1.5rem 0;
 }
 
-.field,
-.upload-box {
-  display: grid;
-  gap: 0.35rem;
-  color: var(--admin-theme-muted);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.field span,
-.upload-box span {
-  color: var(--admin-theme-contrast-soft);
-}
-
-.field input,
-.field textarea,
-.upload-box input {
-  width: 100%;
-  border: 1px solid var(--admin-theme-border-strong);
-  border-radius: 6px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.65rem 0.75rem;
-}
-
-.field textarea {
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.field input:focus,
-.field textarea:focus,
-.upload-box input:focus {
-  border-color: var(--admin-theme-primary);
-  outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
-}
-
-.wide {
+.form-grid .field-wide,
+.intro-fields .field-wide,
+.office-form-grid .field-wide {
   grid-column: 1 / -1;
 }
 
-.upload-box {
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  border: 1px dashed var(--admin-theme-border-strong);
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 38%, var(--admin-theme-surface));
-  padding: 0.75rem;
-}
-
-.upload-box input {
-  grid-column: 1 / -1;
-  padding: 0.55rem;
-}
-
-.upload-actions {
+/* ── Image upload panel (preview + button) ── */
+.image-upload-panel {
   display: grid;
-  gap: 0.65rem;
-}
-
-.upload-box--primary {
-  cursor: pointer;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  border: 1px dashed color-mix(in srgb, var(--admin-theme-primary) 55%, transparent);
-  border-radius: 10px;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface)),
-    color-mix(in srgb, var(--admin-theme-primary) 4%, var(--admin-theme-surface))
-  );
-  color: var(--admin-theme-primary);
-  padding: 0.85rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, border-color 0.2s ease;
-}
-
-.upload-box--primary:hover {
-  transform: translateY(-1px);
-  border-color: var(--admin-theme-primary);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--admin-theme-primary) 22%, var(--admin-theme-surface)),
-    color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface))
-  );
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
-}
-
-.upload-box--primary:focus-within {
-  outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 25%, transparent);
-  outline-offset: 2px;
-}
-
-.upload-box--primary span {
-  color: var(--admin-theme-primary);
-}
-
-.upload-box--primary input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.field-hint {
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-  line-height: 1.4;
+  gap: 0.75rem;
+  align-content: start;
 }
 
 .offices-list {
-  padding: 1rem;
+  display: grid;
+  gap: 0.95rem;
+  padding: 1.5rem;
 }
 
+/* ── Office editor ── */
 .office-editor {
   border: 1px solid var(--admin-theme-border);
   border-radius: 8px;
   background: var(--admin-theme-surface);
   overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.office-editor:hover {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  box-shadow: 0 4px 14px rgba(15, 95, 73, 0.08);
 }
 
 .office-editor-header {
@@ -1023,7 +754,7 @@ function normalizeTelegramUrl(value: string): string {
   gap: 1rem;
   border-bottom: 1px solid var(--admin-theme-border);
   background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
-  padding: 0.75rem 0.85rem;
+  padding: 0.75rem 1.5rem;
 }
 
 .office-heading {
@@ -1061,30 +792,11 @@ function normalizeTelegramUrl(value: string): string {
   color: var(--admin-theme-primary-deep);
   font-size: 0.74rem;
   font-weight: 900;
+  flex-shrink: 0;
 }
 
 .office-form-grid {
-  padding: 0.9rem;
-}
-
-:global(.admin-dark) .contact-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-}
-
-:global(.admin-dark) .btn-primary {
-  color: #071311;
+  padding: 1.25rem 1.5rem;
 }
 
 @media (min-width: 900px) {
@@ -1100,20 +812,13 @@ function normalizeTelegramUrl(value: string): string {
   }
 
   .manager-hero,
-  .panel-header,
   .office-editor-header {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .hero-actions,
-  .hero-actions .btn,
-  .card-actions {
+  .hero-actions {
     width: 100%;
-  }
-
-  .card-actions .icon-btn {
-    flex: 1;
   }
 
   .image-editor-grid,

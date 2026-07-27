@@ -24,15 +24,12 @@ function confirmModal() {
 }
 
 // ── Back to Dashboard ──
-// Any admin page that opens a public page (via a "view page" action) should
+// Any admin page that opens a public page (via a "view page" action) must
 // first do: localStorage.setItem('admin_return_path', route.path)
-// before window.open(...). localStorage is shared across all tabs of the
-// same origin (unlike sessionStorage, which only copies to a new tab when
-// window.open is called WITHOUT 'noopener' — since our admin pages use
-// 'noopener,noreferrer' for security, we need localStorage instead).
-// This reads it back and clears it, so the button returns to whichever
-// admin page the user actually came from. If nothing was stored (e.g. the
-// user navigated to the site normally), it falls back to /admin.
+// before window.open(...). This reads it back and clears it, so the
+// button returns to whichever admin page the user actually came from.
+// If nothing was stored (e.g. the user navigated to the site normally),
+// it falls back to /admin.
 function goToAdmin() {
   const returnPath = localStorage.getItem('admin_return_path')
   localStorage.removeItem('admin_return_path')
