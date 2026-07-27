@@ -16,7 +16,6 @@ const loadError = ref('')
 const stats = ref({
   pages: { total: 0, published: 0, draft: 0 },
   programs: { total: 0, published: 0, draft: 0 },
-  news: { total: 0, published: 0, draft: 0 },
   media: 0,
   partners: 0,
   offices: 0,
@@ -24,7 +23,6 @@ const stats = ref({
   donations: 0,
 })
 const recentPages = ref<{ slug: string; title: string; status: string; updated_at: string; locale: string }[]>([])
-const recentNews = ref<{ slug: string; title: string; status: string; published_at: string | null }[]>([])
 const programsByPillar = ref<{ pillar: string; status: string; title: string }[]>([])
 
 // ── Computed ──
@@ -48,15 +46,14 @@ const adminRole = computed(() => {
 })
 
 const totalContent = computed(() =>
-  stats.value.pages.total + stats.value.programs.total + stats.value.news.total,
+  stats.value.pages.total + stats.value.programs.total,
 )
 
 const publishedRate = computed(() => {
   if (!totalContent.value) return 0
   const published =
     stats.value.pages.published +
-    stats.value.programs.published +
-    stats.value.news.published
+    stats.value.programs.published
   return Math.round((published / totalContent.value) * 100)
 })
 
@@ -64,8 +61,7 @@ const draftRate = computed(() => {
   if (!totalContent.value) return 0
   const draft =
     stats.value.pages.draft +
-    stats.value.programs.draft +
-    stats.value.news.draft
+    stats.value.programs.draft
   return Math.round((draft / totalContent.value) * 100)
 })
 
@@ -84,13 +80,6 @@ const quickActions = [
     to: '/admin/programs',
     color: 'blue',
     icon: 'layers',
-  },
-  {
-    label: 'News & Updates',
-    detail: 'Draft or publish news articles',
-    to: '/admin/editor/news',
-    color: 'amber',
-    icon: 'file-text',
   },
   {
     label: 'Media Library',
@@ -153,7 +142,6 @@ async function loadDashboard() {
     const results = await Promise.allSettled([
       supabase.from('pages').select('slug, title, status, updated_at, locale'),
       supabase.from('programs').select('slug, title, pillar, status'),
-      supabase.from('news_posts').select('slug, title, status, published_at', { count: 'exact', head: false }).order('published_at', { ascending: false }).limit(8),
       supabase.from('media_assets').select('id', { count: 'exact', head: true }),
       supabase.from('partners').select('id', { count: 'exact', head: true }),
       supabase.from('offices').select('id', { count: 'exact', head: true }),
@@ -181,24 +169,15 @@ async function loadDashboard() {
       programsByPillar.value = rows
     }
 
-    // News
-    if (results[2].status === 'fulfilled') {
-      const rows = (results[2].value.data ?? []) as { slug: string; title: string; status: string; published_at: string | null }[]
-      stats.value.news.total = results[2].value.count ?? rows.length
-      stats.value.news.published = countByStatus(rows, 'published')
-      stats.value.news.draft = countByStatus(rows, 'draft')
-      recentNews.value = rows.slice(0, 5)
-    }
-
     // Counts
     const extractCount = (result: PromiseSettledResult<{ count: number | null }>, fallback = 0) =>
       result.status === 'fulfilled' ? (result.value.count ?? fallback) : fallback
 
-    stats.value.media = extractCount(results[3])
-    stats.value.partners = extractCount(results[4])
-    stats.value.offices = extractCount(results[5])
-    stats.value.profiles = extractCount(results[6])
-    stats.value.donations = extractCount(results[7])
+    stats.value.media = extractCount(results[2])
+    stats.value.partners = extractCount(results[3])
+    stats.value.offices = extractCount(results[4])
+    stats.value.profiles = extractCount(results[5])
+    stats.value.donations = extractCount(results[6])
 
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Could not load dashboard data.'
@@ -324,19 +303,6 @@ const pillarStats = computed(() => {
               </div>
             </article>
 
-            <article class="stat-card card-amber">
-              <div class="stat-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              </div>
-              <div class="stat-body">
-                <strong class="stat-value">{{ stats.news.total }}</strong>
-                <span class="stat-label">News</span>
-              </div>
-              <div v-if="stats.news.total" class="stat-badge" :style="{ '--badge-color': '#f59e0b' }">
-                {{ stats.news.published }} published
-              </div>
-            </article>
-
             <article class="stat-card card-violet">
               <div class="stat-icon-wrap">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -397,22 +363,22 @@ const pillarStats = computed(() => {
                   <div class="legend-item">
                     <span class="legend-dot" style="background: #10b981"></span>
                     <span class="legend-label">Published</span>
-                    <strong class="legend-value">{{ 
-                      stats.pages.published + stats.programs.published + stats.news.published 
+                    <strong class="legend-value">{{
+                      stats.pages.published + stats.programs.published
                     }}</strong>
                   </div>
                   <div class="legend-item">
                     <span class="legend-dot" style="background: #f59e0b"></span>
                     <span class="legend-label">Draft</span>
-                    <strong class="legend-value">{{ 
-                      stats.pages.draft + stats.programs.draft + stats.news.draft 
+                    <strong class="legend-value">{{
+                      stats.pages.draft + stats.programs.draft
                     }}</strong>
                   </div>
                   <div class="legend-item">
                     <span class="legend-dot" style="background: #374151"></span>
                     <span class="legend-label">Archived</span>
-                    <strong class="legend-value">{{ 
-                      totalContent - (stats.pages.published + stats.programs.published + stats.news.published + stats.pages.draft + stats.programs.draft + stats.news.draft) 
+                    <strong class="legend-value">{{
+                      totalContent - (stats.pages.published + stats.programs.published + stats.pages.draft + stats.programs.draft)
                     }}</strong>
                   </div>
                 </div>
@@ -463,7 +429,7 @@ const pillarStats = computed(() => {
                 <span class="chart-total">Latest</span>
               </header>
               <div class="chart-body chart-body-scroll">
-                <div v-if="!recentPages.length && !recentNews.length" class="empty-state">
+                <div v-if="!recentPages.length" class="empty-state">
                   <span>No recent activity yet.</span>
                 </div>
                 <div v-for="page in recentPages.slice(0, 6)" :key="'page-' + page.slug" class="activity-row">
@@ -476,18 +442,6 @@ const pillarStats = computed(() => {
                       <span class="activity-status" :style="{ background: statusColor(page.status) + '18', color: statusColor(page.status) }">{{ page.status }}</span>
                     </div>
                     <span class="activity-meta">{{ page.locale === 'kh' ? 'Khmer' : 'English' }} · {{ formatDate(page.updated_at) }}</span>
-                  </div>
-                </div>
-                <div v-for="news in recentNews.slice(0, 3)" :key="'news-' + news.slug" class="activity-row">
-                  <div class="activity-icon-wrap" style="background: #f59e0b12; color: #f59e0b">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                  </div>
-                  <div class="activity-body">
-                    <div class="activity-head">
-                      <RouterLink :to="`/admin/editor/news`" class="activity-title">{{ news.title }}</RouterLink>
-                      <span class="activity-status" :style="{ background: statusColor(news.status) + '18', color: statusColor(news.status) }">{{ news.status }}</span>
-                    </div>
-                    <span class="activity-meta">{{ formatDate(news.published_at) }}</span>
                   </div>
                 </div>
               </div>
@@ -565,7 +519,7 @@ const pillarStats = computed(() => {
   flex: 1;
   width: 100%;
   padding: 1.5rem 2rem 2.5rem;
-  padding-top: calc(60px + 1.5rem);
+  padding-top: calc(60px + 0.25rem);
 }
 
 @media (min-width: 900px) {
@@ -1260,7 +1214,7 @@ const pillarStats = computed(() => {
 @media (max-width: 780px) {
   .dash-main {
     padding: 1rem;
-    padding-top: calc(60px + 1rem);
+    padding-top: calc(60px + 0.25rem);
   }
 
   .welcome-banner {

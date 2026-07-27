@@ -18,53 +18,6 @@
       </button>
     </nav>
 
-    <!-- ===================== OVERVIEW ===================== -->
-    <section class="section overview-section" id="overview">
-      <div class="container">
-        <div class="section-header" ref="overviewHeaderRef">
-          <span class="section-label">Our Approach</span>
-          <h2>{{ heroHeadline }}</h2>
-          <p class="section-desc">{{ heroIntro }}</p>
-        </div>
-        <div class="overview-grid">
-          <div
-            v-for="(card, i) in overviewCards"
-            :key="card.title"
-            class="overview-card"
-            :class="{ 'card-visible': visibleCards.overview[i] === true }"
-            :style="{ '--delay': `${i * 120}ms` }"
-            :ref="el => setRef(el, 'overview', i)"
-          >
-            <div class="oc-icon-wrap">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" v-html="card.svgPaths" />
-            </div>
-            <h3>{{ card.title }}</h3>
-            <p>{{ card.text }}</p>
-            <div class="oc-shimmer" aria-hidden="true"></div>
-            <div class="oc-corner" aria-hidden="true"></div>
-          </div>
-        </div>
-
-        <!-- DB Sections content (when available from Supabase) -->
-        <div v-if="dbSectionsContent.length > 0" class="db-sections">
-          <div v-for="section in dbSectionsContent" :key="section.id" class="db-section-card">
-            <div class="db-section-inner">
-              <span class="db-section-label">{{ section.label }}</span>
-              <h3 v-if="section.heading">{{ section.heading }}</h3>
-              <p v-if="section.body">{{ section.body }}</p>
-              <div v-if="section.items.length > 0" class="db-section-items">
-                <div v-for="item in section.items" :key="item.id" class="db-section-item">
-                  <strong>{{ item.title }}</strong>
-                  <span v-if="item.subtitle">{{ item.subtitle }}</span>
-                  <p v-if="item.body">{{ item.body }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ===================== INITIATIVES ===================== -->
     <section class="section initiatives-section alt-bg" id="initiatives">
       <div class="container">
@@ -326,14 +279,13 @@ import { useEnvironmentProgram } from '@/composables/useEnvironmentProgram'
 
 const {
   metrics: dbMetrics,
-  sections: dbSections,
   partners: dbPartners,
   load: loadDbData,
   setupRealtime: setupEnvRealtime,
   cleanupRealtime: cleanupEnvRealtime,
 } = useEnvironmentProgram()
 
-/* ─── Programs table metadata (hero content) ───── */
+/* ─── Programs table metadata ───── */
 const FALLBACK_TEAM_CARDS = [
   {
     role: 'Program Director',
@@ -357,10 +309,7 @@ const FALLBACK_TEAM_CARDS = [
   },
 ]
 
-const heroHeadline = ref('Environmental Stewardship in Action')
-const heroIntro = ref(
-  'Our environment program takes a holistic approach to conservation, combining immediate action with long-term community education and sustainable development.'
-)
+const metaStatsBand = ref<Array<{ number: string; label: string; description: string }> | null>(null)
 const teamCards = ref(FALLBACK_TEAM_CARDS)
 const quoteText = ref('We do not inherit the earth from our ancestors; we borrow it from our children. Our environmental program is a pledge to protect that inheritance and ensure future generations inherit a planet that is healthy, vibrant, and full of possibility.')
 const quoteCite = ref('— SETE SENA Environmental Team')
@@ -392,11 +341,14 @@ async function loadFromProgramsTable() {
 
     if (data && data.metadata) {
       const meta = data.metadata as Record<string, unknown>
-      if (typeof meta.headline === 'string' && meta.headline.trim()) {
-        heroHeadline.value = meta.headline.trim()
-      }
-      if (typeof meta.intro === 'string' && meta.intro.trim()) {
-        heroIntro.value = meta.intro.trim()
+      // Impact statistics — from meta.statsBand (overrides the impact_metrics table)
+      if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+        const items = meta.statsBand as Array<Record<string, unknown>>
+        metaStatsBand.value = items.map(s => ({
+          number: String(s.number ?? ''),
+          label: String(s.label ?? ''),
+          description: String(s.description ?? ''),
+        }))
       }
 
       // Initiatives — from meta.initiatives
@@ -499,36 +451,13 @@ async function loadFromProgramsTable() {
   }
 }
 
-/* Page sections from DB — shown below overview cards when available */
-const dbSectionsContent = computed(() => {
-  return dbSections.value.map(s => ({
-    id: s.id,
-    label: s.label,
-    heading: s.heading || '',
-    body: s.body || '',
-    items: s.items.map(it => ({
-      id: it.id,
-      title: it.title,
-      subtitle: it.subtitle || '',
-      body: it.body || '',
-    })),
-  }))
-})
-
 /* ─── Static data (fallback defaults) ──────────── */
 const sectionNavItems = [
-  { id: 'overview', label: 'Approach' },
   { id: 'initiatives', label: 'Initiatives' },
   { id: 'impact', label: 'Impact' },
   { id: 'process', label: 'Process' },
   { id: 'gallery', label: 'Gallery' },
   { id: 'partners', label: 'Partners' },
-]
-
-const overviewCards = [
-  { title: 'Conservation', text: 'Protecting and restoring natural habitats, wildlife corridors, and biodiversity hotspots through community-led initiatives and scientific research.', svgPaths: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
-  { title: 'Sustainability', text: 'Promoting renewable energy, sustainable agriculture, and circular economy practices that reduce environmental impact while supporting livelihoods.', svgPaths: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>' },
-  { title: 'Community Engagement', text: 'Empowering local communities with knowledge, resources, and tools to actively participate in environmental protection and climate action.', svgPaths: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
 ]
 
 const initiatives = ref<InitiativeItem[]>([
@@ -551,8 +480,18 @@ const impactStats = reactive<Array<{ label: string; end: number; suffix: string;
   impactStatsRaw.map(s => ({ ...s, displayed: s.end + s.suffix }))
 )
 
-/* Metrics from DB or static fallback */
+/* Metrics: admin-managed statsBand takes priority, then DB, then static fallback */
+const STAT_ICON_CYCLE = ['tree', 'community', 'globe', 'people']
 const displayMetrics = computed(() => {
+  if (metaStatsBand.value && metaStatsBand.value.length > 0) {
+    return metaStatsBand.value.map((s, i) => ({
+      label: s.label,
+      displayed: s.number,
+      icon: STAT_ICON_CYCLE[i % STAT_ICON_CYCLE.length]!,
+      end: 0,
+      suffix: '',
+    }))
+  }
   if (dbMetrics.value.length > 0) {
     return dbMetrics.value.map(m => ({
       label: m.label,
@@ -603,10 +542,9 @@ const displayPartners = computed(() => {
 })
 
 /* ─── Visibility state ─────────────────────────── */
-type CardGroup = 'overview' | 'initiatives' | 'process'
+type CardGroup = 'initiatives' | 'process'
 
 const visibleCards = reactive<Record<CardGroup, boolean[]>>({
-  overview: Array(overviewCards.length).fill(false),
   initiatives: Array(initiatives.value.length).fill(false),
   process: Array(processSteps.value.length).fill(false),
 })
@@ -618,9 +556,8 @@ const partnersVisible = ref(false)
 const activeSection = ref(0)
 
 /* ─── Template refs ────────────────────────────── */
-const cardRefs = reactive<Record<CardGroup, (HTMLElement | null)[]>>({ overview: [], initiatives: [], process: [] })
+const cardRefs = reactive<Record<CardGroup, (HTMLElement | null)[]>>({ initiatives: [], process: [] })
 const scrollProgressRef = ref<HTMLElement | null>(null)
-const overviewHeaderRef = ref<HTMLElement | null>(null)
 const initHeaderRef = ref<HTMLElement | null>(null)
 const initCtaRef = ref<HTMLElement | null>(null)
 const impactSectionRef = ref<HTMLElement | null>(null)
@@ -723,8 +660,6 @@ onMounted(() => {
     if (!ticking) { requestAnimationFrame(() => { handleScroll(); ticking = false }); ticking = true }
   }, { passive: true })
 
-  cardRefs.overview.forEach((el, i) => observe(el, () => setTimeout(() => { visibleCards.overview[i] = true }, i * 120)))
-  observe(overviewHeaderRef.value, () => overviewHeaderRef.value?.classList.add('entered'))
   observe(initHeaderRef.value, () => initHeaderRef.value?.classList.add('entered'))
   cardRefs.initiatives.forEach((el, i) => observe(el, () => setTimeout(() => { visibleCards.initiatives[i] = true }, i * 100)))
   observe(initCtaRef.value, () => initCtaRef.value?.classList.add('entered'))
@@ -805,21 +740,6 @@ onBeforeUnmount(() => {
 .alt-bg { background: var(--color-cream-soft, #edf6f1); }
 .light-header h2 { color: #ffffff; }
 .light-label { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: var(--env-gold); }
-
-/* ─── OVERVIEW ─── */
-.overview-section { background: var(--color-cream, #f7fbf8); position: relative; }
-.overview-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(15,143,105,0.1), transparent); }
-.overview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-.overview-card { background: #ffffff; border: 1px solid rgba(15,143,105,0.08); border-radius: 1.25rem; padding: 2.25rem 2rem; position: relative; overflow: hidden; cursor: default; box-shadow: 0 2px 12px rgba(0,0,0,0.04); opacity: 0; transform: translateY(36px) scale(0.96); transition: opacity 0.55s ease var(--delay,0ms), transform 0.55s cubic-bezier(0.34,1.36,0.64,1) var(--delay,0ms), border-color 0.3s ease, box-shadow 0.35s ease; }
-.overview-card.card-visible { opacity: 1; transform: translateY(0) scale(1); }
-.overview-card:hover { border-color: rgba(15,143,105,0.25); box-shadow: 0 12px 40px rgba(15,143,105,0.08), 0 0 0 3px rgba(15,143,105,0.05); transform: translateY(-6px) scale(1.01); }
-.oc-icon-wrap { width: 3.25rem; height: 3.25rem; display: flex; align-items: center; justify-content: center; border-radius: 0.85rem; background: var(--env-primary-light); color: var(--env-primary); margin-bottom: 1.25rem; transition: transform 0.35s cubic-bezier(0.34,1.6,0.64,1), background 0.3s, color 0.3s; }
-.overview-card:hover .oc-icon-wrap { transform: scale(1.15) rotate(-6deg); background: var(--env-primary); color: #ffffff; }
-.overview-card h3 { font-weight: 700; margin-bottom: 0.75rem; color: var(--color-ink, #16231d); font-size: 1.1rem; }
-.overview-card p { color: var(--color-ink-soft, #53645b); line-height: 1.7; font-size: 0.92rem; }
-.oc-shimmer { position: absolute; inset: 0; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%); background-size: 200% 100%; background-position: 200% 0; transition: background-position 0.65s ease; pointer-events: none; border-radius: inherit; }
-.overview-card:hover .oc-shimmer { background-position: -200% 0; }
-.oc-corner { position: absolute; top: 0; right: 0; width: 60px; height: 60px; background: radial-gradient(circle at 100% 0%, rgba(15,143,105,0.04), transparent 70%); pointer-events: none; border-radius: 0 1.25rem 0 0; }
 
 /* DB Sections */
 .db-sections { display: grid; gap: 1rem; margin-top: 2rem; }
@@ -1018,7 +938,7 @@ onBeforeUnmount(() => {
   .gallery-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 180px; }
   .partners-grid { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 900px) { .hero-scroll-indicator { display: none; } .hero-content { padding: 3rem 0; } .hero { min-height: auto; padding: 6rem 0 4rem; } .hero-line { font-size: clamp(2.2rem,7vw,3.5rem); } }
+
 @media (max-width: 768px) {
   .section { padding: 3.5rem 0; }
   .overview-grid, .initiatives-list { grid-template-columns: 1fr; }
@@ -1029,7 +949,7 @@ onBeforeUnmount(() => {
   .gallery-grid { grid-template-columns: 1fr 1fr; grid-auto-rows: 160px; }
   .gallery-item { grid-column: span 1 !important; }
   .partners-grid { grid-template-columns: repeat(2, 1fr); }
-  .hero-line { font-size: clamp(1.8rem,6vw,2.8rem); }
+
 }
 @media (max-width: 480px) {
   .impact-grid { gap: 0.75rem; }

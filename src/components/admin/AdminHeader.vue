@@ -1,74 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
-const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const auth = useAuthStore()
 const ui = useUiStore()
-
-function titleFromSlug(value: string) {
-  return value
-    .replace(/^get-involved-/, '')
-    .replace(/^programs-/, '')
-    .replace(/^impact-/, '')
-    .replace(/^contact-/, '')
-    .replace(/^about-/, '')
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (c: string) => c.toUpperCase())
-}
-
-const pageTitle = computed(() => {
-  const path = route.path
-  if (path === '/admin' || path === '/admin/') return t('admin.pages.dashboard')
-  if (path.startsWith('/admin/editor/')) {
-    const slug = path.replace('/admin/editor/', '')
-    return titleFromSlug(slug)
-  }
-  if (path === '/admin/programs') return t('admin.pages.programsOverview')
-  if (path === '/admin/get-involved') return t('admin.pages.getInvolved')
-  if (path === '/admin/volunteer') return t('admin.pages.volunteer') || 'Volunteer'
-  if (path === '/admin/contact') return t('admin.pages.contact') || 'Contact'
-  if (path === '/admin/education') return t('admin.pages.educationDashboard')
-  if (path === '/admin/environment')
-    return t('admin.pages.environmentDashboard')
-  if (path === '/admin/livelihood') return t('admin.pages.livelihoodDashboard')
-  if (path === '/admin/child-protection')
-    return t('admin.pages.childProtectionDashboard')
-  if (path === '/admin/media') return t('admin.pages.mediaLibrary')
-  if (path === '/admin/pages') return t('admin.pages.pagesManager')
-  if (path === '/admin/settings') return t('admin.pages.settings')
-  if (path === '/admin/login') return t('admin.pages.login')
-  if (path.startsWith('/admin/modules/')) {
-    const mod = path.replace('/admin/modules/', '')
-    return titleFromSlug(mod)
-  }
-  return t('admin.pages.admin')
-})
-
-const pageContext = computed(() => {
-  const path = route.path
-  if (path.startsWith('/admin/editor/')) return t('admin.context.websitePage')
-  if (path === '/admin/programs') return t('admin.context.programOverview')
-  if (path === '/admin/get-involved') return t('admin.context.pageManagement')
-  if (path === '/admin/volunteer') return t('admin.context.pageManagement')
-  if (path === '/admin/contact') return t('admin.context.pageManagement')
-  if (path === '/admin/education') return t('admin.context.programManagement')
-  if (path === '/admin/environment') return t('admin.context.programManagement')
-  if (path === '/admin/livelihood') return t('admin.context.programManagement')
-  if (path === '/admin/child-protection')
-    return t('admin.context.programManagement')
-  if (path.startsWith('/admin/modules/'))
-    return t('admin.context.contentModule')
-  if (path === '/admin/media') return t('admin.context.assetLibrary')
-  if (path === '/admin/settings') return t('admin.context.preferences')
-  return t('admin.context.workspace')
-})
 
 const userInitials = computed(() => {
   const email = auth.user?.email || ''
@@ -95,64 +35,35 @@ function goToSite() {
 <template>
   <header class="admin-header">
     <div class="admin-header-inner">
-      <div class="left">
-        <button
-          :class="['sidebar-toggle', { active: ui.sidebarOpen }]"
-          type="button"
-          :aria-label="
-            ui.sidebarOpen
-              ? t('admin.actions.hideSidebar')
-              : t('admin.actions.showSidebar')
-          "
-          :aria-pressed="ui.sidebarOpen"
-          @click="ui.toggleSidebar"
+      <button
+        class="icon-btn sidebar-toggle-btn"
+        type="button"
+        :aria-label="
+          ui.sidebarOpen
+            ? t('admin.actions.hideSidebar')
+            : t('admin.actions.showSidebar')
+        "
+        :aria-pressed="ui.sidebarOpen"
+        @click="ui.toggleSidebar"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
         >
-          <svg
-            v-if="ui.sidebarOpen"
-            class="toggle-icon"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-          <svg
-            v-else
-            class="toggle-icon"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M4 7h16" />
-            <path d="M4 12h16" />
-            <path d="M4 17h16" />
-          </svg>
-        </button>
-        <div class="brand-badge">
-          <span class="brand-dot" aria-hidden="true"></span>
-          <div class="title-stack">
-            <span class="section-label">{{ pageContext }}</span>
-            <h1 class="page-title">{{ pageTitle }}</h1>
-          </div>
-        </div>
-      </div>
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
 
       <div class="actions">
         <div class="icon-group">
-          <LanguageSwitcher class="admin-language-switcher" />
           <button
             class="icon-btn view-site-btn"
             type="button"
@@ -268,89 +179,26 @@ function goToSite() {
   min-height: 60px;
 }
 
-.left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
+.sidebar-toggle-btn {
+  flex-shrink: 0;
 }
 
-.brand-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
+.sidebar-toggle-btn[aria-pressed='true'] {
+  border-color: var(--hdr-primary-deep);
+  background: var(--hdr-primary-deep);
+  color: #ffffff;
 }
 
-.brand-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
+.sidebar-toggle-btn[aria-pressed='true']:hover {
+  border-color: var(--hdr-primary);
   background: var(--hdr-primary);
-  flex-shrink: 0;
+  color: #ffffff;
 }
 
-.page-title {
-  margin: 0;
-  color: var(--hdr-text);
-  font-size: 1.05rem;
-  font-weight: 800;
-  line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.title-stack {
-  display: grid;
-  gap: 0.12rem;
-  min-width: 0;
-}
-
-.section-label {
+.sidebar-toggle-btn[aria-pressed='false'] {
+  border-color: var(--hdr-border);
+  background: transparent;
   color: var(--hdr-muted);
-  font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Sidebar toggle */
-.sidebar-toggle {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--hdr-border);
-  border-radius: 10px;
-  background: var(--hdr-surface);
-  color: var(--hdr-text);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    color 0.15s ease;
-}
-
-.sidebar-toggle:hover,
-.sidebar-toggle.active {
-  background: var(--admin-theme-surface-soft);
-  border-color: var(--admin-theme-border-strong);
-  color: var(--hdr-primary-deep);
-}
-
-.sidebar-toggle.active {
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14);
-}
-
-.toggle-icon {
-  display: block;
 }
 
 /* Actions */
@@ -364,14 +212,6 @@ function goToSite() {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-}
-
-.admin-language-switcher {
-  --language-switcher-text: var(--hdr-muted);
-  --language-switcher-surface: var(--hdr-surface);
-  --language-switcher-border: var(--hdr-border);
-  --language-switcher-hover: var(--admin-theme-surface-soft);
-  --language-switcher-accent: var(--hdr-primary-deep);
 }
 
 .icon-btn {
@@ -467,8 +307,6 @@ function goToSite() {
   --hdr-bg: color-mix(in srgb, var(--admin-theme-surface) 92%, transparent);
 }
 
-:global(.admin-dark .sidebar-toggle:hover),
-:global(.admin-dark .sidebar-toggle.active),
 :global(.admin-dark .icon-btn:hover) {
   background: var(--admin-theme-surface-soft);
   border-color: var(--admin-theme-border-strong);
@@ -482,10 +320,6 @@ function goToSite() {
   color: var(--admin-theme-contrast);
   border-color: var(--admin-theme-primary);
   background: var(--admin-theme-surface-soft);
-}
-
-:global(.admin-dark .brand-dot) {
-  background: var(--admin-theme-primary);
 }
 
 @media (max-width: 800px) {
@@ -511,10 +345,6 @@ function goToSite() {
 
   .user-email {
     display: none;
-  }
-
-  .page-title {
-    font-size: 0.9rem;
   }
 }
 </style>

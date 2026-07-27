@@ -24,10 +24,6 @@ import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
 import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
 import QrDonateView from '@/views/public/DonateView.vue'
 
-// 👇 NEW: import news views
-import NewsView from '@/views/public/NewsView.vue'
-import NewsDetailView from '@/views/public/NewsDetailView.vue'
-
 type ManagedPageOptions = {
   name?: string
   alias?: string | string[]
@@ -94,8 +90,4 @@ export const publicRoutes = [
 
   // Donation (QR)
   managedPage('/qr-donate', 'qr-donate', QrDonateView),
-
-  // 👇 NEW: News routes
-  { path: '/news', component: NewsView, name: 'news' },
-  { path: '/news/:id', component: NewsDetailView, name: 'news-detail' },
 ]
