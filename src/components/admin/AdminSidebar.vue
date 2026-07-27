@@ -42,7 +42,7 @@ const workspaceLinks: NavItem[] = [
 ]
 
 const pageGroups: PageGroup[] = [
-  { slug: 'home', labelKey: 'admin.sidebar.home', items: [] },
+  { slug: 'home', labelKey: 'admin.sidebar.home', path: '/admin/home', items: [] },
   {
     slug: 'slideshow',
     labelKey: 'admin.sidebar.slideshow',

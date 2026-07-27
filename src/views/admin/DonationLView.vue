@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { Save } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
 import ImageCropModal from '@/components/admin/ImageCropModal.vue'
+import { useAdminTheme } from '@/composables/useAdminTheme'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
 import { imageUploadHelpText, isAllowedImageFile, isSameImage } from '@/lib/media'
@@ -16,30 +18,23 @@ import {
 
 const ui = useUiStore()
 const media = useMediaStore()
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
 
-// Exactly two fixed bank slots — banks can be edited but never added or
-// removed, so the public Support Us page always shows the same two cards.
+useAdminTheme()
+
 const methods = ref<DonationMethod[]>(defaultDonationMethods())
 const pendingFiles = reactive<Record<string, File>>({})
 const previews = reactive<Record<string, string>>({})
 
-// Only one bank card is shown at a time; the switcher toggles between them.
 const activeIndex = ref(0)
-// methods always has the two fixed slots from defaultDonationMethods(), so
-// the fallback here only guards TypeScript's indexed-access check.
 const activeMethod = computed<DonationMethod>(
   () => methods.value[activeIndex.value] ?? methods.value[0]!,
 )
 
 const loading = ref(true)
-// Each card saves independently, so track saving/message state per bank id
-// rather than a single global one.
 const savingId = ref<string | null>(null)
 const cardMessages = reactive<Record<string, { text: string; type: 'success' | 'error' }>>({})
 
-// Merges saved rows into the fixed slots (matching by id, falling back to
-// position) so the slot's id — and therefore its identity on save — never
-// changes even if older saved data used different ids.
 function toFixedSlots(saved: DonationMethod[]): DonationMethod[] {
   return defaultDonationMethods().map((slot, index) => {
     const match = saved.find((m) => m.id === slot.id) ?? saved[index]
@@ -52,7 +47,7 @@ onMounted(async () => {
     const saved = await fetchDonationMethods()
     if (saved.length) methods.value = toFixedSlots(saved)
   } catch {
-    // No settings saved yet — start from defaults.
+    // defaults
   } finally {
     loading.value = false
   }
@@ -64,17 +59,19 @@ onBeforeUnmount(() => {
 })
 
 function revokePreview(id: string) {
-  if (previews[id]) {
-    URL.revokeObjectURL(previews[id])
-    delete previews[id]
-  }
+  if (previews[id]) { URL.revokeObjectURL(previews[id]); delete previews[id] }
 }
 
-function displayedQr(method: DonationMethod) {
-  return previews[method.id] || method.qrUrl
+function triggerFileUpload() {
+  const el = document.getElementById(activeMethod.value.id + '-qr-upload')
+  el?.click()
 }
 
-// Holds the just-picked (not yet cropped) file while the crop modal is open.
+const activeQrSrc = computed(() => {
+  const method = activeMethod.value
+  return previews[method.id] || method.qrUrl || ''
+})
+
 const cropTarget = ref<{ methodId: string; file: File; src: string } | null>(null)
 
 async function onFileChange(method: DonationMethod, event: Event) {
@@ -82,20 +79,8 @@ async function onFileChange(method: DonationMethod, event: Event) {
   const file = input.files?.[0]
   input.value = ''
   if (!file) return
-
-  if (!isAllowedImageFile(file)) {
-    cardMessages[method.id] = { text: `Please choose ${imageUploadHelpText()}`, type: 'error' }
-    return
-  }
-
-  if (method.qrUrl && (await isSameImage(file, method.qrUrl))) {
-    cardMessages[method.id] = {
-      text: 'That image matches the current QR code — choose a different image to upload.',
-      type: 'error',
-    }
-    return
-  }
-
+  if (!isAllowedImageFile(file)) { cardMessages[method.id] = { text: `Please choose ${imageUploadHelpText()}`, type: 'error' }; return }
+  if (method.qrUrl && (await isSameImage(file, method.qrUrl))) { cardMessages[method.id] = { text: 'That image matches the current QR code — choose a different image to upload.', type: 'error' }; return }
   delete cardMessages[method.id]
   cropTarget.value = { methodId: method.id, file, src: URL.createObjectURL(file) }
 }
@@ -109,7 +94,6 @@ function onCropConfirm(croppedFile: File) {
   const methodId = cropTarget.value?.methodId
   closeCropTarget()
   if (!methodId) return
-
   revokePreview(methodId)
   pendingFiles[methodId] = croppedFile
   previews[methodId] = URL.createObjectURL(croppedFile)
@@ -118,15 +102,11 @@ function onCropConfirm(croppedFile: File) {
 function reopenCrop(method: DonationMethod) {
   const existing = pendingFiles[method.id]
   if (!existing) return
-  // A fresh object URL for this crop session — independent of `previews`, so
-  // cancelling doesn't revoke the URL the card's thumbnail is still using.
   cropTarget.value = { methodId: method.id, file: existing, src: URL.createObjectURL(existing) }
 }
 
 function removeQr(method: DonationMethod) {
-  revokePreview(method.id)
-  delete pendingFiles[method.id]
-  method.qrUrl = ''
+  revokePreview(method.id); delete pendingFiles[method.id]; method.qrUrl = ''
 }
 
 async function uploadQr(method: DonationMethod, file: File) {
@@ -137,69 +117,47 @@ async function uploadQr(method: DonationMethod, file: File) {
 
 async function saveCard(method: DonationMethod, index: number) {
   if (savingId.value) return
-
-  if (!method.bank.trim()) {
-    cardMessages[method.id] = { text: 'This bank needs a name before saving.', type: 'error' }
-    return
-  }
-
-  savingId.value = method.id
-  delete cardMessages[method.id]
-
+  if (!method.bank.trim()) { cardMessages[method.id] = { text: 'This bank needs a name before saving.', type: 'error' }; return }
+  savingId.value = method.id; delete cardMessages[method.id]
   try {
     const file = pendingFiles[method.id]
-    if (file) {
-      method.qrUrl = await uploadQr(method, file)
-      delete pendingFiles[method.id]
-      revokePreview(method.id)
-    }
-
+    if (file) { method.qrUrl = await uploadQr(method, file); delete pendingFiles[method.id]; revokePreview(method.id) }
     await saveDonationMethod(method, index)
-
     cardMessages[method.id] = { text: 'Saved. The Support Us page is now updated.', type: 'success' }
   } catch (e) {
-    cardMessages[method.id] = {
-      text: e instanceof Error ? e.message : 'Failed to save this bank.',
-      type: 'error',
-    }
-  } finally {
-    savingId.value = null
-  }
+    cardMessages[method.id] = { text: e instanceof Error ? e.message : 'Failed to save this bank.', type: 'error' }
+  } finally { savingId.value = null }
 }
 </script>
 
 <template>
-  <div :class="['admin-page', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['admin-page', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
       <main class="main">
         <section class="donation-overview" aria-label="Donation QR settings">
-          <header class="donation-header">
-            <div class="header-copy">
-              <p class="eyebrow">Support Us</p>
+          <header class="manager-hero">
+            <div class="manager-title">
+              <v-chip size="small" variant="tonal" color="primary" class="mb-1">Support Us</v-chip>
               <h1>Donation Banks & QR Codes</h1>
-              <p>
+              <p class="text-body-2 text-medium-emphasis" style="max-width: 640px;">
                 Manage the two banks shown on the public Support Us page — upload each bank's QR
                 code and edit its account details. Changes go live as soon as you save.
               </p>
             </div>
           </header>
 
-          <p v-if="loading" class="loading-note">Loading current settings...</p>
+          <div v-if="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading current settings...</span>
+          </div>
 
           <div v-else class="method-single">
             <div class="method-switcher" role="tablist" aria-label="Select bank to edit">
-              <button
-                v-for="(m, i) in methods"
-                :key="m.id"
-                type="button"
-                role="tab"
-                class="switch-tab"
-                :class="{ active: i === activeIndex }"
-                :aria-selected="i === activeIndex"
-                @click="activeIndex = i"
-              >
+              <button v-for="(m, i) in methods" :key="m.id" type="button" role="tab"
+                class="switch-tab" :class="{ active: i === activeIndex }"
+                :aria-selected="i === activeIndex" @click="activeIndex = i">
                 <span class="tab-badge">{{ i + 1 }}</span>
                 {{ i === 0 ? 'First bank' : 'Second bank' }}
               </button>
@@ -234,48 +192,26 @@ async function saveCard(method: DonationMethod, index: number) {
               <div class="method-body">
                 <div class="method-body-col">
                   <div class="qr-preview" :style="{ borderColor: activeMethod.headerColor }">
-                    <img
-                      v-if="displayedQr(activeMethod)"
-                      :src="displayedQr(activeMethod)"
-                      :alt="`${activeMethod.bank || 'Bank'} donation QR code`"
-                    />
+                    <v-img v-if="activeQrSrc" :key="activeMethod.id" :src="activeQrSrc" :alt="`${activeMethod.bank || 'Bank'} donation QR code`" max-height="260" contain class="bg-white rounded-lg" />
                     <div v-else class="qr-empty">
-                      <span class="qr-empty-icon" aria-hidden="true">&#9635;</span>
-                      <span>No QR uploaded yet</span>
+                      <v-icon size="32" color="disabled">mdi-qrcode</v-icon>
+                      <span class="text-body-2">No QR uploaded yet</span>
                     </div>
-                    <span v-if="pendingFiles[activeMethod.id]" class="pending-tag"
-                      >Not saved yet</span
-                    >
+                    <span v-if="pendingFiles[activeMethod.id]" class="pending-tag">Not saved yet</span>
                   </div>
 
-                  <div class="qr-actions">
-                    <label class="upload-btn">
-                      <input
-                        :id="`${activeMethod.id}-qr-upload`"
-                        :name="`${activeMethod.id}-qr-upload`"
-                        type="file"
-                        accept="image/*"
-                        class="sr-only"
-                        @change="onFileChange(activeMethod, $event)"
-                      />
-                      {{ displayedQr(activeMethod) ? 'Replace QR image' : 'Upload QR image' }}
-                    </label>
-                    <button
-                      v-if="pendingFiles[activeMethod.id]"
-                      type="button"
-                      class="crop-btn"
-                      @click="reopenCrop(activeMethod)"
-                    >
+                  <div class="d-flex flex-wrap ga-2">
+                    <v-btn variant="elevated" color="primary" @click="triggerFileUpload">
+                      {{ activeQrSrc ? 'Replace QR image' : 'Upload QR image' }}
+                    </v-btn>
+                    <input :id="`${activeMethod.id}-qr-upload`" type="file" accept="image/*" class="d-none"
+                      @change="onFileChange(activeMethod, $event)" />
+                    <v-btn v-if="pendingFiles[activeMethod.id]" variant="tonal" @click="reopenCrop(activeMethod)">
                       Adjust crop
-                    </button>
-                    <button
-                      v-if="displayedQr(activeMethod)"
-                      type="button"
-                      class="remove-btn"
-                      @click="removeQr(activeMethod)"
-                    >
+                    </v-btn>
+                    <v-btn v-if="activeQrSrc" variant="tonal" color="error" @click="removeQr(activeMethod)">
                       Remove QR
-                    </button>
+                    </v-btn>
                   </div>
                 </div>
 
@@ -329,181 +265,56 @@ async function saveCard(method: DonationMethod, index: number) {
         </section>
       </main>
     </div>
-  </div>
+
+    <AdminConfirmDialog v-model="confirmOpen" :title="confirmData.title" :body="confirmData.body" @confirm="confirmData.onConfirm()" />
+  </v-app>
 
   <Teleport to="body">
-    <ImageCropModal
-      v-if="cropTarget"
-      :image-src="cropTarget.src"
-      :file-name="cropTarget.file.name"
+    <ImageCropModal v-if="cropTarget" :image-src="cropTarget.src" :file-name="cropTarget.file.name"
       :mime-type="cropTarget.file.type || 'image/png'"
-      @confirm="onCropConfirm"
-      @cancel="closeCropTarget"
-    />
+      @confirm="onCropConfirm" @cancel="closeCropTarget" />
   </Teleport>
 </template>
 
 <style scoped>
-.admin-page {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-blue: var(--admin-theme-primary);
-  --admin-blue-deep: var(--admin-theme-primary-deep);
-  --admin-shadow: var(--admin-theme-shadow);
-
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: var(--admin-bg);
-  color: var(--admin-text);
-  font-family: var(--font-family-base);
-  transition: padding-left 0.25s ease;
+.admin-page { min-height: 100vh; background: var(--admin-bg); color: var(--admin-text); transition: padding-left 0.25s ease; }
+.admin-layout { display: flex; min-height: 100vh; }
+.main { flex: 1; width: 100%; padding: 2rem 2.25rem 2.5rem; }
+.donation-overview { display: grid; gap: 1.5rem; }
+.manager-hero {
+  display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
+  padding: 1.4rem 1.6rem; border: 1px solid var(--admin-theme-border); border-radius: 8px;
+  background: var(--admin-theme-surface); box-shadow: var(--admin-theme-shadow);
 }
-
-.admin-layout {
-  display: flex;
-  flex: 1;
-}
-
-.main {
-  flex: 1;
-  width: 100%;
-  padding: 1.5rem 2.25rem 2.5rem;
-  background: var(--admin-bg);
-}
-
-.donation-overview {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.donation-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.4rem 1.6rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--admin-surface-soft), var(--admin-surface));
-  box-shadow: var(--admin-shadow);
-}
-
-.header-copy {
-  display: grid;
-  gap: 0.5rem;
-  max-width: 640px;
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--admin-blue-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-h1 {
-  margin: 0;
-  color: var(--admin-contrast);
-  font-size: 1.85rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.header-copy p:not(.eyebrow) {
-  margin: 0;
-  color: var(--admin-muted);
-  line-height: 1.6;
-}
-
-.loading-note {
-  margin: 0;
-  color: var(--admin-muted);
-  font-weight: 600;
-}
-
-.method-single {
-  display: grid;
-  gap: 1rem;
-}
-
+.manager-hero h1 { margin: 0 0 0.25rem; color: var(--admin-theme-contrast); font-size: 1.85rem; font-weight: 800; letter-spacing: -0.01em; }
+.manager-title { display: grid; gap: 0.32rem; }
+.manager-hero p { margin: 0; line-height: 1.6; }
+.method-single { display: grid; gap: 1rem; }
 .method-switcher {
-  display: inline-flex;
-  gap: 0.4rem;
-  padding: 0.35rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface-soft);
+  display: inline-flex; gap: 0.4rem; padding: 0.35rem;
+  border: 1px solid var(--admin-theme-border); border-radius: 12px;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 55%, var(--admin-theme-surface));
   width: fit-content;
 }
-
 .switch-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 40px;
-  border: none;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--admin-muted);
-  padding: 0.5rem 1.1rem;
-  font-weight: 700;
-  font-size: 0.86rem;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
+  display: inline-flex; align-items: center; gap: 0.5rem; min-height: 40px;
+  border: none; border-radius: 9px; background: transparent; color: var(--admin-theme-muted);
+  padding: 0.5rem 1.1rem; font-weight: 700; font-size: 0.86rem; cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
 }
-
-.switch-tab:hover {
-  color: var(--admin-contrast);
-}
-
-.switch-tab.active {
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
-  box-shadow: var(--admin-shadow);
-}
-
+.switch-tab:hover { color: var(--admin-theme-contrast); }
+.switch-tab.active { background: var(--admin-theme-surface); color: var(--admin-theme-contrast); box-shadow: var(--admin-theme-shadow); }
 .tab-badge {
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  background: var(--admin-border);
-  color: var(--admin-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
+  display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 999px;
+  background: var(--admin-theme-border); color: var(--admin-theme-muted);
+  font-size: 0.72rem; font-weight: 800;
+  transition: background 0.18s ease, color 0.18s ease;
 }
-
-.switch-tab.active .tab-badge {
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-  color: #ffffff;
-}
-
+.switch-tab.active .tab-badge { background: var(--admin-theme-primary); color: #ffffff; }
 .method-card {
-  width: 100%;
-  border: 1px solid var(--admin-border);
-  border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
-  overflow: hidden;
-  display: grid;
-  align-content: start;
+  border: 1px solid var(--admin-theme-border); border-radius: 16px;
+  background: var(--admin-theme-surface); box-shadow: var(--admin-theme-shadow);
+  overflow: hidden; display: grid; align-content: start;
 }
 
 .method-head {
@@ -565,46 +376,15 @@ h1 {
 }
 
 .qr-preview {
-  position: relative;
-  border: 2px dashed;
-  border-radius: 12px;
-  min-height: 220px;
-  display: grid;
-  place-items: center;
-  padding: 0.75rem;
-  background: var(--admin-surface-soft);
+  position: relative; border: 2px dashed; border-radius: 12px; min-height: 220px;
+  display: grid; place-items: center; padding: 0.75rem;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 55%, var(--admin-theme-surface));
 }
-
-.qr-preview img {
-  max-width: 100%;
-  max-height: 260px;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.qr-empty {
-  display: grid;
-  gap: 0.35rem;
-  justify-items: center;
-  color: var(--admin-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.qr-empty-icon {
-  font-size: 2rem;
-}
-
+.qr-empty { display: grid; gap: 0.35rem; justify-items: center; color: var(--admin-theme-muted); }
 .pending-tag {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  background: #d9ad2f;
-  color: #1d3d5c;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 0.25rem 0.55rem;
-  border-radius: 999px;
+  position: absolute; top: 0.6rem; right: 0.6rem;
+  background: #d9ad2f; color: #1d3d5c; font-size: 0.68rem; font-weight: 800;
+  padding: 0.25rem 0.55rem; border-radius: 999px;
 }
 
 :global(.admin-dark) .pending-tag {
@@ -779,7 +559,12 @@ h1 {
     padding-left: 260px;
   }
 }
+.save-message { margin: 0 auto 0 0; font-weight: 700; font-size: 0.9rem; }
+.save-message.success { color: var(--admin-theme-primary-deep); }
+.save-message.error { color: #be123c; }
+:global(.admin-dark) .save-message.error { color: #fb7185; }
 
+@media (min-width: 900px) { .admin-page.sidebar-open { padding-left: 260px; } }
 @media (max-width: 760px) {
   .main {
     padding: 1rem;

@@ -18,6 +18,8 @@ import GetinvolvedManagement from '@/views/admin/GetinvolvedManagement.vue'
 import PartnerManagement from '@/views/admin/PartnerManagement(involved).vue'
 import ContactManagement from '@/views/admin/ContactManagement.vue'
 import VolunteerManagement from '@/views/admin/VolunteerManagement.vue'
+import HomeAdminView from '@/views/admin/HomeAdminView.vue'
+
 
 export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
@@ -35,6 +37,7 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/livelihood', component: LivelihoodDashboardView, meta: { requiresAuth: true } },
   { path: '/admin/child-protection', component: ChildProtectionDashboardView, meta: { requiresAuth: true } },
   { path: '/admin/programs', component: ProgramsOverviewView, meta: { requiresAuth: true } },
+  { path: '/admin/home', component: HomeAdminView, meta: { requiresAuth: true } },
   { path: '/admin/settings', component: SettingsView, meta: { requiresAuth: true } },
   { path: '/admin/donate', component: DonationLView, meta: { requiresAuth: true } },
   { path: '/admin/slideshow', component: SlideshowManagerView, meta: { requiresAuth: true } },
