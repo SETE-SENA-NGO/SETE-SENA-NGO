@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch, type WatchStopHandle } from 'vue'
-import { useTheme } from 'vuetify'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-// Icons migrated to Vuetify MDI (Material Design Icons)
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminUploadButton from '@/components/admin/AdminUploadButton.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { SupportedLocale } from '@/i18n'
 import { normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
-import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
 import type { PageContent } from '@/types/content'
 
@@ -147,64 +152,66 @@ const fallbackContent: GetInvolvedPageContent = {
 }
 
 const contentStore = useContentStore()
-const media = useMediaStore()
 const ui = useUiStore()
 const { locale } = useI18n()
-const vuetifyTheme = useTheme()
+useAdminTheme()
 
-// Local Vuetify confirm dialog
-const confirmDialog = ref(false)
-const confirmData = ref({ title: '', body: '', onConfirm: (() => {}) as () => void })
-
-function openConfirm(title: string, body: string, onConfirm: () => void) {
-  confirmData.value = { title, body, onConfirm }
-  confirmDialog.value = true
-}
-
-// Sync Vuetify theme with admin dark mode
-watch(
-  () => ui.darkMode,
-  (isDark) => {
-    vuetifyTheme.global.name.value = isDark ? 'adminDark' : 'adminLight'
-  },
-  { immediate: true },
-)
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
 
 const pageRow = ref<PageContent | null>(null)
 const loading = ref(true)
 const saving = ref(false)
-const uploadingKey = ref('')
 const loadError = ref('')
 
 const draft = reactive<GetInvolvedPageContent>(cloneContent(fallbackContent))
 
-const editingSections = reactive<Record<string, boolean>>({
-  hero: false,
-  cards: false,
-  journey: false,
-  closing: false,
-})
-
-const sectionDirty = reactive<Record<string, boolean>>({
-  hero: false,
-  cards: false,
-  journey: false,
-  closing: false,
-})
-
-const collapsedSections = reactive<Record<string, boolean>>({
-  hero: false,
-  cards: false,
-  journey: false,
-  closing: false,
-})
-
-const sectionSnapshots = reactive<Record<string, string>>({
-  hero: '',
-  cards: '',
-  journey: '',
-  closing: '',
-})
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+  setupSectionWatch,
+  stopSectionWatch,
+  resetEditingState,
+} = useSectionEditor([
+  {
+    key: 'hero',
+    getSnapshot: () => ({
+      ...draft.hero,
+      primaryCta: { ...draft.hero.primaryCta },
+      secondaryCta: { ...draft.hero.secondaryCta },
+    }),
+    applySnapshot: (value) => {
+      draft.hero = value
+    },
+  },
+  {
+    key: 'cards',
+    getSnapshot: () => draft.supportCards.map(cloneCard),
+    applySnapshot: (value) => {
+      draft.supportCards = value
+    },
+  },
+  {
+    key: 'journey',
+    getSnapshot: () => draft.journey.map((item) => ({ ...item })),
+    applySnapshot: (value) => {
+      draft.journey = value
+    },
+  },
+  {
+    key: 'closing',
+    getSnapshot: () => ({
+      ...draft.closing,
+      primaryCta: { ...draft.closing.primaryCta },
+      secondaryCta: { ...draft.closing.secondaryCta },
+    }),
+    applySnapshot: (value) => {
+      draft.closing = value
+    },
+  },
+])
 
 const originalSnapshot = ref('')
 
@@ -212,96 +219,6 @@ const hasChanges = computed(() => {
   const current = JSON.stringify(cloneContent(draft))
   return current !== originalSnapshot.value
 })
-
-function toggleCollapse(section: keyof typeof collapsedSections) {
-  collapsedSections[section] = !collapsedSections[section]
-}
-
-function takeSectionSnapshot(section: keyof typeof sectionSnapshots) {
-  switch (section) {
-    case 'hero':
-      sectionSnapshots.hero = JSON.stringify({ ...draft.hero, primaryCta: { ...draft.hero.primaryCta }, secondaryCta: { ...draft.hero.secondaryCta } })
-      break
-    case 'cards':
-      sectionSnapshots.cards = JSON.stringify(draft.supportCards.map(cloneCard))
-      break
-    case 'journey':
-      sectionSnapshots.journey = JSON.stringify(draft.journey.map((j) => ({ ...j })))
-      break
-    case 'closing':
-      sectionSnapshots.closing = JSON.stringify({ ...draft.closing, primaryCta: { ...draft.closing.primaryCta }, secondaryCta: { ...draft.closing.secondaryCta } })
-      break
-  }
-}
-
-function hasSectionChanges(section: keyof typeof sectionSnapshots): boolean {
-  switch (section) {
-    case 'hero':
-      return JSON.stringify({ ...draft.hero, primaryCta: { ...draft.hero.primaryCta }, secondaryCta: { ...draft.hero.secondaryCta } }) !== sectionSnapshots.hero
-    case 'cards':
-      return JSON.stringify(draft.supportCards.map(cloneCard)) !== sectionSnapshots.cards
-    case 'journey':
-      return JSON.stringify(draft.journey.map((j) => ({ ...j }))) !== sectionSnapshots.journey
-    case 'closing':
-      return JSON.stringify({ ...draft.closing, primaryCta: { ...draft.closing.primaryCta }, secondaryCta: { ...draft.closing.secondaryCta } }) !== sectionSnapshots.closing
-    default:
-      return false
-  }
-}
-
-let sectionWatchStop: WatchStopHandle | null = null
-
-function setupSectionWatch() {
-  sectionWatchStop?.()
-  sectionWatchStop = watch(
-    () => ({
-      hero: hasSectionChanges('hero'),
-      cards: hasSectionChanges('cards'),
-      journey: hasSectionChanges('journey'),
-      closing: hasSectionChanges('closing'),
-    }),
-    (changes) => {
-      for (const section of Object.keys(changes) as Array<keyof typeof changes>) {
-        if (changes[section] && editingSections[section] && !sectionDirty[section]) {
-          sectionDirty[section] = true
-        }
-      }
-    },
-    { deep: true },
-  )
-}
-
-function toggleEdit(section: keyof typeof editingSections) {
-  if (!editingSections[section]) {
-    takeSectionSnapshot(section)
-    sectionDirty[section] = false
-    editingSections[section] = true
-  } else {
-    editingSections[section] = false
-  }
-}
-
-function cancelEdit(section: keyof typeof editingSections) {
-  const snapshot = sectionSnapshots[section]
-  if (snapshot) {
-    switch (section) {
-      case 'hero':
-        draft.hero = JSON.parse(snapshot)
-        break
-      case 'cards':
-        draft.supportCards = JSON.parse(snapshot)
-        break
-      case 'journey':
-        draft.journey = JSON.parse(snapshot)
-        break
-      case 'closing':
-        draft.closing = JSON.parse(snapshot)
-        break
-    }
-  }
-  sectionDirty[section] = false
-  editingSections[section] = false
-}
 
 function updateSnapshot() {
   originalSnapshot.value = JSON.stringify(cloneContent(draft))
@@ -324,63 +241,17 @@ const sections = [
   { id: 'getinvolved-closing', label: 'Closing', icon: 'mdi-flag' },
 ] as const
 
-const activeSection = ref<string>(sections[0].id)
-const SCROLL_SPY_OFFSET = 150
-let scrollSpyRaf = 0
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
 
-function scrollToSection(id: string) {
-  const el = document.getElementById(id)
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-function updateActiveSectionFromScroll() {
-  const doc = document.documentElement
-  const scrolledToBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 4
-
-  const lastSection = sections[sections.length - 1]
-  if (scrolledToBottom && lastSection) {
-    activeSection.value = lastSection.id
-    return
-  }
-
-  // Classic scrollspy: the active section is the last one whose top has
-  // crossed above the offset line (just below the sticky nav).
-  let current: string = sections[0].id
-  for (const s of sections) {
-    const el = document.getElementById(s.id)
-    if (el && el.getBoundingClientRect().top - SCROLL_SPY_OFFSET <= 0) {
-      current = s.id
-    }
-  }
-  activeSection.value = current
-}
-
-function handleScrollSpy() {
-  if (scrollSpyRaf) return
-  scrollSpyRaf = requestAnimationFrame(() => {
-    scrollSpyRaf = 0
-    updateActiveSectionFromScroll()
-  })
-}
-
-function warnBeforeUnload(event: BeforeUnloadEvent) {
-  if (!hasChanges.value) return
-  event.preventDefault()
-  event.returnValue = ''
-}
+useUnsavedChangesGuard(hasChanges)
 
 onMounted(() => {
   contentStore.useLocalFallback()
   void loadPage()
-  window.addEventListener('beforeunload', warnBeforeUnload)
-  window.addEventListener('scroll', handleScrollSpy, { passive: true })
 })
 
 onUnmounted(() => {
-  sectionWatchStop?.()
-  if (scrollSpyRaf) cancelAnimationFrame(scrollSpyRaf)
-  window.removeEventListener('beforeunload', warnBeforeUnload)
-  window.removeEventListener('scroll', handleScrollSpy)
+  stopSectionWatch()
 })
 
 watch(activeLocale, () => {
@@ -388,14 +259,7 @@ watch(activeLocale, () => {
 })
 
 async function loadPage() {
-  editingSections.hero = false
-  editingSections.cards = false
-  editingSections.journey = false
-  editingSections.closing = false
-  sectionDirty.hero = false
-  sectionDirty.cards = false
-  sectionDirty.journey = false
-  sectionDirty.closing = false
+  resetEditingState()
   loading.value = true
   loadError.value = ''
 
@@ -465,24 +329,6 @@ async function savePage() {
   }
 }
 
-async function uploadImage(event: Event, key: string, applyUrl: (url: string) => void) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-
-  uploadingKey.value = key
-  try {
-    const uploaded = await media.uploadToGoogleDrive(file, `Get Involved ${key} image`)
-    applyUrl(normalizeMediaUrl(uploaded.url))
-    ui.addToast('Image uploaded.', 'success')
-  } catch (error) {
-    ui.addToast(error instanceof Error ? error.message : 'Could not upload image.', 'error')
-  } finally {
-    uploadingKey.value = ''
-    input.value = ''
-  }
-}
-
 function addCard() {
   if (!canAddCard.value) return
   draft.supportCards.push({
@@ -515,7 +361,7 @@ function removeItem<T extends { title?: string; name?: string }>(
   if (!item) return
 
   const itemTitle = item.title || item.name || 'this item'
-  openConfirm(
+  confirmDialog(
     `Remove ${label}?`,
     `Remove "${itemTitle}" from the public Get Involved page?`,
     () => {
@@ -697,79 +543,36 @@ function cloneCard(card: SupportCard): SupportCard {
 
           <div v-else key="content" class="content-grid">
 
-          <nav class="section-nav" aria-label="Get Involved page sections">
-            <div class="section-nav-tabs">
-              <button
-                v-for="sec in sections"
-                :key="sec.id"
-                type="button"
-                :class="['section-nav-btn', { active: activeSection === sec.id }]"
-                @click="scrollToSection(sec.id)"
-              >
-                <v-icon size="16">{{ sec.icon }}</v-icon>
-                <span>{{ sec.label }}</span>
-              </button>
-            </div>
-            <div class="section-nav-save">
-              <span v-if="hasChanges" class="unsaved-badge">
-                <v-icon size="10">mdi-circle</v-icon>
-                Unsaved changes
-              </span>
-              <v-btn color="primary" variant="tonal" :disabled="saving || !hasChanges" :loading="saving" @click="savePage">
-                <v-icon start>mdi-content-save</v-icon>
-                {{ saving ? 'Saving...' : 'Save Change' }}
-              </v-btn>
-            </div>
-          </nav>
+          <AdminSectionNav
+            :sections="sections"
+            :active-section="activeSection"
+            :has-changes="hasChanges"
+            :saving="saving"
+            aria-label="Get Involved page sections"
+            save-label="Save Change"
+            @navigate="scrollToSection"
+            @save="savePage"
+          />
 
           <!-- ── HERO ── -->
-          <v-card :id="sections[0].id" :class="['editor-panel', 'section-group', { editing: editingSections.hero }]">
-            <v-toolbar density="comfortable" flat class="panel-toolbar">
-              <template #title>
-                <div>
-                  <p class="panel-kicker">Hero section</p>
-                  <h2 id="hero-heading" class="text-h6 font-weight-bold mb-0">Support village peace.</h2>
-                </div>
-              </template>
-              <template #append>
-                <div class="toolbar-actions">
-                  <v-btn icon variant="text" size="small" @click="toggleCollapse('hero')" title="Collapse / expand">
-                    <v-icon :class="{ 'rotate-neg-90': collapsedSections.hero }">mdi-chevron-down</v-icon>
-                  </v-btn>
-                  <span class="toolbar-divider" aria-hidden="true"></span>
-                  <v-fade-transition mode="out-in">
-                    <v-btn v-if="!editingSections.hero" key="edit-hero" color="secondary" size="small" @click="toggleEdit('hero')">
-                      <v-icon start>mdi-pencil</v-icon>
-                      Edit
-                    </v-btn>
-                    <div v-else key="editing-hero" class="edit-actions">
-                      <v-btn variant="tonal" size="small" @click="cancelEdit('hero')">Cancel</v-btn>
-                      <v-btn color="primary" variant="flat" size="small" @click="toggleEdit('hero')">
-                        <v-icon start>mdi-check</v-icon>
-                        Done
-                      </v-btn>
-                    </div>
-                  </v-fade-transition>
-                </div>
-              </template>
-            </v-toolbar>
-            <v-divider />
-
-            <v-expand-transition>
-              <div v-show="!collapsedSections.hero" class="panel-collapsible">
-              <div class="image-editor-grid">
+          <AdminEditorPanel
+            :id="sections[0].id"
+            kicker="Hero section"
+            heading="Support village peace."
+            :editing="!!editingSections.hero"
+            :collapsed="collapsedSections.hero"
+            @toggle-edit="toggleEdit('hero')"
+            @cancel="cancelEdit('hero')"
+            @toggle-collapse="toggleCollapse('hero')"
+          >
+            <div class="image-editor-grid">
               <div class="image-upload-panel">
                 <v-img :src="heroPreview" aspect-ratio="1.6" cover class="image-preview hero-preview" />
-                <label class="upload-btn">
-                  <v-icon size="18">mdi-cloud-upload-outline</v-icon>
-                  <span>{{ uploadingKey === 'hero-image' ? 'Uploading...' : 'Upload image' }}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    :disabled="!editingSections.hero || uploadingKey === 'hero-image'"
-                    @change="uploadImage($event, 'hero-image', (url) => (draft.hero.image = url))"
-                  />
-                </label>
+                <AdminUploadButton
+                  :disabled="!editingSections.hero"
+                  description="Get Involved hero-image image"
+                  @update:model-value="(url) => (draft.hero.image = url)"
+                />
               </div>
 
               <div class="form-stack">
@@ -782,53 +585,30 @@ function cloneCard(card: SupportCard): SupportCard {
                   <v-text-field v-model="draft.hero.secondaryCta.label" label="Secondary CTA label" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
                 </div>
               </div>
-              </div>
-              </div>
-            </v-expand-transition>
-          </v-card>
+            </div>
+          </AdminEditorPanel>
 
           <!-- ── SUPPORT CARDS ── -->
-          <v-card :id="sections[1].id" :class="['editor-panel', 'section-group', { editing: editingSections.cards }]">
-            <v-toolbar density="comfortable" flat class="panel-toolbar">
-              <template #title>
-                <div>
-                  <p class="panel-kicker">Support cards</p>
-                  <h2 id="cards-heading" class="text-h6 font-weight-bold mb-0">Support real community work.</h2>
-                </div>
-              </template>
-              <template #append>
-                <div class="toolbar-actions">
-                  <v-btn icon variant="text" size="small" @click="toggleCollapse('cards')" title="Collapse / expand">
-                    <v-icon :class="{ 'rotate-neg-90': collapsedSections.cards }">mdi-chevron-down</v-icon>
-                  </v-btn>
-                  <span class="toolbar-divider" aria-hidden="true"></span>
-                  <v-fade-transition mode="out-in">
-                    <v-btn v-if="!editingSections.cards" key="edit-cards" color="secondary" size="small" @click="toggleEdit('cards')">
-                      <v-icon start>mdi-pencil</v-icon>
-                      Edit
-                    </v-btn>
-                    <div v-else key="editing-cards" class="edit-actions">
-                      <v-btn variant="tonal" size="small" @click="cancelEdit('cards')">Cancel</v-btn>
-                      <v-btn color="primary" variant="flat" size="small" @click="toggleEdit('cards')">
-                        <v-icon start>mdi-check</v-icon>
-                        Done
-                      </v-btn>
-                    </div>
-                  </v-fade-transition>
-                  <v-fade-transition>
-                    <v-btn v-if="editingSections.cards" key="add-card" color="accent" variant="flat" size="small" :disabled="!canAddCard" @click="addCard">
-                      <v-icon start>mdi-plus</v-icon>
-                      Add card
-                    </v-btn>
-                  </v-fade-transition>
-                </div>
-              </template>
-            </v-toolbar>
-            <v-divider />
+          <AdminEditorPanel
+            :id="sections[1].id"
+            kicker="Support cards"
+            heading="Support real community work."
+            :editing="!!editingSections.cards"
+            :collapsed="collapsedSections.cards"
+            @toggle-edit="toggleEdit('cards')"
+            @cancel="cancelEdit('cards')"
+            @toggle-collapse="toggleCollapse('cards')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" key="add-card" color="accent" variant="flat" size="small" :disabled="!canAddCard" @click="addCard">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add card
+                </v-btn>
+              </v-fade-transition>
+            </template>
 
-            <v-expand-transition>
-              <div v-show="!collapsedSections.cards" class="panel-collapsible">
-              <v-slide-y-transition group tag="div" class="cards-list">
+            <v-slide-y-transition group tag="div" class="cards-list">
               <article v-for="(card, index) in draft.supportCards" :key="index" class="card-editor">
                 <header class="card-editor-header">
                   <div class="card-heading">
@@ -854,16 +634,11 @@ function cloneCard(card: SupportCard): SupportCard {
                 <div class="card-editor-top">
                   <div class="image-upload-panel card-image-upload">
                     <v-img :src="resolveImageUrl(card.image, fallbackContent.supportCards[0]?.image ?? '')" aspect-ratio="1.35" cover class="image-preview card-preview" />
-                    <label class="upload-btn">
-                      <v-icon size="18">mdi-cloud-upload-outline</v-icon>
-                      <span>{{ uploadingKey === `card-${index}` ? 'Uploading...' : 'Upload image' }}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        :disabled="!editingSections.cards || uploadingKey === `card-${index}`"
-                        @change="uploadImage($event, `card-${index}`, (url) => (card.image = url))"
-                      />
-                    </label>
+                    <AdminUploadButton
+                      :disabled="!editingSections.cards"
+                      :description="`Get Involved card-${index} image`"
+                      @update:model-value="(url) => (card.image = url)"
+                    />
                   </div>
                 </div>
 
@@ -873,54 +648,32 @@ function cloneCard(card: SupportCard): SupportCard {
                   <v-text-field v-model="card.alt" label="Image alt text" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
                   <v-textarea v-model="card.body" label="Description" rows="3" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" class="field-wide" />
                   <v-text-field v-model="card.cta" label="Link text" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
-                </div>              </article>
-              </v-slide-y-transition>
-            </div>
-            </v-expand-transition>
-          </v-card>
+                </div>
+              </article>
+            </v-slide-y-transition>
+          </AdminEditorPanel>
 
           <!-- ── JOURNEY ── -->
-          <v-card :id="sections[2].id" :class="['editor-panel', 'section-group', { editing: editingSections.journey }]">
-            <v-toolbar density="comfortable" flat class="panel-toolbar">
-              <template #title>
-                <div>
-                  <p class="panel-kicker">Your path</p>
-                  <h2 id="journey-heading" class="text-h6 font-weight-bold mb-0">Journey steps</h2>
-                </div>
-              </template>
-              <template #append>
-                <div class="toolbar-actions">
-                  <v-btn icon variant="text" size="small" @click="toggleCollapse('journey')" title="Collapse / expand">
-                    <v-icon :class="{ 'rotate-neg-90': collapsedSections.journey }">mdi-chevron-down</v-icon>
-                  </v-btn>
-                  <span class="toolbar-divider" aria-hidden="true"></span>
-                  <v-fade-transition mode="out-in">
-                    <v-btn v-if="!editingSections.journey" key="edit-journey" color="secondary" size="small" @click="toggleEdit('journey')">
-                      <v-icon start>mdi-pencil</v-icon>
-                      Edit
-                    </v-btn>
-                    <div v-else key="editing-journey" class="edit-actions">
-                      <v-btn variant="tonal" size="small" @click="cancelEdit('journey')">Cancel</v-btn>
-                      <v-btn color="primary" variant="flat" size="small" @click="toggleEdit('journey')">
-                        <v-icon start>mdi-check</v-icon>
-                        Done
-                      </v-btn>
-                    </div>
-                  </v-fade-transition>
-                  <v-fade-transition>
-                    <v-btn v-if="editingSections.journey" key="add-step" color="accent" variant="flat" size="small" :disabled="!canAddJourneyStep" @click="addJourneyStep">
-                      <v-icon start>mdi-plus</v-icon>
-                      Add step
-                    </v-btn>
-                  </v-fade-transition>
-                </div>
-              </template>
-            </v-toolbar>
-            <v-divider />
+          <AdminEditorPanel
+            :id="sections[2].id"
+            kicker="Your path"
+            heading="Journey steps"
+            :editing="!!editingSections.journey"
+            :collapsed="collapsedSections.journey"
+            @toggle-edit="toggleEdit('journey')"
+            @cancel="cancelEdit('journey')"
+            @toggle-collapse="toggleCollapse('journey')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" key="add-step" color="accent" variant="flat" size="small" :disabled="!canAddJourneyStep" @click="addJourneyStep">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add step
+                </v-btn>
+              </v-fade-transition>
+            </template>
 
-            <v-expand-transition>
-              <div v-show="!collapsedSections.journey" class="panel-collapsible">
-              <v-slide-y-transition group tag="div" class="cards-list two-col">
+            <v-slide-y-transition group tag="div" class="cards-list two-col">
               <article v-for="(step, index) in draft.journey" :key="index" class="card-editor">
                 <header class="card-editor-header">
                   <div class="card-heading">
@@ -947,78 +700,42 @@ function cloneCard(card: SupportCard): SupportCard {
                   <v-text-field v-model="step.step" label="Step number" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" />
                   <v-text-field v-model="step.title" label="Title" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" class="field-wide" />
                   <v-textarea v-model="step.body" label="Body" rows="2" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" class="field-wide" />
-                </div>              </article>
-              </v-slide-y-transition>
-            </div>
-            </v-expand-transition>
-          </v-card>
+                </div>
+              </article>
+            </v-slide-y-transition>
+          </AdminEditorPanel>
 
           <!-- ── CLOSING ── -->
-          <v-card :id="sections[3].id" :class="['editor-panel', 'section-group', { editing: editingSections.closing }]">
-            <v-toolbar density="comfortable" flat class="panel-toolbar">
-              <template #title>
-                <div>
-                  <p class="panel-kicker">Next step</p>
-                  <h2 id="closing-heading" class="text-h6 font-weight-bold mb-0">Closing call to action</h2>
-                </div>
-              </template>
-              <template #append>
-                <div class="toolbar-actions">
-                  <v-btn icon variant="text" size="small" @click="toggleCollapse('closing')" title="Collapse / expand">
-                    <v-icon :class="{ 'rotate-neg-90': collapsedSections.closing }">mdi-chevron-down</v-icon>
-                  </v-btn>
-                  <span class="toolbar-divider" aria-hidden="true"></span>
-                  <v-fade-transition mode="out-in">
-                    <v-btn v-if="!editingSections.closing" key="edit-closing" color="secondary" size="small" @click="toggleEdit('closing')">
-                      <v-icon start>mdi-pencil</v-icon>
-                      Edit
-                    </v-btn>
-                    <div v-else key="editing-closing" class="edit-actions">
-                      <v-btn variant="tonal" size="small" @click="cancelEdit('closing')">Cancel</v-btn>
-                      <v-btn color="primary" variant="flat" size="small" @click="toggleEdit('closing')">
-                        <v-icon start>mdi-check</v-icon>
-                        Done
-                      </v-btn>
-                    </div>
-                  </v-fade-transition>
-                </div>
-              </template>
-            </v-toolbar>
-            <v-divider />
-
-            <v-expand-transition>
-              <div v-show="!collapsedSections.closing" class="panel-collapsible">
-              <div class="panel-body form-grid">
+          <AdminEditorPanel
+            :id="sections[3].id"
+            kicker="Next step"
+            heading="Closing call to action"
+            :editing="!!editingSections.closing"
+            :collapsed="collapsedSections.closing"
+            @toggle-edit="toggleEdit('closing')"
+            @cancel="cancelEdit('closing')"
+            @toggle-collapse="toggleCollapse('closing')"
+          >
+            <div class="panel-body form-grid">
               <v-text-field v-model="draft.closing.eyebrow" label="Small label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
               <v-text-field v-model="draft.closing.title" label="Section heading" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
               <v-textarea v-model="draft.closing.body" label="Description" rows="3" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" class="field-wide" />
               <v-text-field v-model="draft.closing.primaryCta.label" label="Primary CTA label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
               <v-text-field v-model="draft.closing.secondaryCta.label" label="Secondary CTA label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
-              </div>
-              </div>
-            </v-expand-transition>
-          </v-card>
+            </div>
+          </AdminEditorPanel>
 
         </div>
     </v-fade-transition>
       </main>
     </div>
 
-    <!-- ── Vuetify Confirm Dialog ── -->
-    <v-dialog v-model="confirmDialog" max-width="430" persistent>
-      <v-card>
-        <v-card-title class="font-weight-bold">{{ confirmData.title }}</v-card-title>
-        <v-card-text class="text-body-2">{{ confirmData.body }}</v-card-text>
-        <v-divider />
-        <v-card-actions class="pa-4">
-          <v-spacer />
-          <v-btn variant="tonal" @click="confirmDialog = false">Cancel</v-btn>
-          <v-btn color="error" variant="elevated" @click="confirmData.onConfirm(); confirmDialog = false">
-            Confirm
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <AdminConfirmDialog
+      v-model="confirmOpen"
+      :title="confirmData.title"
+      :body="confirmData.body"
+      @confirm="confirmData.onConfirm()"
+    />
   </v-app>
 </template>
 
@@ -1070,200 +787,11 @@ function cloneCard(card: SupportCard): SupportCard {
   gap: 0.75rem;
 }
 
-/* ── Unsaved-changes indicator ── */
-.unsaved-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.unsaved-badge .v-icon {
-  color: var(--admin-theme-primary);
-}
-
-/* ── Edit / Cancel / Done action group ── */
-.edit-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
 .card-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-}
-
-.panel-kicker {
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-/* ── Vuetify overrides ── */
-.editor-panel {
-  overflow: hidden;
-  border: 1px solid var(--admin-theme-border) !important;
-  background: var(--admin-theme-surface) !important;
-  box-shadow: var(--admin-theme-shadow) !important;
-}
-
-.v-card.editor-panel {
-  border-radius: 8px;
-}
-
-.editor-panel.editing {
-  border-color: var(--admin-theme-primary) !important;
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 10%, transparent),
-    var(--admin-theme-shadow) !important;
-  background: color-mix(in srgb, var(--admin-theme-surface) 94%, var(--admin-theme-primary) 6%) !important;
-}
-
-.panel-toolbar {
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface)) !important;
-  border-bottom: 1px solid var(--admin-theme-border) !important;
-  border-radius: 8px 8px 0 0 !important;
-}
-
-.panel-toolbar :deep(.v-toolbar__content) {
-  height: auto !important;
-  padding: 1.25rem 1.5rem !important;
-  gap: 1rem;
-}
-
-.panel-toolbar :deep(.v-toolbar-title) {
-  margin-inline-start: 0 !important;
-  flex: 1 1 auto;
-}
-
-.panel-toolbar h2 {
-  color: var(--admin-theme-contrast);
-  font-size: 1rem;
-  line-height: 1.3;
-}
-
-/* ── Toolbar action group ── */
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 22px;
-  background: var(--admin-theme-border);
-  margin: 0 0.1rem;
-}
-
-/* Rotate chevron when collapsed */
-.rotate-neg-90 {
-  transform: rotate(-90deg);
-  transition: transform 0.2s ease;
-}
-
-/*
-  Vuetify fades disabled buttons to 26% opacity, which turns a tonal button
-  (like "Save changes" when there's nothing to save) into an almost invisible
-  smear. Keep it as legible/shaped as its enabled "View page" sibling and
-  show the disabled state through color instead of opacity.
-*/
-.v-btn--disabled {
-  opacity: 1 !important;
-}
-
-.v-btn--disabled.v-btn--variant-tonal {
-  color: var(--admin-theme-muted) !important;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface)) !important;
-}
-
-.v-btn--disabled.v-btn--variant-outlined {
-  color: var(--admin-theme-muted) !important;
-  border-color: var(--admin-theme-border) !important;
-}
-
-.v-btn--disabled .v-btn__overlay {
-  opacity: 0 !important;
-}
-
-/* Vuetify text field overrides for theme consistency */
-:deep(.v-field--variant-outlined) {
-  background: var(--admin-theme-surface);
-}
-
-:deep(.v-field--variant-outlined .v-field__outline__start),
-:deep(.v-field--variant-outlined .v-field__outline__end),
-:deep(.v-field--variant-outlined .v-field__outline__notch::before),
-:deep(.v-field--variant-outlined .v-field__outline__notch::after) {
-  border-color: var(--admin-theme-border-strong);
-}
-
-:deep(.v-field__input),
-:deep(textarea.v-field__input) {
-  color: var(--admin-theme-contrast);
-  font-weight: 600;
-}
-
-:deep(.v-label.v-field-label) {
-  color: var(--admin-theme-muted);
-  font-weight: 600;
-  opacity: 1;
-}
-
-/*
-  Vuetify's outlined floating label rests centered on the field's top
-  border (translateY(-50%)) — the classic "notched outline" look. Our
-  fields double as read-only value displays, so the label reads more like
-  a field caption than a notch; lift it clear of the border instead of
-  overlapping it. The transform is purely visual (doesn't reserve layout
-  space), so the row gap above (.form-grid / .card-form-grid) is widened
-  to match, or this would just collide with the field in the row above.
-*/
-:deep(.v-field--variant-outlined .v-label.v-field-label--floating) {
-  transform: translateY(-90%) !important;
-}
-
-/*
-  Vuetify dims disabled fields via opacity on the whole field, which fades
-  real content (not just affordance) to near-illegible gray. Fields are used
-  here to show saved page content in "view" mode, so keep text at full
-  contrast and signal read-only via background + cursor instead.
-*/
-:deep(.v-input--disabled) {
-  opacity: 1;
-}
-
-:deep(.v-field--disabled) {
-  opacity: 1;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 55%, var(--admin-theme-surface));
-  cursor: not-allowed;
-}
-
-:deep(.v-field--disabled .v-field__input) {
-  color: var(--admin-theme-contrast-soft);
-  -webkit-text-fill-color: var(--admin-theme-contrast-soft);
-  cursor: not-allowed;
-}
-
-:deep(.v-field--disabled .v-label.v-field-label) {
-  color: var(--admin-theme-muted);
-  opacity: 1;
-}
-
-:deep(.v-field--disabled .v-field__outline__start),
-:deep(.v-field--disabled .v-field__outline__end),
-:deep(.v-field--disabled .v-field__outline__notch::before),
-:deep(.v-field--disabled .v-field__outline__notch::after) {
-  border-color: var(--admin-theme-border);
-  opacity: 1;
 }
 
 /* ── Content grid ── */
@@ -1273,78 +801,7 @@ function cloneCard(card: SupportCard): SupportCard {
   margin-top: 1rem;
 }
 
-/* ── Section navigation ── */
-.section-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
-  padding: 0.75rem 1.5rem;
-  position: sticky;
-  top: calc(60px + 0.5rem);
-  z-index: 40;
-}
-
-.section-nav-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.section-nav-save {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-shrink: 0;
-}
-
-.section-nav-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 36px;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 7px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
-  padding: 0.45rem 0.85rem;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.section-nav-btn:hover {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.section-nav-btn.active {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
-}
-
-.section-group {
-  scroll-margin-top: 120px;
-}
-
-/* ── Collapsible panels ── */
-.panel-collapsible {
-  overflow: hidden;
-}
-
+/* ── Collapsible panel body ── */
 .panel-body {
   padding: 1.5rem;
 }
@@ -1389,55 +846,6 @@ function cloneCard(card: SupportCard): SupportCard {
   display: grid;
   gap: 0.75rem;
   align-content: start;
-}
-
-/* ── Upload button (modern pill button, replaces the old file-input dropzone) ── */
-.upload-btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  min-height: 40px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  padding: 0.65rem 1rem;
-  font-size: 0.82rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.upload-btn:hover {
-  background: color-mix(in srgb, var(--admin-theme-primary) 20%, var(--admin-theme-surface));
-}
-
-.upload-btn:focus-within {
-  outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 20%, transparent);
-  outline-offset: 2px;
-}
-
-.upload-btn:has(input:disabled) {
-  cursor: not-allowed;
-  color: var(--admin-theme-muted);
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 55%, var(--admin-theme-surface));
-}
-
-/* Native file input stays functional/accessible via the wrapping <label>, just visually hidden */
-.upload-btn input[type="file"] {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 .cards-list {
@@ -1553,26 +961,6 @@ function cloneCard(card: SupportCard): SupportCard {
     padding-top: calc(60px + 1rem);
   }
 
-  .section-nav {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .section-nav-tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .section-nav-tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .section-nav-save {
-    justify-content: space-between;
-  }
-
   .manager-hero,
   .card-editor-header {
     align-items: stretch;
@@ -1581,15 +969,6 @@ function cloneCard(card: SupportCard): SupportCard {
 
   .hero-actions {
     width: 100%;
-  }
-
-  .panel-toolbar :deep(.v-toolbar__content) {
-    flex-wrap: wrap;
-    row-gap: 0.5rem;
-  }
-
-  .toolbar-actions {
-    flex-wrap: wrap;
   }
 
   .image-editor-grid,
