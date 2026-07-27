@@ -394,7 +394,10 @@ onMounted(async () => {
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">Loading Child Protection content...</div>
+        <div v-if="loading" class="state-card">
+          <span class="state-spinner" aria-hidden="true"></span>
+          <span>Loading Child Protection content...</span>
+        </div>
 
         <div v-else class="content-grid">
           <!-- ═══ Quick links ═══ -->
@@ -630,7 +633,6 @@ onMounted(async () => {
 .manager-main {
   min-height: 100vh;
   padding: 1.25rem;
-  padding-top: calc(60px + 1.25rem);
 }
 
 .manager-hero {
@@ -836,12 +838,32 @@ onMounted(async () => {
 }
 
 .state-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   margin-top: 1rem;
   border: 1px solid var(--admin-theme-border);
   border-radius: 10px;
   background: var(--admin-theme-surface);
   color: var(--admin-theme-muted);
-  padding: 1rem;
+  padding: 2.5rem 1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.state-spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--admin-theme-border);
+  border-top-color: var(--admin-theme-primary);
+  border-radius: 50%;
+  animation: state-spin 0.8s linear infinite;
+}
+
+@keyframes state-spin {
+  to { transform: rotate(360deg); }
 }
 
 .content-grid {
@@ -1271,7 +1293,6 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
-    padding-top: calc(60px + 1rem);
   }
 
   .manager-hero,

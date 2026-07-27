@@ -17,7 +17,9 @@ import {
 } from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import CollapsiblePanel from '@/components/admin/CollapsiblePanel.vue'
 import ImagePickerField from '@/components/admin/ImagePickerField.vue'
+import ImageSlotEditor from '@/components/admin/ImageSlotEditor.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
@@ -55,6 +57,34 @@ interface StatItem {
   number: string
   label: string
   description: string
+}
+
+interface GalleryImage {
+  id: string
+  label: string
+  url: string
+}
+
+/* ─── Gallery slots — order matters: public page reads by array index,
+   items 0-5 feed "What we do", 6-9 feed "Why it matters" ─────────── */
+const GALLERY_MAP: { label: string; badge: string; hint: string }[] = [
+  { label: 'Integrated Farming', badge: 'What we do — 1', hint: 'Integrated Farming' },
+  { label: 'Saving-for-Change', badge: 'What we do — 2', hint: 'Saving-for-Change' },
+  { label: 'Cooperatives', badge: 'What we do — 3', hint: 'Cooperatives' },
+  { label: 'Rural Enterprise', badge: 'What we do — 4', hint: 'Rural Enterprise' },
+  { label: 'Financial Literacy', badge: 'What we do — 5', hint: 'Financial Literacy' },
+  { label: 'Market Linkages', badge: 'What we do — 6', hint: 'Market Linkages' },
+  { label: 'Why it matters — 1', badge: 'Why it matters — 1', hint: 'Debt & trafficking risk' },
+  { label: 'Why it matters — 2', badge: 'Why it matters — 2', hint: 'Women-led savings' },
+  { label: 'Why it matters — 3', badge: 'Why it matters — 3', hint: 'Cooperative marketplace' },
+  { label: 'Why it matters — 4', badge: 'Why it matters — 4', hint: 'Local enterprise' },
+]
+
+let _idCounter = 0
+function genId() { return `live-img-${++_idCounter}-${Date.now()}` }
+
+function createDefaultGallery(): GalleryImage[] {
+  return GALLERY_MAP.map(m => ({ id: genId(), label: m.label, url: '' }))
 }
 
 /* ─── Default Livelihood Page ───────────────────── */
@@ -114,10 +144,20 @@ const quoteContent = ref<QuoteContent>({
   text: 'Our group has lent to twelve families for chickens and school fees. Nobody has left for Thailand this year.',
 })
 
+const galleryImages = ref<GalleryImage[]>(createDefaultGallery())
+
+function padGalleryToTen() {
+  while (galleryImages.value.length < GALLERY_MAP.length) {
+    const i = galleryImages.value.length
+    galleryImages.value.push({ id: genId(), label: GALLERY_MAP[i]?.label || `Image ${i + 1}`, url: '' })
+  }
+}
+
 /* ─── Collapsible panels ───────────────────────── */
 const expandedPanels = ref<Record<string, boolean>>({
   'quick-links': true,
   'hero-header': true,
+  'gallery': true,
   'stats': true,
   'content': true,
   'quote': true,
@@ -139,6 +179,25 @@ function confirmDeleteStat(index: number) {
       ui.addToast(`Statistic "${label}" deleted.`, 'success')
     },
   )
+}
+
+function clearGalleryImage(index: number) {
+  const slotName = GALLERY_MAP[index]?.label || `Slot ${index + 1}`
+  if (!galleryImages.value[index]?.url?.trim()) return
+  ui.openModal(
+    'Remove image',
+    `Are you sure you want to remove the image from <strong>${slotName}</strong>? The public page will show the default fallback image instead.`,
+    () => {
+      galleryImages.value[index]!.url = ''
+      ui.addToast(`Image removed from "${slotName}".`, 'success')
+      void savePageContent()
+    },
+  )
+}
+
+function onGalleryImageSaved(msg: string) {
+  ui.addToast(msg, 'success')
+  void savePageContent()
 }
 
 /* ─── State ─────────────────────────────────────── */
@@ -173,6 +232,10 @@ function loadFromLocalStorage(): void {
       }
       if (saved.quoteContent && typeof saved.quoteContent === 'object') {
         quoteContent.value = { ...quoteContent.value, ...saved.quoteContent as Partial<QuoteContent> }
+      }
+      if (Array.isArray(saved.galleryImages) && saved.galleryImages.length > 0) {
+        galleryImages.value = saved.galleryImages as GalleryImage[]
+        padGalleryToTen()
       }
     }
   } catch { /* ignore */ }
@@ -226,6 +289,7 @@ function snapshotData(): string {
     sections: page.value.sections.map(s => ({ ...s })),
     statsBand: statsBand.value.map(s => ({ ...s })),
     quoteContent: { ...quoteContent.value },
+    galleryImages: galleryImages.value.map(g => ({ ...g })),
   })
 }
 
@@ -274,6 +338,16 @@ async function loadPageContent() {
       }
       if (meta?.quoteContent && typeof meta.quoteContent === 'object') {
         quoteContent.value = { ...quoteContent.value, ...meta.quoteContent as Partial<QuoteContent> }
+      }
+      if (meta?.gallery && Array.isArray(meta.gallery) && meta.gallery.length > 0) {
+        galleryImages.value = (meta.gallery as GalleryImage[]).map((g, i) => ({
+          id: g.id || genId(),
+          label: g.label?.trim() ? g.label : GALLERY_MAP[i]?.label || `Image ${i + 1}`,
+          url: g.url || '',
+        }))
+        padGalleryToTen()
+      } else {
+        galleryImages.value = createDefaultGallery()
       }
 
       storageMode.value = 'supabase'
@@ -324,6 +398,7 @@ async function savePageContent() {
         })),
         statsBand: statsBand.value,
         quoteContent: quoteContent.value,
+        gallery: galleryImages.value,
       },
       updated_at: now,
     }
@@ -413,7 +488,10 @@ onMounted(async () => {
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">Loading Livelihood content...</div>
+        <div v-if="loading" class="state-card">
+          <span class="state-spinner" aria-hidden="true"></span>
+          <span>Loading Livelihood content...</span>
+        </div>
 
         <div v-else class="content-grid">
           <!-- ═══ Quick links ═══ -->
@@ -508,6 +586,34 @@ onMounted(async () => {
               </div>
             </Transition>
           </section>
+
+          <!-- ═══ Gallery images ═══ -->
+          <CollapsiblePanel
+            v-model:expanded="expandedPanels['gallery']"
+            title="Section images"
+            kicker="What we do &amp; Why it matters"
+            heading-id="gallery-heading"
+          >
+            <template #icon>
+              <ImageIcon :size="18" aria-hidden="true" />
+            </template>
+
+            <p class="panel-desc">Upload a photo for each item below. These feed the "What we do" and "Why it matters" images on the public page.</p>
+            <div class="image-slot-grid">
+              <ImageSlotEditor
+                v-for="(slot, index) in galleryImages"
+                :key="slot.id"
+                v-model="galleryImages[index]!.url"
+                :index="index"
+                :badge="GALLERY_MAP[index]?.badge || `Image ${index + 1}`"
+                :hint="GALLERY_MAP[index]?.hint || ''"
+                :alt="slot.label"
+                @clear="clearGalleryImage(index)"
+                @saved="onGalleryImageSaved"
+                @error="(msg) => ui.addToast(msg, 'error')"
+              />
+            </div>
+          </CollapsiblePanel>
 
           <!-- ═══ Stats band ═══ -->
           <section class="editor-panel" aria-labelledby="stats-heading">
@@ -677,7 +783,6 @@ onMounted(async () => {
 .manager-main {
   min-height: 100vh;
   padding: 1.25rem;
-  padding-top: calc(60px + 1.25rem);
 }
 
 .manager-hero {
@@ -883,12 +988,32 @@ onMounted(async () => {
 }
 
 .state-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   margin-top: 1rem;
   border: 1px solid var(--admin-theme-border);
   border-radius: 10px;
   background: var(--admin-theme-surface);
   color: var(--admin-theme-muted);
-  padding: 1rem;
+  padding: 2.5rem 1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.state-spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--admin-theme-border);
+  border-top-color: var(--admin-theme-primary);
+  border-radius: 50%;
+  animation: state-spin 0.8s linear infinite;
+}
+
+@keyframes state-spin {
+  to { transform: rotate(360deg); }
 }
 
 .content-grid {
@@ -1141,6 +1266,12 @@ onMounted(async () => {
   gap: 0.75rem;
 }
 
+.image-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.85rem;
+}
+
 .sub-editor {
   border: 1px solid var(--admin-theme-border);
   border-radius: 10px;
@@ -1326,7 +1457,6 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
-    padding-top: calc(60px + 1rem);
   }
 
   .manager-hero,

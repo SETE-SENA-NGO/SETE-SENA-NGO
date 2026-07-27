@@ -132,6 +132,8 @@ const approachText = ref(
 const introText = ref(
   'Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena answers with income at home — soil restored, savings pooled, cooperatives negotiating fair prices, and small enterprises rooted in local resources.'
 )
+const pageEyebrow = ref('Livelihood')
+const pageTitle = ref('Growing practical income and food security.')
 
 const quoteText = ref(
   'Our group has lent to twelve families for chickens and school fees. Nobody has left for Thailand this year.'
@@ -270,6 +272,11 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
   if (typeof meta.heroImageUrl === 'string' && meta.heroImageUrl.trim()) {
     heroImageValue.value = meta.heroImageUrl.trim()
   }
+
+  // Page title / eyebrow / intro
+  if (typeof meta.eyebrow === 'string' && meta.eyebrow.trim()) pageEyebrow.value = meta.eyebrow.trim()
+  if (typeof meta.headline === 'string' && meta.headline.trim()) pageTitle.value = meta.headline.trim()
+  if (typeof meta.intro === 'string' && meta.intro.trim()) introText.value = meta.intro.trim()
 
   // Gallery images — from meta.gallery (array of {label, url} like Education)
   let galleryUrls: string[] = []
@@ -532,6 +539,13 @@ onBeforeUnmount(() => {
 <template>
   <div class="education-page">
 
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="container">
+        <p class="page-header-eyebrow">{{ pageEyebrow }}</p>
+        <h1 class="page-header-title">{{ pageTitle }}</h1>
+      </div>
+    </div>
 
     <!-- Stats band — bridges hero into content -->
     <div class="container stats-band-wrap">
@@ -909,6 +923,31 @@ onBeforeUnmount(() => {
   color: #666;
   line-height: 1.5;
   font-size: 0.88rem;
+}
+
+.page-header {
+  background: var(--color-cream-soft, var(--color-cream));
+  padding: 3.5rem 0 2.5rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(22, 52, 42, 0.08);
+}
+
+.page-header-eyebrow {
+  color: var(--primary-color);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.page-header-title {
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--primary-dark);
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 /* ===== Cream / light sections ===== */

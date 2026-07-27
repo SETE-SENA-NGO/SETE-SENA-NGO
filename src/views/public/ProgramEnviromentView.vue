@@ -1,20 +1,5 @@
 <template>
   <div class="environment-page">
-    <!-- Hero Section -->
-    <section class="hero" style="position: relative; min-height: 70vh; overflow: hidden; display: flex; align-items: center;">
-      <div style="position: absolute; inset: 0; z-index: 0;">
-        <img src="/images/programs/environment.jpg" alt="Environment" style="width: 100%; height: 100%; object-fit: cover;" />
-      </div>
-      <div class="hero-overlay" style="z-index: 1;"></div>
-      <div class="hero-content" style="z-index: 2;">
-        <span class="badge">Environment Program</span>
-        <h1>Protecting the land that sustains villages.</h1>
-        <p class="hero-subtitle">
-          Community forestry, tree nurseries, WASH and climate adaptation help families care for the natural resources around them.
-        </p>
-      </div>
-    </section>
-
     <!-- Program Overview Section -->
     <section class="section overview-section">
       <div class="container">
@@ -437,79 +422,6 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
 
 .alt-bg {
   background: var(--color-cream-soft);
-}
-
-/* =====================
-   Hero
-   ===================== */
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-      90deg,
-      rgba(6, 18, 13, 0.82) 0%,
-      rgba(6, 18, 13, 0.5) 42%,
-      rgba(6, 18, 13, 0.18) 72%,
-      transparent 100%
-    ),
-    radial-gradient(circle at 75% 30%, rgba(27, 163, 79, 0.3) 0%, transparent 60%);
-}
-
-.hero-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  text-align: left;
-  max-width: 720px;
-  margin: 0;
-  left: var(--container-offset);
-  padding: 3rem 1.5rem;
-  animation: fadeInUp 0.8s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.badge {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #ffffff;
-  margin-bottom: 1.25rem;
-  padding: 0.35rem 1.1rem;
-  border: 0px solid rgba(255, 255, 255, 0.3);
-  border-radius: 9999px;
-  background: none;
-  backdrop-filter: none;
-}
-
-.hero-content h1 {
-  font-weight: 800;
-  color: #ffffff;
-  margin-bottom: 1.25rem;
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25);
-}
-
-.hero-subtitle {
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.7;
-  max-width: 600px;
-  margin: 0;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* =====================
@@ -1105,10 +1017,6 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
 }
 
 @media (max-width: 480px) {
-  .hero {
-    min-height: 55vh;
-    padding: 3rem 1.25rem;
-  }
   .impact-grid {
     gap: 0.75rem;
   }

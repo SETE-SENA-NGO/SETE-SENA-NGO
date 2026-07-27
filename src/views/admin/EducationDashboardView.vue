@@ -9,6 +9,7 @@ import {
   Layers,
   Plus,
   Save,
+  Type,
   Users,
 } from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
@@ -119,6 +120,11 @@ function defaultSections() {
   ]
 }
 
+const heroTitle = ref('Access to Education')
+const heroIntro = ref(
+  'Community pre-schools, mobile libraries, scholarships for poor children and the preservation of Buddhist education in pagoda settings across rural Cambodia.',
+)
+
 const page = ref<PageDraft>({
   slug: 'programs-education',
   title: 'Education',
@@ -145,6 +151,7 @@ const rawMetadata = ref<Record<string, unknown>>({})
 /* ─── Collapsible panels ───────────────────────── */
 const expandedPanels = ref<Record<string, boolean>>({
   'quick-links': true,
+  'page-header': true,
   'page-images': true,
   'stats': true,
   'content': true,
@@ -213,6 +220,8 @@ function loadFromLocalStorage(): void {
 
 function snapshotData(): string {
   return JSON.stringify({
+    heroTitle: heroTitle.value,
+    heroIntro: heroIntro.value,
     galleryImages: page.value.galleryImages.map(g => ({ ...g })),
     sections: page.value.sections.map(s => ({ ...s })),
     statsBand: statsBand.value.map(s => ({ ...s })),
@@ -268,6 +277,10 @@ async function loadPageContent() {
     if (data && data.metadata) {
       const meta = data.metadata as Record<string, unknown>
       rawMetadata.value = { ...meta }
+
+      // Hero title & intro
+      if (typeof meta.headline === 'string' && meta.headline.trim()) heroTitle.value = meta.headline.trim()
+      if (typeof meta.intro === 'string' && meta.intro.trim()) heroIntro.value = meta.intro.trim()
 
       // Image gallery — prefer gallery array, fall back to individual fields
       const galleryFromMeta = meta.gallery as GalleryImage[] | undefined
@@ -353,6 +366,8 @@ async function savePageContent() {
       status: 'published',
       metadata: {
         ...rawMetadata.value,
+        headline: heroTitle.value,
+        intro: heroIntro.value,
         // Store gallery array and individual fields for backward compatibility
         gallery: page.value.galleryImages,
         introImageUrl: page.value.galleryImages[0]?.url || '',
@@ -558,7 +573,10 @@ onMounted(async () => {
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">Loading Education content...</div>
+        <div v-if="loading" class="state-card">
+          <span class="state-spinner" aria-hidden="true"></span>
+          <span>Loading Education content...</span>
+        </div>
 
         <div v-else class="content-grid">
           <!-- ═══ Quick links ═══ -->
@@ -587,6 +605,28 @@ onMounted(async () => {
                   <span>Manage education data entries</span>
                 </div>
               </RouterLink>
+            </div>
+          </CollapsiblePanel>
+
+          <!-- ═══ Page header ═══ -->
+          <CollapsiblePanel
+            v-model:expanded="expandedPanels['page-header']"
+            title="Page title &amp; intro"
+            kicker="Public page header"
+            heading-id="page-header-heading"
+          >
+            <template #icon>
+              <Type :size="18" aria-hidden="true" />
+            </template>
+
+            <p class="panel-desc">Edit the main title and intro paragraph shown at the top of the public Education page.</p>
+            <div class="header-field">
+              <label for="edu-hero-title">Page title</label>
+              <input id="edu-hero-title" v-model="heroTitle" type="text" placeholder="e.g. Access to Education" />
+            </div>
+            <div class="header-field">
+              <label for="edu-hero-intro">Intro paragraph</label>
+              <textarea id="edu-hero-intro" v-model="heroIntro" rows="3" placeholder="Short paragraph introducing the program"></textarea>
             </div>
           </CollapsiblePanel>
 
@@ -729,7 +769,6 @@ onMounted(async () => {
 .manager-main {
   min-height: 100vh;
   padding: 1.25rem;
-  padding-top: calc(60px + 1.25rem);
 }
 
 /* ─── Hero banner ───────────────────────────────── */
@@ -920,13 +959,32 @@ onMounted(async () => {
 
 /* ─── State / loading ───────────────────────────── */
 .state-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   margin-top: 1rem;
   border: 1px solid var(--admin-theme-border);
   border-radius: 10px;
   background: var(--admin-theme-surface);
   color: var(--admin-theme-muted);
-  padding: 1rem;
+  padding: 2.5rem 1rem;
   font-weight: 700;
+  text-align: center;
+}
+
+.state-spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--admin-theme-border);
+  border-top-color: var(--admin-theme-primary);
+  border-radius: 50%;
+  animation: state-spin 0.8s linear infinite;
+}
+
+@keyframes state-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ─── Content grid ──────────────────────────────── */
@@ -981,6 +1039,42 @@ onMounted(async () => {
   color: var(--admin-theme-muted);
   font-size: 0.74rem;
   font-weight: 600;
+}
+
+/* ─── Page header fields ────────────────────────── */
+.header-field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.header-field:last-child {
+  margin-bottom: 0;
+}
+
+.header-field label {
+  color: var(--admin-theme-contrast);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.header-field input,
+.header-field textarea {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 7px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-text);
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  font-size: 0.86rem;
+  resize: vertical;
+}
+
+.header-field input:focus,
+.header-field textarea:focus {
+  outline: none;
+  border-color: var(--admin-theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
 }
 
 /* ─── Field hints ───────────────────────────────── */
@@ -1047,7 +1141,6 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
-    padding-top: calc(60px + 1rem);
   }
 
   .manager-hero {

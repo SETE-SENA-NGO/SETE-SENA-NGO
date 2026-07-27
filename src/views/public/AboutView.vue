@@ -394,7 +394,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
         <!-- Decorative connecting path -->
         <div class="geo-connector" aria-hidden="true">
           <svg viewBox="0 0 800 40" preserveAspectRatio="none">
-            <path d="M 80 20 Q 200 0, 400 20 T 720 20" fill="none" stroke="var(--about-border)" stroke-width="1.5"
+            <path class="geo-dash-path" d="M 80 20 Q 200 0, 400 20 T 720 20" fill="none" stroke="var(--about-border)" stroke-width="1.5"
               stroke-dasharray="8 6" />
             <circle cx="80" r="4" cy="20" fill="var(--about-highlight)" opacity="0.4" />
             <circle cx="400" r="4" cy="20" fill="var(--about-highlight)" opacity="0.4" />
@@ -506,14 +506,23 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border: 0px solid color-mix(in srgb, var(--about-saffron) 18%, transparent);
 }
 
-/* ─── Scroll-Reveal — only opacity (no transform conflict with hover) ─── */
+/* ─── Scroll-Reveal — refined, subtle entrance ─── */
 .reveal {
   opacity: 0;
-  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(24px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .reveal.revealed {
   opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes vmgFloat {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(20px, -15px); }
+  66% { transform: translate(-15px, -25px); }
 }
 
 /* ═══════════════════════════════════════════════
@@ -781,8 +790,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
       rgba(255, 255, 255, 0.15) 50%,
       transparent 65%);
   transform: translateX(-100%);
-  display: none;
-  animation: none !important;
+  display: block;
+  animation: sweepReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
 }
 
 @keyframes sweepReveal {
@@ -997,7 +1006,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border-radius: 50%;
   filter: blur(80px);
   opacity: 0.12;
-  animation: none !important;
+  animation: vmgFloat 8s ease-in-out infinite;
 }
 
 .vmg-bg-c1 {
@@ -1087,19 +1096,20 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 .vmg-card {
   position: relative;
   border-radius: 1.5rem;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
   will-change: transform;
 }
 
 .vmg-card:hover {
-  transform: scale(1.03);
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
 }
 
 /* ── Glowing border effect ── */
 .vmg-card-glow {
   position: absolute;
-  inset: -2px;
-  border-radius: 1.6rem;
+  inset: 0;
+  border-radius: 1.5rem;
   background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -1114,7 +1124,14 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .vmg-card:hover .vmg-card-glow {
-  opacity: 0.6;
+  opacity: 0.4;
+}
+
+/* ── Geo path draw animation ── */
+.geo-dash-path {
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
+  animation: geoDashDraw 1.8s ease-out 0.3s forwards;
 }
 
 /* ── Card Inner ── */
@@ -1349,15 +1366,15 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border: 1px solid var(--about-border);
   border-radius: 1.125rem;
   padding: 1.5rem 1.25rem;
-  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, border-color 0.4s ease;
   display: flex;
   flex-direction: column;
   will-change: transform;
 }
 
 .value-card:hover {
-  transform: scale(1.04);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
   border-color: color-mix(in srgb, var(--about-saffron) 30%, transparent);
 }
 
@@ -1595,6 +1612,10 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   height: 32px;
 }
 
+@keyframes geoDashDraw {
+  to { stroke-dashoffset: 0; }
+}
+
 /* ── Card Grid ── */
 .geo-grid {
   display: grid;
@@ -1697,7 +1718,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border-radius: 50%;
   border: 2px solid var(--province-accent);
   opacity: 0;
-  animation: none !important;
+  animation: geoPulse 2.5s ease-in-out infinite;
   animation-delay: calc(var(--pulse-delay, 0) * 0.4s);
 }
 
