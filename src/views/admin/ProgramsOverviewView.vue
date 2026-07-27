@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -23,12 +23,58 @@ const loading = ref(false)
 const saving = ref(false)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 
-// ── Image upload — reuses the same ImageUploader.vue component as the
-// Donate admin page (Supabase storage via media.store.ts → upload()).
-// Toggle map: which goal's uploader panel is currently open.
-const imageEditorsOpen = reactive<Record<string, boolean>>({})
-function toggleImageEditor(key: string) {
-  imageEditorsOpen[key] = !imageEditorsOpen[key]
+// ── Image upload — reuses the same Google Drive upload flow as the
+// Media Library page (media.store.ts → uploadToGoogleDrive → Netlify
+// function /api/google-drive-upload). No separate storage bucket needed.
+const uploadingIndex = ref<number | null>(null)
+const dragIndex = ref<number | null>(null)
+const uploadError = ref<string | null>(null)
+
+async function uploadGoalImage(file: File, index: number) {
+  if (!file.type.startsWith('image/')) {
+    uploadError.value = 'Please choose an image file.'
+    return
+  }
+  const target = goals[index]
+  if (!target) return
+
+  uploadingIndex.value = index
+  uploadError.value = null
+  try {
+    const displayName = `${target.title || 'Program goal'} image`
+    const item = await media.uploadToGoogleDrive(file, displayName)
+    target.image = item.url
+    notice.value = {
+      type: 'success',
+      message: 'Image uploaded to Google Drive. Click "Save & view page" to publish it.',
+    }
+  } catch (e: unknown) {
+    console.error('uploadGoalImage error:', e)
+    uploadError.value = e instanceof Error ? e.message : 'Image upload failed.'
+  } finally {
+    uploadingIndex.value = null
+  }
+}
+
+function onFileInputChange(e: Event, index: number) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (file) uploadGoalImage(file, index)
+  input.value = ''
+}
+
+function onImageDrop(e: DragEvent, index: number) {
+  dragIndex.value = null
+  const file = e.dataTransfer?.files?.[0]
+  if (file) uploadGoalImage(file, index)
+}
+
+function onImageDragOver(index: number) {
+  dragIndex.value = index
+}
+
+function onImageDragLeave(index: number) {
+  if (dragIndex.value === index) dragIndex.value = null
 }
 
 // Public route this admin page edits.
