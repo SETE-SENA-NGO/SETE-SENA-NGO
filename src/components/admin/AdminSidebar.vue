@@ -55,7 +55,7 @@ const pageGroups: PageGroup[] = [
     slug: 'about',
     labelKey: 'admin.sidebar.about',
     items: [
-      { slug: 'about-vision', labelKey: 'admin.sidebar.visionMission' },
+      { slug: 'about-vision', labelKey: 'admin.sidebar.visionMission', path: '/admin/vision-mission' },
       // { slug: 'about-organization', labelKey: 'admin.sidebar.organization' },
     ],
   },
@@ -64,6 +64,11 @@ const pageGroups: PageGroup[] = [
     labelKey: 'admin.sidebar.programs',
     path: '/admin/programs',
     items: [
+      {
+        slug: 'programs-overview',
+        labelKey: 'admin.sidebar.overview',
+        path: '/admin/programs',
+      },
       {
         slug: 'programs-education',
         labelKey: 'admin.sidebar.education',
@@ -101,6 +106,11 @@ const pageGroups: PageGroup[] = [
     labelKey: 'admin.sidebar.getInvolved',
     path: '/admin/get-involved',
     items: [
+      {
+        slug: 'get-involved-overview',
+        labelKey: 'admin.sidebar.overview',
+        path: '/admin/get-involved',
+      },
       { slug: 'get-involved-donate', labelKey: 'admin.sidebar.donate' },
       { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer', path: '/admin/volunteer' },
       { slug: 'get-involved-partner', labelKey: 'admin.sidebar.partner' },
@@ -138,7 +148,9 @@ function isSummaryActive(group: PageGroup) {
   const isChildActive = group.items.some((item) =>
     isActive(item.path ?? editorPath(item.slug)),
   )
-  if (isChildActive) return false
+  if (isChildActive) {
+    return !isGroupOpen(group)
+  }
 
   const groupPath = group.path ?? editorPath(group.slug)
   return isActive(groupPath)
@@ -154,6 +166,18 @@ function toggleGroup(group: PageGroup) {
   const nextOverrides = new Map(groupOverrides.value)
   nextOverrides.set(group.slug, !isGroupOpen(group))
   groupOverrides.value = nextOverrides
+}
+
+function onGroupClick(group: PageGroup) {
+  if (group.path) {
+    if (!isGroupOpen(group)) {
+      toggleGroup(group)
+    }
+    void router.push(group.path)
+    ui.closeSidebarForNavigation()
+  } else {
+    toggleGroup(group)
+  }
 }
 
 function submenuId(group: PageGroup) {
@@ -264,66 +288,71 @@ onUnmounted(() => {
 
       <p class="nav-heading">{{ t('admin.sidebar.websitePages') }}</p>
 
-      <!-- Flat single pages -->
-      <RouterLink
-        v-for="group in pageGroups.filter((g) => !g.items.length)"
-        :key="group.slug"
-        :to="group.path ?? editorPath(group.slug)"
-        :class="[
-          'link',
-          { active: isActive(group.path ?? editorPath(group.slug)) },
-        ]"
-        :data-nav-active="isActive(group.path ?? editorPath(group.slug))"
-        @click="ui.closeSidebarForNavigation"
-      >
-        <span class="link-icon icon-pages" aria-hidden="true"></span>
-        <span>{{ t(group.labelKey) }}</span>
-      </RouterLink>
-
-      <!-- Expandable groups with sub-pages -->
-      <div
-        v-for="group in pageGroups.filter((g) => g.items.length)"
-        :key="group.slug"
-        class="nav-group"
-        :class="{ open: isGroupOpen(group) }"
-      >
-        <div class="nav-group-row">
-          <button
-            class="link summary-link"
-            type="button"
-            :class="{ active: isSummaryActive(group) }"
-            :data-nav-active="isSummaryActive(group)"
-            :aria-controls="submenuId(group)"
-            :aria-expanded="isGroupOpen(group)"
-            @click="toggleGroup(group)"
-          >
-            <span class="link-icon icon-pages" aria-hidden="true"></span>
-            <span class="link-label">{{ t(group.labelKey) }}</span>
-            <span class="toggle-chevron" aria-hidden="true"></span>
-          </button>
-        </div>
-        <div
-          class="submenu-wrap"
-          :class="{ open: isGroupOpen(group) }"
-          :inert="!isGroupOpen(group)"
-          @transitionend="updateActiveIndicator"
+      <template v-for="group in pageGroups" :key="group.slug">
+        <!-- Flat single pages -->
+        <RouterLink
+          v-if="!group.items.length"
+          :to="group.path ?? editorPath(group.slug)"
+          :class="[
+            'link',
+            { active: isActive(group.path ?? editorPath(group.slug)) },
+          ]"
+          :data-nav-active="isActive(group.path ?? editorPath(group.slug))"
+          @click="ui.closeSidebarForNavigation"
         >
-          <div :id="submenuId(group)" class="submenu">
-            <RouterLink
-              v-for="item in group.items"
-              :key="item.slug"
-              :to="item.path ?? editorPath(item.slug)"
-              :class="[
-                'sub-link',
-                { active: isActive(item.path ?? editorPath(item.slug)) },
-              ]"
-              @click="ui.closeSidebarForNavigation"
+          <span class="link-icon icon-pages" aria-hidden="true"></span>
+          <span>{{ t(group.labelKey) }}</span>
+        </RouterLink>
+
+        <!-- Expandable groups with sub-pages -->
+        <div
+          v-else
+          class="nav-group"
+          :class="{ open: isGroupOpen(group) }"
+        >
+          <div class="nav-group-row">
+            <button
+              class="link summary-link"
+              type="button"
+              :class="{ active: isSummaryActive(group) }"
+              :data-nav-active="isSummaryActive(group)"
+              :aria-controls="submenuId(group)"
+              :aria-expanded="isGroupOpen(group)"
+              @click="onGroupClick(group)"
             >
-              {{ t(item.labelKey) }}
-            </RouterLink>
+              <span class="link-icon icon-pages" aria-hidden="true"></span>
+              <span class="link-label">{{ t(group.labelKey) }}</span>
+              <span
+                class="toggle-chevron"
+                aria-hidden="true"
+                @click.stop="toggleGroup(group)"
+              ></span>
+            </button>
+          </div>
+          <div
+            class="submenu-wrap"
+            :class="{ open: isGroupOpen(group) }"
+            :inert="!isGroupOpen(group)"
+            @transitionend="updateActiveIndicator"
+          >
+            <div :id="submenuId(group)" class="submenu">
+              <RouterLink
+                v-for="item in group.items"
+                :key="item.slug"
+                :to="item.path ?? editorPath(item.slug)"
+                :class="[
+                  'sub-link',
+                  { active: isActive(item.path ?? editorPath(item.slug)) },
+                ]"
+                @click="ui.closeSidebarForNavigation"
+              >
+                <span class="sub-dot" aria-hidden="true"></span>
+                <span>{{ t(item.labelKey) }}</span>
+              </RouterLink>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
     </nav>
 
     <div class="bottom">
@@ -820,11 +849,26 @@ nav .link.active {
 .submenu-wrap {
   display: grid;
   grid-template-rows: 0fr;
+<<<<<<< HEAD
   transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+=======
+  overflow: hidden;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.25s step-end;
+>>>>>>> 69077cc (feat: update navbar style for admin page)
 }
 
 .submenu-wrap.open {
   grid-template-rows: 1fr;
+<<<<<<< HEAD
+=======
+  visibility: visible;
+  transition:
+    grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s step-start;
+>>>>>>> 69077cc (feat: update navbar style for admin page)
 }
 
 .submenu {
@@ -832,39 +876,80 @@ nav .link.active {
   overflow: hidden;
   display: grid;
   gap: 0.2rem;
+<<<<<<< HEAD
   padding: 0.2rem 0 0.35rem 1.4rem;
   margin-left: 0.35rem;
   border-left: 1px solid var(--sb-divider);
+=======
+  padding: 0.25rem 0 0.35rem 0.95rem;
+  margin-left: 0.75rem;
+  border-left: 2px solid color-mix(in srgb, var(--sb-accent) 18%, var(--sb-divider));
+  border-radius: 0 0 0 4px;
+}
+
+.sub-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--sb-muted);
+  opacity: 0.55;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+.sub-link:hover .sub-dot {
+  opacity: 1;
+  transform: scale(1.35);
+  background: var(--sb-accent);
+}
+
+.sub-link.active .sub-dot {
+  opacity: 1;
+  transform: scale(1.5);
+  background: var(--sb-accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--sb-accent) 60%, transparent);
+>>>>>>> 69077cc (feat: update navbar style for admin page)
 }
 
 .sub-link {
   display: flex;
   align-items: center;
+<<<<<<< HEAD
   min-height: 40px;
   gap: 0.6rem;
   border-radius: 7px;
   color: var(--sb-muted);
   padding: 0.55rem 0.7rem;
+=======
+  min-height: 38px;
+  gap: 0.65rem;
+  border-radius: 7px;
+  color: var(--sb-text);
+  opacity: 0.78;
+  padding: 0.48rem 0.75rem;
+>>>>>>> 69077cc (feat: update navbar style for admin page)
   font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
   transition:
-    color 0.15s ease,
-    background 0.15s ease;
-}
-
-.sub-link .link-icon {
-  width: 0.75rem;
-  height: 0.75rem;
-  flex: 0 0 auto;
-  position: relative;
-  color: currentColor;
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
 }
 
 .sub-link:hover {
+  opacity: 1;
   background: var(--sb-hover-bg);
   color: var(--sb-text-strong);
+  transform: translateX(3px);
+}
+
+.sub-link:focus-visible {
+  outline: none;
+  color: var(--sb-text-strong);
+  box-shadow: 0 0 0 2px var(--sb-accent-soft);
 }
 
 .sub-link:focus-visible {
@@ -874,9 +959,12 @@ nav .link.active {
 }
 
 .sub-link.active {
+  opacity: 1;
   background: var(--sb-accent-soft);
   color: var(--sb-active-text);
-  box-shadow: inset 2px 0 0 var(--sb-accent);
+  font-weight: 800;
+  box-shadow: inset 3px 0 0 var(--sb-accent);
+  transform: translateX(2px);
 }
 
 .bottom {
