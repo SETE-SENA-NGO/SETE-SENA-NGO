@@ -9,20 +9,11 @@
           <div class="manager-title">
             <p class="eyebrow">About</p>
             <h1>Manage About Page</h1>
-            <div class="manager-meta">
-              <span>Core values</span>
-              <span>Team</span>
-              <span>Geographical reach</span>
-            </div>
           </div>
           <div class="hero-actions">
             <v-btn variant="tonal" to="/about" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn variant="tonal" @click="resetToDefaults">
-              <v-icon start>mdi-restore</v-icon>
-              Reset draft
             </v-btn>
             <v-btn color="primary" variant="tonal" :disabled="saving" @click="savePage">
               <v-icon start>mdi-content-save</v-icon>
