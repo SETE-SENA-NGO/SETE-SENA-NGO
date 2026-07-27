@@ -1,14 +1,22 @@
 <template>
-  <div class="environment-page">
+  <div v-if="loading" class="environment-page loading-state">
+    <div class="container">
+      <div class="loading-spinner-wrap">
+        <span class="loading-spinner"></span>
+        <span>Loading...</span>
+      </div>
+    </div>
+  </div>
+
+  <div v-else class="environment-page">
     <!-- Program Overview Section -->
     <section class="section overview-section">
       <div class="container">
         <div class="section-header reveal-header">
           <span class="section-label">Our Approach</span>
-          <h2>Environmental Stewardship in Action</h2>
+          <h2>{{ pageTitle }}</h2>
           <p class="section-desc">
-            Our environment program takes a holistic approach to conservation, combining immediate
-            action with long-term community education and sustainable development.
+            {{ pageIntro }}
           </p>
         </div>
         <div class="overview-grid">
@@ -30,7 +38,7 @@
                 stroke-width="1.8"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                v-html="card.svgPaths"
+                v-html="cardSvgPaths[card.icon] || cardSvgPaths.shield"
               />
             </div>
             <h3>{{ card.title }}</h3>
@@ -58,7 +66,7 @@
             :ref="el => setRef(el, 'initiatives', i)"
           >
             <div class="initiative-image">
-              <img :src="item.img" :alt="item.title" loading="lazy" />
+              <img :src="item.img || defaultInitiativeImg" :alt="item.title" loading="lazy" />
               <div class="initiative-overlay" />
             </div>
             <div class="initiative-content">
@@ -99,8 +107,7 @@
           <span class="section-label">Our Process</span>
           <h2>How We Work</h2>
           <p class="section-desc">
-            Our approach combines scientific expertise with community participation to create
-            lasting environmental change.
+            {{ processIntro }}
           </p>
         </div>
         <div class="process-steps">
@@ -121,7 +128,7 @@
     </section>
 
     <!-- Quote Section -->
-    <section class="quote-section">
+    <section class="quote-section" v-if="quoteContent.text">
       <div class="container">
         <blockquote
           class="quote-animate"
@@ -147,11 +154,9 @@
             />
           </svg>
           <p class="quote-text">
-            "We do not inherit the earth from our ancestors; we borrow it from our children. Our
-            environmental program is a pledge to protect that inheritance and ensure future
-            generations inherit a planet that is healthy, vibrant, and full of possibility."
+            "{{ quoteContent.text }}"
           </p>
-          <cite>— SETE SENA Environmental Team</cite>
+          <cite>{{ quoteContent.cite }}</cite>
         </blockquote>
       </div>
     </section>
@@ -164,14 +169,11 @@
           :class="{ visible: ctaVisible }"
           ref="ctaRef"
         >
-          <h2>Join the Environmental Movement</h2>
-          <p>
-            Whether you want to volunteer, partner with us, or support our conservation efforts,
-            your contribution helps create a sustainable future for all.
-          </p>
+          <h2>{{ ctaContent.heading }}</h2>
+          <p>{{ ctaContent.description }}</p>
           <div class="cta-actions">
-            <router-link to="/contact" class="btn btn-primary">Get Involved</router-link>
-            <router-link to="/about" class="btn btn-outline">Learn More</router-link>
+            <router-link :to="ctaContent.primaryBtnUrl || '/contact'" class="btn btn-primary">{{ ctaContent.primaryBtnText || 'Get Involved' }}</router-link>
+            <router-link :to="ctaContent.secondaryBtnUrl || '/about'" class="btn btn-outline">{{ ctaContent.secondaryBtnText || 'Learn More' }}</router-link>
           </div>
         </div>
       </div>
@@ -181,82 +183,104 @@
 
 <script setup>
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
+import { supabase } from '@/lib/supabase'
+import { normalizeMediaUrl } from '@/lib/media'
 
-/* ─── Static data ──────────────────────────────── */
-const overviewCards = [
+/* ─── SVG paths for approach card icons ────────── */
+const cardSvgPaths = {
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  leaf: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  'tree-pine': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+}
+
+const defaultInitiativeImg = 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80'
+
+/* ─── Default data ──────────────────────────────── */
+const defaultOverviewCards = [
   {
     title: 'Conservation',
     text: 'Protecting and restoring natural habitats, wildlife corridors, and biodiversity hotspots through community-led initiatives and scientific research.',
-    svgPaths: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    icon: 'shield',
   },
   {
     title: 'Sustainability',
     text: 'Promoting renewable energy, sustainable agriculture, and circular economy practices that reduce environmental impact while supporting livelihoods.',
-    svgPaths: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+    icon: 'leaf',
   },
   {
     title: 'Community Engagement',
     text: 'Empowering local communities with knowledge, resources, and tools to actively participate in environmental protection and climate action.',
-    svgPaths: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    icon: 'users',
   },
 ]
 
-const initiatives = [
-  {
-    title: 'Reforestation Projects',
-    text: 'Planting native tree species to restore degraded forests, combat desertification, and create carbon sinks. We\'ve planted over 500,000 trees across 12 communities.',
-    img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80',
-  },
-  {
-    title: 'Environmental Education',
-    text: 'Developing curriculum and training programs for schools and community groups to build environmental literacy and promote sustainable practices from an early age.',
-    img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
-  },
-  {
-    title: 'Renewable Energy Access',
-    text: 'Installing solar panels and clean energy solutions in rural communities, reducing dependence on fossil fuels and improving quality of life.',
-    img: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80',
-  },
-  {
-    title: 'Water Conservation',
-    text: 'Implementing rainwater harvesting, watershed management, and water purification systems to ensure clean water access and protect aquatic ecosystems.',
-    img: 'https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80',
-  },
-  {
-    title: 'Sustainable Agriculture',
-    text: 'Training farmers in organic farming, crop rotation, and agroforestry techniques that increase yields while preserving soil health and biodiversity.',
-    img: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80',
-  },
-  {
-    title: 'Climate Research & Advocacy',
-    text: 'Conducting climate impact assessments and advocating for policy changes that protect vulnerable ecosystems and promote environmental justice.',
-    img: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80',
-  },
+const defaultInitiatives = [
+  { title: 'Reforestation Projects', text: 'Planting native tree species to restore degraded forests. We\'ve planted over 500,000 trees across 12 communities.', img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80' },
+  { title: 'Environmental Education', text: 'Developing curriculum and training programs for schools to build environmental literacy from an early age.', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80' },
+  { title: 'Renewable Energy Access', text: 'Installing solar panels and clean energy solutions in rural communities, reducing dependence on fossil fuels.', img: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80' },
+  { title: 'Water Conservation', text: 'Implementing rainwater harvesting, watershed management, and water purification systems.', img: 'https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80' },
+  { title: 'Sustainable Agriculture', text: 'Training farmers in organic farming, crop rotation, and agroforestry techniques.', img: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80' },
+  { title: 'Climate Research & Advocacy', text: 'Conducting climate impact assessments and advocating for policy changes.', img: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80' },
 ]
 
-const impactStatsRaw = [
+function parseNumberToEndAndSuffix(numStr) {
+  if (!numStr) return { end: 0, suffix: '' }
+  const match = numStr.match(/^([\d,.]+)\s*([kKmM+%]*)/)
+  if (!match) return { end: 0, suffix: '' }
+  const num = parseFloat(match[1].replace(/,/g, '')) || 0
+  const suffix = match[2] || ''
+  return { end: num, suffix }
+}
+
+/* ─── State ─────────────────────────────────────── */
+const loading = ref(true)
+const pageTitle = ref('Environmental Stewardship in Action')
+const pageIntro = ref('Our environment program takes a holistic approach to conservation, combining immediate action with long-term community education and sustainable development.')
+const processIntro = ref('Our approach combines scientific expertise with community participation to create lasting environmental change.')
+
+const overviewCards = ref([...defaultOverviewCards])
+const initiatives = ref([...defaultInitiatives])
+
+const impactStatsRaw = ref([
   { label: 'Trees Planted', end: 500, suffix: 'K+' },
   { label: 'Communities Served', end: 12, suffix: '' },
   { label: 'Ecosystems Protected', end: 50, suffix: '+' },
   { label: 'People Trained', end: 10, suffix: 'K+' },
-]
+])
 
 const impactStats = reactive(
-  impactStatsRaw.map(s => ({ ...s, displayed: s.end + s.suffix }))
+  impactStatsRaw.value.map(s => ({ ...s, displayed: s.end + s.suffix }))
 )
 
-const processSteps = [
+const processSteps = ref([
   { number: '01', title: 'Assessment', text: 'We conduct comprehensive environmental assessments to understand local ecosystems, identify challenges, and prioritize interventions.' },
   { number: '02', title: 'Planning', text: 'Working with community leaders and environmental experts, we develop tailored action plans that balance conservation with community needs.' },
   { number: '03', title: 'Implementation', text: 'We execute projects with active community participation, ensuring local ownership and building capacity for long-term sustainability.' },
   { number: '04', title: 'Monitoring & Learning', text: 'Continuous monitoring and evaluation help us measure impact, learn from experiences, and adapt our strategies for greater effectiveness.' },
-]
+])
+
+const quoteContent = ref({
+  text: 'We do not inherit the earth from our ancestors; we borrow it from our children. Our environmental program is a pledge to protect that inheritance and ensure future generations inherit a planet that is healthy, vibrant, and full of possibility.',
+  cite: '— SETE SENA Environmental Team',
+})
+
+const ctaContent = ref({
+  heading: 'Join the Environmental Movement',
+  description: 'Whether you want to volunteer, partner with us, or support our conservation efforts, your contribution helps create a sustainable future for all.',
+  primaryBtnText: 'Get Involved',
+  primaryBtnUrl: '/contact',
+  secondaryBtnText: 'Learn More',
+  secondaryBtnUrl: '/about',
+})
 
 /* ─── Visibility state ─────────────────────────── */
 const visibleCards = reactive({
-  overview: Array(overviewCards.length).fill(false),
-  initiatives: Array(initiatives.length).fill(false),
-  process: Array(processSteps.length).fill(false),
+  overview: Array(overviewCards.value.length).fill(false),
+  initiatives: Array(initiatives.value.length).fill(false),
+  process: Array(processSteps.value.length).fill(false),
 })
 const statsVisible = ref(false)
 const quoteVisible = ref(false)
@@ -307,8 +331,226 @@ function animateCounter(statObj) {
   requestAnimationFrame(tick)
 }
 
+const PAGE_STORAGE_KEY = 'env-dashboard-page'
+
+/* ─── Load from localStorage (admin fallback) ──── */
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(PAGE_STORAGE_KEY)
+    if (!raw) return false
+
+    const saved = JSON.parse(raw)
+
+    if (saved.headline) pageTitle.value = saved.headline
+    if (saved.intro) pageIntro.value = saved.intro
+
+    // Approach cards
+    if (Array.isArray(saved.approachCards) && saved.approachCards.length > 0) {
+      overviewCards.value = saved.approachCards.map(c => ({
+        title: c.title || '',
+        text: c.text || '',
+        icon: c.icon || 'shield',
+      }))
+    }
+
+    // Initiatives — normalize Google Drive image URLs through proxy
+    if (Array.isArray(saved.initiatives) && saved.initiatives.length > 0) {
+      initiatives.value = saved.initiatives.map(item => ({
+        title: item.title || '',
+        text: item.text || '',
+        img: normalizeMediaUrl(item.img || ''),
+      }))
+    }
+
+    // Process steps
+    if (Array.isArray(saved.processSteps) && saved.processSteps.length > 0) {
+      processSteps.value = saved.processSteps.map(step => ({
+        number: step.number || '',
+        title: step.title || '',
+        text: step.text || '',
+      }))
+    }
+
+    // Stats — convert from admin format to public format
+    if (Array.isArray(saved.statsBand) && saved.statsBand.length > 0) {
+      impactStatsRaw.value = saved.statsBand.map(stat => {
+        const parsed = parseNumberToEndAndSuffix(stat.number || '0')
+        return {
+          label: stat.label || '',
+          end: parsed.end,
+          suffix: parsed.suffix,
+        }
+      })
+      // Rebuild impactStats reactive
+      impactStats.length = 0
+      impactStatsRaw.value.forEach(s => {
+        impactStats.push({ ...s, displayed: s.end + s.suffix })
+      })
+    }
+
+    // Quote
+    if (saved.quoteContent && typeof saved.quoteContent === 'object') {
+      if (saved.quoteContent.text) quoteContent.value.text = saved.quoteContent.text
+      if (saved.quoteContent.cite) quoteContent.value.cite = saved.quoteContent.cite
+    }
+
+    // CTA
+    if (saved.ctaContent && typeof saved.ctaContent === 'object') {
+      const cta = saved.ctaContent
+      if (cta.heading) ctaContent.value.heading = cta.heading
+      if (cta.description) ctaContent.value.description = cta.description
+      if (cta.primaryBtnText) ctaContent.value.primaryBtnText = cta.primaryBtnText
+      if (cta.primaryBtnUrl) ctaContent.value.primaryBtnUrl = cta.primaryBtnUrl
+      if (cta.secondaryBtnText) ctaContent.value.secondaryBtnText = cta.secondaryBtnText
+      if (cta.secondaryBtnUrl) ctaContent.value.secondaryBtnUrl = cta.secondaryBtnUrl
+    }
+
+    return true
+  } catch {
+    return false
+  }
+}
+
+/* ─── Load from Supabase ───────────────────────── */
+async function loadPageContent() {
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('title, summary, description, metadata')
+      .eq('slug', 'programs-environment')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('Failed to load environment page from Supabase:', error.message)
+      // Try localStorage fallback
+      if (loadFromLocalStorage()) {
+        console.log('[EnvPage] Loaded from localStorage fallback.')
+      }
+      return
+    }
+
+    if (!data || !data.metadata) {
+      // No data in Supabase — try localStorage fallback
+      if (loadFromLocalStorage()) {
+        console.log('[EnvPage] Loaded from localStorage fallback.')
+      }
+      return
+    }
+
+    const meta = data.metadata
+
+    // Hero title & intro
+    if (meta.headline) pageTitle.value = meta.headline
+    if (meta.intro) pageIntro.value = meta.intro
+
+    // Approach cards
+    if (Array.isArray(meta.approachCards) && meta.approachCards.length > 0) {
+      overviewCards.value = meta.approachCards.map(c => ({
+        title: c.title || '',
+        text: c.text || '',
+        icon: c.icon || 'shield',
+      }))
+    }
+
+    // Initiatives — normalize Google Drive image URLs through proxy
+    if (Array.isArray(meta.initiatives) && meta.initiatives.length > 0) {
+      initiatives.value = meta.initiatives.map(item => ({
+        title: item.title || '',
+        text: item.text || '',
+        img: normalizeMediaUrl(item.img || ''),
+      }))
+    }
+
+    // Process steps
+    if (Array.isArray(meta.processSteps) && meta.processSteps.length > 0) {
+      processSteps.value = meta.processSteps.map(step => ({
+        number: step.number || '',
+        title: step.title || '',
+        text: step.text || '',
+      }))
+    }
+
+    // Stats — convert from admin format { number, label, description } to { label, end, suffix }
+    if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+      impactStatsRaw.value = meta.statsBand.map(stat => {
+        const parsed = parseNumberToEndAndSuffix(stat.number || '0')
+        return {
+          label: stat.label || '',
+          end: parsed.end,
+          suffix: parsed.suffix,
+        }
+      })
+      // Rebuild impactStats reactive
+      impactStats.length = 0
+      impactStatsRaw.value.forEach(s => {
+        impactStats.push({ ...s, displayed: s.end + s.suffix })
+      })
+    }
+
+    // Quote
+    if (meta.quoteContent && typeof meta.quoteContent === 'object') {
+      if (meta.quoteContent.text) quoteContent.value.text = meta.quoteContent.text
+      if (meta.quoteContent.cite) quoteContent.value.cite = meta.quoteContent.cite
+    }
+
+    // CTA
+    if (meta.ctaContent && typeof meta.ctaContent === 'object') {
+      const cta = meta.ctaContent
+      if (cta.heading) ctaContent.value.heading = cta.heading
+      if (cta.description) ctaContent.value.description = cta.description
+      if (cta.primaryBtnText) ctaContent.value.primaryBtnText = cta.primaryBtnText
+      if (cta.primaryBtnUrl) ctaContent.value.primaryBtnUrl = cta.primaryBtnUrl
+      if (cta.secondaryBtnText) ctaContent.value.secondaryBtnText = cta.secondaryBtnText
+      if (cta.secondaryBtnUrl) ctaContent.value.secondaryBtnUrl = cta.secondaryBtnUrl
+    }
+  } catch (e) {
+    console.warn('Failed to load environment content:', e)
+    // Try localStorage fallback on crash too
+    if (loadFromLocalStorage()) {
+      console.log('[EnvPage] Loaded from localStorage fallback.')
+    }
+  }
+}
+
+/* ─── Realtime subscription to programs table ──── */
+let realtimeChannel = null
+
+function setupRealtime() {
+  realtimeChannel = supabase
+    .channel('env-public-programs-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'programs',
+        filter: 'slug=eq.programs-environment',
+      },
+      () => {
+        console.log('[EnvPage] Programs table changed, reloading...')
+        void loadPageContent()
+      },
+    )
+    .subscribe()
+}
+
 /* ─── Mount ─────────────────────────────────────── */
-onMounted(() => {
+onMounted(async () => {
+  await loadPageContent()
+
+  // Update visibility arrays to match actual data lengths
+  visibleCards.overview = Array(overviewCards.value.length).fill(false)
+  visibleCards.initiatives = Array(initiatives.value.length).fill(false)
+  visibleCards.process = Array(processSteps.value.length).fill(false)
+
+  loading.value = false
+
+  // Start real-time subscription after initial load
+  setupRealtime()
+
+  // Wait for next tick to ensure refs are populated
+  await new Promise(resolve => setTimeout(resolve, 0))
+
   // Overview cards
   cardRefs.overview.forEach((el, i) => {
     observe(el, () => setTimeout(() => { visibleCards.overview[i] = true }, i * 120))
@@ -322,7 +564,7 @@ onMounted(() => {
   // Impact stats + counters
   observe(impactSectionRef.value, () => {
     statsVisible.value = true
-    impactStatsRaw.forEach((_, i) => {
+    impactStatsRaw.value.forEach((_, i) => {
       setTimeout(() => animateCounter(impactStats[i]), i * 110)
     })
   })
@@ -339,7 +581,13 @@ onMounted(() => {
   observe(ctaRef.value, () => { ctaVisible.value = true })
 })
 
-onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
+onBeforeUnmount(() => {
+  observers.forEach(io => io.disconnect())
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel)
+    realtimeChannel = null
+  }
+})
 </script>
 
 <style scoped>
@@ -352,6 +600,35 @@ onBeforeUnmount(() => observers.forEach(io => io.disconnect()))
   color: var(--color-ink);
   background: var(--color-cream);
   background-image: radial-gradient(ellipse at top center, rgba(27, 163, 79, 0.08) 0%, transparent 70%);
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 4rem 1rem;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(27, 163, 79, 0.2);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .container {

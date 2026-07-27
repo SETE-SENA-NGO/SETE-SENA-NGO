@@ -45,11 +45,11 @@ Do not use a service account with a normal personal My Drive folder. Google reje
 
 Ask for the first admin email address. The customer creates the Auth user in Supabase, then runs `supabase/create_admin_profile.sql` with that email.
 
-## Netlify Environment Variables
+## Vercel Environment Variables
 
-Add these in Netlify under Project configuration > Environment variables.
+Add these in Vercel under Project Settings > Environment Variables.
 
-Build scope:
+**Framework (Build) scope** – available during the build process (frontend):
 
 ```env
 VITE_SUPABASE_URL=
@@ -57,7 +57,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_USE_GOOGLE_DRIVE_IMAGES=true
 ```
 
-Functions scope:
+**Runtime (Serverless Function) scope** – available at runtime to the `api/` functions:
 
 ```env
 SUPABASE_URL=
@@ -115,8 +115,8 @@ https://www.googleapis.com/auth/drive
 
 ## Deploy And Verify
 
-1. Trigger a Netlify deploy.
-2. Confirm build, deploy, and post-processing complete.
+1. Push to your Git repository; Vercel will automatically deploy.
+2. Confirm the build and deployment complete successfully.
 3. Open `/admin/login` and sign in as the admin user.
 4. Open `/admin/media`.
 5. Upload a small JPG or PNG.
@@ -138,7 +138,7 @@ The customer used a service account with a personal My Drive folder. Switch to O
 
 Google rejected the service-account key before upload. Create a new JSON key for the same service
 account, replace `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`, and restart the local dev server or redeploy
-Netlify. Also confirm the Drive folder is shared with the service-account email as Editor.
+Vercel. Also confirm the Drive folder is shared with the service-account email as Editor.
 
 `Could not find the table 'public.media_assets' in the schema cache.`
 
