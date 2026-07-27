@@ -7,12 +7,61 @@ import { useLocalizedDomContent } from '@/i18n/useLocalizedDomContent'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
+const adminRouteMap: Record<string, string> = {
+  '/': '/admin',
+  '/about': '/admin/about',
+  '/about/vision': '/admin/vision-mission',
+  '/about/organization': '/admin/editor/about-organization',
+  '/programs': '/admin/programs',
+  '/programs/education': '/admin/education',
+  '/programs/environment': '/admin/environment',
+  '/programs/livelihood': '/admin/livelihood',
+  '/programs/child-protection': '/admin/child-protection',
+  '/impact/numbers': '/admin/editor/impact-numbers',
+  '/impact/timeline': '/admin/editor/impact-timeline',
+  '/impact/partners': '/admin/editor/impact-partners',
+  '/get-involved': '/admin/get-involved',
+  '/get-involved/donate': '/admin/donate',
+  '/get-involved/volunteer': '/admin/get-involved',
+  '/get-involved/partner': '/admin/get-involved',
+  '/news': '/admin/news',
+  '/contact': '/admin/contact',
+}
+
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
 const auth = useAuthStore()
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 const showAdminBar = computed(() => !isAdminRoute.value && auth.isAuthenticated)
+
+const adminTargetRoute = computed(() => {
+  return adminRouteMap[route.path] || '/admin'
+})
+
+const pageLabel = computed(() => {
+  const labels: Record<string, string> = {
+    '/': 'Home',
+    '/about': 'About',
+    '/about/vision': 'Vision & Mission',
+    '/about/organization': 'Organization',
+    '/programs': 'Programs',
+    '/programs/education': 'Education',
+    '/programs/environment': 'Environment',
+    '/programs/livelihood': 'Livelihood',
+    '/programs/child-protection': 'Child Protection',
+    '/impact/numbers': 'Impact Numbers',
+    '/impact/timeline': 'Impact Timeline',
+    '/impact/partners': 'Impact Partners',
+    '/get-involved': 'Get Involved',
+    '/get-involved/donate': 'Donate',
+    '/get-involved/volunteer': 'Volunteer',
+    '/get-involved/partner': 'Partner',
+    '/news': 'News',
+    '/contact': 'Contact',
+  }
+  return labels[route.path] || ''
+})
 
 // Initialize auth session
 void auth.init()
@@ -31,6 +80,7 @@ function confirmModal() {
 // If nothing was stored (e.g. the user navigated to the site normally),
 // it falls back to /admin.
 function goToAdmin() {
+  void router.push(adminTargetRoute.value)
   const returnPath = localStorage.getItem('admin_return_path')
   localStorage.removeItem('admin_return_path')
   void router.push(returnPath || '/admin')
@@ -64,7 +114,7 @@ function goToAdmin() {
               <path d="M19 12H5" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-            Back to Dashboard
+            {{ pageLabel ? 'Edit ' + pageLabel : 'Dashboard' }}
           </button>
         </div>
       </div>

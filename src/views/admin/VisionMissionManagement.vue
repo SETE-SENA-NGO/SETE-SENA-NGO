@@ -451,9 +451,9 @@ function mergeContent(
 ): VisionMissionContent {
   if (!override) return cloneContent(base)
 
-  const visionOverride = isRecord(override.vision) ? override.vision : {}
-  const missionOverride = isRecord(override.mission) ? override.mission : {}
-  const valuesOverride = isRecord(override.values) ? override.values : {}
+  const visionOverride = (isRecord(override.vision) ? override.vision : {}) as Partial<VisionMissionContent['vision']>
+  const missionOverride = (isRecord(override.mission) ? override.mission : {}) as Partial<VisionMissionContent['mission']>
+  const valuesOverride = (isRecord(override.values) ? override.values : {}) as Partial<VisionMissionContent['values']>
 
   return {
     vision: {

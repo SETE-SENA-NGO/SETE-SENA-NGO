@@ -1,11 +1,22 @@
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { Facebook, HeartHandshake, Mail, MapPin, Phone } from "lucide-vue-next";
+import { Mail, MapPin, Phone } from "lucide-vue-next";
 import logoUrl from "@/assets/santi_sena_logo.png";
 import pncLogoUrl from "@/assets/pnc_logo.png";
+import type { SupportedLocale } from "@/i18n";
+import {
+  contactPageSlug,
+  fallbackContactContent,
+  mergeContactContent,
+  parseContactCmsBody,
+  type ContactPageContent,
+} from "@/lib/contactContent";
+import { useContentStore } from "@/stores/content.store";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const contentStore = useContentStore();
 
 const exploreLinks = [
   { labelKey: "nav.about", to: "/about" },
@@ -14,15 +25,44 @@ const exploreLinks = [
   { labelKey: "nav.contact", to: "/contact" },
 ];
 
-const socialLinks = [
-  {
-    labelKey: "footer.facebook",
-    href: "https://www.facebook.com/Santisenaorganization/",
-    icon: Facebook,
-  },
-];
-
 const year = new Date().getFullYear();
+
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === "kh" ? "kh" : "en",
+);
+const cmsContent = ref<Partial<ContactPageContent> | null>(null);
+let stopCmsSubscription: (() => void) | null = null;
+
+const headquarters = computed(
+  () => mergeContactContent(fallbackContactContent, cmsContent.value).headquarters,
+);
+const contactEmail = computed(() => headquarters.value.email);
+const contactPhone = computed(() => headquarters.value.phone);
+const contactPhoneHref = computed(() => {
+  const digits = contactPhone.value.replace(/[^\d+]/g, "");
+  return digits ? `tel:${digits}` : "";
+});
+
+async function loadContactContent() {
+  try {
+    const page = await contentStore.fetchBySlug(contactPageSlug, activeLocale.value);
+    cmsContent.value = page ? parseContactCmsBody(page.body) : null;
+  } catch {
+    cmsContent.value = null;
+  }
+}
+
+onMounted(async () => {
+  stopCmsSubscription = contentStore.subscribeToSlug(contactPageSlug, () => {
+    void loadContactContent();
+  });
+  await loadContactContent();
+});
+
+onUnmounted(() => {
+  stopCmsSubscription?.();
+  stopCmsSubscription = null;
+});
 </script>
 
 <template>
@@ -41,7 +81,7 @@ const year = new Date().getFullYear();
         <p class="footer-provinces">{{ t("footer.provinces") }}</p>
       </div>
 
-      <nav class="footer-col">
+      <nav class="footer-col" aria-label="Footer navigation">
         <p class="footer-heading">{{ t("footer.explore") }}</p>
         <RouterLink
           v-for="link in exploreLinks"
@@ -57,53 +97,37 @@ const year = new Date().getFullYear();
         <p class="footer-heading">{{ t("footer.contactHeading") }}</p>
         <p class="footer-contact-item">
           <MapPin :size="18" aria-hidden="true" />
-          <span>{{ t("footer.address") }}</span>
+          <span>{{ headquarters.address }}</span>
         </p>
         <a
-          href="mailto:SANTISENAMONK@GMAIL.COM"
+          :href="`mailto:${contactEmail}`"
           class="footer-contact-item footer-link-inline"
         >
           <Mail :size="18" aria-hidden="true" />
-          <span>SANTISENAMONK@GMAIL.COM</span>
+          <span>{{ contactEmail }}</span>
         </a>
         <a
-          href="tel:+85577655464"
+          :href="contactPhoneHref"
           class="footer-contact-item footer-link-inline"
         >
           <Phone :size="18" aria-hidden="true" />
-          <span>(+855-77) 65 54 64</span>
+          <span>{{ contactPhone }}</span>
         </a>
-
-        <div class="footer-social">
-          <a
-            v-for="social in socialLinks"
-            :key="social.labelKey"
-            :href="social.href"
-            :aria-label="t(social.labelKey)"
-            class="footer-social-link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <component :is="social.icon" :size="18" />
-          </a>
-          <RouterLink to="/get-involved/donate" class="footer-donate-btn">
-            <HeartHandshake :size="17" aria-hidden="true" />
-            {{ t("actions.donate") }}
-          </RouterLink>
-        </div>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p>&copy; {{ year }} {{ t("footer.rights") }}</p>
-      <p>{{ t("footer.partners") }}</p>
-      <p class="footer-credit">
-        {{ t("footer.builtBy") }}
-        <img
-          :src="pncLogoUrl"
-          alt="Passerelles Numériques Cambodia"
-          class="footer-credit-logo"
-        />
+      <p class="footer-bottom-note">&copy; {{ year }} {{ t("footer.rights") }}</p>
+      <p class="footer-bottom-note">{{ t("footer.partners") }}</p>
+      <p
+        class="footer-credit"
+        :aria-label="`${t('footer.builtBy')} Passerelles Numériques Cambodia`"
+      >
+        <span class="footer-credit-label">{{ t("footer.builtBy") }}</span>
+        <span class="footer-credit-mark">
+          <img :src="pncLogoUrl" alt="" aria-hidden="true" />
+        </span>
+        <span class="footer-credit-name">Passerelles Numériques Cambodia</span>
       </p>
     </div>
   </footer>
@@ -118,11 +142,19 @@ const year = new Date().getFullYear();
   --footer-muted: rgba(255, 255, 255, 0.64);
   --footer-border: rgba(255, 255, 255, 0.14);
   --footer-accent: #d8b15a;
+  --footer-accent-soft: rgba(216, 177, 90, 0.2);
 
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(15, 143, 105, 0.24), rgba(8, 63, 51, 0) 34%),
+    linear-gradient(180deg, rgba(15, 143, 105, 0.28), rgba(8, 63, 51, 0) 36%),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.025) 0,
+      rgba(255, 255, 255, 0.025) 1px,
+      transparent 1px,
+      transparent 18px
+    ),
     linear-gradient(
       135deg,
       var(--footer-bg-soft),
@@ -158,10 +190,10 @@ const year = new Date().getFullYear();
   position: relative;
   max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 4.25rem var(--container-padding) 2.8rem;
+  padding: clamp(3.4rem, 7vw, 4.8rem) var(--container-padding) 2.75rem;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2.25rem;
+  gap: 2.45rem;
 }
 
 .footer-brand-row {
@@ -169,6 +201,10 @@ const year = new Date().getFullYear();
   align-items: center;
   gap: 0.95rem;
   margin-bottom: 1.25rem;
+}
+
+.footer-brand {
+  max-width: 34rem;
 }
 
 .footer-logo {
@@ -192,7 +228,7 @@ const year = new Date().getFullYear();
 }
 
 .footer-name {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 1.55rem;
   line-height: 1;
   color: var(--footer-cream);
@@ -202,7 +238,7 @@ const year = new Date().getFullYear();
   max-width: 440px;
   margin: 0 0 1.35rem;
   font-size: 0.98rem;
-  line-height: 1.75;
+  line-height: 1.72;
   color: var(--footer-text);
 }
 
@@ -210,81 +246,32 @@ const year = new Date().getFullYear();
   margin: 0;
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #b8dece;
 }
 
-.footer-social {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: 0.45rem;
-}
-
-.footer-social-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.65rem;
-  height: 2.65rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--footer-cream);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition:
-    transform 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease,
-    border-color 0.18s ease;
-}
-
-.footer-social-link:hover {
-  transform: translateY(-2px);
-  background: var(--footer-cream);
-  color: var(--primary-dark);
-  border-color: var(--footer-cream);
-}
-
-.footer-donate-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.65rem;
-  padding: 0.55rem 1.15rem;
-  border-radius: 999px;
-  background: var(--footer-cream);
-  color: var(--primary-dark);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
-}
-
-.footer-donate-btn:hover {
-  transform: translateY(-2px);
-  background: #fff8e7;
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.2);
+.footer-link:focus-visible,
+.footer-link-inline:focus-visible {
+  outline: 2px solid #f2dfaa;
+  outline-offset: 4px;
 }
 
 .footer-col {
   display: flex;
   flex-direction: column;
-  gap: 0.78rem;
+  gap: 0.82rem;
+  min-width: 0;
 }
 
 .footer-heading {
   position: relative;
   margin: 0 0 0.5rem;
   padding-bottom: 0.7rem;
-  font-weight: 700;
-  font-size: 1.08rem;
+  font-weight: 800;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--footer-cream);
 }
 
@@ -300,13 +287,26 @@ const year = new Date().getFullYear();
 }
 
 .footer-link {
+  position: relative;
   color: var(--footer-text);
   text-decoration: none;
   font-size: 0.95rem;
+  line-height: 1.35;
   width: fit-content;
   transition:
     color 0.18s ease,
     transform 0.18s ease;
+}
+
+.footer-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -0.2rem;
+  height: 1px;
+  background: var(--footer-accent);
+  transition: right 0.18s ease;
 }
 
 .footer-link:hover {
@@ -314,11 +314,15 @@ const year = new Date().getFullYear();
   transform: translateX(4px);
 }
 
+.footer-link:hover::after {
+  right: 0;
+}
+
 .footer-contact-item {
   display: grid;
-  grid-template-columns: 1.1rem minmax(0, 1fr);
+  grid-template-columns: 2rem minmax(0, 1fr);
   align-items: start;
-  gap: 0.7rem;
+  gap: 0.78rem;
   margin: 0;
   color: var(--footer-text);
   font-size: 0.94rem;
@@ -326,8 +330,14 @@ const year = new Date().getFullYear();
 }
 
 .footer-contact-item svg {
-  margin-top: 0.1rem;
-  color: #cbe9dc;
+  width: 2rem;
+  height: 2rem;
+  margin-top: -0.15rem;
+  padding: 0.42rem;
+  color: #d6f1e5;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
 
@@ -350,10 +360,10 @@ const year = new Date().getFullYear();
   position: relative;
   max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: 1.35rem var(--container-padding) 1.5rem;
-  border-top: 1px solid var(--footer-border);
-  display: flex;
-  flex-direction: column;
+  padding: 1.1rem var(--container-padding) 1.3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
   font-size: 0.82rem;
   color: var(--footer-muted);
@@ -363,37 +373,70 @@ const year = new Date().getFullYear();
   margin: 0;
 }
 
-.footer-credit {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.footer-bottom-note {
+  line-height: 1.5;
 }
 
-.footer-credit-logo {
-  height: 2.45rem;
-  width: auto;
-  background: var(--footer-cream);
-  border-radius: 6px;
-  padding: 0.24rem 0.5rem;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.14);
+.footer-credit {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.48rem;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.38rem 0.62rem 0.38rem 0.46rem;
+  color: var(--footer-muted);
+}
+
+.footer-credit-label {
+  line-height: 1.25;
+}
+
+.footer-credit-mark {
+  display: inline-flex;
+  width: 1.7rem;
+  height: 1.7rem;
+  overflow: hidden;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #171717;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+.footer-credit-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+}
+
+.footer-credit-name {
+  color: var(--footer-cream);
+  font-weight: 400;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 @media (min-width: 768px) {
   .footer-inner {
-    grid-template-columns: minmax(280px, 1.45fr) minmax(160px, 0.7fr) minmax(
-        280px,
-        1fr
-      );
+    grid-template-columns: minmax(280px, 1.2fr) minmax(160px, 0.7fr);
     align-items: start;
     gap: clamp(2.5rem, 6vw, 6rem);
   }
 
+  .footer-col:last-child {
+    grid-column: 1 / -1;
+  }
+
   .footer-bottom {
-    flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr);
     gap: 1.5rem;
+  }
+
+  .footer-credit {
+    grid-column: 1 / -1;
   }
 }
 
@@ -408,6 +451,34 @@ const year = new Date().getFullYear();
 
   .footer-bottom {
     align-items: flex-start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .footer-inner {
+    grid-template-columns: minmax(300px, 1.45fr) minmax(160px, 0.7fr) minmax(
+        280px,
+        1fr
+      );
+  }
+
+  .footer-col:last-child {
+    grid-column: auto;
+  }
+
+  .footer-col {
+    height: 100%;
+    padding-left: clamp(1.4rem, 3vw, 2.2rem);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .footer-bottom {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) max-content;
+  }
+
+  .footer-credit {
+    grid-column: auto;
+    justify-self: end;
   }
 }
 </style>

@@ -37,7 +37,6 @@ type VolunteerPageContent = {
   campaignSection: { kicker: string; heading: string; body: string; cta: ActionLink }
   gallerySection: { kicker: string; heading: string }
   galleryImages: GalleryItem[]
-  galleryLink: ActionLink
   supportSection: {
     kicker: string
     heading: string
@@ -120,7 +119,6 @@ const fallbackContent: VolunteerPageContent = {
     { title: 'Pagoda learning', caption: 'Books and materials for Buddhist education.', image: '/images/programs/education.jpg', alt: 'Young monks and volunteers organizing learning materials' },
     { title: 'Field visits', caption: 'Community work carried with local teams.', image: '/images/programs/hero-2.jpg', alt: 'Volunteer team walking on a rural Cambodian road' },
   ],
-  galleryLink: { label: 'View stories', to: '/news' },
   supportSection: {
     kicker: 'Volunteer contact',
     heading: 'Strengthen local work',
@@ -188,7 +186,6 @@ function mergeContent(base: VolunteerPageContent, override: Partial<VolunteerPag
           image: normalizeMediaUrl(g.image) || g.image,
         }))
       : base.galleryImages,
-    galleryLink: { ...base.galleryLink, ...override.galleryLink },
     supportSection: {
       ...base.supportSection,
       ...override.supportSection,
@@ -395,8 +392,6 @@ function setupRevealAnimations() {
             </figcaption>
           </figure>
         </div>
-
-        <RouterLink :to="page.galleryLink.to" class="gallery-link">{{ page.galleryLink.label }}</RouterLink>
       </div>
     </section>
 
@@ -493,8 +488,7 @@ function setupRevealAnimations() {
   line-height: 1.75;
 }
 
-.card-link,
-.gallery-link {
+.card-link {
   display: inline-flex;
   width: fit-content;
   align-items: center;
@@ -505,8 +499,7 @@ function setupRevealAnimations() {
   text-decoration: none;
 }
 
-.card-link:hover,
-.gallery-link:hover {
+.card-link:hover {
   color: var(--primary-color);
 }
 
@@ -786,10 +779,6 @@ function setupRevealAnimations() {
 .gallery-tile:focus-visible figcaption {
   opacity: 1;
   transform: translateY(0) scale(1);
-}
-
-.gallery-link {
-  margin: 1.4rem auto 0;
 }
 
 .support-section {

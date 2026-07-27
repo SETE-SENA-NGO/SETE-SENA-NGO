@@ -17,6 +17,8 @@ import SlideshowManagerView from '@/views/admin/SlideshowManagerView.vue'
 import GetinvolvedManagement from '@/views/admin/GetinvolvedManagement.vue'
 import PartnerManagement from '@/views/admin/PartnerManagement(involved).vue'
 import ContactManagement from '@/views/admin/ContactManagement.vue'
+import VisionMissionManagement from '@/views/admin/VisionMissionManagement.vue'
+import AboutManagement from '@/views/admin/AboutManagement.vue'
 import VolunteerManagement from '@/views/admin/VolunteerManagement.vue'
 import HomeAdminView from '@/views/admin/HomeAdminView.vue'
 
@@ -45,9 +47,11 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/volunteer', component: VolunteerManagement, meta: { requiresAuth: true } },
   { path: '/admin/contact', component: ContactManagement, meta: { requiresAuth: true } },
   { path: '/admin/editor/get-involved', redirect: '/admin/get-involved', meta: { requiresAuth: true } },
+  { path: '/admin/editor/about-vision', redirect: '/admin/vision-mission', meta: { requiresAuth: true } },
+  { path: '/admin/vision-mission', component: VisionMissionManagement, meta: { requiresAuth: true } },
+  { path: '/admin/about', component: AboutManagement, meta: { requiresAuth: true } },
+  { path: '/admin/editor/about', redirect: '/admin/about', meta: { requiresAuth: true } },
   { path: '/admin/editor/volunteer', redirect: '/admin/volunteer', meta: { requiresAuth: true } },
   // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
   { path: '/admin/editor/home-slideshow', component: PageEditorView, meta: { requiresAuth: true } },
-  // Redirect old /admin/news to the News page editor
-  { path: '/admin/news', redirect: '/admin/editor/news' },
 ]

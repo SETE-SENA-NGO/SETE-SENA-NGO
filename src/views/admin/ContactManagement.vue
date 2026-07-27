@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
@@ -146,6 +146,10 @@ useUnsavedChangesGuard(hasChanges)
 
 onMounted(() => {
   void loadPage()
+})
+
+onUnmounted(() => {
+  stopSectionWatch()
 })
 
 watch(activeLocale, () => {

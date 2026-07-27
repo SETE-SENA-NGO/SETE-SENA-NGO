@@ -32,8 +32,15 @@ type VolunteerPageContent = {
   campaignSection: { kicker: string; heading: string; body: string; cta: ActionLink }
   gallerySection: { kicker: string; heading: string }
   galleryImages: GalleryItem[]
-  galleryLink: ActionLink
-  supportSection: { kicker: string; heading: string; body: string; cardTitle: string; cardBody: string; details: string[]; cta: ActionLink }
+  supportSection: {
+    kicker: string
+    heading: string
+    body: string
+    cardTitle: string
+    cardBody: string
+    details: string[]
+    cta: ActionLink
+  }
 }
 
 const PAGE_SLUG = 'volunteer'
@@ -73,8 +80,19 @@ const fallbackContent: VolunteerPageContent = {
     { title: 'Pagoda learning', caption: 'Books and materials for Buddhist education.', image: '/images/programs/education.jpg', alt: 'Young monks and volunteers organizing learning materials' },
     { title: 'Field visits', caption: 'Community work carried with local teams.', image: '/images/programs/hero-2.jpg', alt: 'Volunteer team walking on a rural Cambodian road' },
   ],
-  galleryLink: { label: 'View stories', to: '/news' },
-  supportSection: { kicker: 'Volunteer contact', heading: 'Strengthen local work', body: 'Share your skills, available dates, language ability and the program area you care about. The team will help match your interest with practical needs.', cardTitle: 'Start here', cardBody: 'Contact the team to discuss a volunteer placement, field visit or practical support.', details: ['Prey Chlak pagoda, Svay Rieng City, Svay Rieng province', '+855 77 65 54 64, +855 87 67 57 57, +855 71 877 55 33', 'santisenamonk@gmail.com, santisena@santisenacambodia.org'], cta: { label: 'Contact the volunteer team', to: '/contact' } },
+  supportSection: {
+    kicker: 'Volunteer contact',
+    heading: 'Strengthen local work',
+    body: 'Share your skills, available dates, language ability and the program area you care about. The team will help match your interest with practical needs.',
+    cardTitle: 'Start here',
+    cardBody: 'Contact the team to discuss a volunteer placement, field visit or practical support.',
+    details: [
+      'Prey Chlak pagoda, Svay Rieng City, Svay Rieng province',
+      '+855 77 65 54 64, +855 87 67 57 57, +855 71 877 55 33',
+      'santisenamonk@gmail.com, santisena@santisenacambodia.org',
+    ],
+    cta: { label: 'Contact the volunteer team', to: '/contact' },
+  },
 }
 
 const contentStore = useContentStore()
@@ -120,8 +138,8 @@ const {
   },
   {
     key: 'gallery',
-    getSnapshot: () => ({ gallerySection: { ...draft.gallerySection }, galleryLink: { ...draft.galleryLink }, galleryImages: draft.galleryImages.map((g) => ({ ...g })) }),
-    applySnapshot: (v) => { draft.gallerySection = v.gallerySection; draft.galleryLink = v.galleryLink; draft.galleryImages = v.galleryImages },
+    getSnapshot: () => ({ gallerySection: { ...draft.gallerySection }, galleryImages: draft.galleryImages.map((g) => ({ ...g })) }),
+    applySnapshot: (v) => { draft.gallerySection = v.gallerySection; draft.galleryImages = v.galleryImages },
   },
   {
     key: 'support',
@@ -179,8 +197,11 @@ function replaceDraft(content: VolunteerPageContent) {
   draft.campaignSection = { ...content.campaignSection, cta: { ...content.campaignSection.cta } }
   draft.gallerySection = { ...content.gallerySection }
   draft.galleryImages = content.galleryImages.map((g) => ({ ...g }))
-  draft.galleryLink = { ...content.galleryLink }
-  draft.supportSection = { ...content.supportSection, details: [...content.supportSection.details], cta: { ...content.supportSection.cta } }
+  draft.supportSection = {
+    ...content.supportSection,
+    details: [...content.supportSection.details],
+    cta: { ...content.supportSection.cta },
+  }
 }
 
 async function savePage() {
@@ -236,9 +257,15 @@ function prepareForSave(content: VolunteerPageContent): VolunteerPageContent {
     helpCards: content.helpCards.map((c) => ({ ...c })),
     campaignSection: { ...content.campaignSection, cta: { ...content.campaignSection.cta } },
     gallerySection: { ...content.gallerySection },
-    galleryImages: content.galleryImages.map((g) => ({ ...g, image: normalizeMediaUrl(g.image) })),
-    galleryLink: { ...content.galleryLink },
-    supportSection: { ...content.supportSection, details: content.supportSection.details.map((d) => d.trim()).filter(Boolean), cta: { ...content.supportSection.cta } },
+    galleryImages: content.galleryImages.map((item) => ({
+      ...item,
+      image: normalizeMediaUrl(item.image),
+    })),
+    supportSection: {
+      ...content.supportSection,
+      details: content.supportSection.details.map((d) => d.trim()).filter(Boolean),
+      cta: { ...content.supportSection.cta },
+    },
   }
 }
 
@@ -267,8 +294,7 @@ function mergeContent(base: VolunteerPageContent, override: Partial<VolunteerPag
     helpCards: Array.isArray(override.helpCards) && override.helpCards.length ? override.helpCards.map((c) => ({ ...c })) : base.helpCards.map((c) => ({ ...c })),
     campaignSection: mergeRecordWithCta(base.campaignSection, override.campaignSection),
     gallerySection: mergeObject(base.gallerySection, override.gallerySection),
-    galleryImages: Array.isArray(override.galleryImages) && override.galleryImages.length ? override.galleryImages.map((g) => ({ ...g })) : base.galleryImages.map((g) => ({ ...g })),
-    galleryLink: mergeObject(base.galleryLink, override.galleryLink),
+    galleryImages: mergeGalleryImages(override.galleryImages, base.galleryImages),
     supportSection: mergeSupportSection(base.supportSection, override.supportSection),
   }
 }
@@ -287,6 +313,20 @@ function mergeObject<T>(base: T, override: unknown): T {
   return isRecord(override) ? { ...base, ...override } as T : { ...base }
 }
 
+function mergeGalleryImages(override: unknown, fallback: GalleryItem[]): GalleryItem[] {
+  if (!Array.isArray(override) || !override.length) return fallback.map(cloneGalleryItem)
+  return override.filter(isRecord).map((item, index) => ({
+    title: getString(item.title) || fallback[index]?.title || fallback[0]?.title || '',
+    caption: getString(item.caption) || fallback[index]?.caption || '',
+    image: getString(item.image) || fallback[index]?.image || fallback[0]?.image || '',
+    alt: getString(item.alt) || fallback[index]?.alt || '',
+  }))
+}
+
+function cloneGalleryItem(item: GalleryItem): GalleryItem {
+  return { ...item }
+}
+
 function cloneContent(c: VolunteerPageContent): VolunteerPageContent {
   return {
     serviceSection: { ...c.serviceSection },
@@ -296,9 +336,12 @@ function cloneContent(c: VolunteerPageContent): VolunteerPageContent {
     helpCards: c.helpCards.map((c) => ({ ...c })),
     campaignSection: { ...c.campaignSection, cta: { ...c.campaignSection.cta } },
     gallerySection: { ...c.gallerySection },
-    galleryImages: c.galleryImages.map((g) => ({ ...g })),
-    galleryLink: { ...c.galleryLink },
-    supportSection: { ...c.supportSection, details: [...c.supportSection.details], cta: { ...c.supportSection.cta } },
+    galleryImages: c.galleryImages.map(cloneGalleryItem),
+    supportSection: {
+      ...c.supportSection,
+      details: [...c.supportSection.details],
+      cta: { ...c.supportSection.cta },
+    },
   }
 }
 </script>
@@ -558,7 +601,6 @@ function cloneContent(c: VolunteerPageContent): VolunteerPageContent {
             <div class="panel-body form-grid">
               <v-text-field v-model="draft.gallerySection.kicker" label="Small label" :disabled="!editingSections.gallery" hide-details density="comfortable" variant="outlined" />
               <v-text-field v-model="draft.gallerySection.heading" label="Section heading" :disabled="!editingSections.gallery" hide-details density="comfortable" variant="outlined" />
-              <v-text-field v-model="draft.galleryLink.label" label="Link label" :disabled="!editingSections.gallery" hide-details density="comfortable" variant="outlined" />
             </div>
 
             <v-divider class="mx-4" />
@@ -632,15 +674,25 @@ function cloneContent(c: VolunteerPageContent): VolunteerPageContent {
                   Add detail
                 </v-btn>
               </div>
-              <div class="details-list">
-                <div v-for="(detail, index) in draft.supportSection.details" :key="'dtl-' + index" class="detail-row">
-                  <span class="detail-index">{{ index + 1 }}</span>
-                  <v-text-field v-model="draft.supportSection.details[index]" :disabled="!editingSections.support" hide-details density="compact" variant="outlined" class="detail-field" />
-                  <v-btn v-if="editingSections.support" icon color="error" variant="tonal" size="x-small" @click="removeDetail(index)">
-                    <v-icon>mdi-delete</v-icon>
-                  </v-btn>
-                </div>
-              </div>
+
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(detail, index) in draft.supportSection.details" :key="'detail-' + index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <h4>Detail {{ index + 1 }}</h4>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn v-if="editingSections.support" icon color="error" variant="tonal" size="x-small" @click="removeDetail(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="draft.supportSection.details[index]" label="Contact detail" :disabled="!editingSections.support" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
             </div>
           </AdminEditorPanel>
 
