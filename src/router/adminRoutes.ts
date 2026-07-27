@@ -20,14 +20,18 @@ import ContactManagement from '@/views/admin/ContactManagement.vue'
 import VisionMissionManagement from '@/views/admin/VisionMissionManagement.vue'
 import AboutManagement from '@/views/admin/AboutManagement.vue'
 import VolunteerManagement from '@/views/admin/VolunteerManagement.vue'
+import ImpactManagement from '@/views/admin/ImpactManagement.vue'
 import HomeAdminView from '@/views/admin/HomeAdminView.vue'
-
 
 export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/login', component: LoginView, name: 'admin-login' },
   { path: '/admin', component: DashboardView, meta: { requiresAuth: true } },
   { path: '/admin/pages', component: PagesManagerView, meta: { requiresAuth: true } },
   { path: '/admin/editor/impact', redirect: '/admin/editor/impact-numbers', meta: { requiresAuth: true } },
+  { path: '/admin/editor/impact-numbers', component: ImpactManagement, meta: { requiresAuth: true } },
+  { path: '/admin/editor/impact-timeline', component: ImpactManagement, meta: { requiresAuth: true } },
+  { path: '/admin/editor/impact-partners', component: ImpactManagement, meta: { requiresAuth: true } },
+  { path: '/admin/impact', component: ImpactManagement, meta: { requiresAuth: true } },
   { path: '/admin/editor/get-involved-partner', component: PartnerManagement, meta: { requiresAuth: true } },
   { path: '/admin/partner-management', redirect: '/admin/editor/get-involved-partner', meta: { requiresAuth: true } },
   { path: '/admin/editor/get-involved-donate', component: DonateAdminView, meta: { requiresAuth: true } },
