@@ -1,5 +1,5 @@
 <template>
-  <div :class="['vision-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <div :class="['about-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -7,17 +7,17 @@
       <main class="manager-main">
         <header class="manager-hero">
           <div class="manager-title">
-            <p class="eyebrow">Vision & Mission</p>
-            <h1>Manage Vision, Mission & Core Values</h1>
+            <p class="eyebrow">About</p>
+            <h1>Manage About Page</h1>
             <div class="manager-meta">
-              <span>Vision cards</span>
-              <span>Mission content</span>
               <span>Core values</span>
+              <span>Team</span>
+              <span>Geographical reach</span>
             </div>
           </div>
           <div class="hero-actions">
             <RouterLink class="btn btn-secondary" to="/admin">Dashboard</RouterLink>
-            <RouterLink class="btn btn-ghost" to="/about/vision">View Site (EN)</RouterLink>
+            <RouterLink class="btn btn-ghost" to="/about">View Site (EN)</RouterLink>
             <button type="button" class="btn btn-ghost" @click="resetToDefaults">
               Reset draft
             </button>
@@ -27,7 +27,7 @@
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">Loading Vision & Mission content...</div>
+        <div v-if="loading" class="state-card">Loading About page content...</div>
         <div v-else-if="loadError" class="state-card state-card-error">
           {{ loadError }}
           <button type="button" class="btn btn-secondary" @click="loadPage">Try again</button>
@@ -38,38 +38,38 @@
             <button
               type="button"
               class="tab-filter-btn"
-              :class="{ active: activeTab === 'vision' }"
-              @click="activeTab = 'vision'"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-              Vision
-            </button>
-            <button
-              type="button"
-              class="tab-filter-btn"
-              :class="{ active: activeTab === 'mission' }"
-              @click="activeTab = 'mission'"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              Mission
-            </button>
-            <button
-              type="button"
-              class="tab-filter-btn"
               :class="{ active: activeTab === 'values' }"
               @click="activeTab = 'values'"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               Core Values
             </button>
+            <button
+              type="button"
+              class="tab-filter-btn"
+              :class="{ active: activeTab === 'team' }"
+              @click="activeTab = 'team'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Team
+            </button>
+            <button
+              type="button"
+              class="tab-filter-btn"
+              :class="{ active: activeTab === 'reach' }"
+              @click="activeTab = 'reach'"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Reach
+            </button>
           </div>
 
           <div class="content-grid">
-            <section v-if="activeTab === 'vision'" class="editor-panel" aria-labelledby="vision-heading">
+            <section v-if="activeTab === 'values'" class="editor-panel" aria-labelledby="values-heading">
               <div class="panel-header">
                 <div>
                   <p class="panel-kicker">Section 1</p>
-                  <h2 id="vision-heading">Vision — What We Strive For</h2>
+                  <h2 id="values-heading">Core Values — Values That Guide The Work</h2>
                 </div>
                 <span v-if="savedAt" class="saved-pill">Saved</span>
               </div>
@@ -78,116 +78,7 @@
                 <div class="form-grid">
                   <label class="field">
                     <span>Section label</span>
-                    <input v-model="draft.vision.label" type="text" placeholder="e.g. Vision" />
-                  </label>
-                  <label class="field">
-                    <span>Section heading</span>
-                    <input v-model="draft.vision.heading" type="text" placeholder="e.g. What Santi Sena Strives For" />
-                  </label>
-                </div>
-
-                <label class="field field-block">
-                  <span>Description body</span>
-                  <textarea v-model="draft.vision.body" rows="2" placeholder="Short description of the vision section"></textarea>
-                </label>
-
-                <div class="sub-section-header">
-                  <h3>Vision Cards (3 items)</h3>
-                  <p class="sub-section-hint">Use <code>Title | Description</code> format for each card.</p>
-                </div>
-
-                <div class="items-editor">
-                  <div
-                    v-for="(card, index) in draft.vision.cards"
-                    :key="'vision-' + index"
-                    class="item-row"
-                  >
-                    <span class="item-index">{{ index + 1 }}</span>
-                    <label class="field item-field">
-                      <span>Title</span>
-                      <input v-model="card.title" type="text" :placeholder="'Card ' + (index + 1) + ' title'" />
-                    </label>
-                    <label class="field item-field item-field-wide">
-                      <span>Description</span>
-                      <input v-model="card.text" type="text" :placeholder="'Card ' + (index + 1) + ' description'" />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section v-if="activeTab === 'mission'" class="editor-panel" aria-labelledby="mission-heading">
-              <div class="panel-header">
-                <div>
-                  <p class="panel-kicker">Section 2</p>
-                  <h2 id="mission-heading">Mission — How The Mission Becomes Practical</h2>
-                </div>
-              </div>
-
-              <div class="panel-body">
-                <div class="form-grid">
-                  <label class="field">
-                    <span>Section label</span>
-                    <input v-model="draft.mission.label" type="text" placeholder="e.g. Mission" />
-                  </label>
-                  <label class="field">
-                    <span>Section heading</span>
-                    <input v-model="draft.mission.heading" type="text" placeholder="e.g. How The Mission Becomes Practical" />
-                  </label>
-                </div>
-
-                <label class="field field-block">
-                  <span>Mission body text</span>
-                  <textarea v-model="draft.mission.body" rows="3" placeholder="Main mission description text"></textarea>
-                </label>
-
-                <div class="sub-section-header">
-                  <h3>Mission Items</h3>
-                  <p class="sub-section-hint">Each line is one mission item. Edit freely below.</p>
-                </div>
-
-                <div class="items-editor">
-                  <div
-                    v-for="(item, index) in draft.mission.items"
-                    :key="'mission-' + index"
-                    class="item-row"
-                  >
-                    <span class="item-index">{{ index + 1 }}</span>
-                    <label class="field item-field item-field-wide">
-                      <span>Item {{ index + 1 }}</span>
-                      <input v-model="draft.mission.items[index]" type="text" :placeholder="'Mission item ' + (index + 1)" />
-                    </label>
-                    <button
-                      v-if="draft.mission.items.length > 1"
-                      type="button"
-                      class="btn-icon danger"
-                      @click="removeMissionItem(index)"
-                      title="Remove item"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    </button>
-                  </div>
-                </div>
-                <button type="button" class="btn btn-secondary add-item-btn" @click="addMissionItem">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Add mission item
-                </button>
-              </div>
-            </section>
-
-            <section v-if="activeTab === 'values'" class="editor-panel" aria-labelledby="values-heading">
-              <div class="panel-header">
-                <div>
-                  <p class="panel-kicker">Section 3</p>
-                  <h2 id="values-heading">Core Values — Values That Guide The Work</h2>
-                </div>
-              </div>
-
-              <div class="panel-body">
-                <div class="form-grid">
-                  <label class="field">
-                    <span>Section label</span>
-                    <input v-model="draft.values.label" type="text" placeholder="e.g. Core Values" />
+                    <input v-model="draft.values.label" type="text" placeholder="e.g. Core values" />
                   </label>
                   <label class="field">
                     <span>Section heading</span>
@@ -197,7 +88,7 @@
 
                 <label class="field field-block">
                   <span>Section description</span>
-                  <textarea v-model="draft.values.desc" rows="2" placeholder="Short description of values section"></textarea>
+                  <textarea v-model="draft.values.body" rows="2" placeholder="Short description of the values section"></textarea>
                 </label>
 
                 <div class="sub-section-header">
@@ -207,7 +98,7 @@
 
                 <div class="items-editor">
                   <div
-                    v-for="(val, index) in draft.values.cards"
+                    v-for="(val, index) in draft.values.items"
                     :key="'value-' + index"
                     class="item-row"
                   >
@@ -221,7 +112,7 @@
                       <input v-model="val.text" type="text" :placeholder="'Value ' + (index + 1) + ' description'" />
                     </label>
                     <button
-                      v-if="draft.values.cards.length > 1"
+                      v-if="draft.values.items.length > 1"
                       type="button"
                       class="btn-icon danger"
                       @click="removeValueItem(index)"
@@ -234,6 +125,128 @@
                 <button type="button" class="btn btn-secondary add-item-btn" @click="addValueItem">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   Add core value
+                </button>
+              </div>
+            </section>
+
+            <section v-if="activeTab === 'team'" class="editor-panel" aria-labelledby="team-heading">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-kicker">Section 2</p>
+                  <h2 id="team-heading">Team — A team of monks, managers and master practitioners.</h2>
+                </div>
+              </div>
+
+              <div class="panel-body">
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Section label</span>
+                    <input v-model="draft.team.label" type="text" placeholder="e.g. Team" />
+                  </label>
+                  <label class="field">
+                    <span>Section heading</span>
+                    <input v-model="draft.team.heading" type="text" placeholder="e.g. A team of monks, managers and master practitioners." />
+                  </label>
+                </div>
+
+                <label class="field field-block">
+                  <span>Section description</span>
+                  <textarea v-model="draft.team.body" rows="2" placeholder="Short description of the team section"></textarea>
+                </label>
+
+                <div class="sub-section-header">
+                  <h3>Team Members (5 items)</h3>
+                  <p class="sub-section-hint">Use <code>Title | Description</code> format.</p>
+                </div>
+
+                <div class="items-editor">
+                  <div
+                    v-for="(member, index) in draft.team.items"
+                    :key="'team-' + index"
+                    class="item-row"
+                  >
+                    <span class="item-index">{{ index + 1 }}</span>
+                    <label class="field item-field">
+                      <span>Title</span>
+                      <input v-model="member.title" type="text" :placeholder="'Member ' + (index + 1) + ' title'" />
+                    </label>
+                    <label class="field item-field item-field-wide">
+                      <span>Description</span>
+                      <input v-model="member.text" type="text" :placeholder="'Member ' + (index + 1) + ' description'" />
+                    </label>
+                    <button
+                      v-if="draft.team.items.length > 1"
+                      type="button"
+                      class="btn-icon danger"
+                      @click="removeTeamItem(index)"
+                      title="Remove item"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-secondary add-item-btn" @click="addTeamItem">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add team member
+                </button>
+              </div>
+            </section>
+
+            <section v-if="activeTab === 'reach'" class="editor-panel" aria-labelledby="reach-heading">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-kicker">Section 3</p>
+                  <h2 id="reach-heading">Geographical Reach — Three provinces. Forty-three communes. Two hundred and ninety-three villages.</h2>
+                </div>
+              </div>
+
+              <div class="panel-body">
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Section label</span>
+                    <input v-model="draft.reach.label" type="text" placeholder="e.g. Geographical reach" />
+                  </label>
+                  <label class="field">
+                    <span>Section heading</span>
+                    <input v-model="draft.reach.heading" type="text" placeholder="e.g. Three provinces. Forty-three communes. Two hundred and ninety-three villages." />
+                  </label>
+                </div>
+
+                <label class="field field-block">
+                  <span>Section description</span>
+                  <textarea v-model="draft.reach.body" rows="2" placeholder="Short description of the reach section"></textarea>
+                </label>
+
+                <div class="sub-section-header">
+                  <h3>Provinces (3 items)</h3>
+                  <p class="sub-section-hint">One province per line.</p>
+                </div>
+
+                <div class="items-editor">
+                  <div
+                    v-for="(province, index) in draft.reach.items"
+                    :key="'reach-' + index"
+                    class="item-row"
+                  >
+                    <span class="item-index">{{ index + 1 }}</span>
+                    <label class="field item-field item-field-wide">
+                      <span>Province {{ index + 1 }}</span>
+                      <input v-model="province.title" type="text" :placeholder="'Province ' + (index + 1)" />
+                    </label>
+                    <button
+                      v-if="draft.reach.items.length > 1"
+                      type="button"
+                      class="btn-icon danger"
+                      @click="removeReachItem(index)"
+                      title="Remove item"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-secondary add-item-btn" @click="addReachItem">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add province
                 </button>
               </div>
             </section>
@@ -252,20 +265,25 @@ import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
-const PAGE_SLUG = 'about-vision'
+const PAGE_SLUG = 'about'
 const contentKind = 'santi-sena-page-content'
-
-interface VisionCard {
-  title: string
-  text: string
-}
 
 interface ValueCard {
   title: string
   text: string
 }
 
-interface VisionMissionContent {
+interface TeamCard {
+  title: string
+  text: string
+}
+
+interface ReachItem {
+  title: string
+  text: string
+}
+
+interface AboutContent {
   kind: string
   version: number
   sections: Array<{
@@ -278,38 +296,25 @@ interface VisionMissionContent {
 }
 
 interface DraftType {
-  vision: {
-    label: string
-    heading: string
-    body: string
-    cards: VisionCard[]
-  }
-  mission: {
-    label: string
-    heading: string
-    body: string
-    items: string[]
-  }
   values: {
     label: string
     heading: string
-    desc: string
-    cards: ValueCard[]
+    body: string
+    items: ValueCard[]
+  }
+  team: {
+    label: string
+    heading: string
+    body: string
+    items: TeamCard[]
+  }
+  reach: {
+    label: string
+    heading: string
+    body: string
+    items: ReachItem[]
   }
 }
-
-const defaultVisionCards: VisionCard[] = [
-  { title: 'Peace With Justice', text: 'A Cambodia where peace, justice and harmony are lived in daily village life, not only written in plans.' },
-  { title: 'Community Ownership', text: 'Villagers, monks, local authorities, schools and community organizations lead the work together.' },
-  { title: 'Sustainable Livelihoods', text: 'Families build better lives through education, child protection, rural income and care for natural resources.' },
-]
-
-const defaultMissionItems: string[] = [
-  'Work with monks, villagers, local government and schools',
-  'Strengthen education, savings groups and rural livelihoods',
-  'Protect children from trafficking, unsafe migration and exploitation',
-  'Preserve community forests, water resources and local resilience',
-]
 
 const defaultValues: ValueCard[] = [
   { title: 'Honesty', text: 'Clear communication and transparent relationships with donors, communities, partners and staff.' },
@@ -318,25 +323,39 @@ const defaultValues: ValueCard[] = [
   { title: 'Flexibility', text: 'Plans adapt to community feedback, partner advice, available resources and real field needs.' },
 ]
 
+const defaultTeam: TeamCard[] = [
+  { title: 'Board of Directors', text: 'Policy and oversight, including senior Buddhist leadership.' },
+  { title: 'Executive Director', text: 'Daily operations and strategic execution.' },
+  { title: 'Management Committee', text: 'Coordinates programs across provinces.' },
+  { title: 'Technical Coordination', text: 'Provides inputs across thematic areas.' },
+  { title: 'Professional Staff', text: 'Full-time and project-based experts in agriculture, education and rural development.' },
+]
+
+const defaultReach: ReachItem[] = [
+  { title: 'Svay Rieng', text: '' },
+  { title: 'Prey Veng', text: '' },
+  { title: 'Kratie', text: '' },
+]
+
 function createDefaultDraft(): DraftType {
   return {
-    vision: {
-      label: 'Vision',
-      heading: 'What Santi Sena Strives For',
-      body: 'Peace With Justice, Community Ownership and Sustainable Livelihoods.',
-      cards: defaultVisionCards.map(c => ({ ...c })),
-    },
-    mission: {
-      label: 'Mission',
-      heading: 'How The Mission Becomes Practical',
-      body: 'Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics. Its work connects moral leadership with practical programs in education, livelihoods, environment and child protection.',
-      items: [...defaultMissionItems],
-    },
     values: {
-      label: 'Core Values',
+      label: 'Core values',
       heading: 'Values That Guide The Work',
-      desc: 'These values shape how Santi Sena works with communities, donors and partners.',
-      cards: defaultValues.map(c => ({ ...c })),
+      body: 'These values shape how Santi Sena works with communities, donors and partners.',
+      items: defaultValues.map(c => ({ ...c })),
+    },
+    team: {
+      label: 'Team',
+      heading: 'A team of monks, managers and master practitioners.',
+      body: 'From the Board of Directors to field staff in Kratie, every level is accountable to the villagers served and donors who trust Santi Sena.',
+      items: defaultTeam.map(c => ({ ...c })),
+    },
+    reach: {
+      label: 'Geographical reach',
+      heading: 'Three provinces. Forty-three communes. Two hundred and ninety-three villages.',
+      body: 'Santi Sena works across Svay Rieng, Prey Veng and Kratie.',
+      items: defaultReach.map(c => ({ ...c })),
     },
   }
 }
@@ -346,7 +365,7 @@ const loading = ref(true)
 const saving = ref(false)
 const loadError = ref('')
 const savedAt = ref<string | null>(null)
-const activeTab = ref<'vision' | 'mission' | 'values'>('vision')
+const activeTab = ref<'values' | 'team' | 'reach'>('values')
 const draft = reactive<DraftType>(createDefaultDraft())
 
 async function loadPage() {
@@ -363,26 +382,22 @@ async function loadPage() {
     if (error) throw error
     if (!data?.body) throw new Error('Missing stored content.')
 
-    const parsed = JSON.parse(data.body) as VisionMissionContent
+    const parsed = JSON.parse(data.body) as AboutContent
     const sections = parsed.sections || []
 
-    const visionSection = sections.find((s) => s.id === 'vision-strive')
-    if (visionSection) {
-      if (visionSection.label) draft.vision.label = visionSection.label
-      if (visionSection.heading) draft.vision.heading = visionSection.heading
-      if (visionSection.body) draft.vision.body = visionSection.body
-      if (visionSection.items) {
-        const lines = visionSection.items.split('\n').filter((line: string) => line.trim())
+    const valuesSection = sections.find((s) => s.id === 'about-values')
+    if (valuesSection) {
+      if (valuesSection.label) draft.values.label = valuesSection.label
+      if (valuesSection.heading) draft.values.heading = valuesSection.heading
+      if (valuesSection.body) draft.values.body = valuesSection.body
+      if (valuesSection.items) {
+        const lines = valuesSection.items.split('\n').filter((line: string) => line.trim())
         if (lines.length) {
-          draft.vision.cards = lines.map((line: string) => {
+          draft.values.items = lines.map((line: string) => {
             const trimmed = line.trim()
             if (trimmed.includes('|')) {
               const [title, ...rest] = trimmed.split('|').map((part: string) => part.trim())
               return { title: title || trimmed, text: rest.join(' | ') }
-            }
-            const commaIdx = trimmed.indexOf(',')
-            if (commaIdx > 0 && commaIdx < 30) {
-              return { title: trimmed.slice(0, commaIdx).trim(), text: trimmed.slice(commaIdx + 1).trim() }
             }
             return { title: trimmed, text: '' }
           })
@@ -390,35 +405,36 @@ async function loadPage() {
       }
     }
 
-    const missionSection = sections.find((s) => s.id === 'mission-content')
-    if (missionSection) {
-      if (missionSection.label) draft.mission.label = missionSection.label
-      if (missionSection.heading) draft.mission.heading = missionSection.heading
-      if (missionSection.body) draft.mission.body = missionSection.body
-      if (missionSection.items) {
-        const items = missionSection.items.split('\n').map((line: string) => line.trim()).filter((line: string) => Boolean(line))
-        if (items.length) draft.mission.items = items
-      }
-    }
-
-    const guidesSection = sections.find((s) => s.id === 'vision-guides')
-    if (guidesSection) {
-      if (guidesSection.label) draft.values.label = guidesSection.label
-      if (guidesSection.heading) draft.values.heading = guidesSection.heading
-      if (guidesSection.body) draft.values.desc = guidesSection.body
-      if (guidesSection.items) {
-        const lines = guidesSection.items.split('\n').filter((line: string) => line.trim())
+    const teamSection = sections.find((s) => s.id === 'about-team')
+    if (teamSection) {
+      if (teamSection.label) draft.team.label = teamSection.label
+      if (teamSection.heading) draft.team.heading = teamSection.heading
+      if (teamSection.body) draft.team.body = teamSection.body
+      if (teamSection.items) {
+        const lines = teamSection.items.split('\n').filter((line: string) => line.trim())
         if (lines.length) {
-          draft.values.cards = lines.map((line: string) => {
+          draft.team.items = lines.map((line: string) => {
             const trimmed = line.trim()
             if (trimmed.includes('|')) {
               const [title, ...rest] = trimmed.split('|').map((part: string) => part.trim())
               return { title: title || trimmed, text: rest.join(' | ') }
             }
-            const commaIdx = trimmed.indexOf(',')
-            if (commaIdx > 0 && commaIdx < 30) {
-              return { title: trimmed.slice(0, commaIdx).trim(), text: trimmed.slice(commaIdx + 1).trim() }
-            }
+            return { title: trimmed, text: '' }
+          })
+        }
+      }
+    }
+
+    const reachSection = sections.find((s) => s.id === 'about-reach')
+    if (reachSection) {
+      if (reachSection.label) draft.reach.label = reachSection.label
+      if (reachSection.heading) draft.reach.heading = reachSection.heading
+      if (reachSection.body) draft.reach.body = reachSection.body
+      if (reachSection.items) {
+        const lines = reachSection.items.split('\n').filter((line: string) => line.trim())
+        if (lines.length) {
+          draft.reach.items = lines.map((line: string) => {
+            const trimmed = line.trim()
             return { title: trimmed, text: '' }
           })
         }
@@ -427,50 +443,52 @@ async function loadPage() {
 
     savedAt.value = data.updated_at ? new Date(data.updated_at).toLocaleString() : null
   } catch (error) {
-    loadError.value = error instanceof Error ? error.message : 'Could not load Vision & Mission content.'
+    loadError.value = error instanceof Error ? error.message : 'Could not load About page content.'
   } finally {
     loading.value = false
   }
 }
 
-function visionStriveItems(): string {
-  return draft.vision.cards
-    .map((card) => `${card.title} | ${card.text}`)
+function valuesItems(): string {
+  return draft.values.items
+    .map((item) => `${item.title} | ${item.text}`)
     .join('\n')
 }
 
-function missionContentItems(): string {
-  return draft.mission.items.join('\n')
+function teamItems(): string {
+  return draft.team.items
+    .map((item) => `${item.title} | ${item.text}`)
+    .join('\n')
 }
 
-function valuesItems(): string {
-  return draft.values.cards
-    .map((card) => `${card.title} | ${card.text}`)
+function reachItems(): string {
+  return draft.reach.items
+    .map((item) => item.title)
     .join('\n')
 }
 
 function buildPageBody(): string {
   const sections = [
     {
-      id: 'vision-strive',
-      label: draft.vision.label,
-      heading: draft.vision.heading,
-      body: draft.vision.body,
-      items: visionStriveItems(),
-    },
-    {
-      id: 'mission-content',
-      label: draft.mission.label,
-      heading: draft.mission.heading,
-      body: draft.mission.body,
-      items: missionContentItems(),
-    },
-    {
-      id: 'vision-guides',
+      id: 'about-values',
       label: draft.values.label,
       heading: draft.values.heading,
-      body: draft.values.desc,
+      body: draft.values.body,
       items: valuesItems(),
+    },
+    {
+      id: 'about-team',
+      label: draft.team.label,
+      heading: draft.team.heading,
+      body: draft.team.body,
+      items: teamItems(),
+    },
+    {
+      id: 'about-reach',
+      label: draft.reach.label,
+      heading: draft.reach.heading,
+      body: draft.reach.body,
+      items: reachItems(),
     },
   ]
 
@@ -493,9 +511,9 @@ async function savePage() {
           {
             slug: PAGE_SLUG,
             locale: 'en',
-            title: 'Vision & Mission',
+            title: 'About Santi Sena',
             body,
-            route_path: '/about/vision',
+            route_path: '/about',
           },
         ],
         { onConflict: 'slug,locale' }
@@ -504,10 +522,10 @@ async function savePage() {
     if (error) throw error
 
     savedAt.value = new Date().toLocaleString()
-    ui.addToast('Vision & Mission content saved.', 'success')
+    ui.addToast('About page content saved.', 'success')
     await loadPage()
   } catch (error) {
-    ui.addToast(error instanceof Error ? error.message : 'Could not save Vision & Mission content.', 'error')
+    ui.addToast(error instanceof Error ? error.message : 'Could not save About page content.', 'error')
   } finally {
     saving.value = false
   }
@@ -515,39 +533,49 @@ async function savePage() {
 
 function resetToDefaults() {
   const defaults = createDefaultDraft()
-  draft.vision.label = defaults.vision.label
-  draft.vision.heading = defaults.vision.heading
-  draft.vision.body = defaults.vision.body
-  draft.vision.cards = defaults.vision.cards.map((c) => ({ ...c }))
-  draft.mission.label = defaults.mission.label
-  draft.mission.heading = defaults.mission.heading
-  draft.mission.body = defaults.mission.body
-  draft.mission.items = [...defaults.mission.items]
   draft.values.label = defaults.values.label
   draft.values.heading = defaults.values.heading
-  draft.values.desc = defaults.values.desc
-  draft.values.cards = defaults.values.cards.map((c) => ({ ...c }))
+  draft.values.body = defaults.values.body
+  draft.values.items = defaults.values.items.map((c) => ({ ...c }))
+  draft.team.label = defaults.team.label
+  draft.team.heading = defaults.team.heading
+  draft.team.body = defaults.team.body
+  draft.team.items = defaults.team.items.map((c) => ({ ...c }))
+  draft.reach.label = defaults.reach.label
+  draft.reach.heading = defaults.reach.heading
+  draft.reach.body = defaults.reach.body
+  draft.reach.items = defaults.reach.items.map((c) => ({ ...c }))
   savedAt.value = null
-  ui.addToast('Default Vision & Mission draft restored.', 'info')
-}
-
-function addMissionItem() {
-  draft.mission.items.push('New mission item')
-}
-
-function removeMissionItem(index: number) {
-  if (draft.mission.items.length > 1) {
-    draft.mission.items.splice(index, 1)
-  }
+  ui.addToast('Default About page draft restored.', 'info')
 }
 
 function addValueItem() {
-  draft.values.cards.push({ title: 'New value', text: 'Describe this core value.' })
+  draft.values.items.push({ title: 'New value', text: 'Describe this core value.' })
 }
 
 function removeValueItem(index: number) {
-  if (draft.values.cards.length > 1) {
-    draft.values.cards.splice(index, 1)
+  if (draft.values.items.length > 1) {
+    draft.values.items.splice(index, 1)
+  }
+}
+
+function addTeamItem() {
+  draft.team.items.push({ title: 'New team member', text: 'Describe this team member role.' })
+}
+
+function removeTeamItem(index: number) {
+  if (draft.team.items.length > 1) {
+    draft.team.items.splice(index, 1)
+  }
+}
+
+function addReachItem() {
+  draft.reach.items.push({ title: 'New province', text: '' })
+}
+
+function removeReachItem(index: number) {
+  if (draft.reach.items.length > 1) {
+    draft.reach.items.splice(index, 1)
   }
 }
 
@@ -557,7 +585,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.vision-admin {
+.about-admin {
   --admin-bg: var(--admin-theme-bg);
   --admin-surface: var(--admin-theme-surface);
   --admin-surface-soft: var(--admin-theme-surface-soft);
@@ -578,7 +606,7 @@ onMounted(() => {
   transition: padding-left 0.25s ease;
 }
 
-.vision-admin.sidebar-open {
+.about-admin.sidebar-open {
   padding-left: 260px;
 }
 
@@ -957,7 +985,7 @@ onMounted(() => {
   color: var(--admin-theme-danger);
 }
 
-:global(.admin-dark) .vision-admin {
+:global(.admin-dark) .about-admin {
   --admin-bg: var(--admin-theme-bg);
   --admin-surface: var(--admin-theme-surface);
   --admin-surface-soft: var(--admin-theme-surface-soft);
@@ -978,7 +1006,7 @@ onMounted(() => {
 }
 
 @media (min-width: 900px) {
-  .vision-admin.sidebar-open {
+  .about-admin.sidebar-open {
     padding-left: 260px;
   }
 }
@@ -986,7 +1014,7 @@ onMounted(() => {
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
-    padding-top: calc(60px + 1rem);
+    padding-top: 1rem;
   }
 }
 </style>

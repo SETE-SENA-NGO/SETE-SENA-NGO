@@ -9,8 +9,8 @@ import { useUiStore } from '@/stores/ui.store'
 
 const adminRouteMap: Record<string, string> = {
   '/': '/admin',
-  '/about': '/admin/editor/about',
-  '/about/vision': '/admin/editor/about-vision',
+  '/about': '/admin/about',
+  '/about/vision': '/admin/vision-mission',
   '/about/organization': '/admin/editor/about-organization',
   '/programs': '/admin/programs',
   '/programs/education': '/admin/education',

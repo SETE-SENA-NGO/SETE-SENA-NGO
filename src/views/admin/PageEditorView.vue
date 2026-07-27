@@ -187,20 +187,12 @@ const defaultPages: PageDraft[] = [
     secondaryAction: '',
     sections: [
       {
-        id: 'about-vmg',
-        label: 'Vision, mission, goal',
-        heading: 'Vision, Mission, Goal',
-        body: 'Vision: A Cambodia where peace, justice and harmony flourish. Mission: Alleviate poverty through community-led development rooted in Buddhist ethics. Goal: Better work and living situations for vulnerable rural households.',
-        items:
-          'Vision | A Cambodia where peace, justice and harmony flourish across every village and generation.\nMission | To alleviate poverty through community-led development rooted in Buddhist ethics.\nGoal | Better work and living situations for the most vulnerable rural households of southeastern Cambodia.',
-      },
-      {
         id: 'about-values',
         label: 'Core values',
-        heading: 'Five vows that shape every program',
-        body: 'The values listed on the About page.',
+        heading: 'Values That Guide The Work',
+        body: 'These values shape how Santi Sena works with communities, donors and partners.',
         items:
-          'Honesty | We have honesty with donors, target groups, operational partners and working groups.\nNon-discrimination | We do not discriminate by disability, religion, color, race, target group or political faction.\nCollective Benefits | We do not utilize organization property for private benefit.\nFlexibility | We respect and accept good comments from target groups and development partners.\nEmpowerment | We do not deliver development; we hand it back to the community.',
+          'Honesty | Clear communication and transparent relationships with donors, communities, partners and staff.\nNon-discrimination | Respect for people across disability, religion, background, race, community status and political belief.\nCollective Benefit | Organizational resources and knowledge are used for shared benefit, not private advantage.\nFlexibility | Plans adapt to community feedback, partner advice, available resources and real field needs.',
       },
       {
         id: 'about-team',
@@ -216,42 +208,6 @@ const defaultPages: PageDraft[] = [
         heading: 'Three provinces. Forty-three communes. Two hundred and ninety-three villages.',
         body: 'Santi Sena works across Svay Rieng, Prey Veng and Kratie.',
         items: 'Svay Rieng\nPrey Veng\nKratie',
-      },
-    ],
-    updatedAt: '',
-  },
-  {
-    slug: 'about-vision',
-    route: '/about/vision',
-    group: 'About',
-    title: 'Vision & Mission',
-    eyebrow: 'Vision & Mission',
-    headline: 'Shaping a Future of Equity & Opportunity',
-    intro:
-      'A focused page for Santi Sena vision, mission, values and the practical commitments that guide long-term village work.',
-    primaryAction: 'Join Us',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'vision-strive',
-        label: 'What we strive for',
-        heading: 'What We Strive For',
-        body: 'Peace With Justice, Community Ownership and Sustainable Livelihoods.',
-        items: 'Peace With Justice | A Cambodia where peace, justice and harmony are lived in daily village life, not only written in plans.\nCommunity Ownership | Villagers, monks, local authorities, schools and community organizations lead the work together.\nSustainable Livelihoods | Families build better lives through education, child protection, rural income and care for natural resources.',
-      },
-      {
-        id: 'vision-guides',
-        label: 'Mission',
-        heading: 'How The Mission Becomes Practical',
-        body: 'Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics. Its work connects moral leadership with practical programs in education, livelihoods, environment and child protection.',
-        items: 'Work with monks, villagers, local government and schools\nStrengthen education, savings groups and rural livelihoods\nProtect children from trafficking, unsafe migration and exploitation\nPreserve community forests, water resources and local resilience',
-      },
-      {
-        id: 'mission-content',
-        label: 'Mission',
-        heading: 'How The Mission Becomes Practical',
-        body: 'Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics. Its work connects moral leadership with practical programs in education, livelihoods, environment and child protection.',
-        items: 'Work with monks, villagers, local government and schools\nStrengthen education, savings groups and rural livelihoods\nProtect children from trafficking, unsafe migration and exploitation\nPreserve community forests, water resources and local resilience',
       },
     ],
     updatedAt: '',
@@ -1026,8 +982,7 @@ const mediaStore = useMediaStore()
 
 const uploadingCell = ref<{ sectionId: string; rowIndex: number; colIndex: number } | null>(null)
 
-// ─── Step & Section Filter State ─────────────────────────────────
-const activeStep = ref<'identity' | 'content' | 'status'>('identity')
+// ─── Section Filter State ─────────────────────────────────
 const activeSectionFilter = ref<string | null>(null)
 
 const activePageDirty = computed(() => {
@@ -1988,66 +1943,10 @@ function formatDate(value: string) {
             </div>
 
             <!-- ==============================
-                 CLICKABLE WORKFLOW STEPS
+                 PAGE IDENTITY, HERO + CONTENT BLOCKS (always visible)
                  ============================== -->
-            <div class="workflow-steps">
-              <div
-                class="step"
-                :class="{ active: activeStep === 'identity', completed: activeStep !== 'identity' }"
-                @click="activeStep = 'identity'"
-                role="button"
-                tabindex="0"
-                @keydown.enter="activeStep = 'identity'"
-                @keydown.space.prevent="activeStep = 'identity'"
-              >
-                <div class="step-indicator">
-                  <svg v-if="activeStep === 'identity'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <template v-else>1</template>
-                </div>
-                <div class="step-content">
-                  <span class="step-label">Page</span>
-                  <span class="step-desc">Identity</span>
-                </div>
-              </div>
-              <div
-                class="step"
-                :class="{ active: activeStep === 'content' }"
-                @click="activeStep = 'content'"
-                role="button"
-                tabindex="0"
-                @keydown.enter="activeStep = 'content'"
-                @keydown.space.prevent="activeStep = 'content'"
-              >
-                <div class="step-indicator">2</div>
-                <div class="step-content">
-                  <span class="step-label">Content</span>
-                  <span class="step-desc">Blocks</span>
-                </div>
-              </div>
-              <div
-                class="step"
-                :class="{ active: activeStep === 'status' }"
-                @click="activeStep = 'status'"
-                role="button"
-                tabindex="0"
-                @keydown.enter="activeStep = 'status'"
-                @keydown.space.prevent="activeStep = 'status'"
-              >
-                <div class="step-indicator" :class="{ success: !activePageDirty && activeStep === 'status' }">
-                  <svg v-if="!activePageDirty && activeStep === 'status'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <template v-else>3</template>
-                </div>
-                <div class="step-content">
-                  <span class="step-label">{{ activePageDirty ? 'Unsaved' : 'Published' }}</span>
-                  <span class="step-desc">Status</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Form Panels - Step 1: Identity -->
-            <template v-if="activeStep === 'identity'">
-              <div class="form-panels step-panel-enter">
-                <!-- Page Setup -->
+            <div class="form-panels">
+              <!-- Page Setup -->
               <section class="form-card">
                 <div class="card-header">
                   <div class="card-header-left">
@@ -2259,12 +2158,10 @@ function formatDate(value: string) {
                 </div>
               </section>
             </div>
-            </template>
-
-            <!-- ==============================
-                 STEP 2: Content Blocks
+<!-- ==============================
+                 STEP 3: Status / Publish (stale - kept for reference)
                  ============================== -->
-            <template v-if="activeStep === 'content'">
+            <template v-if="false">
               <div class="form-panels step-panel-enter">
 
                 <!-- Section Filter Pills -->
@@ -2868,47 +2765,47 @@ function formatDate(value: string) {
 }
 
 .btn-primary {
-  background: var(--admin-blue);
+  border-color: var(--admin-theme-primary-deep);
+  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
   color: #ffffff;
-  border-color: var(--admin-blue);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  border-color: var(--admin-theme-primary-deep);
+  background: linear-gradient(180deg, var(--admin-theme-primary-deep), var(--admin-theme-primary));
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--admin-theme-primary) 28%, transparent);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
-  border-color: var(--admin-border-strong);
+  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
+  color: var(--admin-theme-contrast);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--admin-muted);
-  background: var(--admin-surface-soft);
-  box-shadow: var(--admin-shadow);
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
 }
 
 .btn-ghost {
-  background: transparent;
-  color: var(--admin-muted);
-  border-color: transparent;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-contrast);
+  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--admin-bg);
-  color: var(--admin-contrast);
-  border-color: var(--admin-border);
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
 }
 
 .btn-ghost.danger:hover:not(:disabled) {
-  color: #dc2626;
-  background: var(--admin-red-soft);
-  border-color: rgba(220, 38, 38, 0.2);
+  color: var(--admin-theme-danger);
+  background: color-mix(in srgb, var(--admin-theme-danger) 10%, var(--admin-theme-surface));
+  border-color: var(--admin-theme-danger);
 }
 
 .btn-icon {
@@ -3036,11 +2933,6 @@ function formatDate(value: string) {
   background: var(--admin-blue-soft);
 }
 
-.step.completed {
-  border-color: var(--admin-green);
-  background: var(--admin-green-soft);
-}
-
 .step-indicator {
   width: 28px;
   height: 28px;
@@ -3058,11 +2950,6 @@ function formatDate(value: string) {
 .step.active .step-indicator {
   background: var(--admin-blue);
   border-color: var(--admin-blue);
-  color: #ffffff;
-}
-
-.step.completed .step-indicator {
-  background: var(--admin-green);
   color: #ffffff;
 }
 
@@ -4625,9 +4512,21 @@ input::placeholder, textarea::placeholder {
   color: #f2fbf6 !important;
 }
 .admin-dark .btn-primary {
-  background: #38c982 !important;
-  border-color: #74e0ae !important;
-  color: #06100F !important;
+  color: #071311;
+}
+
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: var(--admin-theme-surface) !important;
+  border-color: var(--admin-theme-border) !important;
+  color: var(--admin-theme-contrast) !important;
+}
+
+.admin-dark .btn-secondary:hover,
+.admin-dark .btn-ghost:hover {
+  border-color: var(--admin-theme-primary) !important;
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) !important;
+  color: var(--admin-theme-primary-deep) !important;
 }
 .admin-dark input,
 .admin-dark textarea,
@@ -4666,5 +4565,31 @@ html.admin-dark .editor-page .section-summary {
   --admin-amber-soft: #1a150b !important;
   --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
   --admin-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Dark mode: Workflow step buttons ── */
+.admin-dark .workflow-steps .step {
+  border-color: #1d3b33 !important;
+  background: #0a1a14 !important;
+}
+.admin-dark .workflow-steps .step.active {
+  border-color: #38c982 !important;
+  background: rgba(56, 201, 130, 0.12) !important;
+}
+.admin-dark .step .step-label {
+  color: #f2fbf6 !important;
+}
+.admin-dark .step .step-desc {
+  color: #b9ead5 !important;
+}
+.admin-dark .step-indicator {
+  background: #1d3b33 !important;
+  color: #90aaa0 !important;
+}
+.admin-dark .step.active .step-indicator,
+.admin-dark .step-indicator.success {
+  background: #38c982 !important;
+  color: #06100F !important;
+  border-color: #74e0ae !important;
 }
 </style>
