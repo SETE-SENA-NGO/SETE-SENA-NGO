@@ -233,6 +233,12 @@ export const useContentStore = defineStore('content', () => {
     }
 
     const page = normalizePageContent(data as PageContent)
+    const localSaved = readStoredFallbackPage(slug, locale, false)
+    if (localSaved && (localSaved.updated_at || '') > (page.updated_at || '')) {
+      pages.value[key] = localSaved
+      loading.value = false
+      return localSaved
+    }
     rememberPreviousPageIfChanged(pages.value[key], page)
     cachePage(page)
     pages.value[key] = page
@@ -254,6 +260,7 @@ export const useContentStore = defineStore('content', () => {
       rememberPreviousPageIfChanged(previousPage, localPage)
       cachePage(localPage)
       pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
+      notifyPageChange(slug)
       return localPage
     }
 
@@ -279,6 +286,7 @@ export const useContentStore = defineStore('content', () => {
         rememberPreviousPageIfChanged(previousPage, localPage)
         cachePage(localPage)
         pages.value[pageKey(localPage.slug, localPage.locale)] = localPage
+        notifyPageChange(slug)
         return localPage
       }
       throw explainPageSaveError(error)
@@ -286,9 +294,11 @@ export const useContentStore = defineStore('content', () => {
     if (!data) throw new Error('Page save did not return a row')
 
     const savedPage = normalizePageContent(data as PageContent)
+    saveLocalPage(savedPage)
     rememberPreviousPageIfChanged(previousPage, savedPage)
     cachePage(savedPage)
     pages.value[pageKey(savedPage.slug, savedPage.locale)] = savedPage
+    notifyPageChange(slug)
     return savedPage
   }
 

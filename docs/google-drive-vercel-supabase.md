@@ -1,17 +1,17 @@
-# Google Drive + Netlify + Vue 3 + Supabase Setup
+# Google Drive + Vercel + Vue 3 + Supabase Setup
 
 This project supports two media workflows:
 
 1. Paste a public image URL in the admin panel.
-2. Upload an image in the admin panel through a Netlify Function that stores it in Google Drive.
+2. Upload an image in the admin panel through a Vercel Serverless Function that stores it in Google Drive.
 
 The first workflow works now after Supabase is configured. The second workflow needs Google Drive API
-credentials and Netlify secret environment variables.
+credentials and Vercel secret environment variables.
 
 ## Supabase
 
 Run the SQL files in `supabase/SETUP.md`, then configure these public frontend variables locally and
-in Netlify build variables:
+in Vercel environment variables:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
@@ -19,7 +19,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 VITE_USE_GOOGLE_DRIVE_IMAGES=true
 ```
 
-Set these server-side values for Netlify Functions:
+Set these server-side values for Vercel Serverless Functions:
 
 ```env
 SUPABASE_URL=https://your-project-ref.supabase.co
@@ -29,20 +29,23 @@ SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
 The upload function verifies the logged-in admin through Supabase Auth and RLS, so it does not need
 the Supabase service-role key.
 
-## Netlify
+## Vercel
 
-The repo includes `netlify.toml`:
+The repo includes `vercel.json` for SPA rewrites:
 
-```toml
-[build]
-  command = "npm run build"
-  publish = "dist"
-  functions = "netlify/functions"
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
 ```
 
-In Netlify, add environment variables in Project configuration > Environment variables. Public
-`VITE_` variables need Build scope. Google OAuth or service-account upload variables need Functions
-scope.
+API functions are in the `api/` directory. Vercel automatically deploys these as Serverless Functions.
+
+In Vercel, add environment variables in Project Settings > Environment Variables. Public `VITE_`
+variables need to be available during Build (Framework). Google OAuth or service-account upload
+variables need to be available at Runtime (Serverless Functions).
 
 ## Google Drive Manual URL Mode
 
@@ -55,7 +58,7 @@ The app converts normal Drive share links into thumbnail URLs automatically.
 
 ## Google Drive Upload Mode
 
-The Netlify Function supports two Google auth styles:
+The Vercel Serverless Function supports two Google auth styles:
 
 - Service account JSON: best when the target folder is in a Google Workspace Shared Drive.
 - OAuth refresh token: best when the target folder is in a normal personal My Drive account.
@@ -72,7 +75,7 @@ happens, use the OAuth option.
 4. Create a JSON key for the service account.
 5. Share your website image folder with the service account email as Editor.
 6. Copy the folder ID from the Google Drive folder URL.
-7. Add these Netlify Function secrets:
+7. Add these Vercel environment variables (Runtime scope):
 
 ```env
 SUPABASE_URL=https://your-project-ref.supabase.co
@@ -96,7 +99,7 @@ means Google could not verify the private key signature.
 
 Use this when the upload folder is in a personal Google My Drive account.
 
-Add these Netlify Function secrets instead of the service-account JSON:
+Add these Vercel environment variables (Runtime scope):
 
 ```env
 SUPABASE_URL=https://your-project-ref.supabase.co
@@ -120,8 +123,7 @@ resulting URL into `media_assets`.
 
 ## Local Testing
 
-The local Vite dev server includes a dev-only middleware for the upload function, so this works for
-admin upload testing:
+The local Vite dev server mounts the API functions as middleware, so admin uploads work:
 
 ```powershell
 npm run dev
@@ -130,17 +132,17 @@ npm run dev
 Open the app at `http://localhost:5173`. The browser can post to `POST /api/google-drive-upload`
 from that same origin.
 
-You can still use Netlify Dev when you want to test the full Netlify runtime locally:
+You can also use Vercel Dev when you want to test the full Vercel runtime locally:
 
 ```powershell
-npx netlify dev
+npx vercel dev
 ```
 
 ## References
 
 - Supabase Vue quickstart: https://supabase.com/docs/guides/getting-started/quickstarts/vue
-- Netlify environment variables: https://docs.netlify.com/build/environment-variables/overview/
-- Netlify Functions API: https://docs.netlify.com/build/functions/api/
+- Vercel environment variables: https://vercel.com/docs/projects/environment-variables
+- Vercel Serverless Functions: https://vercel.com/docs/functions/serverless-functions
 - Google Drive uploads: https://developers.google.com/workspace/drive/api/guides/manage-uploads
 - Google Drive sharing: https://developers.google.com/workspace/drive/api/guides/manage-sharing
 - Google Drive service-account ownership note: https://developers.google.com/workspace/drive/api/guides/folder

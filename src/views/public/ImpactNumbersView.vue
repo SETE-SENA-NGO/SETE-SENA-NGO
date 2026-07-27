@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, nextTick, computed } from 'vue'
+import { onMounted, onBeforeUnmount, ref, nextTick, computed, watch } from 'vue'
 import cambodiaMap from '@/assets/maps/cambodia.png'
 
 type StatItem = {
@@ -21,8 +21,9 @@ const props = defineProps<{
   } | null
 }>()
 
-const headline = computed(() => props.content?.headline || 'Thirty years, measured village by village.')
-const intro = computed(() => props.content?.intro || 'Numbers do not tell the whole story, but they keep us honest. Every figure below is drawn from our annual monitoring and audited reports.')
+const eyebrow = computed(() => (props.content as any)?.hero?.eyebrow || 'Impact · By the Numbers')
+const headline = computed(() => (props.content as any)?.hero?.title || props.content?.headline || 'Thirty years, measured village by village.')
+const intro = computed(() => (props.content as any)?.hero?.description || props.content?.intro || 'Numbers do not tell the whole story, but they keep us honest. Every figure below is drawn from our annual monitoring and audited reports.')
 
 const defaultOverviewItems: StatItem[] = [
   { value: '293', label: 'Villages', desc: 'Across 43 communes in three provinces.' },
@@ -31,6 +32,13 @@ const defaultOverviewItems: StatItem[] = [
 ]
 
 const overviewHeader = computed(() => {
+  const hero = (props.content as any)?.hero
+  if (hero?.title) {
+    return {
+      heading: hero.title,
+      body: hero.description || ''
+    }
+  }
   const section = props.content?.sections?.find(s => s.id === 'numbers-overview')
   return {
     heading: section?.heading || 'Our Areas of Operation',
@@ -39,6 +47,10 @@ const overviewHeader = computed(() => {
 })
 
 const overviewItems = computed<StatItem[]>(() => {
+  const cmsStats = (props.content as any)?.stats
+  if (Array.isArray(cmsStats) && cmsStats.length > 0) {
+    return cmsStats
+  }
   const section = props.content?.sections?.find(s => s.id === 'numbers-overview')
   if (!section || !section.items) return defaultOverviewItems
   
@@ -119,13 +131,42 @@ function parseFlipCard(sectionId: string, defaultCard: FlipCard): FlipCard {
   }
 }
 
+const beyondHeader = computed(() => {
+  const cmsBeyond = (props.content as any)?.beyondHeader
+  if (cmsBeyond?.heading) return cmsBeyond
+  return {
+    heading: 'Beyond the Numbers',
+    body: 'Our work spans environment, education, and livelihoods — each area with its own measurable outcomes and human stories.'
+  }
+})
+
 const sections = computed(() => {
+  const cmsCards = (props.content as any)?.flipCards
+  if (Array.isArray(cmsCards) && cmsCards.length > 0) {
+    return cmsCards.map((c: any, idx: number) => ({
+      title: c.title || '',
+      icon: c.icon || (idx === 0 ? 'tree' : idx === 1 ? 'book' : 'handshake'),
+      preview: c.preview || '',
+      description: c.description || '',
+      details: Array.isArray(c.details) ? c.details : []
+    }))
+  }
   return [
     parseFlipCard('numbers-card-environment', defaultSections[0]!),
     parseFlipCard('numbers-card-education', defaultSections[1]!),
     parseFlipCard('numbers-card-livelihoods', defaultSections[2]!),
   ]
 })
+
+watch(
+  sections,
+  () => {
+    nextTick(() => {
+      setupObservers()
+    })
+  },
+  { immediate: true, deep: true }
+)
 
 // ─── SCROLL‑TRIGGERED POP‑UP (Intersection Observer) ──────────────
 let observers: IntersectionObserver[] = []
@@ -203,7 +244,7 @@ onBeforeUnmount(() => {
         <header class="hero-centered">
             <div class="container">
                 <div class="hero-inner">
-                    <span class="eyebrow">Impact · By the Numbers</span>
+                    <span class="eyebrow">{{ eyebrow }}</span>
                     <h1>{{ headline }}</h1>
                     <p class="hero-description">{{ intro }}</p>
                     <div class="hero-divider">
@@ -251,17 +292,14 @@ onBeforeUnmount(() => {
             <div class="container">
                 <div class="section-header">
                     <span class="subtitle">Impact Areas</span>
-                    <h2>Beyond the Numbers</h2>
-                    <p>
-                        Our work spans environment, education, and livelihoods — each area
-                        with its own measurable outcomes and human stories.
-                    </p>
+                    <h2>{{ beyondHeader.heading }}</h2>
+                    <p>{{ beyondHeader.body }}</p>
                 </div>
 
                 <div class="flip-grid">
                     <div
                         v-for="(item, index) in sections"
-                        :key="item.title"
+                        :key="'card-' + index + '-' + (item.title || '')"
                         class="flip-card-wrapper"
                         :style="{ transitionDelay: (index * 0.12) + 's' }"
                     >
@@ -300,7 +338,7 @@ onBeforeUnmount(() => {
                             <div class="flip-card-back">
                                 <h3 class="flip-back-title">{{ item.title }}</h3>
                                 <ul class="flip-details">
-                                    <li v-for="detail in item.details" :key="detail.label">
+                                    <li v-for="(detail, dIdx) in item.details" :key="'detail-' + dIdx + '-' + (detail.label || '')">
                                         <strong>{{ detail.value }}</strong> {{ detail.label }}
                                         <span class="flip-detail-desc">{{ detail.desc }}</span>
                                     </li>
