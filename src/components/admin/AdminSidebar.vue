@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter, RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth.store'
@@ -30,7 +30,9 @@ const { t } = useI18n()
 const ui = useUiStore()
 const auth = useAuthStore()
 const loggingOut = ref(false)
-const openGroups = ref(new Set<string>())
+const groupOverrides = ref(new Map<string, boolean>())
+const navEl = ref<HTMLElement | null>(null)
+const indicatorStyle = ref<Record<string, string>>({ opacity: '0' })
 
 const workspaceLinks: NavItem[] = [
   { to: '/admin', labelKey: 'admin.sidebar.dashboard', icon: 'icon-dashboard' },
@@ -53,7 +55,7 @@ const pageGroups: PageGroup[] = [
     slug: 'about',
     labelKey: 'admin.sidebar.about',
     items: [
-      { slug: 'about-vision', labelKey: 'admin.sidebar.visionMission' },
+      { slug: 'about-vision', labelKey: 'admin.sidebar.visionMission', path: '/admin/vision-mission' },
       // { slug: 'about-organization', labelKey: 'admin.sidebar.organization' },
     ],
   },
@@ -62,6 +64,11 @@ const pageGroups: PageGroup[] = [
     labelKey: 'admin.sidebar.programs',
     path: '/admin/programs',
     items: [
+      {
+        slug: 'programs-overview',
+        labelKey: 'admin.sidebar.overview',
+        path: '/admin/programs',
+      },
       {
         slug: 'programs-education',
         labelKey: 'admin.sidebar.education',
@@ -99,6 +106,11 @@ const pageGroups: PageGroup[] = [
     labelKey: 'admin.sidebar.getInvolved',
     path: '/admin/get-involved',
     items: [
+      {
+        slug: 'get-involved-overview',
+        labelKey: 'admin.sidebar.overview',
+        path: '/admin/get-involved',
+      },
       { slug: 'get-involved-donate', labelKey: 'admin.sidebar.donate' },
       { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer', path: '/admin/volunteer' },
       { slug: 'get-involved-partner', labelKey: 'admin.sidebar.partner' },
@@ -132,20 +144,40 @@ function isGroupActive(group: PageGroup) {
   )
 }
 
+function isSummaryActive(group: PageGroup) {
+  const isChildActive = group.items.some((item) =>
+    isActive(item.path ?? editorPath(item.slug)),
+  )
+  if (isChildActive) {
+    return !isGroupOpen(group)
+  }
+
+  const groupPath = group.path ?? editorPath(group.slug)
+  return isActive(groupPath)
+}
+
 function isGroupOpen(group: PageGroup) {
-  return isGroupActive(group) || openGroups.value.has(group.slug)
+  const override = groupOverrides.value.get(group.slug)
+  if (override !== undefined) return override
+  return isGroupActive(group)
 }
 
 function toggleGroup(group: PageGroup) {
-  const nextGroups = new Set(openGroups.value)
+  const nextOverrides = new Map(groupOverrides.value)
+  nextOverrides.set(group.slug, !isGroupOpen(group))
+  groupOverrides.value = nextOverrides
+}
 
-  if (nextGroups.has(group.slug)) {
-    nextGroups.delete(group.slug)
+function onGroupClick(group: PageGroup) {
+  if (group.path) {
+    if (!isGroupOpen(group)) {
+      toggleGroup(group)
+    }
+    void router.push(group.path)
+    ui.closeSidebarForNavigation()
   } else {
-    nextGroups.add(group.slug)
+    toggleGroup(group)
   }
-
-  openGroups.value = nextGroups
 }
 
 function submenuId(group: PageGroup) {
@@ -164,6 +196,67 @@ async function logout() {
     loggingOut.value = false
   }
 }
+
+// ─── Sliding active indicator ─────────────────────────────
+// Tracks the currently active top-level row (workspace link, flat page
+// link, or group summary) and positions a single shared pill over it,
+// so selection appears to glide between rows instead of each row
+// drawing its own static highlight.
+function updateActiveIndicator() {
+  const nav = navEl.value
+  const activeEl = nav?.querySelector<HTMLElement>('[data-nav-active="true"]')
+
+  if (!nav || !activeEl) {
+    indicatorStyle.value = { opacity: '0' }
+    return
+  }
+
+  const navRect = nav.getBoundingClientRect()
+  const elRect = activeEl.getBoundingClientRect()
+  const top = elRect.top - navRect.top + nav.scrollTop
+
+  indicatorStyle.value = {
+    transform: `translateY(${top}px)`,
+    height: `${elRect.height}px`,
+    opacity: '1',
+  }
+}
+
+let resizeFrame: number | null = null
+function handleResize() {
+  if (resizeFrame !== null) return
+  resizeFrame = requestAnimationFrame(() => {
+    resizeFrame = null
+    updateActiveIndicator()
+  })
+}
+
+// Escape closes the sidebar only when it's acting as a mobile overlay —
+// on desktop it's persistent chrome, not a dismissible drawer.
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return
+  if (typeof window === 'undefined' || window.innerWidth >= 900) return
+  if (ui.sidebarOpen) ui.closeSidebar()
+}
+
+watch(
+  () => route.path,
+  () => void nextTick(updateActiveIndicator),
+)
+
+watch(groupOverrides, () => void nextTick(updateActiveIndicator))
+
+onMounted(() => {
+  void nextTick(updateActiveIndicator)
+  window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', handleResize)
+  if (resizeFrame !== null) cancelAnimationFrame(resizeFrame)
+})
 </script>
 
 <template>
@@ -177,13 +270,16 @@ async function logout() {
       </span>
     </RouterLink>
 
-    <nav aria-label="Admin navigation">
+    <nav ref="navEl" aria-label="Admin navigation">
+      <div class="active-indicator" :style="indicatorStyle" aria-hidden="true"></div>
+
       <p class="nav-heading">{{ t('admin.sidebar.workspace') }}</p>
       <RouterLink
         v-for="item in workspaceLinks"
         :key="item.to"
         :to="item.to"
         :class="['link', { active: isNavActive(item) }]"
+        :data-nav-active="isNavActive(item)"
         @click="ui.closeSidebarForNavigation"
       >
         <span :class="['link-icon', item.icon]" aria-hidden="true"></span>
@@ -192,68 +288,71 @@ async function logout() {
 
       <p class="nav-heading">{{ t('admin.sidebar.websitePages') }}</p>
 
-      <!-- Flat single pages -->
-      <RouterLink
-        v-for="group in pageGroups.filter((g) => !g.items.length)"
-        :key="group.slug"
-        :to="group.path ?? editorPath(group.slug)"
-        :class="[
-          'link',
-          { active: isActive(group.path ?? editorPath(group.slug)) },
-        ]"
-        @click="ui.closeSidebarForNavigation"
-      >
-        <span class="link-icon icon-pages" aria-hidden="true"></span>
-        <span>{{ t(group.labelKey) }}</span>
-      </RouterLink>
-
-      <!-- Expandable groups with sub-pages -->
-      <div
-        v-for="group in pageGroups.filter((g) => g.items.length)"
-        :key="group.slug"
-        class="nav-group"
-        :class="{ open: isGroupOpen(group) }"
-      >
-        <div class="nav-group-row">
-          <RouterLink
-            :to="group.path ?? editorPath(group.slug)"
-            class="link summary-link"
-            :class="{ active: group.items.length === 0 ? isActive(group.path ?? editorPath(group.slug)) : (group.path ? isActive(group.path) && !group.items.some((item) => isActive(item.path ?? editorPath(item.slug))) : false) }"
-            @click.stop="ui.closeSidebarForNavigation"
-          >
-            <span class="link-icon icon-pages" aria-hidden="true"></span>
-            <span>{{ t(group.labelKey) }}</span>
-          </RouterLink>
-          <button
-            class="group-toggle"
-            type="button"
-            :aria-controls="submenuId(group)"
-            :aria-expanded="isGroupOpen(group)"
-            :aria-label="`${isGroupOpen(group) ? 'Collapse' : 'Expand'} ${t(group.labelKey)}`"
-            @click="toggleGroup(group)"
-          >
-            <span class="toggle-chevron" aria-hidden="true"></span>
-          </button>
-        </div>
-        <div
-          v-show="isGroupOpen(group)"
-          :id="submenuId(group)"
-          class="submenu"
+      <template v-for="group in pageGroups" :key="group.slug">
+        <!-- Flat single pages -->
+        <RouterLink
+          v-if="!group.items.length"
+          :to="group.path ?? editorPath(group.slug)"
+          :class="[
+            'link',
+            { active: isActive(group.path ?? editorPath(group.slug)) },
+          ]"
+          :data-nav-active="isActive(group.path ?? editorPath(group.slug))"
+          @click="ui.closeSidebarForNavigation"
         >
-          <RouterLink
-            v-for="item in group.items"
-            :key="item.slug"
-            :to="item.path ?? editorPath(item.slug)"
-            :class="[
-              'sub-link',
-              { active: isActive(item.path ?? editorPath(item.slug)) },
-            ]"
-            @click="ui.closeSidebarForNavigation"
+          <span class="link-icon icon-pages" aria-hidden="true"></span>
+          <span>{{ t(group.labelKey) }}</span>
+        </RouterLink>
+
+        <!-- Expandable groups with sub-pages -->
+        <div
+          v-else
+          class="nav-group"
+          :class="{ open: isGroupOpen(group) }"
+        >
+          <div class="nav-group-row">
+            <button
+              class="link summary-link"
+              type="button"
+              :class="{ active: isSummaryActive(group) }"
+              :data-nav-active="isSummaryActive(group)"
+              :aria-controls="submenuId(group)"
+              :aria-expanded="isGroupOpen(group)"
+              @click="onGroupClick(group)"
+            >
+              <span class="link-icon icon-pages" aria-hidden="true"></span>
+              <span class="link-label">{{ t(group.labelKey) }}</span>
+              <span
+                class="toggle-chevron"
+                aria-hidden="true"
+                @click.stop="toggleGroup(group)"
+              ></span>
+            </button>
+          </div>
+          <div
+            class="submenu-wrap"
+            :class="{ open: isGroupOpen(group) }"
+            :inert="!isGroupOpen(group)"
+            @transitionend="updateActiveIndicator"
           >
-            {{ t(item.labelKey) }}
-          </RouterLink>
+            <div :id="submenuId(group)" class="submenu">
+              <RouterLink
+                v-for="item in group.items"
+                :key="item.slug"
+                :to="item.path ?? editorPath(item.slug)"
+                :class="[
+                  'sub-link',
+                  { active: isActive(item.path ?? editorPath(item.slug)) },
+                ]"
+                @click="ui.closeSidebarForNavigation"
+              >
+                <span class="sub-dot" aria-hidden="true"></span>
+                <span>{{ t(item.labelKey) }}</span>
+              </RouterLink>
+            </div>
+          </div>
         </div>
-      </div>
+      </template>
     </nav>
 
     <div class="bottom">
@@ -435,10 +534,28 @@ async function logout() {
 }
 
 nav {
+  position: relative;
   flex: 1;
   overflow-y: auto;
   scrollbar-width: none;
   padding: 0.75rem 0.85rem;
+}
+
+.active-indicator {
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  top: 0;
+  z-index: 0;
+  border-radius: 8px;
+  background: var(--sb-accent-soft);
+  box-shadow: inset 3px 0 0 var(--sb-accent);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s ease;
 }
 
 .nav-heading {
@@ -451,20 +568,46 @@ nav {
 }
 
 .link {
-  min-height: 40px;
+  position: relative;
+  z-index: 1;
+  min-height: 46px;
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--sb-text);
-  padding: 0.5rem 0.75rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.22rem;
   font-weight: 700;
   text-decoration: none;
   font-size: 0.9rem;
   opacity: 0.85;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.link:hover {
+  transform: translateX(2px);
+}
+
+.link:focus-visible {
+  outline: none;
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--sb-accent-soft);
 }
 
 .link > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-label {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -479,6 +622,14 @@ nav {
 
 .link.active {
   box-shadow: inset 3px 0 0 var(--sb-accent);
+}
+
+/* Inside <nav>, the sliding .active-indicator pill provides the active
+   background/accent bar, so each row's own static active styling is
+   neutralized here to avoid drawing both at once. */
+nav .link.active {
+  background: none;
+  box-shadow: none;
 }
 
 .link-icon {
@@ -661,42 +812,22 @@ nav {
 
 /* Expandable group styles */
 .nav-group {
-  margin-bottom: 0;
+  margin-bottom: 0.22rem;
 }
 
 .nav-group-row {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
 }
 
-.group-toggle {
-  width: 2rem;
-  height: 2rem;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--sb-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.group-toggle:hover,
-.group-toggle:focus-visible {
-  background: var(--sb-hover-bg);
-  color: var(--sb-text-strong);
-  outline: none;
-}
-
-.group-toggle:focus-visible {
-  box-shadow: 0 0 0 2px var(--sb-accent-soft);
+.nav-group-row .link {
+  margin-bottom: 0;
 }
 
 .toggle-chevron {
   width: 0.42rem;
   height: 0.42rem;
+  flex-shrink: 0;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: rotate(-45deg);
@@ -708,50 +839,132 @@ nav {
 }
 
 .summary-link {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+}
+
+.submenu-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+<<<<<<< HEAD
+  transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+=======
+  overflow: hidden;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.25s step-end;
+>>>>>>> 69077cc (feat: update navbar style for admin page)
+}
+
+.submenu-wrap.open {
+  grid-template-rows: 1fr;
+<<<<<<< HEAD
+=======
+  visibility: visible;
+  transition:
+    grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0s step-start;
+>>>>>>> 69077cc (feat: update navbar style for admin page)
 }
 
 .submenu {
+  min-height: 0;
+  overflow: hidden;
   display: grid;
-  gap: 0.1rem;
-  padding: 0.1rem 0 0.35rem 1.4rem;
+  gap: 0.2rem;
+<<<<<<< HEAD
+  padding: 0.2rem 0 0.35rem 1.4rem;
   margin-left: 0.35rem;
   border-left: 1px solid var(--sb-divider);
+=======
+  padding: 0.25rem 0 0.35rem 0.95rem;
+  margin-left: 0.75rem;
+  border-left: 2px solid color-mix(in srgb, var(--sb-accent) 18%, var(--sb-divider));
+  border-radius: 0 0 0 4px;
+}
+
+.sub-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--sb-muted);
+  opacity: 0.55;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+.sub-link:hover .sub-dot {
+  opacity: 1;
+  transform: scale(1.35);
+  background: var(--sb-accent);
+}
+
+.sub-link.active .sub-dot {
+  opacity: 1;
+  transform: scale(1.5);
+  background: var(--sb-accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--sb-accent) 60%, transparent);
+>>>>>>> 69077cc (feat: update navbar style for admin page)
 }
 
 .sub-link {
   display: flex;
   align-items: center;
+<<<<<<< HEAD
+  min-height: 40px;
   gap: 0.6rem;
-  border-radius: 5px;
+  border-radius: 7px;
   color: var(--sb-muted);
-  padding: 0.38rem 0.6rem;
+  padding: 0.55rem 0.7rem;
+=======
+  min-height: 38px;
+  gap: 0.65rem;
+  border-radius: 7px;
+  color: var(--sb-text);
+  opacity: 0.78;
+  padding: 0.48rem 0.75rem;
+>>>>>>> 69077cc (feat: update navbar style for admin page)
   font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
   transition:
-    color 0.15s ease,
-    background 0.15s ease;
-}
-
-.sub-link .link-icon {
-  width: 0.75rem;
-  height: 0.75rem;
-  flex: 0 0 auto;
-  position: relative;
-  color: currentColor;
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
 }
 
 .sub-link:hover {
+  opacity: 1;
   background: var(--sb-hover-bg);
   color: var(--sb-text-strong);
+  transform: translateX(3px);
+}
+
+.sub-link:focus-visible {
+  outline: none;
+  color: var(--sb-text-strong);
+  box-shadow: 0 0 0 2px var(--sb-accent-soft);
+}
+
+.sub-link:focus-visible {
+  outline: none;
+  color: var(--sb-text-strong);
+  box-shadow: 0 0 0 2px var(--sb-accent-soft);
 }
 
 .sub-link.active {
+  opacity: 1;
   background: var(--sb-accent-soft);
   color: var(--sb-active-text);
-  box-shadow: inset 2px 0 0 var(--sb-accent);
+  font-weight: 800;
+  box-shadow: inset 3px 0 0 var(--sb-accent);
+  transform: translateX(2px);
 }
 
 .bottom {
