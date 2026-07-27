@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { Save } from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ImageCropModal from '@/components/admin/ImageCropModal.vue'
@@ -205,10 +206,28 @@ async function saveCard(method: DonationMethod, index: number) {
             </div>
 
             <article class="method-card">
-              <header class="method-head" :style="{ background: activeMethod.headerColor }">
+              <header class="method-head">
                 <div class="head-copy">
                   <div class="bank-name">{{ activeMethod.bank || 'New bank' }}</div>
                   <div class="bank-subtitle">{{ activeMethod.subtitle || 'Bank subtitle' }}</div>
+                </div>
+                <div class="method-head-actions">
+                  <p
+                    v-if="cardMessages[activeMethod.id]"
+                    :class="['save-message', cardMessages[activeMethod.id]?.type]"
+                    role="status"
+                  >
+                    {{ cardMessages[activeMethod.id]?.text }}
+                  </p>
+                  <button
+                    class="save-btn"
+                    type="button"
+                    :disabled="savingId === activeMethod.id"
+                    @click="saveCard(activeMethod, activeIndex)"
+                  >
+                    <Save :size="16" aria-hidden="true" />
+                    <span>{{ savingId === activeMethod.id ? 'Saving...' : 'Save changes' }}</span>
+                  </button>
                 </div>
               </header>
 
@@ -280,18 +299,6 @@ async function saveCard(method: DonationMethod, index: number) {
                     />
                   </div>
                   <div class="field">
-                    <label :for="`${activeMethod.id}-color`">Card color</label>
-                    <div class="color-field">
-                      <input
-                        :id="`${activeMethod.id}-color`"
-                        v-model="activeMethod.headerColor"
-                        :name="`${activeMethod.id}-color`"
-                        type="color"
-                      />
-                      <span class="color-value">{{ activeMethod.headerColor }}</span>
-                    </div>
-                  </div>
-                  <div class="field">
                     <label :for="`${activeMethod.id}-account-name`">Account name</label>
                     <input
                       :id="`${activeMethod.id}-account-name`"
@@ -317,24 +324,6 @@ async function saveCard(method: DonationMethod, index: number) {
                   </div>
                 </div>
               </div>
-
-              <footer class="card-save-bar">
-                <p
-                  v-if="cardMessages[activeMethod.id]"
-                  :class="['save-message', cardMessages[activeMethod.id]?.type]"
-                  role="status"
-                >
-                  {{ cardMessages[activeMethod.id]?.text }}
-                </p>
-                <button
-                  class="save-btn"
-                  type="button"
-                  :disabled="savingId === activeMethod.id"
-                  @click="saveCard(activeMethod, activeIndex)"
-                >
-                  {{ savingId === activeMethod.id ? 'Saving...' : 'Save changes' }}
-                </button>
-              </footer>
             </article>
           </div>
         </section>
@@ -520,13 +509,24 @@ h1 {
 .method-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 0.75rem;
   padding: 1rem 1.4rem;
-  color: #ffffff;
+  color: var(--admin-contrast);
+  background: #ffffff;
+  border-bottom: 1px solid var(--admin-border);
 }
 
 .head-copy {
   min-width: 0;
+}
+
+.method-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .bank-name {
@@ -537,7 +537,7 @@ h1 {
 .bank-subtitle {
   font-size: 0.7rem;
   letter-spacing: 0.04em;
-  opacity: 0.85;
+  color: var(--admin-muted);
 }
 
 .method-body {
@@ -725,58 +725,29 @@ h1 {
   outline: none;
 }
 
-.color-field {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-.color-field input[type='color'] {
-  width: 3.2rem;
-  height: 2.6rem;
-  border: 1.5px solid var(--admin-border-strong);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  padding: 0.2rem;
-  cursor: pointer;
-}
-
-.color-value {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--admin-muted);
-  text-transform: uppercase;
-}
-
-.card-save-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 1rem 1.4rem 1.4rem;
-  border-top: 1px solid var(--admin-border);
-}
-
 .save-message {
-  margin: 0 auto 0 0;
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
 }
 
 .save-message.success {
-  color: var(--admin-blue-deep);
+  background: rgba(15, 125, 56, 0.1);
+  color: #0f7d38;
 }
 
 .save-message.error {
+  background: rgba(190, 18, 60, 0.1);
   color: #be123c;
 }
 
-:global(.admin-dark) .save-message.error {
-  color: #fb7185;
-}
-
 .save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   min-height: 46px;
   border: 1px solid var(--admin-blue);
   border-radius: 10px;
@@ -889,11 +860,5 @@ h1 {
 }
 .admin-dark .switch-tab:hover {
   color: #f2fbf6 !important;
-}
-.admin-dark .card-save-bar {
-  border-color: #1d3b33 !important;
-}
-.admin-dark .save-message.success {
-  color: #74e0ae !important;
 }
 </style>

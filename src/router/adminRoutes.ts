@@ -45,6 +45,4 @@ export const adminRoutes: RouteRecordRaw[] = [
   { path: '/admin/editor/volunteer', redirect: '/admin/volunteer', meta: { requiresAuth: true } },
   // Home slideshow shortcut (edits only the `home-slideshow` section inside the Home page)
   { path: '/admin/editor/home-slideshow', component: PageEditorView, meta: { requiresAuth: true } },
-  // Redirect old /admin/news to the News page editor
-  { path: '/admin/news', redirect: '/admin/editor/news' },
 ]

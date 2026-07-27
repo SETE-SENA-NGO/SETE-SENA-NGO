@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowDown,
   ArrowUp,
-  ExternalLink,
   Image as ImageIcon,
   Mail,
   MapPin,
   MessageSquare,
   Phone,
   Plus,
-  RotateCcw,
   Save,
   Trash2,
   Upload,
@@ -29,7 +26,7 @@ import {
   type ContactOffice,
   type ContactPageContent,
 } from '@/lib/contactContent'
-import { imageUploadHelpText, normalizeMediaUrl } from '@/lib/media'
+import { normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
@@ -48,7 +45,6 @@ const saving = ref(false)
 const uploadingKey = ref('')
 const loadError = ref('')
 const savedAt = ref('')
-const imageHint = imageUploadHelpText()
 
 const draft = reactive<ContactPageContent>(cloneContactContent(fallbackContactContent))
 
@@ -210,17 +206,6 @@ function moveOffice(index: number, direction: -1 | 1) {
   draft.offices[target] = current
 }
 
-function resetToDefaults() {
-  ui.openModal(
-    'Reset Contact content?',
-    'Restore the default contact details, office info, Telegram QR and visitor guide?',
-    () => {
-      replaceDraft(cloneContactContent(fallbackContactContent))
-      ui.addToast('Default Contact draft restored.', 'info')
-    },
-  )
-}
-
 function prepareForSave(content: ContactPageContent): ContactPageContent {
   return {
     headquarters: {
@@ -328,14 +313,6 @@ function normalizeTelegramUrl(value: string): string {
             </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/contact">
-              <ExternalLink :size="16" aria-hidden="true" />
-              <span>View page</span>
-            </RouterLink>
-            <button type="button" class="btn btn-ghost" @click="resetToDefaults">
-              <RotateCcw :size="16" aria-hidden="true" />
-              <span>Reset draft</span>
-            </button>
             <button type="button" class="btn btn-primary" :disabled="saving" @click="savePage">
               <Save :size="16" aria-hidden="true" />
               <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
@@ -383,10 +360,6 @@ function normalizeTelegramUrl(value: string): string {
                   <label class="field wide">
                     <span>Intro text</span>
                     <textarea v-model="draft.headquarters.intro" rows="3"></textarea>
-                  </label>
-                  <label class="field wide">
-                    <span>Main photo URL</span>
-                    <input v-model="draft.headquarters.image" type="url" :placeholder="imageHint" />
                   </label>
                   <label class="field wide">
                     <span>Photo alt text</span>

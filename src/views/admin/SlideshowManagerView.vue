@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { ArrowDown, ArrowUp, Save, Trash2 } from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
@@ -210,9 +211,20 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                 live as soon as you save. Keep between {{ MIN_SLIDES }} and {{ MAX_SLIDES }} slides.
               </p>
             </div>
-            <div class="slot-meter" aria-live="polite">
-              <strong>{{ filledSlideCount }}</strong>
-              <span>/ {{ MAX_SLIDES }} image slots filled</span>
+            <div class="header-actions">
+              <div class="slot-meter" aria-live="polite">
+                <strong>{{ filledSlideCount }}</strong>
+                <span>/ {{ MAX_SLIDES }} image slots filled</span>
+              </div>
+              <template v-if="!loading">
+                <p v-if="message" :class="['save-message', messageType]" role="status">
+                  {{ message }}
+                </p>
+                <button class="save-btn" type="button" :disabled="saving" @click="save">
+                  <Save :size="16" aria-hidden="true" />
+                  <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
+                </button>
+              </template>
             </div>
           </header>
 
@@ -253,7 +265,7 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                     aria-label="Move slide up"
                     @click="moveSlide(activeIndex, -1)"
                   >
-                    &uarr;
+                    <ArrowUp :size="15" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
@@ -262,7 +274,7 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                     aria-label="Move slide down"
                     @click="moveSlide(activeIndex, 1)"
                   >
-                    &darr;
+                    <ArrowDown :size="15" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
@@ -272,7 +284,7 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                     :aria-label="`Clear slide ${activeIndex + 1}`"
                     @click="clearSlot(activeSlide)"
                   >
-                    ×
+                    <Trash2 :size="15" aria-hidden="true" />
                   </button>
                 </div>
               </header>
@@ -358,15 +370,6 @@ function normalizeSlideSlots(source: HomeSlide[]) {
               </div>
             </article>
           </template>
-
-          <footer v-if="!loading" class="save-bar">
-            <p v-if="message" :class="['save-message', messageType]" role="status">
-              {{ message }}
-            </p>
-            <button class="save-btn" type="button" :disabled="saving" @click="save">
-              {{ saving ? 'Saving...' : 'Save changes' }}
-            </button>
-          </footer>
         </section>
       </main>
     </div>
@@ -606,6 +609,9 @@ h1 {
 
 .order-btn,
 .remove-slide-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
@@ -613,8 +619,6 @@ h1 {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  font-size: 1.1rem;
-  line-height: 1;
   cursor: pointer;
   transition: background 0.18s ease;
 }
@@ -826,21 +830,16 @@ h1 {
   outline: none;
 }
 
-.save-bar {
+.header-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 1rem;
-  padding: 1rem 1.4rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
 }
 
 .save-message {
-  margin: 0 auto 0 0;
+  margin: 0;
   font-weight: 700;
   font-size: 0.9rem;
 }
@@ -858,6 +857,10 @@ h1 {
 }
 
 .save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   min-height: 46px;
   border: 1px solid var(--admin-blue);
   border-radius: 10px;
@@ -926,8 +929,7 @@ h1 {
   background: #06100F !important;
 }
 .admin-dark .slideshow-header,
-.admin-dark .slide-card,
-.admin-dark .save-bar {
+.admin-dark .slide-card {
   background: #0a1a14 !important;
   border-color: #1d3b33 !important;
 }

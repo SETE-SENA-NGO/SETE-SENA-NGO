@@ -97,7 +97,7 @@ useScrollReveal()
       </div>
     </Slideshow>
 
-    <!-- Stats + News button -->
+    <!-- Stats -->
     <section class="stats">
       <div class="stats-inner">
         <div
@@ -109,10 +109,6 @@ useScrollReveal()
           <div class="stat-number">{{ stat.value }}</div>
           <div class="stat-label">{{ stat.label }}</div>
         </div>
-      </div>
-      <!-- 👇 NEW: button row under stats -->
-      <div class="stats-news-row">
-        <RouterLink to="/news" class="btn btn--news"> See all news </RouterLink>
       </div>
     </section>
 
@@ -458,35 +454,6 @@ useScrollReveal()
   .stat + .stat {
     border-left: 1px solid var(--color-border);
   }
-}
-
-/* 👇 NEW: news button row */
-.stats-news-row {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem 0.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.btn--news {
-  background: transparent;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  padding: 0.65rem 2rem;
-  font-weight: 600;
-  transition:
-    background 0.25s,
-    color 0.25s,
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-.btn--news:hover {
-  background: var(--primary-color);
-  color: #fff;
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(22, 48, 42, 0.18);
 }
 
 /* Mission */

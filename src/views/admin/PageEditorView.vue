@@ -62,73 +62,6 @@ const contentKind = 'santi-sena-page-content'
 
 const defaultPages: PageDraft[] = [
   {
-    slug: 'news',
-    route: '/news',
-    group: 'News',
-    title: 'News',
-    eyebrow: 'News manager',
-    headline: 'News',
-    intro: '',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'news-list',
-        label: 'News list',
-        heading: 'News list',
-        body: 'Used by the News manager editor page.',
-        items: '',
-      },
-    ],
-    updatedAt: '',
-  },
-  {
-    slug: 'news-detail',
-    route: '/news/:id',
-    previewRoute: '/news/1',
-    group: 'News',
-    title: 'News Detail',
-    eyebrow: 'News detail',
-    headline: 'Community stories, updates and field notes.',
-    intro:
-      'A detail page template for public news stories, including the article header, body content, related updates and donation call to action.',
-    primaryAction: 'All news',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'news-detail-hero',
-        label: 'Article header',
-        heading: 'Story header',
-        body: 'Controls the headline area shown on individual public news stories.',
-        items:
-          'Category | Community update\nDate | Published date\nAuthor | Santi Sena team\nReading time | 5 min read',
-      },
-      {
-        id: 'news-detail-body',
-        label: 'Article body',
-        heading: 'Story content',
-        body: 'Use this section for the article introduction, main body and closing note.',
-        items:
-          'Introduction | Open with the community need or program moment.\nMain story | Describe the people, place, activities and outcomes.\nClosing note | Invite readers to continue learning or supporting the work.',
-      },
-      {
-        id: 'news-detail-related',
-        label: 'Related stories',
-        heading: 'More from Santi Sena',
-        body: 'Related news cards shown near the end of a story.',
-        items: 'Environment updates\nEducation stories\nLivelihood field notes\nChild protection news',
-      },
-      {
-        id: 'news-detail-cta',
-        label: 'Call to action',
-        heading: 'Stand with village-led change.',
-        body: 'A short donation or support invitation that appears after a news article.',
-        items: 'Donate\nGet involved\nContact us',
-      },
-    ],
-    updatedAt: '',
-  },
-  {
     slug: 'home',
     route: '/',
     group: 'Home',
@@ -979,32 +912,6 @@ const defaultPages: PageDraft[] = [
           'Explore | About, Programs, Impact, Get Involved, Contact\nContact | Svay Rieng Province, Cambodia | info@santisena.org | +855 (0) 12 345 678\nBottom | Santi Sena Organization. All rights reserved. | Registered NGO. Partners: UNDP, ADB, Oxfam',
       },
     ],
-    updatedAt: '',
-  },
-  {
-    slug: 'news',
-    route: '/news',
-    group: 'News',
-    title: 'News',
-    eyebrow: 'News & Updates',
-    headline: 'Announcements, stories and updates from the field.',
-    intro: 'Keep up to date with Santi Sena\'s work in community development, environment and education.',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [],
-    updatedAt: '',
-  },
-  {
-    slug: 'news-detail',
-    route: '/news/:slug',
-    group: 'News',
-    title: 'News Detail',
-    eyebrow: 'Article',
-    headline: 'News Article Title Placeholder',
-    intro: 'News Article Introduction Summary Placeholder',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [],
     updatedAt: '',
   },
 ]
@@ -4564,7 +4471,7 @@ input::placeholder, textarea::placeholder {
 }
 </style>
 
-<!-- Non-scoped dark mode overrides for page editor (Home, About, Programs, News) -->
+<!-- Non-scoped dark mode overrides for page editor (Home, About, Programs) -->
 <style>
 .admin-dark .editor-page {
   background: #06100F !important;

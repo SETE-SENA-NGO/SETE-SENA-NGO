@@ -84,7 +84,6 @@ type VolunteerPageContent = {
     heading: string
   }
   galleryImages: GalleryItem[]
-  galleryLink: ActionLink
   supportSection: {
     kicker: string
     heading: string
@@ -211,7 +210,6 @@ const fallbackContent: VolunteerPageContent = {
       alt: 'Volunteer team walking on a rural Cambodian road',
     },
   ],
-  galleryLink: { label: 'View stories', to: '/news' },
   supportSection: {
     kicker: 'Volunteer contact',
     heading: 'Strengthen local work',
@@ -336,7 +334,6 @@ function replaceDraft(content: VolunteerPageContent) {
   draft.campaignSection = { ...content.campaignSection, cta: { ...content.campaignSection.cta } }
   draft.gallerySection = { ...content.gallerySection }
   draft.galleryImages = content.galleryImages.map((g) => ({ ...g }))
-  draft.galleryLink = { ...content.galleryLink }
   draft.supportSection = {
     ...content.supportSection,
     details: [...content.supportSection.details],
@@ -538,7 +535,6 @@ function prepareForSave(content: VolunteerPageContent): VolunteerPageContent {
       ...item,
       image: normalizeMediaUrl(item.image),
     })),
-    galleryLink: { ...content.galleryLink },
     supportSection: {
       ...content.supportSection,
       details: content.supportSection.details.map((d) => d.trim()).filter(Boolean),
@@ -593,7 +589,6 @@ function mergeContent(
     campaignSection: mergeCampaignSection(base.campaignSection, override.campaignSection),
     gallerySection: mergeObject(base.gallerySection, override.gallerySection),
     galleryImages: mergeGalleryImages(override.galleryImages, base.galleryImages),
-    galleryLink: mergeObject(base.galleryLink, override.galleryLink),
     supportSection: mergeSupportSection(base.supportSection, override.supportSection),
   }
 }
@@ -671,7 +666,6 @@ function cloneContent(c: VolunteerPageContent): VolunteerPageContent {
     campaignSection: { ...c.campaignSection, cta: { ...c.campaignSection.cta } },
     gallerySection: { ...c.gallerySection },
     galleryImages: c.galleryImages.map(cloneGalleryItem),
-    galleryLink: { ...c.galleryLink },
     supportSection: {
       ...c.supportSection,
       details: [...c.supportSection.details],
@@ -1038,10 +1032,6 @@ function cloneGalleryItem(g: GalleryItem): GalleryItem {
               <label class="field">
                 <span>Section heading</span>
                 <input v-model="draft.gallerySection.heading" type="text" />
-              </label>
-              <label class="field">
-                <span>Link label</span>
-                <input v-model="draft.galleryLink.label" type="text" />
               </label>
             </div>
           </section>
