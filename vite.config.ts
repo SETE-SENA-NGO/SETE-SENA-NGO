@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import vuetify from 'vite-plugin-vuetify'
 
 type NetlifyFunction = (request: Request) => Promise<Response> | Response
 
@@ -18,7 +19,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     envPrefix: ['VITE_', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'],
-    plugins: [vue(), netlifyFunctionsDevPlugin()],
+    plugins: [vue(), vuetify({ autoImport: true }), netlifyFunctionsDevPlugin()],
     server: {
       host: devHost,
       port: devPort,
@@ -40,7 +41,23 @@ function numberFromEnv(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
-function netlifyFunctionsDevPlugin(): Plugin {
+async function netlifyFunctionsDevPlugin(): Promise<Plugin> {
+  // Import the Netlify functions once at plugin setup time so that
+  // a temporary incomplete save does not break every subsequent request.
+  const uploadFunctionUrl = new URL(
+    './netlify/functions/google-drive-upload.mjs',
+    import.meta.url,
+  ).href
+  const imageFunctionUrl = new URL(
+    './netlify/functions/google-drive-image.mjs',
+    import.meta.url,
+  ).href
+
+  const [uploadModule, imageModule] = await Promise.all([
+    import(uploadFunctionUrl) as Promise<{ default: NetlifyFunction }>,
+    import(imageFunctionUrl) as Promise<{ default: NetlifyFunction }>,
+  ])
+
   return {
     name: 'santi-sena-netlify-functions-dev',
     apply: 'serve',
@@ -48,10 +65,7 @@ function netlifyFunctionsDevPlugin(): Plugin {
       server.middlewares.use('/api/google-drive-upload', async (request, response, next) => {
         try {
           const uploadRequest = await toFetchRequest(request, '/api/google-drive-upload')
-          const uploadFunctionUrl = new URL('./netlify/functions/google-drive-upload.mjs', import.meta.url).href
-          const uploadFunction = (await import(uploadFunctionUrl)) as { default: NetlifyFunction }
-          const uploadResponse = await uploadFunction.default(uploadRequest)
-
+          const uploadResponse = await uploadModule.default(uploadRequest)
           await sendFetchResponse(response, uploadResponse)
         } catch (error) {
           server.ssrFixStacktrace(error as Error)
@@ -61,10 +75,7 @@ function netlifyFunctionsDevPlugin(): Plugin {
       server.middlewares.use('/api/google-drive-image', async (request, response, next) => {
         try {
           const imageRequest = await toFetchRequest(request, '/api/google-drive-image')
-          const imageFunctionUrl = new URL('./netlify/functions/google-drive-image.mjs', import.meta.url).href
-          const imageFunction = (await import(imageFunctionUrl)) as { default: NetlifyFunction }
-          const imageResponse = await imageFunction.default(imageRequest)
-
+          const imageResponse = await imageModule.default(imageRequest)
           await sendFetchResponse(response, imageResponse)
         } catch (error) {
           server.ssrFixStacktrace(error as Error)
