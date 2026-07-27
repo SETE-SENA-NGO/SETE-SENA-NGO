@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -6,7 +5,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 
-type NetlifyFunction = (request: Request) => Promise<Response> | Response
+type VercelFunction = (req: IncomingMessage, res: ServerResponse) => void | Promise<void>
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -19,7 +18,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     envPrefix: ['VITE_', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'],
-    plugins: [vue(), vuetify({ autoImport: true }), netlifyFunctionsDevPlugin()],
+    plugins: [vue(), vuetify({ autoImport: true }), apiFunctionsDevPlugin()],
     server: {
       host: devHost,
       port: devPort,
@@ -41,94 +40,27 @@ function numberFromEnv(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
-async function netlifyFunctionsDevPlugin(): Promise<Plugin> {
-  // Import the Netlify functions once at plugin setup time so that
-  // a temporary incomplete save does not break every subsequent request.
-  const uploadFunctionUrl = new URL(
-    './netlify/functions/google-drive-upload.mjs',
-    import.meta.url,
-  ).href
-  const imageFunctionUrl = new URL(
-    './netlify/functions/google-drive-image.mjs',
-    import.meta.url,
-  ).href
+/**
+ * Vite dev plugin that mounts the Vercel Serverless Functions as Connect middleware,
+ * so the same API handlers work both locally and in production on Vercel.
+ */
+async function apiFunctionsDevPlugin(): Promise<Plugin> {
+  const uploadFunctionUrl = new URL('./api/google-drive-upload.mjs', import.meta.url).href
+  const imageFunctionUrl = new URL('./api/google-drive-image.mjs', import.meta.url).href
 
   const [uploadModule, imageModule] = await Promise.all([
-    import(uploadFunctionUrl) as Promise<{ default: NetlifyFunction }>,
-    import(imageFunctionUrl) as Promise<{ default: NetlifyFunction }>,
+    import(uploadFunctionUrl) as Promise<{ default: VercelFunction }>,
+    import(imageFunctionUrl) as Promise<{ default: VercelFunction }>,
   ])
 
   return {
-    name: 'santi-sena-netlify-functions-dev',
+    name: 'santi-sena-api-dev',
     apply: 'serve',
     configureServer(server) {
-      server.middlewares.use('/api/google-drive-upload', async (request, response, next) => {
-        try {
-          const uploadRequest = await toFetchRequest(request, '/api/google-drive-upload')
-          const uploadResponse = await uploadModule.default(uploadRequest)
-          await sendFetchResponse(response, uploadResponse)
-        } catch (error) {
-          server.ssrFixStacktrace(error as Error)
-          next(error)
-        }
-      })
-      server.middlewares.use('/api/google-drive-image', async (request, response, next) => {
-        try {
-          const imageRequest = await toFetchRequest(request, '/api/google-drive-image')
-          const imageResponse = await imageModule.default(imageRequest)
-          await sendFetchResponse(response, imageResponse)
-        } catch (error) {
-          server.ssrFixStacktrace(error as Error)
-          next(error)
-        }
-      })
+      // Vercel Serverless Functions use the (req, res) signature,
+      // which is directly compatible with Connect middleware.
+      server.middlewares.use('/api/google-drive-upload', uploadModule.default)
+      server.middlewares.use('/api/google-drive-image', imageModule.default)
     },
   }
-}
-
-async function toFetchRequest(request: IncomingMessage, pathname: string) {
-  const origin = `http://${request.headers.host || 'localhost:5173'}`
-  const mountedUrl = request.url && request.url.startsWith('/') ? request.url : '/'
-  const url = new URL(`${pathname}${mountedUrl === '/' ? '' : mountedUrl}`, origin)
-  const body = await readRequestBody(request)
-
-  return new Request(url, {
-    method: request.method,
-    headers: toFetchHeaders(request),
-    body: body.length ? new Uint8Array(body) : undefined,
-  })
-}
-
-function toFetchHeaders(request: IncomingMessage) {
-  const headers = new Headers()
-
-  for (const [name, value] of Object.entries(request.headers)) {
-    if (Array.isArray(value)) {
-      value.forEach((item) => headers.append(name, item))
-    } else if (value) {
-      headers.set(name, value)
-    }
-  }
-
-  return headers
-}
-
-function readRequestBody(request: IncomingMessage) {
-  return new Promise<Buffer>((resolve, reject) => {
-    const chunks: Buffer[] = []
-
-    request.on('data', (chunk: Buffer | string) => {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-    })
-    request.on('end', () => resolve(Buffer.concat(chunks)))
-    request.on('error', reject)
-  })
-}
-
-async function sendFetchResponse(response: ServerResponse, fetchResponse: Response) {
-  response.statusCode = fetchResponse.status
-  fetchResponse.headers.forEach((value, name) => response.setHeader(name, value))
-
-  const body = Buffer.from(await fetchResponse.arrayBuffer())
-  response.end(body)
 }

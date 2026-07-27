@@ -227,14 +227,31 @@ const defaultPartners = [
 ]
 
 const supportersHeader = computed(() => {
+  const hero = (props.content as any)?.hero
+  if (hero?.title) {
+    return {
+      eyebrow: hero.eyebrow || 'Our Network',
+      heading: hero.title,
+      body: hero.description || ''
+    }
+  }
   const section = props.content?.sections?.find(s => s.id === 'partners-supporters')
   return {
+    eyebrow: 'Our Network',
     heading: section?.heading || 'Partners & Supporters',
     body: section?.body || 'These organizations and institutions make our work possible through funding, technical expertise, and shared commitment to sustainable development.'
   }
 })
 
 const partners = computed(() => {
+  const cmsPartners = (props.content as any)?.partners
+  if (Array.isArray(cmsPartners) && cmsPartners.length > 0) {
+    return cmsPartners.map((p: any) => ({
+      name: p.name || '',
+      logo: (p.name || '').toUpperCase().slice(0, 5),
+      image: p.image || donorLogosMap[p.name] || donorLogosMap['UNDP']
+    }))
+  }
   const section = props.content?.sections?.find(s => s.id === 'partners-supporters')
   if (!section || !section.items) return defaultPartners
   
@@ -259,6 +276,8 @@ const defaultGovernmentItems = [
 ]
 
 const governmentHeader = computed(() => {
+  const cmsGovH = (props.content as any)?.governmentHeader
+  if (cmsGovH?.heading) return cmsGovH
   const section = props.content?.sections?.find(s => s.id === 'partners-government')
   return {
     heading: section?.heading || 'Government Coordination',
@@ -267,6 +286,10 @@ const governmentHeader = computed(() => {
 })
 
 const governmentItems = computed(() => {
+  const cmsGov = (props.content as any)?.government
+  if (Array.isArray(cmsGov) && cmsGov.length > 0) {
+    return cmsGov
+  }
   const section = props.content?.sections?.find(s => s.id === 'partners-government')
   if (!section || !section.items) return defaultGovernmentItems
   
@@ -289,6 +312,8 @@ const defaultLocalItems = [
 ]
 
 const localHeader = computed(() => {
+  const cmsLocalH = (props.content as any)?.localHeader
+  if (cmsLocalH?.heading) return cmsLocalH
   const section = props.content?.sections?.find(s => s.id === 'partners-local')
   return {
     heading: section?.heading || 'Local Partners',
@@ -297,6 +322,14 @@ const localHeader = computed(() => {
 })
 
 const localItems = computed(() => {
+  const cmsLocal = (props.content as any)?.local
+  if (Array.isArray(cmsLocal) && cmsLocal.length > 0) {
+    return cmsLocal.map((item: any, idx: number) => ({
+      number: String(idx + 1).padStart(2, '0'),
+      title: item.title || '',
+      desc: item.desc || ''
+    }))
+  }
   const section = props.content?.sections?.find(s => s.id === 'partners-local')
   if (!section || !section.items) return defaultLocalItems
   
@@ -318,6 +351,8 @@ const defaultWhyItems = [
 ]
 
 const whyHeader = computed(() => {
+  const cmsWhyH = (props.content as any)?.whyHeader
+  if (cmsWhyH?.heading) return cmsWhyH
   const section = props.content?.sections?.find(s => s.id === 'partners-why')
   return {
     heading: section?.heading || 'Why Partners Stay',
@@ -326,6 +361,10 @@ const whyHeader = computed(() => {
 })
 
 const whyItems = computed(() => {
+  const cmsWhy = (props.content as any)?.whyItems
+  if (Array.isArray(cmsWhy) && cmsWhy.length > 0) {
+    return cmsWhy
+  }
   const section = props.content?.sections?.find(s => s.id === 'partners-why')
   if (!section || !section.items) return defaultWhyItems
   

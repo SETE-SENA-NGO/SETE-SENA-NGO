@@ -1,38 +1,67 @@
 import { Buffer } from 'node:buffer'
 import { createPrivateKey, randomUUID, sign } from 'node:crypto'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+const Busboy = require('busboy')
 
 const adminRoles = new Set(['super_admin', 'admin', 'editor'])
 const defaultMaxUploadBytes = 8 * 1024 * 1024
 const driveScope = 'https://www.googleapis.com/auth/drive'
 
-export default async function googleDriveUpload(request) {
-  if (request.method === 'OPTIONS') return emptyResponse(204)
-  if (request.method === 'GET') return adminStatusResponse(request)
-  if (request.method === 'DELETE') return deleteMediaAssetResponse(request)
-  if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
+/**
+ * Vercel Serverless Function – Google Drive upload, admin status check, and delete.
+ *
+ * POST   /api/google-drive-upload  – upload an image to Google Drive
+ * GET    /api/google-drive-upload  – check admin status
+ * DELETE /api/google-drive-upload  – delete a media asset (and its Drive file)
+ */
+export default async function handler(req, res) {
+  if (req.method === 'OPTIONS') {
+    res.status(204).end()
+    return
+  }
+
+  if (req.method === 'GET') {
+    await adminStatusResponse(req, res)
+    return
+  }
+
+  if (req.method === 'DELETE') {
+    await deleteMediaAssetResponse(req, res)
+    return
+  }
+
+  if (req.method !== 'POST') {
+    json(res, { error: 'Method not allowed' }, 405)
+    return
+  }
 
   try {
     const config = readConfig()
-    const authorization = request.headers.get('authorization') || ''
-    const user = await requireAdminUser(request, config)
-    const formData = await request.formData()
-    const file = formData.get('file')
+    const user = await requireAdminUser(req, config)
+
+    const { files } = await parseMultipartForm(req)
+    const file = files.file
 
     if (!isUploadFile(file)) {
-      return jsonResponse({ error: 'Choose an image file to upload.' }, 400)
+      json(res, { error: 'Choose an image file to upload.' }, 400)
+      return
     }
 
     const maxUploadBytes = Number(process.env.GOOGLE_DRIVE_MAX_UPLOAD_BYTES || defaultMaxUploadBytes)
     if (file.size > maxUploadBytes) {
-      return jsonResponse({ error: `Image is too large. Limit is ${formatBytes(maxUploadBytes)}.` }, 413)
+      json(res, { error: `Image is too large. Limit is ${formatBytes(maxUploadBytes)}.` }, 413)
+      return
     }
 
     const mimeType = file.type || 'application/octet-stream'
     if (!mimeType.startsWith('image/')) {
-      return jsonResponse({ error: 'Only image uploads are allowed.' }, 400)
+      json(res, { error: 'Only image uploads are allowed.' }, 400)
+      return
     }
 
-    const requestedName = stringValue(formData.get('name'))
+    const requestedName = stringValue(file.name) // fallback; the form may not send a name field separately
     const fileName = sanitizeFileName(requestedName || file.name || `image-${Date.now()}.jpg`)
     await ensureMediaAssetsReady(config.supabase, user.authorization)
 
@@ -48,17 +77,21 @@ export default async function googleDriveUpload(request) {
     await makeDriveFilePublic(accessToken, driveFile.id)
 
     const publicUrl = googleThumbnailUrl(driveFile.id)
-    const media = await saveMediaAsset(config.supabase, {
-      userId: user.id,
-      authorization: user.authorization,
-      fileName,
-      publicUrl,
-      mimeType,
-      size: file.size,
-      driveFile,
-    }, authorization) // authorization from request header, used instead of service role key
+    const media = await saveMediaAsset(
+      config.supabase,
+      {
+        userId: user.id,
+        authorization: user.authorization,
+        fileName,
+        publicUrl,
+        mimeType,
+        size: file.size,
+        driveFile,
+      },
+      user.authorization,
+    )
 
-    return jsonResponse({
+    json(res, {
       url: publicUrl,
       fileId: driveFile.id,
       media,
@@ -67,19 +100,59 @@ export default async function googleDriveUpload(request) {
     const message = error instanceof Error ? error.message : 'Upload failed.'
     const status = typeof error?.status === 'number' ? error.status : 500
     const details = error?.details && typeof error.details === 'object' ? error.details : undefined
-    return jsonResponse({ error: message, details }, status)
+    json(res, { error: message, details }, status)
   }
 }
 
-async function deleteMediaAssetResponse(request) {
+// ── Parsing ──────────────────────────────────────────────────────
+
+function parseMultipartForm(req) {
+  return new Promise((resolve, reject) => {
+    const busboy = Busboy({ headers: req.headers })
+    const fields = {}
+    const files = {}
+
+    busboy.on('field', (name, val) => {
+      fields[name] = val
+    })
+
+    busboy.on('file', (fieldname, stream, info) => {
+      const { filename, encoding, mimeType: detectedMime } = info
+      const chunks = []
+
+      stream.on('data', (chunk) => chunks.push(chunk))
+      stream.on('end', () => {
+        const buf = Buffer.concat(chunks)
+        files[fieldname] = {
+          name: filename,
+          size: buf.length,
+          type: detectedMime,
+          encoding,
+          arrayBuffer: () => Promise.resolve(buf.buffer),
+          buffer: buf,
+        }
+      })
+    })
+
+    busboy.on('finish', () => resolve({ fields, files }))
+    busboy.on('error', reject)
+
+    req.pipe(busboy)
+  })
+}
+
+// ── Admin helpers ────────────────────────────────────────────────
+
+async function deleteMediaAssetResponse(req, res) {
   try {
     const config = readConfig()
-    const user = await requireAdminUser(request, config)
-    const payload = await readJsonBody(request)
+    const user = await requireAdminUser(req, config)
+    const payload = await readJsonBody(req)
     const mediaId = stringValue(payload?.id || payload?.mediaId)
 
     if (!mediaId) {
-      return jsonResponse({ error: 'Media asset id is required.' }, 400)
+      json(res, { error: 'Media asset id is required.' }, 400)
+      return
     }
 
     await ensureMediaAssetsReady(config.supabase, user.authorization)
@@ -90,7 +163,8 @@ async function deleteMediaAssetResponse(request) {
     })
 
     if (!media) {
-      return jsonResponse({ deleted: true, media: null })
+      json(res, { deleted: true, media: null })
+      return
     }
 
     const driveFileId = googleDriveFileIdFromMedia(media)
@@ -104,7 +178,7 @@ async function deleteMediaAssetResponse(request) {
       authorization: user.authorization,
     })
 
-    return jsonResponse({
+    json(res, {
       deleted: true,
       media: {
         id: media.id,
@@ -117,12 +191,19 @@ async function deleteMediaAssetResponse(request) {
     const message = error instanceof Error ? error.message : 'Delete failed.'
     const status = typeof error?.status === 'number' ? error.status : 500
     const details = error?.details && typeof error.details === 'object' ? error.details : undefined
-    return jsonResponse({ error: message, details }, status)
+    json(res, { error: message, details }, status)
   }
 }
 
-export const config = {
-  path: '/api/google-drive-upload',
+async function adminStatusResponse(req, res) {
+  try {
+    const admin = await resolveAdminContext(req, readConfig())
+    json(res, publicAdminContext(admin), admin.ok ? 200 : admin.status)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not check admin status.'
+    const status = typeof error?.status === 'number' ? error.status : 500
+    json(res, { ok: false, step: 'config', error: message }, status)
+  }
 }
 
 export function readConfig() {
@@ -141,7 +222,7 @@ export function readConfig() {
   missing.push(...missingGoogleAuthFields(googleAuth))
 
   if (missing.length) {
-    throw httpError(`Missing Netlify environment variables: ${missing.join(', ')}`, 500)
+    throw httpError(`Missing Vercel environment variables: ${missing.join(', ')}`, 500)
   }
 
   return {
@@ -158,7 +239,7 @@ export function readConfig() {
 }
 
 function googleAuthConfig() {
-  const authType = env('GOOGLE_DRIVE_AUTH_TYPE').toLowerCase()
+  const authType = env('GOOGLE_DRIVE_AUTH_TYPE')?.toLowerCase()
   const refreshToken = env('GOOGLE_OAUTH_REFRESH_TOKEN')
   if (authType === 'oauth' || refreshToken) {
     return {
@@ -209,8 +290,8 @@ function missingGoogleAuthFields(config) {
   return missing
 }
 
-async function requireAdminUser(request, config) {
-  const admin = await resolveAdminContext(request, config)
+async function requireAdminUser(req, config) {
+  const admin = await resolveAdminContext(req, config)
 
   if (!admin.ok) {
     throw httpError(admin.error, admin.status, publicAdminContext(admin))
@@ -222,19 +303,8 @@ async function requireAdminUser(request, config) {
   }
 }
 
-async function adminStatusResponse(request) {
-  try {
-    const admin = await resolveAdminContext(request, readConfig())
-    return jsonResponse(publicAdminContext(admin), admin.ok ? 200 : admin.status)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Could not check admin status.'
-    const status = typeof error?.status === 'number' ? error.status : 500
-    return jsonResponse({ ok: false, step: 'config', error: message }, status)
-  }
-}
-
-async function resolveAdminContext(request, config) {
-  const authorization = request.headers.get('authorization') || ''
+async function resolveAdminContext(req, config) {
+  const authorization = req.headers['authorization'] || ''
   if (!authorization.startsWith('Bearer ')) {
     return {
       ok: false,
@@ -271,8 +341,6 @@ async function resolveAdminContext(request, config) {
     }
   }
 
-  // Query the profiles table using the user's own auth token (not service role key)
-  // so that RLS allows reading the profile. This matches how the frontend verifies admin.
   const profileUrl = `${config.supabase.url}/rest/v1/profiles?id=eq.${encodeURIComponent(
     user.id,
   )}&select=id,email,role&limit=1`
@@ -390,7 +458,7 @@ async function uploadDriveFile({ accessToken, file, fileName, folderId, mimeType
     name: fileName,
     parents: [folderId],
   }
-  const content = Buffer.from(await file.arrayBuffer())
+  const content = file.buffer || Buffer.from(await file.arrayBuffer())
   const body = Buffer.concat([
     Buffer.from(
       `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(
@@ -469,7 +537,11 @@ function driveErrorMessage(data, fallback) {
   return message
 }
 
-async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, size, driveFile }, authorization) {
+async function saveMediaAsset(
+  config,
+  { userId, fileName, publicUrl, mimeType, size, driveFile },
+  authorization,
+) {
   const response = await fetch(
     `${config.url}/rest/v1/media_assets?on_conflict=bucket,path&select=id,bucket,path,public_url,file_name,mime_type,file_size,created_at`,
     {
@@ -500,11 +572,15 @@ async function saveMediaAsset(config, { userId, fileName, publicUrl, mimeType, s
 
   const data = await response.json().catch(() => null)
   if (!response.ok) {
-    throw httpError(data?.message || 'Image uploaded, but Supabase media record could not be saved.', 502, {
-      step: 'media-assets-save',
-      supabaseStatus: response.status,
-      supabaseMessage: responseDataMessage(data, response.statusText),
-    })
+    throw httpError(
+      data?.message || 'Image uploaded, but Supabase media record could not be saved.',
+      502,
+      {
+        step: 'media-assets-save',
+        supabaseStatus: response.status,
+        supabaseMessage: responseDataMessage(data, response.statusText),
+      },
+    )
   }
 
   return Array.isArray(data) ? data[0] : data
@@ -562,7 +638,7 @@ async function getMediaAsset(config, { id, authorization }) {
   }
 
   const rows = await response.json().catch(() => [])
-  return Array.isArray(rows) ? (rows[0] ?? null) : null
+  return Array.isArray(rows) ? rows[0] ?? null : null
 }
 
 async function deleteMediaAsset(config, { id, authorization }) {
@@ -625,6 +701,33 @@ export function googleDriveFileIdFromUrl(value) {
   return ''
 }
 
+// ── Body reading helpers ─────────────────────────────────────────
+
+async function readJsonBody(req) {
+  try {
+    const chunks = []
+    for await (const chunk of req) {
+      chunks.push(chunk)
+    }
+    const body = Buffer.concat(chunks).toString('utf8')
+    return body ? JSON.parse(body) : null
+  } catch {
+    return null
+  }
+}
+
+// ── Response helpers ─────────────────────────────────────────────
+
+function json(res, body, status = 200) {
+  res.writeHead(status, {
+    'content-type': 'application/json',
+    'cache-control': 'no-store',
+  })
+  res.end(JSON.stringify(body))
+}
+
+// ── Utilities ────────────────────────────────────────────────────
+
 function publicUser(user) {
   return {
     id: user?.id,
@@ -671,8 +774,6 @@ function googleAuthError(config, data) {
 }
 
 function googleThumbnailUrl(fileId) {
-  // Use w3200 for high quality — far above the 380-480px display size, so it looks
-  // indistinguishable from the original, while still letting Google's CDN optimize file size.
   return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=w3200`
 }
 
@@ -693,28 +794,6 @@ function isUploadFile(value) {
       typeof value.arrayBuffer === 'function' &&
       typeof value.size === 'number',
   )
-}
-
-async function readJsonBody(request) {
-  try {
-    return await request.json()
-  } catch {
-    return null
-  }
-}
-
-function jsonResponse(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'content-type': 'application/json',
-      'cache-control': 'no-store',
-    },
-  })
-}
-
-function emptyResponse(status) {
-  return new Response(null, { status })
 }
 
 function httpError(message, status, details) {

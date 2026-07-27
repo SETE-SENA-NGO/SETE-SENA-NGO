@@ -36,9 +36,9 @@ npm run dev
 ```
 
 ### Type-Check, Compile and Minify for Production
-Fill only local development values in `.env`. Production secrets belong in Netlify environment variables.
-During local development, Vite serves `POST /api/google-drive-upload` through the same function used
-on Netlify, so admin image uploads work from `http://localhost:5173`.
+Fill only local development values in `.env`. Production secrets belong in Vercel environment variables.
+The `api/` directory contains Vercel Serverless Functions. During local development, Vite mounts them
+as middleware so admin image uploads work from `http://localhost:5173`.
 
 ## Production Build
 

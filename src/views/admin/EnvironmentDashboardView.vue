@@ -1,19 +1,18 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
-  BookOpen,
   ChevronDown,
   ExternalLink,
   FolderOpen,
   Image as ImageIcon,
-  Images,
   Layers,
-  ListChecks,
+  Lock,
   MessageSquareQuote,
   Pencil,
   Plus,
   Save,
+  Shield,
   Trash2,
   TreePine,
 } from 'lucide-vue-next'
@@ -61,24 +60,7 @@ interface InitiativeItem {
 interface ProcessStep {
   number: string
   title: string
-  icon: string
   text: string
-}
-
-interface GalleryImage {
-  src: string
-  caption: string
-  span: string
-}
-
-interface CTAContent {
-  label: string
-  heading: string
-  description: string
-  primaryBtnText: string
-  primaryBtnUrl: string
-  secondaryBtnText: string
-  secondaryBtnUrl: string
 }
 
 interface QuoteContent {
@@ -86,16 +68,15 @@ interface QuoteContent {
   cite: string
 }
 
-interface PartnerItem {
-  name: string
-  type: string
-  description: string
-}
-
 interface StatItem {
   number: string
   label: string
-  description: string
+}
+
+interface ApproachCard {
+  title: string
+  text: string
+  icon: string
 }
 
 /* ─── Default Environment Page ──────────────────── */
@@ -146,9 +127,10 @@ function createDefaultEnvironmentPage(): PageDraft {
 }
 
 const statsBand = ref<StatItem[]>([
-  { number: '571', label: 'HECTARES PROTECTED', description: 'Community forest agreements and restored land.' },
-  { number: '18', label: 'VILLAGES SERVED', description: 'With biogas, water access and climate adaptation.' },
-  { number: '2,500+', label: 'HOUSEHOLDS REACHED', description: 'With clean water and renewable energy solutions.' },
+  { number: '500K+', label: 'TREES PLANTED' },
+  { number: '12', label: 'COMMUNITIES SERVED' },
+  { number: '50+', label: 'ECOSYSTEMS PROTECTED' },
+  { number: '10K+', label: 'PEOPLE TRAINED' },
 ])
 
 const initiatives = ref<InitiativeItem[]>([
@@ -161,43 +143,22 @@ const initiatives = ref<InitiativeItem[]>([
 ])
 
 const processSteps = ref<ProcessStep[]>([
-  { number: '01', title: 'Assessment', icon: 'search', text: 'We conduct comprehensive environmental assessments to understand local ecosystems and identify priorities.' },
-  { number: '02', title: 'Planning', icon: 'map', text: 'Working with community leaders, we develop tailored action plans that balance conservation with needs.' },
-  { number: '03', title: 'Implementation', icon: 'play', text: 'We execute projects with active community participation, ensuring local ownership.' },
-  { number: '04', title: 'Monitoring', icon: 'check', text: 'Continuous monitoring helps us measure impact and adapt strategies for greater effectiveness.' },
+  { number: '01', title: 'Assessment', text: 'We conduct comprehensive environmental assessments to understand local ecosystems and identify priorities.' },
+  { number: '02', title: 'Planning', text: 'Working with community leaders, we develop tailored action plans that balance conservation with needs.' },
+  { number: '03', title: 'Implementation', text: 'We execute projects with active community participation, ensuring local ownership.' },
+  { number: '04', title: 'Monitoring', text: 'Continuous monitoring helps us measure impact and adapt strategies for greater effectiveness.' },
 ])
 
-const galleryImages = ref<GalleryImage[]>([
-  { src: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600&q=75', caption: 'Reforestation in rural Cambodia', span: '2' },
-  { src: 'https://images.unsplash.com/photo-1470071459604-4b118ecb0e7e?w=400&q=75', caption: 'Forest canopy restoration', span: '1' },
-  { src: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&q=75', caption: 'Community tree nursery', span: '1' },
-  { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&q=75', caption: 'Eco-tourism initiatives', span: '1' },
-  { src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=75', caption: 'Nature conservation areas', span: '2' },
+const approachCards = ref<ApproachCard[]>([
+  { title: 'Conservation', text: 'Protecting and restoring natural habitats, wildlife corridors, and biodiversity hotspots through community-led initiatives and scientific research.', icon: 'shield' },
+  { title: 'Sustainability', text: 'Promoting renewable energy, sustainable agriculture, and circular economy practices that reduce environmental impact while supporting livelihoods.', icon: 'leaf' },
+  { title: 'Community Engagement', text: 'Empowering local communities with knowledge, resources, and tools to actively participate in environmental protection and climate action.', icon: 'users' },
 ])
-
-const ctaContent = ref<CTAContent>({
-  label: 'Take Action',
-  heading: 'Join the Environmental Movement',
-  description: 'Whether you want to volunteer, partner with us, or support our conservation efforts, your contribution helps create a sustainable future for all.',
-  primaryBtnText: 'Get Involved',
-  primaryBtnUrl: '/get-involved',
-  secondaryBtnText: 'Support Us',
-  secondaryBtnUrl: '/get-involved/donate',
-})
 
 const quoteContent = ref<QuoteContent>({
   text: 'We do not inherit the earth from our ancestors; we borrow it from our children. Our environmental program is a pledge to protect that inheritance and ensure future generations inherit a planet that is healthy, vibrant, and full of possibility.',
   cite: '— SETE SENA Environmental Team',
 })
-
-const partners = ref<PartnerItem[]>([
-  { name: 'UN Environment', type: 'International Partner', description: '' },
-  { name: 'Green Cambodia', type: 'Local NGO', description: '' },
-  { name: 'Eco Foundation', type: 'Funding Partner', description: '' },
-  { name: 'Wildlife Alliance', type: 'Conservation Partner', description: '' },
-  { name: 'Solar Future', type: 'Technology Partner', description: '' },
-  { name: 'Rainforest Trust', type: 'Global Supporter', description: '' },
-])
 
 /* ─── State ─────────────────────────────────────── */
 const loading = ref(false)
@@ -205,20 +166,22 @@ const saving = ref(false)
 const page = ref<PageDraft>(createDefaultEnvironmentPage())
 const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
+const editing = ref(false)
+
+function toggleEditing() {
+  editing.value = !editing.value
+}
 const STORAGE_KEY = 'env-dashboard-page'
 
 /* ─── Collapsible panels ───────────────────────── */
 const expandedPanels = ref<Record<string, boolean>>({
   'quick-links': true,
-  'hero-header': true,
+
+  'approach-cards': true,
   'stats': true,
-  'content': true,
   'initiatives': true,
   'process': true,
-  'gallery': true,
-  'partners': true,
   'quote': true,
-  'cta': true,
 })
 
 function togglePanel(id: string) {
@@ -284,28 +247,15 @@ function confirmDeleteProcessStep(index: number) {
   )
 }
 
-function confirmDeleteGalleryImage(index: number) {
-  const img = galleryImages.value[index]
-  const caption = img?.caption?.trim() || `Image ${index + 1}`
+function confirmDeleteApproachCard(index: number) {
+  const card = approachCards.value[index]
+  const title = card?.title?.trim() || `Card ${index + 1}`
   ui.openModal(
-    'Remove image',
-    `Permanently delete <strong>${caption}</strong> from the gallery? This action cannot be undone.`,
+    'Delete approach card',
+    `Permanently delete <strong>${title}</strong> from approach cards? This action cannot be undone.`,
     () => {
-      galleryImages.value.splice(index, 1)
-      ui.addToast(`Image "${caption}" removed.`, 'success')
-    },
-  )
-}
-
-function confirmDeletePartner(index: number) {
-  const partner = partners.value[index]
-  const name = partner?.name?.trim() || `Partner ${index + 1}`
-  ui.openModal(
-    'Delete partner',
-    `Permanently remove <strong>${name}</strong> from the partner list? This action cannot be undone.`,
-    () => {
-      partners.value.splice(index, 1)
-      ui.addToast(`Partner "${name}" removed.`, 'success')
+      approachCards.value.splice(index, 1)
+      ui.addToast(`Card "${title}" deleted.`, 'success')
     },
   )
 }
@@ -339,17 +289,11 @@ function loadFromLocalStorage(): void {
       if (saved.processSteps && Array.isArray(saved.processSteps)) {
         processSteps.value = saved.processSteps as ProcessStep[]
       }
-      if (saved.galleryImages && Array.isArray(saved.galleryImages)) {
-        galleryImages.value = saved.galleryImages as GalleryImage[]
-      }
-      if (saved.ctaContent && typeof saved.ctaContent === 'object') {
-        ctaContent.value = { ...ctaContent.value, ...saved.ctaContent as Partial<CTAContent> }
+      if (saved.approachCards && Array.isArray(saved.approachCards)) {
+        approachCards.value = saved.approachCards as ApproachCard[]
       }
       if (saved.quoteContent && typeof saved.quoteContent === 'object') {
         quoteContent.value = { ...quoteContent.value, ...saved.quoteContent as Partial<QuoteContent> }
-      }
-      if (saved.partners && Array.isArray(saved.partners)) {
-        partners.value = saved.partners as PartnerItem[]
       }
     }
   } catch { /* ignore */ }
@@ -388,10 +332,8 @@ function saveToLocalStorage(): void {
       statsBand: statsBand.value,
       initiatives: initiatives.value,
       processSteps: processSteps.value,
-      galleryImages: galleryImages.value,
-      ctaContent: ctaContent.value,
+      approachCards: approachCards.value,
       quoteContent: quoteContent.value,
-      partners: partners.value,
       updatedAt: new Date().toISOString(),
     }))
   } catch { /* ignore */ }
@@ -410,10 +352,8 @@ function snapshotData(): string {
     statsBand: statsBand.value.map(s => ({ ...s })),
     initiatives: initiatives.value.map(s => ({ ...s })),
     processSteps: processSteps.value.map(s => ({ ...s })),
-    galleryImages: galleryImages.value.map(s => ({ ...s })),
-    ctaContent: { ...ctaContent.value },
+    approachCards: approachCards.value.map(s => ({ ...s })),
     quoteContent: { ...quoteContent.value },
-    partners: partners.value.map(s => ({ ...s })),
   })
 }
 
@@ -466,19 +406,12 @@ async function loadPageContent() {
       if (meta?.processSteps && Array.isArray(meta.processSteps)) {
         processSteps.value = meta.processSteps as ProcessStep[]
       }
-      if (meta?.galleryImages && Array.isArray(meta.galleryImages)) {
-        galleryImages.value = meta.galleryImages as GalleryImage[]
-      }
-      if (meta?.ctaContent && typeof meta.ctaContent === 'object') {
-        ctaContent.value = { ...ctaContent.value, ...meta.ctaContent as Partial<CTAContent> }
+      if (meta?.approachCards && Array.isArray(meta.approachCards)) {
+        approachCards.value = meta.approachCards as ApproachCard[]
       }
       if (meta?.quoteContent && typeof meta.quoteContent === 'object') {
         quoteContent.value = { ...quoteContent.value, ...meta.quoteContent as Partial<QuoteContent> }
       }
-      if (meta?.partners && Array.isArray(meta.partners)) {
-        partners.value = meta.partners as PartnerItem[]
-      }
-
       storageMode.value = 'supabase'
       saveToLocalStorage()
     } else {
@@ -528,10 +461,8 @@ async function savePageContent() {
         statsBand: statsBand.value,
         initiatives: initiatives.value,
         processSteps: processSteps.value,
-        galleryImages: galleryImages.value,
-        ctaContent: ctaContent.value,
+        approachCards: approachCards.value,
         quoteContent: quoteContent.value,
-        partners: partners.value,
       },
       updated_at: now,
     }
@@ -593,13 +524,6 @@ async function savePageContent() {
   }
 }
 
-/* ─── Section helpers ───────────────────────────── */
-function parsedItemsForSection(section: EditableSection): string[] {
-  return section.items
-    ? section.items.split('\n').map(l => l.trim()).filter(Boolean)
-    : []
-}
-
 /* ─── Helper: format date ───────────────────────── */
 function formatDate(value: string) {
   if (!value) return 'Not saved yet'
@@ -607,6 +531,20 @@ function formatDate(value: string) {
   if (Number.isNaN(date.getTime())) return 'Not saved yet'
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
+
+/* ─── Auto-save to localStorage on any data change ─ */
+let autosaveTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(
+  [statsBand, initiatives, processSteps, approachCards, quoteContent],
+  () => {
+    if (autosaveTimer) clearTimeout(autosaveTimer)
+    autosaveTimer = setTimeout(() => {
+      saveToLocalStorage()
+    }, 600)
+  },
+  { deep: true },
+)
 
 /* ─── Init ──────────────────────────────────────── */
 onMounted(async () => {
@@ -640,7 +578,6 @@ onMounted(async () => {
                 <span>{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</span>
                 <span>{{ statsBand.length }} stats</span>
                 <span>{{ initiatives.length }} initiatives</span>
-                <span>{{ galleryImages.length }} gallery photos</span>
                 <span v-if="isDirty" class="meta-dirty">Unsaved changes</span>
                 <span v-else-if="page.updatedAt">Saved {{ formatDate(page.updatedAt) }}</span>
               </div>
@@ -651,7 +588,11 @@ onMounted(async () => {
               <ExternalLink :size="16" aria-hidden="true" />
               <span>View page</span>
             </RouterLink>
-            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty" @click="savePageContent">
+            <button type="button" class="btn btn-edit" :class="{ 'btn-edit-active': editing }" @click="toggleEditing">
+              <Lock :size="15" aria-hidden="true" />
+              <span>{{ editing ? 'Editing enabled' : 'Enable editing' }}</span>
+            </button>
+            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty || !editing" @click="savePageContent">
               <Save :size="16" aria-hidden="true" />
               <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
             </button>
@@ -663,7 +604,7 @@ onMounted(async () => {
           <span>Loading Environment content...</span>
         </div>
 
-        <div v-else class="content-grid">
+        <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
           <!-- ═══ Quick links ═══ -->
           <section class="editor-panel quick-links-panel" aria-labelledby="quick-links-heading">
             <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
@@ -701,163 +642,66 @@ onMounted(async () => {
             </Transition>
           </section>
 
-          <!-- ═══ Hero & header ═══ -->
-          <section class="editor-panel" aria-labelledby="hero-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['hero-header']" @click="togglePanel('hero-header')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <TreePine :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Public page</p>
-                  <h2 id="hero-heading">Hero &amp; header</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['hero-header'] }" aria-hidden="true" />
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['hero-header']" class="image-editor-grid">
-                <figure class="image-preview hero-preview">
-                  <img v-if="page.heroImageUrl" :src="page.heroImageUrl" alt="" />
-                  <div v-else class="slot-empty">
-                    <ImageIcon :size="22" aria-hidden="true" />
-                    <span>No image set</span>
-                  </div>
-                </figure>
 
-                <div class="form-stack">
-                  <div class="form-grid">
-                    <label class="field">
-                      <span>Eyebrow / badge</span>
-                      <input v-model="page.eyebrow" type="text" placeholder="e.g. Environment" />
-                    </label>
-                    <label class="field wide">
-                      <span>Headline (main title)</span>
-                      <input v-model="page.headline" type="text" placeholder="Protecting the land that sustains villages." />
-                    </label>
-                    <label class="field wide">
-                      <span>Intro / description</span>
-                      <textarea v-model="page.intro" rows="3" placeholder="Community forestry, biogas digesters, rainwater harvesting and WASH."></textarea>
-                    </label>
-                  </div>
 
-                  <ImagePickerField
-                    v-model="page.heroImageUrl"
-                    label="Upload or paste URL"
-                    hint="Background image for the hero section"
-                    hide-preview
-                    @success="(msg) => ui.addToast(msg, 'success')"
-                    @error="(msg) => ui.addToast(msg, 'error')"
-                  />
-                </div>
-              </div>
-            </Transition>
-          </section>
-
-          <!-- ═══ Stats band ═══ -->
-          <section class="editor-panel" data-panel-id="stats" aria-labelledby="stats-heading">
+          <!-- ═══ Our Approach cards ═══ -->
+          <section class="editor-panel" data-panel-id="approach-cards" aria-labelledby="approach-heading">
             <div class="panel-header">
-              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('stats')">
+              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('approach-cards')">
                 <div class="panel-icon-wrap">
-                  <Layers :size="18" aria-hidden="true" />
+                  <Shield :size="18" aria-hidden="true" />
                 </div>
                 <div>
-                  <p class="panel-kicker">Stats band</p>
-                  <h2 id="stats-heading">Impact statistics</h2>
+                  <p class="panel-kicker">Approach</p>
+                  <h2 id="approach-heading">Our Approach cards</h2>
                 </div>
               </div>
               <div class="panel-header-actions">
-                <button type="button" class="icon-btn-pencil" aria-label="Jump to edit stats" @click.stop="editPanel('stats')">
+                <button type="button" class="icon-btn-pencil" aria-label="Jump to edit approach cards" @click.stop="editPanel('approach-cards')">
                   <Pencil :size="15" aria-hidden="true" />
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" @click="statsBand.push({ number: '', label: '', description: '' })">
+                <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="approachCards.push({ title: '', text: '', icon: 'leaf' })">
                   <Plus :size="15" aria-hidden="true" />
-                  <span>Add stat</span>
+                  <span>Add card</span>
                 </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('stats')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }" />
+                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('approach-cards')">
+                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['approach-cards'] }" />
                 </button>
               </div>
             </div>
             <Transition name="collapse">
-              <div v-show="expandedPanels['stats']" class="panel-body">
-                <p class="panel-desc">Edit the statistics shown on the public Environment page.</p>
+              <div v-show="expandedPanels['approach-cards']" class="panel-body">
+                <p class="panel-desc">Edit the three approach cards shown in the "Our Approach" section: title, text, and icon.</p>
 
                 <div class="stack-list">
-                  <article v-for="(stat, index) in statsBand" :key="index" class="sub-editor">
+                  <article v-for="(card, index) in approachCards" :key="index" class="sub-editor">
                     <header class="sub-editor-header">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>Stat {{ index + 1 }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove stat" @click="confirmDeleteStat(index)">
+                      <h3>{{ card.title || 'Untitled card' }}</h3>
+                      <button type="button" class="icon-btn danger" :disabled="!editing" aria-label="Remove card" @click="confirmDeleteApproachCard(index)">
                         <Trash2 :size="15" aria-hidden="true" />
                       </button>
                     </header>
                     <div class="sub-editor-body form-grid">
                       <label class="field">
-                        <span>Number</span>
-                        <input v-model="stat.number" type="text" placeholder="e.g. 571" />
+                        <span>Title</span>
+                        <input v-model="card.title" type="text" placeholder="e.g. Conservation" />
                       </label>
                       <label class="field">
-                        <span>Label</span>
-                        <input v-model="stat.label" type="text" placeholder="e.g. HECTARES PROTECTED" />
+                        <span>Icon</span>
+                        <select v-model="card.icon">
+                          <option value="shield">Shield</option>
+                          <option value="leaf">Leaf / Sprout</option>
+                          <option value="users">Users</option>
+                          <option value="tree-pine">Tree</option>
+                          <option value="globe">Globe</option>
+                          <option value="heart">Heart</option>
+                        </select>
                       </label>
                       <label class="field wide">
                         <span>Description</span>
-                        <input v-model="stat.description" type="text" placeholder="Brief description of this statistic" />
+                        <textarea v-model="card.text" rows="3" placeholder="Card description..."></textarea>
                       </label>
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
-
-          <!-- ═══ Page sections ═══ -->
-          <section class="editor-panel" aria-labelledby="sections-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['content']" @click="togglePanel('content')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <BookOpen :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Content</p>
-                  <h2 id="sections-heading">What we do, approach &amp; why it matters</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['content'] }" aria-hidden="true" />
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['content']" class="panel-body">
-                <p class="panel-desc">Edit the main content blocks shown on the public Environment page.</p>
-
-                <div class="stack-list">
-                  <article v-for="section in page.sections" :key="section.id" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="section-badge">{{ section.label }}</span>
-                      <h3>{{ section.heading || 'No heading yet' }}</h3>
-                    </header>
-                    <div class="sub-editor-body">
-                      <label class="field wide">
-                        <span>Heading</span>
-                        <input v-model="section.heading" type="text" :placeholder="'Heading for ' + section.label" />
-                      </label>
-                      <label class="field wide">
-                        <span>Body / description</span>
-                        <textarea v-model="section.body" rows="3" :placeholder="'Description for ' + section.label"></textarea>
-                      </label>
-                      <label class="field wide">
-                        <span>Bullet items <em>(one per line)</em></span>
-                        <textarea v-model="section.items" rows="5" placeholder="Community forestry agreements&#10;Biogas digester installation&#10;Rainwater harvesting systems"></textarea>
-                      </label>
-                      <div v-if="parsedItemsForSection(section).length" class="item-chips">
-                        <span v-for="item in parsedItemsForSection(section)" :key="item" class="item-chip">{{ item }}</span>
-                      </div>
                     </div>
                   </article>
                 </div>
@@ -881,7 +725,7 @@ onMounted(async () => {
                 <button type="button" class="icon-btn-pencil" aria-label="Jump to edit initiatives" @click.stop="editPanel('initiatives')">
                   <Pencil :size="15" aria-hidden="true" />
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" @click="initiatives.push({ title: '', text: '', img: '', tag: '' })">
+                <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="initiatives.push({ title: '', text: '', img: '', tag: '' })">
                   <Plus :size="15" aria-hidden="true" />
                   <span>Add initiative</span>
                 </button>
@@ -899,20 +743,22 @@ onMounted(async () => {
                     <header class="sub-editor-header">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
                       <h3>{{ item.title || 'Untitled initiative' }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove initiative" @click="confirmDeleteInitiative(index)">
+                      <button type="button" class="icon-btn danger" :disabled="!editing" aria-label="Remove initiative" @click="confirmDeleteInitiative(index)">
                         <Trash2 :size="15" aria-hidden="true" />
                       </button>
                     </header>
                     <div class="sub-editor-body">
-                      <div class="image-editor-grid image-editor-grid--compact">
-                        <figure class="image-preview initiative-preview">
-                          <img v-if="item.img" :src="item.img" alt="" />
-                          <div v-else class="slot-empty">
-                            <ImageIcon :size="20" aria-hidden="true" />
-                            <span>No image</span>
-                          </div>
-                        </figure>
-                        <div class="form-stack">
+                      <div class="initiative-editor-layout">
+                        <div class="initiative-thumb-wrap">
+                          <figure class="initiative-thumb">
+                            <img v-if="item.img" :src="item.img" alt="" />
+                            <div v-else class="slot-empty">
+                              <ImageIcon :size="16" aria-hidden="true" />
+                              <span>Image</span>
+                            </div>
+                          </figure>
+                        </div>
+                        <div class="initiative-fields">
                           <div class="form-grid">
                             <label class="field">
                               <span>Title</span>
@@ -927,15 +773,71 @@ onMounted(async () => {
                               <textarea v-model="item.text" rows="2" placeholder="Brief description..."></textarea>
                             </label>
                           </div>
-                          <ImagePickerField
-                            v-model="item.img"
-                            :label="item.title || `Initiative ${index + 1} image`"
-                            hide-preview
-                            @success="(msg) => ui.addToast(msg, 'success')"
-                            @error="(msg) => ui.addToast(msg, 'error')"
-                          />
+                          <div class="upload-wrap" :class="{ 'upload-disabled': !editing }">
+                            <ImagePickerField
+                              v-model="item.img"
+                              :label="item.title || `Initiative ${index + 1} image`"
+                              hide-preview
+                              @success="(msg) => ui.addToast(msg, 'success')"
+                              @error="(msg) => ui.addToast(msg, 'error')"
+                            />
+                          </div>
                         </div>
                       </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </Transition>
+          </section>
+
+          <!-- ═══ Stats band ═══ -->
+          <section class="editor-panel" data-panel-id="stats" aria-labelledby="stats-heading">
+            <div class="panel-header">
+              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('stats')">
+                <div class="panel-icon-wrap">
+                  <Layers :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Stats band</p>
+                  <h2 id="stats-heading">Impact statistics</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <button type="button" class="icon-btn-pencil" aria-label="Jump to edit stats" @click.stop="editPanel('stats')">
+                  <Pencil :size="15" aria-hidden="true" />
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="statsBand.push({ number: '', label: '' })">
+                  <Plus :size="15" aria-hidden="true" />
+                  <span>Add stat</span>
+                </button>
+                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('stats')">
+                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }" />
+                </button>
+              </div>
+            </div>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['stats']" class="panel-body">
+                <p class="panel-desc">Edit the statistics shown on the public Environment page.</p>
+
+                <div class="stack-list">
+                  <article v-for="(stat, index) in statsBand" :key="index" class="sub-editor">
+                    <header class="sub-editor-header">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <h3>Stat {{ index + 1 }}</h3>
+                      <button type="button" class="icon-btn danger" :disabled="!editing" aria-label="Remove stat" @click="confirmDeleteStat(index)">
+                        <Trash2 :size="15" aria-hidden="true" />
+                      </button>
+                    </header>
+                    <div class="sub-editor-body form-grid">
+                      <label class="field">
+                        <span>Number</span>
+                        <input v-model="stat.number" type="text" placeholder="e.g. 571" />
+                      </label>
+                      <label class="field">
+                        <span>Label</span>
+                        <input v-model="stat.label" type="text" placeholder="e.g. TREES PLANTED" />
+                      </label>
                     </div>
                   </article>
                 </div>
@@ -959,7 +861,7 @@ onMounted(async () => {
                 <button type="button" class="icon-btn-pencil" aria-label="Jump to edit process steps" @click.stop="editPanel('process')">
                   <Pencil :size="15" aria-hidden="true" />
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" @click="processSteps.push({ number: '', title: '', icon: 'search', text: '' })">
+                <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="processSteps.push({ number: '', title: '', text: '' })">
                   <Plus :size="15" aria-hidden="true" />
                   <span>Add step</span>
                 </button>
@@ -977,7 +879,7 @@ onMounted(async () => {
                     <header class="sub-editor-header">
                       <span class="item-number">{{ step.number || String(index + 1).padStart(2, '0') }}</span>
                       <h3>{{ step.title || 'Untitled step' }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove step" @click="confirmDeleteProcessStep(index)">
+                      <button type="button" class="icon-btn danger" :disabled="!editing" aria-label="Remove step" @click="confirmDeleteProcessStep(index)">
                         <Trash2 :size="15" aria-hidden="true" />
                       </button>
                     </header>
@@ -990,158 +892,9 @@ onMounted(async () => {
                         <span>Title</span>
                         <input v-model="step.title" type="text" placeholder="e.g. Assessment" />
                       </label>
-                      <label class="field">
-                        <span>Icon</span>
-                        <select v-model="step.icon">
-                          <option value="search">Search / Magnifier</option>
-                          <option value="map">Map / Pin</option>
-                          <option value="play">Play / Action</option>
-                          <option value="check">Check / Done</option>
-                        </select>
-                      </label>
                       <label class="field wide">
                         <span>Description</span>
                         <textarea v-model="step.text" rows="2" placeholder="Step description..."></textarea>
-                      </label>
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
-
-          <!-- ═══ Field gallery ═══ -->
-          <section class="editor-panel" data-panel-id="gallery" aria-labelledby="gallery-heading">
-            <div class="panel-header">
-              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('gallery')">
-                <div class="panel-icon-wrap">
-                  <Images :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Field gallery</p>
-                  <h2 id="gallery-heading">Gallery images</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <button type="button" class="icon-btn-pencil" aria-label="Jump to edit gallery" @click.stop="editPanel('gallery')">
-                  <Pencil :size="15" aria-hidden="true" />
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" @click="galleryImages.push({ src: '', caption: '', span: '1' })">
-                  <Plus :size="15" aria-hidden="true" />
-                  <span>Add image</span>
-                </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('gallery')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['gallery'] }" />
-                </button>
-              </div>
-            </div>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['gallery']" class="panel-body">
-                <p class="panel-desc">
-                  Upload a photo or paste a URL for each gallery slot. Set the span to "2 columns" for a wider tile on the public page.
-                  {{ galleryImages.filter(i => !i.src?.trim()).length }} of {{ galleryImages.length }} slots are missing an image.
-                </p>
-
-                <div class="image-slot-grid">
-                  <article v-for="(img, index) in galleryImages" :key="index" class="image-slot" :class="{ filled: !!img.src }">
-                    <header class="image-slot-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <div class="image-slot-heading">
-                        <h3>{{ img.caption || 'Untitled photo' }}</h3>
-                        <p>{{ img.span === '2' ? 'Wide (2 columns)' : 'Standard (1 column)' }}</p>
-                      </div>
-                      <button type="button" class="icon-btn danger" aria-label="Remove image" @click="confirmDeleteGalleryImage(index)">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </header>
-                    <div class="image-slot-body">
-                      <figure class="image-preview slot-preview">
-                        <img v-if="img.src" :src="img.src" :alt="img.caption" />
-                        <div v-else class="slot-empty">
-                          <ImageIcon :size="22" aria-hidden="true" />
-                          <span>No image set</span>
-                        </div>
-                      </figure>
-                      <div class="form-grid">
-                        <label class="field">
-                          <span>Caption</span>
-                          <input v-model="img.caption" type="text" placeholder="e.g. Reforestation in rural Cambodia" />
-                        </label>
-                        <label class="field">
-                          <span>Span</span>
-                          <select v-model="img.span">
-                            <option value="1">1 column</option>
-                            <option value="2">2 columns (wider)</option>
-                          </select>
-                        </label>
-                      </div>
-                      <ImagePickerField
-                        v-model="img.src"
-                        :label="img.caption || `Gallery image ${index + 1}`"
-                        hide-preview
-                        @success="(msg) => ui.addToast(msg, 'success')"
-                        @error="(msg) => ui.addToast(msg, 'error')"
-                      />
-                    </div>
-                  </article>
-                </div>
-
-                <button type="button" class="btn btn-secondary add-image-btn" @click="galleryImages.push({ src: '', caption: '', span: '1' })">
-                  <Plus :size="16" aria-hidden="true" />
-                  <span>Add image</span>
-                </button>
-              </div>
-            </Transition>
-          </section>
-
-          <!-- ═══ Our support (partners) ═══ -->
-          <section class="editor-panel" aria-labelledby="partners-heading">
-            <div class="panel-header">
-              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('partners')">
-                <div class="panel-icon-wrap">
-                  <FolderOpen :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Our support</p>
-                  <h2 id="partners-heading">Partner organizations</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <button type="button" class="btn btn-secondary btn-sm" @click="partners.push({ name: '', type: '', description: '' })">
-                  <Plus :size="15" aria-hidden="true" />
-                  <span>Add partner</span>
-                </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('partners')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['partners'] }" />
-                </button>
-              </div>
-            </div>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['partners']" class="panel-body">
-                <p class="panel-desc">Edit the partner organizations shown in the "Our Supporters" section.</p>
-
-                <div class="stack-list">
-                  <article v-for="(partner, index) in partners" :key="index" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>{{ partner.name || 'Untitled partner' }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove partner" @click="confirmDeletePartner(index)">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </header>
-                    <div class="sub-editor-body form-grid">
-                      <label class="field">
-                        <span>Name</span>
-                        <input v-model="partner.name" type="text" placeholder="e.g. UN Environment" />
-                      </label>
-                      <label class="field">
-                        <span>Type / relationship</span>
-                        <input v-model="partner.type" type="text" placeholder="e.g. International Partner" />
-                      </label>
-                      <label class="field wide">
-                        <span>Description <em>(optional)</em></span>
-                        <textarea v-model="partner.description" rows="2" placeholder="Brief description of the partnership..."></textarea>
                       </label>
                     </div>
                   </article>
@@ -1181,56 +934,7 @@ onMounted(async () => {
             </Transition>
           </section>
 
-          <!-- ═══ CTA section ═══ -->
-          <section class="editor-panel" aria-labelledby="cta-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['cta']" @click="togglePanel('cta')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <ListChecks :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Call to action</p>
-                  <h2 id="cta-heading">CTA section</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['cta'] }" aria-hidden="true" />
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['cta']" class="panel-body form-grid">
-                <label class="field">
-                  <span>Label / eyebrow</span>
-                  <input v-model="ctaContent.label" type="text" placeholder="e.g. Take Action" />
-                </label>
-                <label class="field">
-                  <span>Heading</span>
-                  <input v-model="ctaContent.heading" type="text" placeholder="e.g. Join the Environmental Movement" />
-                </label>
-                <label class="field wide">
-                  <span>Description</span>
-                  <textarea v-model="ctaContent.description" rows="2" placeholder="CTA description..."></textarea>
-                </label>
-                <label class="field">
-                  <span>Primary button text</span>
-                  <input v-model="ctaContent.primaryBtnText" type="text" placeholder="e.g. Get Involved" />
-                </label>
-                <label class="field">
-                  <span>Primary button URL</span>
-                  <input v-model="ctaContent.primaryBtnUrl" type="text" placeholder="e.g. /get-involved" />
-                </label>
-                <label class="field">
-                  <span>Secondary button text</span>
-                  <input v-model="ctaContent.secondaryBtnText" type="text" placeholder="e.g. Support Us" />
-                </label>
-                <label class="field">
-                  <span>Secondary button URL</span>
-                  <input v-model="ctaContent.secondaryBtnUrl" type="text" placeholder="e.g. /get-involved/donate" />
-                </label>
-              </div>
-            </Transition>
-          </section>
+
         </div>
       </main>
     </div>
@@ -1266,6 +970,64 @@ onMounted(async () => {
 .manager-main {
   min-height: 100vh;
   padding: 1.25rem;
+}
+
+/* ─── View mode (editing disabled) ────────────── */
+.view-mode input,
+.view-mode textarea,
+.view-mode select {
+  pointer-events: none;
+  opacity: 0.6;
+  background: var(--admin-theme-surface-soft);
+  user-select: none;
+  cursor: default;
+}
+
+.view-mode .initiative-thumb .slot-empty {
+  pointer-events: none;
+}
+
+.view-mode .sub-editor:hover {
+  border-color: var(--admin-theme-border);
+}
+
+.view-mode .icon-btn-pencil {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: transparent;
+  color: var(--admin-theme-primary-deep);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+  transition: all 0.18s ease;
+}
+
+.btn-edit:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, transparent);
+  border-color: var(--admin-theme-primary);
+  transform: translateY(-1px);
+}
+
+.btn-edit-active {
+  background: var(--admin-theme-primary);
+  color: #ffffff;
+  border-color: var(--admin-theme-primary-deep);
+}
+
+.btn-edit-active:hover {
+  background: var(--admin-theme-primary-deep);
 }
 
 /* ─── Hero banner ───────────────────────────────── */
@@ -1832,9 +1594,56 @@ onMounted(async () => {
   padding: 1.1rem;
 }
 
-.image-editor-grid--compact {
-  padding: 0;
-  grid-template-columns: minmax(160px, 0.5fr) minmax(240px, 1.5fr);
+/* ─── Initiative editor layout (smaller image) ── */
+.initiative-editor-layout {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.initiative-thumb-wrap {
+  flex-shrink: 0;
+  width: 100px;
+}
+
+.initiative-thumb {
+  width: 100px;
+  height: 70px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--admin-theme-border);
+  background: var(--admin-theme-surface-soft);
+  display: grid;
+  place-items: center;
+}
+
+.initiative-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.initiative-thumb .slot-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--admin-theme-muted);
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.25rem;
+}
+
+.initiative-fields {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.upload-disabled {
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .image-preview {
@@ -2110,14 +1919,24 @@ onMounted(async () => {
   }
 
   .form-grid,
-  .image-editor-grid,
-  .image-editor-grid--compact {
-    grid-template-columns: 1fr;
+  .image-editor-grid,  .initiative-editor-layout {
+    flex-direction: column;
+  }
+
+  .initiative-thumb-wrap {
+    width: 80px;
+  }
+
+  .initiative-thumb {
+    width: 80px;
+    height: 60px;
   }
 
   .hero-content-wrap {
     flex-direction: column;
     align-items: flex-start;
   }
+
+
 }
 </style>
