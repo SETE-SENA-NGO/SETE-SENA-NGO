@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import vuetify from 'vite-plugin-vuetify'
 
 type NetlifyFunction = (request: Request) => Promise<Response> | Response
 
@@ -18,7 +19,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     envPrefix: ['VITE_', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'],
-    plugins: [vue(), netlifyFunctionsDevPlugin()],
+    plugins: [vue(), vuetify({ autoImport: true }), netlifyFunctionsDevPlugin()],
     server: {
       host: devHost,
       port: devPort,

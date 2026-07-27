@@ -1,26 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch, type WatchStopHandle } from 'vue'
+import { useTheme } from 'vuetify'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import {
-  ArrowDown,
-  ArrowUp,
-  ExternalLink,
-  FileText,
-  Flag,
-  FolderHeart,
-  MapPin,
-  Plus,
-  RotateCcw,
-  Save,
-  Sparkles,
-  Trash2,
-  Upload,
-} from 'lucide-vue-next'
+// Icons migrated to Vuetify MDI (Material Design Icons)
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import type { SupportedLocale } from '@/i18n'
-import { imageUploadHelpText, normalizeMediaUrl } from '@/lib/media'
+import { normalizeMediaUrl } from '@/lib/media'
 import { useContentStore } from '@/stores/content.store'
 import { useMediaStore } from '@/stores/media.store'
 import { useUiStore } from '@/stores/ui.store'
@@ -41,13 +28,6 @@ type SupportCard = {
   cta: string
 }
 
-type QuotePanel = {
-  quote: string
-  credit: string
-  title: string
-  body: string
-}
-
 type JourneyStep = {
   step: string
   title: string
@@ -65,7 +45,6 @@ type GetInvolvedPageContent = {
     secondaryCta: ActionLink
   }
   supportCards: SupportCard[]
-  quotePanel: QuotePanel
   journey: JourneyStep[]
   closing: {
     eyebrow: string
@@ -141,13 +120,6 @@ const fallbackContent: GetInvolvedPageContent = {
       cta: 'Protection',
     },
   ],
-  quotePanel: {
-    quote:
-      'Santi Sena means people working together for peace, livelihoods, justice and environmental preservation.',
-    credit: 'From the Santi Sena profile and strategic plan',
-    title: 'Support here is not only a gift. It is cooperation with village systems.',
-    body: 'Santi Sena works with monks, villagers, local government, schools and partners in Svay Rieng, Prey Veng and Kratie. Choose the help you can offer and connect it to work communities can carry forward.',
-  },
   journey: [
     {
       step: '01',
@@ -178,16 +150,162 @@ const contentStore = useContentStore()
 const media = useMediaStore()
 const ui = useUiStore()
 const { locale } = useI18n()
+const vuetifyTheme = useTheme()
+
+// Local Vuetify confirm dialog
+const confirmDialog = ref(false)
+const confirmData = ref({ title: '', body: '', onConfirm: (() => {}) as () => void })
+
+function openConfirm(title: string, body: string, onConfirm: () => void) {
+  confirmData.value = { title, body, onConfirm }
+  confirmDialog.value = true
+}
+
+// Sync Vuetify theme with admin dark mode
+watch(
+  () => ui.darkMode,
+  (isDark) => {
+    vuetifyTheme.global.name.value = isDark ? 'adminDark' : 'adminLight'
+  },
+  { immediate: true },
+)
 
 const pageRow = ref<PageContent | null>(null)
 const loading = ref(true)
 const saving = ref(false)
 const uploadingKey = ref('')
 const loadError = ref('')
-const savedAt = ref('')
-const imageHint = imageUploadHelpText()
 
 const draft = reactive<GetInvolvedPageContent>(cloneContent(fallbackContent))
+
+const editingSections = reactive<Record<string, boolean>>({
+  hero: false,
+  cards: false,
+  journey: false,
+  closing: false,
+})
+
+const sectionDirty = reactive<Record<string, boolean>>({
+  hero: false,
+  cards: false,
+  journey: false,
+  closing: false,
+})
+
+const collapsedSections = reactive<Record<string, boolean>>({
+  hero: false,
+  cards: false,
+  journey: false,
+  closing: false,
+})
+
+const sectionSnapshots = reactive<Record<string, string>>({
+  hero: '',
+  cards: '',
+  journey: '',
+  closing: '',
+})
+
+const originalSnapshot = ref('')
+
+const hasChanges = computed(() => {
+  const current = JSON.stringify(cloneContent(draft))
+  return current !== originalSnapshot.value
+})
+
+function toggleCollapse(section: keyof typeof collapsedSections) {
+  collapsedSections[section] = !collapsedSections[section]
+}
+
+function takeSectionSnapshot(section: keyof typeof sectionSnapshots) {
+  switch (section) {
+    case 'hero':
+      sectionSnapshots.hero = JSON.stringify({ ...draft.hero, primaryCta: { ...draft.hero.primaryCta }, secondaryCta: { ...draft.hero.secondaryCta } })
+      break
+    case 'cards':
+      sectionSnapshots.cards = JSON.stringify(draft.supportCards.map(cloneCard))
+      break
+    case 'journey':
+      sectionSnapshots.journey = JSON.stringify(draft.journey.map((j) => ({ ...j })))
+      break
+    case 'closing':
+      sectionSnapshots.closing = JSON.stringify({ ...draft.closing, primaryCta: { ...draft.closing.primaryCta }, secondaryCta: { ...draft.closing.secondaryCta } })
+      break
+  }
+}
+
+function hasSectionChanges(section: keyof typeof sectionSnapshots): boolean {
+  switch (section) {
+    case 'hero':
+      return JSON.stringify({ ...draft.hero, primaryCta: { ...draft.hero.primaryCta }, secondaryCta: { ...draft.hero.secondaryCta } }) !== sectionSnapshots.hero
+    case 'cards':
+      return JSON.stringify(draft.supportCards.map(cloneCard)) !== sectionSnapshots.cards
+    case 'journey':
+      return JSON.stringify(draft.journey.map((j) => ({ ...j }))) !== sectionSnapshots.journey
+    case 'closing':
+      return JSON.stringify({ ...draft.closing, primaryCta: { ...draft.closing.primaryCta }, secondaryCta: { ...draft.closing.secondaryCta } }) !== sectionSnapshots.closing
+    default:
+      return false
+  }
+}
+
+let sectionWatchStop: WatchStopHandle | null = null
+
+function setupSectionWatch() {
+  sectionWatchStop?.()
+  sectionWatchStop = watch(
+    () => ({
+      hero: hasSectionChanges('hero'),
+      cards: hasSectionChanges('cards'),
+      journey: hasSectionChanges('journey'),
+      closing: hasSectionChanges('closing'),
+    }),
+    (changes) => {
+      for (const section of Object.keys(changes) as Array<keyof typeof changes>) {
+        if (changes[section] && editingSections[section] && !sectionDirty[section]) {
+          sectionDirty[section] = true
+        }
+      }
+    },
+    { deep: true },
+  )
+}
+
+function toggleEdit(section: keyof typeof editingSections) {
+  if (!editingSections[section]) {
+    takeSectionSnapshot(section)
+    sectionDirty[section] = false
+    editingSections[section] = true
+  } else {
+    editingSections[section] = false
+  }
+}
+
+function cancelEdit(section: keyof typeof editingSections) {
+  const snapshot = sectionSnapshots[section]
+  if (snapshot) {
+    switch (section) {
+      case 'hero':
+        draft.hero = JSON.parse(snapshot)
+        break
+      case 'cards':
+        draft.supportCards = JSON.parse(snapshot)
+        break
+      case 'journey':
+        draft.journey = JSON.parse(snapshot)
+        break
+      case 'closing':
+        draft.closing = JSON.parse(snapshot)
+        break
+    }
+  }
+  sectionDirty[section] = false
+  editingSections[section] = false
+}
+
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify(cloneContent(draft))
+}
 
 const activeLocale = computed<SupportedLocale>(() =>
   locale.value === 'kh' ? 'kh' : 'en',
@@ -200,49 +318,69 @@ const canAddCard = computed(() => draft.supportCards.length < MAX_SUPPORT_CARDS)
 const canAddJourneyStep = computed(() => draft.journey.length < MAX_JOURNEY_STEPS)
 
 const sections = [
-  { id: 'getinvolved-hero', label: 'Hero', icon: Sparkles },
-  { id: 'getinvolved-cards', label: 'Cards', icon: FolderHeart },
-  { id: 'getinvolved-quote', label: 'Quote', icon: FileText },
-  { id: 'getinvolved-journey', label: 'Journey', icon: MapPin },
-  { id: 'getinvolved-closing', label: 'Closing', icon: Flag },
+  { id: 'getinvolved-hero', label: 'Hero', icon: 'mdi-creation' },
+  { id: 'getinvolved-cards', label: 'Cards', icon: 'mdi-folder-heart' },
+  { id: 'getinvolved-journey', label: 'Journey', icon: 'mdi-map-marker' },
+  { id: 'getinvolved-closing', label: 'Closing', icon: 'mdi-flag' },
 ] as const
 
-const activeSection = ref(sections[0].id)
-let sectionObserver: IntersectionObserver | null = null
+const activeSection = ref<string>(sections[0].id)
+const SCROLL_SPY_OFFSET = 150
+let scrollSpyRaf = 0
 
 function scrollToSection(id: string) {
   const el = document.getElementById(id)
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-function setupSectionObserver() {
-  sectionObserver?.disconnect()
+function updateActiveSectionFromScroll() {
+  const doc = document.documentElement
+  const scrolledToBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 4
 
-  sectionObserver = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          activeSection.value = entry.target.id
-        }
-      }
-    },
-    { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
-  )
+  const lastSection = sections[sections.length - 1]
+  if (scrolledToBottom && lastSection) {
+    activeSection.value = lastSection.id
+    return
+  }
 
+  // Classic scrollspy: the active section is the last one whose top has
+  // crossed above the offset line (just below the sticky nav).
+  let current: string = sections[0].id
   for (const s of sections) {
     const el = document.getElementById(s.id)
-    if (el) sectionObserver.observe(el)
+    if (el && el.getBoundingClientRect().top - SCROLL_SPY_OFFSET <= 0) {
+      current = s.id
+    }
   }
+  activeSection.value = current
+}
+
+function handleScrollSpy() {
+  if (scrollSpyRaf) return
+  scrollSpyRaf = requestAnimationFrame(() => {
+    scrollSpyRaf = 0
+    updateActiveSectionFromScroll()
+  })
+}
+
+function warnBeforeUnload(event: BeforeUnloadEvent) {
+  if (!hasChanges.value) return
+  event.preventDefault()
+  event.returnValue = ''
 }
 
 onMounted(() => {
   contentStore.useLocalFallback()
   void loadPage()
+  window.addEventListener('beforeunload', warnBeforeUnload)
+  window.addEventListener('scroll', handleScrollSpy, { passive: true })
 })
 
 onUnmounted(() => {
-  sectionObserver?.disconnect()
-  sectionObserver = null
+  sectionWatchStop?.()
+  if (scrollSpyRaf) cancelAnimationFrame(scrollSpyRaf)
+  window.removeEventListener('beforeunload', warnBeforeUnload)
+  window.removeEventListener('scroll', handleScrollSpy)
 })
 
 watch(activeLocale, () => {
@@ -250,6 +388,14 @@ watch(activeLocale, () => {
 })
 
 async function loadPage() {
+  editingSections.hero = false
+  editingSections.cards = false
+  editingSections.journey = false
+  editingSections.closing = false
+  sectionDirty.hero = false
+  sectionDirty.cards = false
+  sectionDirty.journey = false
+  sectionDirty.closing = false
   loading.value = true
   loadError.value = ''
 
@@ -257,14 +403,13 @@ async function loadPage() {
     const page = await contentStore.fetchBySlug(PAGE_SLUG, activeLocale.value)
     pageRow.value = page
     replaceDraft(mergeContent(fallbackContent, parseCmsBody(page?.body ?? '')))
-    savedAt.value = page?.updated_at ?? ''
+    updateSnapshot()
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Could not load Get Involved content.'
     ui.addToast(loadError.value, 'error')
   } finally {
     loading.value = false
-    await nextTick()
-    setupSectionObserver()
+    setupSectionWatch()
   }
 }
 
@@ -275,7 +420,6 @@ function replaceDraft(nextContent: GetInvolvedPageContent) {
     secondaryCta: { ...nextContent.hero.secondaryCta },
   }
   draft.supportCards = nextContent.supportCards.map(cloneCard)
-  draft.quotePanel = { ...nextContent.quotePanel }
   draft.journey = nextContent.journey.map((item) => ({ ...item }))
   draft.closing = {
     ...nextContent.closing,
@@ -312,7 +456,7 @@ async function savePage() {
 
     pageRow.value = saved
     replaceDraft(content)
-    savedAt.value = saved.updated_at
+    updateSnapshot()
     ui.addToast(`Get Involved ${activeLocaleName.value} content saved.`, 'success')
   } catch (error) {
     ui.addToast(error instanceof Error ? error.message : 'Could not save Get Involved content.', 'error')
@@ -371,7 +515,7 @@ function removeItem<T extends { title?: string; name?: string }>(
   if (!item) return
 
   const itemTitle = item.title || item.name || 'this item'
-  ui.openModal(
+  openConfirm(
     `Remove ${label}?`,
     `Remove "${itemTitle}" from the public Get Involved page?`,
     () => {
@@ -393,17 +537,6 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   items[target] = current
 }
 
-function resetToDefaults() {
-  ui.openModal(
-    'Reset Get Involved content?',
-    'Restore all content sections, cards, journey steps, and quotes to their defaults?',
-    () => {
-      replaceDraft(cloneContent(fallbackContent))
-      ui.addToast('Default Get Involved draft restored.', 'info')
-    },
-  )
-}
-
 function prepareForSave(content: GetInvolvedPageContent): GetInvolvedPageContent {
   return {
     hero: {
@@ -416,7 +549,6 @@ function prepareForSave(content: GetInvolvedPageContent): GetInvolvedPageContent
       ...card,
       image: normalizeMediaUrl(card.image),
     })),
-    quotePanel: { ...content.quotePanel },
     journey: content.journey.map((item) => ({
       step: item.step.trim() || '0',
       title: item.title.trim(),
@@ -474,7 +606,6 @@ function mergeContent(
       secondaryCta: mergeObject(base.hero.secondaryCta, hero.secondaryCta),
     },
     supportCards: mergeCards(override.supportCards, base.supportCards),
-    quotePanel: mergeObject(base.quotePanel, override.quotePanel),
     journey: mergeArray<JourneyStep>(override.journey, base.journey),
     closing: {
       ...base.closing,
@@ -516,7 +647,6 @@ function cloneContent(content: GetInvolvedPageContent): GetInvolvedPageContent {
       secondaryCta: { ...content.hero.secondaryCta },
     },
     supportCards: content.supportCards.map(cloneCard),
-    quotePanel: { ...content.quotePanel },
     journey: content.journey.map((item) => ({ ...item })),
     closing: {
       ...content.closing,
@@ -532,7 +662,7 @@ function cloneCard(card: SupportCard): SupportCard {
 </script>
 
 <template>
-  <div :class="['getinvolved-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['getinvolved-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -540,134 +670,165 @@ function cloneCard(card: SupportCard): SupportCard {
       <main class="manager-main">
         <header class="manager-hero">
           <div class="manager-title">
-            <p class="eyebrow">Get Involved</p>
             <h1>Manage get involved page</h1>
-            <div class="manager-meta" aria-label="Editable sections summary">
-              <span>{{ activeLocaleName }} content</span>
-              <span>{{ draft.supportCards.length }} cards</span>
-              <span>{{ draft.journey.length }} steps</span>
-              <span v-if="savedAt">Saved</span>
-            </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/get-involved">
-              <ExternalLink :size="16" aria-hidden="true" />
-              <span>View page</span>
-            </RouterLink>
-            <button type="button" class="btn btn-ghost" @click="resetToDefaults">
-              <RotateCcw :size="16" aria-hidden="true" />
-              <span>Reset draft</span>
-            </button>
-            <button type="button" class="btn btn-primary" :disabled="saving" @click="savePage">
-              <Save :size="16" aria-hidden="true" />
-              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
-            </button>
+            <v-btn variant="tonal" to="/get-involved" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">Loading Get Involved content...</div>
-        <div v-else-if="loadError" class="state-card state-card-error">
-          <span>{{ loadError }}</span>
-          <button type="button" class="btn btn-secondary" @click="loadPage">Try again</button>
-        </div>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Get Involved content...</span>
+          </div>
+          <div v-else-if="loadError" key="error">
+            <v-alert type="error" variant="tonal" closable @click:close="loadError = ''">
+              <template #title>Could not load content</template>
+              <div class="d-flex align-center justify-space-between ga-2">
+                <span>{{ loadError }}</span>
+                <v-btn variant="tonal" size="small" @click="loadPage">Try again</v-btn>
+              </div>
+            </v-alert>
+          </div>
 
-        <div v-else class="content-grid">
+          <div v-else key="content" class="content-grid">
 
           <nav class="section-nav" aria-label="Get Involved page sections">
-            <button
-              v-for="sec in sections"
-              :key="sec.id"
-              type="button"
-              :class="['section-nav-btn', { active: activeSection === sec.id }]"
-              @click="scrollToSection(sec.id)"
-            >
-              <component :is="sec.icon" :size="15" aria-hidden="true" />
-              <span>{{ sec.label }}</span>
-            </button>
+            <div class="section-nav-tabs">
+              <button
+                v-for="sec in sections"
+                :key="sec.id"
+                type="button"
+                :class="['section-nav-btn', { active: activeSection === sec.id }]"
+                @click="scrollToSection(sec.id)"
+              >
+                <v-icon size="16">{{ sec.icon }}</v-icon>
+                <span>{{ sec.label }}</span>
+              </button>
+            </div>
+            <div class="section-nav-save">
+              <span v-if="hasChanges" class="unsaved-badge">
+                <v-icon size="10">mdi-circle</v-icon>
+                Unsaved changes
+              </span>
+              <v-btn color="primary" variant="tonal" :disabled="saving || !hasChanges" :loading="saving" @click="savePage">
+                <v-icon start>mdi-content-save</v-icon>
+                {{ saving ? 'Saving...' : 'Save Change' }}
+              </v-btn>
+            </div>
           </nav>
 
           <!-- ── HERO ── -->
-          <div :id="sections[0].id" class="section-group">
-            <p class="section-group-label">Hero</p>
-          </div>
-
-          <section class="editor-panel" aria-labelledby="hero-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Hero section</p>
-                <h2 id="hero-heading">Support village peace.</h2>
-              </div>
-              <Sparkles :size="20" aria-hidden="true" />
-            </div>
-
-            <div class="image-editor-grid">
-              <figure class="image-preview hero-preview">
-                <img :src="heroPreview" alt="" />
-              </figure>
-
-              <div class="form-stack">
-                <div class="form-grid">
-                  <label class="field">
-                    <span>Small label</span>
-                    <input v-model="draft.hero.eyebrow" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Section heading</span>
-                    <input v-model="draft.hero.title" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Description</span>
-                    <textarea v-model="draft.hero.description" rows="3"></textarea>
-                  </label>
-                  <label class="field wide">
-                    <span>Image URL</span>
-                    <input v-model="draft.hero.image" type="url" :placeholder="imageHint" />
-                  </label>
-                  <label class="field">
-                    <span>Image alt text</span>
-                    <input v-model="draft.hero.alt" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Primary CTA label</span>
-                    <input v-model="draft.hero.primaryCta.label" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Secondary CTA label</span>
-                    <input v-model="draft.hero.secondaryCta.label" type="text" />
-                  </label>
+          <v-card :id="sections[0].id" :class="['editor-panel', 'section-group', { editing: editingSections.hero }]">
+            <v-toolbar density="comfortable" flat class="panel-toolbar">
+              <template #title>
+                <div>
+                  <p class="panel-kicker">Hero section</p>
+                  <h2 id="hero-heading" class="text-h6 font-weight-bold mb-0">Support village peace.</h2>
                 </div>
-                <label class="upload-box">
-                  <Upload :size="17" aria-hidden="true" />
-                  <span>{{ uploadingKey === 'hero-image' ? 'Uploading...' : 'Upload hero image' }}</span>
+              </template>
+              <template #append>
+                <div class="toolbar-actions">
+                  <v-btn icon variant="text" size="small" @click="toggleCollapse('hero')" title="Collapse / expand">
+                    <v-icon :class="{ 'rotate-neg-90': collapsedSections.hero }">mdi-chevron-down</v-icon>
+                  </v-btn>
+                  <span class="toolbar-divider" aria-hidden="true"></span>
+                  <v-fade-transition mode="out-in">
+                    <v-btn v-if="!editingSections.hero" key="edit-hero" color="secondary" size="small" @click="toggleEdit('hero')">
+                      <v-icon start>mdi-pencil</v-icon>
+                      Edit
+                    </v-btn>
+                    <div v-else key="editing-hero" class="edit-actions">
+                      <v-btn variant="tonal" size="small" @click="cancelEdit('hero')">Cancel</v-btn>
+                      <v-btn color="primary" variant="flat" size="small" @click="toggleEdit('hero')">
+                        <v-icon start>mdi-check</v-icon>
+                        Done
+                      </v-btn>
+                    </div>
+                  </v-fade-transition>
+                </div>
+              </template>
+            </v-toolbar>
+            <v-divider />
+
+            <v-expand-transition>
+              <div v-show="!collapsedSections.hero" class="panel-collapsible">
+              <div class="image-editor-grid">
+              <div class="image-upload-panel">
+                <v-img :src="heroPreview" aspect-ratio="1.6" cover class="image-preview hero-preview" />
+                <label class="upload-btn">
+                  <v-icon size="18">mdi-cloud-upload-outline</v-icon>
+                  <span>{{ uploadingKey === 'hero-image' ? 'Uploading...' : 'Upload image' }}</span>
                   <input
                     type="file"
                     accept="image/*"
-                    :disabled="uploadingKey === 'hero-image'"
+                    :disabled="!editingSections.hero || uploadingKey === 'hero-image'"
                     @change="uploadImage($event, 'hero-image', (url) => (draft.hero.image = url))"
                   />
                 </label>
               </div>
-            </div>
-          </section>
+
+              <div class="form-stack">
+                <div class="form-grid">
+                  <v-text-field v-model="draft.hero.eyebrow" label="Small label" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draft.hero.title" label="Section heading" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
+                  <v-textarea v-model="draft.hero.description" label="Description" rows="3" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-text-field v-model="draft.hero.alt" label="Image alt text" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-text-field v-model="draft.hero.primaryCta.label" label="Primary CTA label" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draft.hero.secondaryCta.label" label="Secondary CTA label" :disabled="!editingSections.hero" hide-details density="comfortable" variant="outlined" />
+                </div>
+              </div>
+              </div>
+              </div>
+            </v-expand-transition>
+          </v-card>
 
           <!-- ── SUPPORT CARDS ── -->
-          <div :id="sections[1].id" class="section-group">
-            <p class="section-group-label">Cards</p>
-          </div>
+          <v-card :id="sections[1].id" :class="['editor-panel', 'section-group', { editing: editingSections.cards }]">
+            <v-toolbar density="comfortable" flat class="panel-toolbar">
+              <template #title>
+                <div>
+                  <p class="panel-kicker">Support cards</p>
+                  <h2 id="cards-heading" class="text-h6 font-weight-bold mb-0">Support real community work.</h2>
+                </div>
+              </template>
+              <template #append>
+                <div class="toolbar-actions">
+                  <v-btn icon variant="text" size="small" @click="toggleCollapse('cards')" title="Collapse / expand">
+                    <v-icon :class="{ 'rotate-neg-90': collapsedSections.cards }">mdi-chevron-down</v-icon>
+                  </v-btn>
+                  <span class="toolbar-divider" aria-hidden="true"></span>
+                  <v-fade-transition mode="out-in">
+                    <v-btn v-if="!editingSections.cards" key="edit-cards" color="secondary" size="small" @click="toggleEdit('cards')">
+                      <v-icon start>mdi-pencil</v-icon>
+                      Edit
+                    </v-btn>
+                    <div v-else key="editing-cards" class="edit-actions">
+                      <v-btn variant="tonal" size="small" @click="cancelEdit('cards')">Cancel</v-btn>
+                      <v-btn color="primary" variant="flat" size="small" @click="toggleEdit('cards')">
+                        <v-icon start>mdi-check</v-icon>
+                        Done
+                      </v-btn>
+                    </div>
+                  </v-fade-transition>
+                  <v-fade-transition>
+                    <v-btn v-if="editingSections.cards" key="add-card" color="accent" variant="flat" size="small" :disabled="!canAddCard" @click="addCard">
+                      <v-icon start>mdi-plus</v-icon>
+                      Add card
+                    </v-btn>
+                  </v-fade-transition>
+                </div>
+              </template>
+            </v-toolbar>
+            <v-divider />
 
-          <section class="editor-panel" aria-labelledby="cards-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Support cards</p>
-                <h2 id="cards-heading">Support real community work.</h2>
-              </div>
-              <button type="button" class="btn btn-secondary" :disabled="!canAddCard" @click="addCard">
-                <Plus :size="16" aria-hidden="true" />
-                <span>Add card</span>
-              </button>
-            </div>
-
-            <div class="cards-list">
+            <v-expand-transition>
+              <div v-show="!collapsedSections.cards" class="panel-collapsible">
+              <v-slide-y-transition group tag="div" class="cards-list">
               <article v-for="(card, index) in draft.supportCards" :key="index" class="card-editor">
                 <header class="card-editor-header">
                   <div class="card-heading">
@@ -678,34 +839,28 @@ function cloneCard(card: SupportCard): SupportCard {
                     </div>
                   </div>
                   <div class="card-actions">
-                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move card up" @click="moveItem(draft.supportCards, index, -1)">
-                      <ArrowUp :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn" :disabled="index === draft.supportCards.length - 1" aria-label="Move card down" @click="moveItem(draft.supportCards, index, 1)">
-                      <ArrowDown :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn danger" aria-label="Remove card" @click="removeItem(draft.supportCards, index, 'card')">
-                      <Trash2 :size="15" aria-hidden="true" />
-                    </button>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.cards || index === 0" aria-label="Move card up" @click="moveItem(draft.supportCards, index, -1)">
+                      <v-icon>mdi-chevron-up</v-icon>
+                    </v-btn>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.cards || index === draft.supportCards.length - 1" aria-label="Move card down" @click="moveItem(draft.supportCards, index, 1)">
+                      <v-icon>mdi-chevron-down</v-icon>
+                    </v-btn>
+                    <v-btn v-if="editingSections.cards" icon color="error" variant="tonal" size="small" aria-label="Remove card" @click="removeItem(draft.supportCards, index, 'card')">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
                   </div>
                 </header>
 
                 <div class="card-editor-top">
-                  <figure class="image-preview card-preview">
-                    <img :src="resolveImageUrl(card.image, fallbackContent.supportCards[0]?.image ?? '')" alt="" />
-                  </figure>
-                  <div class="card-image-controls image-control-panel">
-                    <label class="field">
-                      <span>Image URL</span>
-                      <input v-model="card.image" type="url" :placeholder="imageHint" />
-                    </label>
-                    <label class="upload-box">
-                      <Upload :size="17" aria-hidden="true" />
-                      <span>{{ uploadingKey === `card-${index}` ? 'Uploading...' : 'Upload card image' }}</span>
+                  <div class="image-upload-panel card-image-upload">
+                    <v-img :src="resolveImageUrl(card.image, fallbackContent.supportCards[0]?.image ?? '')" aspect-ratio="1.35" cover class="image-preview card-preview" />
+                    <label class="upload-btn">
+                      <v-icon size="18">mdi-cloud-upload-outline</v-icon>
+                      <span>{{ uploadingKey === `card-${index}` ? 'Uploading...' : 'Upload image' }}</span>
                       <input
                         type="file"
                         accept="image/*"
-                        :disabled="uploadingKey === `card-${index}`"
+                        :disabled="!editingSections.cards || uploadingKey === `card-${index}`"
                         @change="uploadImage($event, `card-${index}`, (url) => (card.image = url))"
                       />
                     </label>
@@ -713,83 +868,59 @@ function cloneCard(card: SupportCard): SupportCard {
                 </div>
 
                 <div class="card-form-grid">
-                  <label class="field">
-                    <span>Label</span>
-                    <input v-model="card.label" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Title</span>
-                    <input v-model="card.title" type="text" />
-                  </label>
-                  <label class="field">
-                    <span>Image alt text</span>
-                    <input v-model="card.alt" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Description</span>
-                    <textarea v-model="card.body" rows="3"></textarea>
-                  </label>
-                  <label class="field">
-                    <span>Link text</span>
-                    <input v-model="card.cta" type="text" />
-                  </label>
-                </div>
-              </article>
+                  <v-text-field v-model="card.label" label="Label" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="card.title" label="Title" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="card.alt" label="Image alt text" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
+                  <v-textarea v-model="card.body" label="Description" rows="3" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-text-field v-model="card.cta" label="Link text" :disabled="!editingSections.cards" hide-details density="comfortable" variant="outlined" />
+                </div>              </article>
+              </v-slide-y-transition>
             </div>
-          </section>
-
-          <!-- ── QUOTE PANEL ── -->
-          <div :id="sections[2].id" class="section-group">
-            <p class="section-group-label">Quote</p>
-          </div>
-
-          <section class="editor-panel" aria-labelledby="quote-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Quote panel</p>
-                <h2 id="quote-heading">Strategy quote and context</h2>
-              </div>
-              <FileText :size="20" aria-hidden="true" />
-            </div>
-
-            <div class="panel-body form-grid">
-              <label class="field wide">
-                <span>Quote</span>
-                <textarea v-model="draft.quotePanel.quote" rows="3"></textarea>
-              </label>
-              <label class="field wide">
-                <span>Credit / attribution</span>
-                <input v-model="draft.quotePanel.credit" type="text" />
-              </label>
-              <label class="field wide">
-                <span>Support heading</span>
-                <input v-model="draft.quotePanel.title" type="text" />
-              </label>
-              <label class="field wide">
-                <span>Context body</span>
-                <textarea v-model="draft.quotePanel.body" rows="4"></textarea>
-              </label>
-            </div>
-          </section>
+            </v-expand-transition>
+          </v-card>
 
           <!-- ── JOURNEY ── -->
-          <div :id="sections[3].id" class="section-group">
-            <p class="section-group-label">Journey</p>
-          </div>
+          <v-card :id="sections[2].id" :class="['editor-panel', 'section-group', { editing: editingSections.journey }]">
+            <v-toolbar density="comfortable" flat class="panel-toolbar">
+              <template #title>
+                <div>
+                  <p class="panel-kicker">Your path</p>
+                  <h2 id="journey-heading" class="text-h6 font-weight-bold mb-0">Journey steps</h2>
+                </div>
+              </template>
+              <template #append>
+                <div class="toolbar-actions">
+                  <v-btn icon variant="text" size="small" @click="toggleCollapse('journey')" title="Collapse / expand">
+                    <v-icon :class="{ 'rotate-neg-90': collapsedSections.journey }">mdi-chevron-down</v-icon>
+                  </v-btn>
+                  <span class="toolbar-divider" aria-hidden="true"></span>
+                  <v-fade-transition mode="out-in">
+                    <v-btn v-if="!editingSections.journey" key="edit-journey" color="secondary" size="small" @click="toggleEdit('journey')">
+                      <v-icon start>mdi-pencil</v-icon>
+                      Edit
+                    </v-btn>
+                    <div v-else key="editing-journey" class="edit-actions">
+                      <v-btn variant="tonal" size="small" @click="cancelEdit('journey')">Cancel</v-btn>
+                      <v-btn color="primary" variant="flat" size="small" @click="toggleEdit('journey')">
+                        <v-icon start>mdi-check</v-icon>
+                        Done
+                      </v-btn>
+                    </div>
+                  </v-fade-transition>
+                  <v-fade-transition>
+                    <v-btn v-if="editingSections.journey" key="add-step" color="accent" variant="flat" size="small" :disabled="!canAddJourneyStep" @click="addJourneyStep">
+                      <v-icon start>mdi-plus</v-icon>
+                      Add step
+                    </v-btn>
+                  </v-fade-transition>
+                </div>
+              </template>
+            </v-toolbar>
+            <v-divider />
 
-          <section class="editor-panel" aria-labelledby="journey-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Your path</p>
-                <h2 id="journey-heading">Journey steps</h2>
-              </div>
-              <button type="button" class="btn btn-secondary" :disabled="!canAddJourneyStep" @click="addJourneyStep">
-                <Plus :size="16" aria-hidden="true" />
-                <span>Add step</span>
-              </button>
-            </div>
-
-            <div class="cards-list two-col">
+            <v-expand-transition>
+              <div v-show="!collapsedSections.journey" class="panel-collapsible">
+              <v-slide-y-transition group tag="div" class="cards-list two-col">
               <article v-for="(step, index) in draft.journey" :key="index" class="card-editor">
                 <header class="card-editor-header">
                   <div class="card-heading">
@@ -800,78 +931,95 @@ function cloneCard(card: SupportCard): SupportCard {
                     </div>
                   </div>
                   <div class="card-actions">
-                    <button type="button" class="icon-btn" :disabled="index === 0" aria-label="Move step up" @click="moveItem(draft.journey, index, -1)">
-                      <ArrowUp :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn" :disabled="index === draft.journey.length - 1" aria-label="Move step down" @click="moveItem(draft.journey, index, 1)">
-                      <ArrowDown :size="15" aria-hidden="true" />
-                    </button>
-                    <button type="button" class="icon-btn danger" aria-label="Remove step" @click="removeItem(draft.journey, index, 'journey step')">
-                      <Trash2 :size="15" aria-hidden="true" />
-                    </button>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.journey || index === 0" aria-label="Move step up" @click="moveItem(draft.journey, index, -1)">
+                      <v-icon>mdi-chevron-up</v-icon>
+                    </v-btn>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.journey || index === draft.journey.length - 1" aria-label="Move step down" @click="moveItem(draft.journey, index, 1)">
+                      <v-icon>mdi-chevron-down</v-icon>
+                    </v-btn>
+                    <v-btn v-if="editingSections.journey" icon color="error" variant="tonal" size="small" aria-label="Remove step" @click="removeItem(draft.journey, index, 'journey step')">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
                   </div>
                 </header>
 
                 <div class="card-form-grid">
-                  <label class="field">
-                    <span>Step number</span>
-                    <input v-model="step.step" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Title</span>
-                    <input v-model="step.title" type="text" />
-                  </label>
-                  <label class="field wide">
-                    <span>Body</span>
-                    <textarea v-model="step.body" rows="2"></textarea>
-                  </label>
-                </div>
-              </article>
+                  <v-text-field v-model="step.step" label="Step number" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="step.title" label="Title" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-textarea v-model="step.body" label="Body" rows="2" :disabled="!editingSections.journey" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                </div>              </article>
+              </v-slide-y-transition>
             </div>
-          </section>
+            </v-expand-transition>
+          </v-card>
 
           <!-- ── CLOSING ── -->
-          <div :id="sections[4].id" class="section-group">
-            <p class="section-group-label">Closing</p>
-          </div>
+          <v-card :id="sections[3].id" :class="['editor-panel', 'section-group', { editing: editingSections.closing }]">
+            <v-toolbar density="comfortable" flat class="panel-toolbar">
+              <template #title>
+                <div>
+                  <p class="panel-kicker">Next step</p>
+                  <h2 id="closing-heading" class="text-h6 font-weight-bold mb-0">Closing call to action</h2>
+                </div>
+              </template>
+              <template #append>
+                <div class="toolbar-actions">
+                  <v-btn icon variant="text" size="small" @click="toggleCollapse('closing')" title="Collapse / expand">
+                    <v-icon :class="{ 'rotate-neg-90': collapsedSections.closing }">mdi-chevron-down</v-icon>
+                  </v-btn>
+                  <span class="toolbar-divider" aria-hidden="true"></span>
+                  <v-fade-transition mode="out-in">
+                    <v-btn v-if="!editingSections.closing" key="edit-closing" color="secondary" size="small" @click="toggleEdit('closing')">
+                      <v-icon start>mdi-pencil</v-icon>
+                      Edit
+                    </v-btn>
+                    <div v-else key="editing-closing" class="edit-actions">
+                      <v-btn variant="tonal" size="small" @click="cancelEdit('closing')">Cancel</v-btn>
+                      <v-btn color="primary" variant="flat" size="small" @click="toggleEdit('closing')">
+                        <v-icon start>mdi-check</v-icon>
+                        Done
+                      </v-btn>
+                    </div>
+                  </v-fade-transition>
+                </div>
+              </template>
+            </v-toolbar>
+            <v-divider />
 
-          <section class="editor-panel" aria-labelledby="closing-heading">
-            <div class="panel-header">
-              <div>
-                <p class="panel-kicker">Next step</p>
-                <h2 id="closing-heading">Closing call to action</h2>
+            <v-expand-transition>
+              <div v-show="!collapsedSections.closing" class="panel-collapsible">
+              <div class="panel-body form-grid">
+              <v-text-field v-model="draft.closing.eyebrow" label="Small label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.closing.title" label="Section heading" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
+              <v-textarea v-model="draft.closing.body" label="Description" rows="3" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" class="field-wide" />
+              <v-text-field v-model="draft.closing.primaryCta.label" label="Primary CTA label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.closing.secondaryCta.label" label="Secondary CTA label" :disabled="!editingSections.closing" hide-details density="comfortable" variant="outlined" />
               </div>
-              <Flag :size="20" aria-hidden="true" />
-            </div>
-
-            <div class="panel-body form-grid">
-              <label class="field">
-                <span>Small label</span>
-                <input v-model="draft.closing.eyebrow" type="text" />
-              </label>
-              <label class="field">
-                <span>Section heading</span>
-                <input v-model="draft.closing.title" type="text" />
-              </label>
-              <label class="field wide">
-                <span>Description</span>
-                <textarea v-model="draft.closing.body" rows="3"></textarea>
-              </label>
-              <label class="field">
-                <span>Primary CTA label</span>
-                <input v-model="draft.closing.primaryCta.label" type="text" />
-              </label>
-              <label class="field">
-                <span>Secondary CTA label</span>
-                <input v-model="draft.closing.secondaryCta.label" type="text" />
-              </label>
-            </div>
-          </section>
+              </div>
+            </v-expand-transition>
+          </v-card>
 
         </div>
+    </v-fade-transition>
       </main>
     </div>
-  </div>
+
+    <!-- ── Vuetify Confirm Dialog ── -->
+    <v-dialog v-model="confirmDialog" max-width="430" persistent>
+      <v-card>
+        <v-card-title class="font-weight-bold">{{ confirmData.title }}</v-card-title>
+        <v-card-text class="text-body-2">{{ confirmData.body }}</v-card-text>
+        <v-divider />
+        <v-card-actions class="pa-4">
+          <v-spacer />
+          <v-btn variant="tonal" @click="confirmDialog = false">Cancel</v-btn>
+          <v-btn color="error" variant="elevated" @click="confirmData.onConfirm(); confirmDialog = false">
+            Confirm
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-app>
 </template>
 
 <style scoped>
@@ -888,16 +1036,7 @@ function cloneCard(card: SupportCard): SupportCard {
 
 .manager-main {
   min-height: 100vh;
-  padding: 1.25rem;
-  padding-top: calc(60px + 1.25rem);
-}
-
-.manager-hero,
-.editor-panel {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
+  padding: 1.5rem 2rem 2.5rem;
 }
 
 .manager-hero {
@@ -905,17 +1044,15 @@ function cloneCard(card: SupportCard): SupportCard {
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 1rem 1.1rem;
-}
-
-.manager-hero h1,
-.manager-hero p,
-.editor-panel h2,
-.editor-panel p {
-  margin: 0;
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
 .manager-hero h1 {
+  margin: 0;
   color: var(--admin-theme-contrast);
   font-size: 1.32rem;
   line-height: 1.2;
@@ -926,161 +1063,258 @@ function cloneCard(card: SupportCard): SupportCard {
   gap: 0.32rem;
 }
 
-.manager-meta,
-.hero-actions,
-.card-actions,
-.panel-icons {
+.hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ── Unsaved-changes indicator ── */
+.unsaved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.unsaved-badge .v-icon {
+  color: var(--admin-theme-primary);
+}
+
+/* ── Edit / Cancel / Done action group ── */
+.edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.manager-meta span {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 999px;
-  background: var(--admin-theme-surface-soft);
-  color: var(--admin-theme-muted);
-  padding: 0.18rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.eyebrow,
 .panel-kicker {
   color: var(--admin-theme-primary-deep);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
-.btn,
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0.55rem 0.8rem;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
+/* ── Vuetify overrides ── */
+.editor-panel {
+  overflow: hidden;
+  border: 1px solid var(--admin-theme-border) !important;
+  background: var(--admin-theme-surface) !important;
+  box-shadow: var(--admin-theme-shadow) !important;
 }
 
-.btn:hover,
-.icon-btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn:disabled,
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none;
-}
-
-.btn-primary {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  color: #ffffff;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
-}
-
-.btn-secondary,
-.btn-ghost,
-.icon-btn {
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
-  color: var(--admin-theme-contrast);
-}
-
-.btn-ghost {
-  background: var(--admin-theme-surface);
-}
-
-.icon-btn {
-  width: 34px;
-  min-height: 34px;
-  padding: 0;
-}
-
-.icon-btn.danger {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
-}
-
-.btn-secondary:hover,
-.btn-ghost:hover,
-.icon-btn:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.icon-btn.danger:hover {
-  border-color: var(--admin-theme-danger);
-  background: var(--admin-theme-danger);
-  color: #ffffff;
-}
-
-.state-card {
-  margin-top: 1rem;
-  border: 1px solid var(--admin-theme-border);
+.v-card.editor-panel {
   border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
-  padding: 1rem;
 }
 
-.state-card-error {
+.editor-panel.editing {
+  border-color: var(--admin-theme-primary) !important;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 10%, transparent),
+    var(--admin-theme-shadow) !important;
+  background: color-mix(in srgb, var(--admin-theme-surface) 94%, var(--admin-theme-primary) 6%) !important;
+}
+
+.panel-toolbar {
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface)) !important;
+  border-bottom: 1px solid var(--admin-theme-border) !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.panel-toolbar :deep(.v-toolbar__content) {
+  height: auto !important;
+  padding: 1.25rem 1.5rem !important;
+  gap: 1rem;
+}
+
+.panel-toolbar :deep(.v-toolbar-title) {
+  margin-inline-start: 0 !important;
+  flex: 1 1 auto;
+}
+
+.panel-toolbar h2 {
+  color: var(--admin-theme-contrast);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+/* ── Toolbar action group ── */
+.toolbar-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  color: var(--admin-theme-danger);
+  gap: 0.5rem;
 }
 
+.toolbar-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--admin-theme-border);
+  margin: 0 0.1rem;
+}
+
+/* Rotate chevron when collapsed */
+.rotate-neg-90 {
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+
+/*
+  Vuetify fades disabled buttons to 26% opacity, which turns a tonal button
+  (like "Save changes" when there's nothing to save) into an almost invisible
+  smear. Keep it as legible/shaped as its enabled "View page" sibling and
+  show the disabled state through color instead of opacity.
+*/
+.v-btn--disabled {
+  opacity: 1 !important;
+}
+
+.v-btn--disabled.v-btn--variant-tonal {
+  color: var(--admin-theme-muted) !important;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface)) !important;
+}
+
+.v-btn--disabled.v-btn--variant-outlined {
+  color: var(--admin-theme-muted) !important;
+  border-color: var(--admin-theme-border) !important;
+}
+
+.v-btn--disabled .v-btn__overlay {
+  opacity: 0 !important;
+}
+
+/* Vuetify text field overrides for theme consistency */
+:deep(.v-field--variant-outlined) {
+  background: var(--admin-theme-surface);
+}
+
+:deep(.v-field--variant-outlined .v-field__outline__start),
+:deep(.v-field--variant-outlined .v-field__outline__end),
+:deep(.v-field--variant-outlined .v-field__outline__notch::before),
+:deep(.v-field--variant-outlined .v-field__outline__notch::after) {
+  border-color: var(--admin-theme-border-strong);
+}
+
+:deep(.v-field__input),
+:deep(textarea.v-field__input) {
+  color: var(--admin-theme-contrast);
+  font-weight: 600;
+}
+
+:deep(.v-label.v-field-label) {
+  color: var(--admin-theme-muted);
+  font-weight: 600;
+  opacity: 1;
+}
+
+/*
+  Vuetify's outlined floating label rests centered on the field's top
+  border (translateY(-50%)) — the classic "notched outline" look. Our
+  fields double as read-only value displays, so the label reads more like
+  a field caption than a notch; lift it clear of the border instead of
+  overlapping it. The transform is purely visual (doesn't reserve layout
+  space), so the row gap above (.form-grid / .card-form-grid) is widened
+  to match, or this would just collide with the field in the row above.
+*/
+:deep(.v-field--variant-outlined .v-label.v-field-label--floating) {
+  transform: translateY(-90%) !important;
+}
+
+/*
+  Vuetify dims disabled fields via opacity on the whole field, which fades
+  real content (not just affordance) to near-illegible gray. Fields are used
+  here to show saved page content in "view" mode, so keep text at full
+  contrast and signal read-only via background + cursor instead.
+*/
+:deep(.v-input--disabled) {
+  opacity: 1;
+}
+
+:deep(.v-field--disabled) {
+  opacity: 1;
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 55%, var(--admin-theme-surface));
+  cursor: not-allowed;
+}
+
+:deep(.v-field--disabled .v-field__input) {
+  color: var(--admin-theme-contrast-soft);
+  -webkit-text-fill-color: var(--admin-theme-contrast-soft);
+  cursor: not-allowed;
+}
+
+:deep(.v-field--disabled .v-label.v-field-label) {
+  color: var(--admin-theme-muted);
+  opacity: 1;
+}
+
+:deep(.v-field--disabled .v-field__outline__start),
+:deep(.v-field--disabled .v-field__outline__end),
+:deep(.v-field--disabled .v-field__outline__notch::before),
+:deep(.v-field--disabled .v-field__outline__notch::after) {
+  border-color: var(--admin-theme-border);
+  opacity: 1;
+}
+
+/* ── Content grid ── */
 .content-grid {
   display: grid;
-  gap: 0.9rem;
+  gap: 1.1rem;
   margin-top: 1rem;
 }
 
+/* ── Section navigation ── */
 .section-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   border: 1px solid var(--admin-theme-border);
   border-radius: 8px;
   background: var(--admin-theme-surface);
   box-shadow: var(--admin-theme-shadow);
-  padding: 0.5rem 0.6rem;
+  padding: 0.75rem 1.5rem;
   position: sticky;
   top: calc(60px + 0.5rem);
   z-index: 40;
 }
 
+.section-nav-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.section-nav-save {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
 .section-nav-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: transparent;
+  gap: 0.4rem;
+  min-height: 36px;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 7px;
+  background: var(--admin-theme-surface);
   color: var(--admin-theme-muted);
-  padding: 0.4rem 0.7rem;
+  padding: 0.45rem 0.85rem;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -1090,71 +1324,40 @@ function cloneCard(card: SupportCard): SupportCard {
 }
 
 .section-nav-btn:hover {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
   background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
   color: var(--admin-theme-primary-deep);
 }
 
 .section-nav-btn.active {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 32%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
   color: var(--admin-theme-primary-deep);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 12%, transparent);
 }
 
 .section-group {
   scroll-margin-top: 120px;
 }
 
-.section-group-label {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 0.6rem 0 0;
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.section-group-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 18%, var(--admin-theme-border));
-}
-
-.editor-panel {
+/* ── Collapsible panels ── */
+.panel-collapsible {
   overflow: hidden;
 }
 
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 44%, var(--admin-theme-surface));
-  padding: 0.85rem 1rem;
-}
-
-.panel-header h2 {
-  color: var(--admin-theme-contrast);
-  font-size: 1rem;
-}
-
 .panel-body {
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
+/* ── Image editor grid ── */
 .image-editor-grid {
   display: grid;
   grid-template-columns: minmax(300px, 0.72fr) minmax(360px, 1.28fr);
-  gap: 1.1rem;
-  padding: 1.1rem;
+  gap: 1.25rem;
+  padding: 1.5rem;
 }
 
 .image-preview {
-  margin: 0;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
   border-radius: 7px;
@@ -1164,17 +1367,7 @@ function cloneCard(card: SupportCard): SupportCard {
     0 12px 24px rgba(15, 95, 73, 0.11);
 }
 
-.image-preview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-preview {
-  aspect-ratio: 16 / 10;
-}
-
+/* ── Form layouts ── */
 .form-stack,
 .cards-list {
   display: grid;
@@ -1184,90 +1377,90 @@ function cloneCard(card: SupportCard): SupportCard {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1.6rem 0.85rem;
 }
 
-.wide {
+.form-grid .field-wide {
   grid-column: 1 / -1;
 }
 
-.field,
-.upload-box {
+/* ── Image upload panel (preview + button) ── */
+.image-upload-panel {
   display: grid;
-  gap: 0.35rem;
-  color: var(--admin-theme-muted);
-  font-size: 0.8rem;
-  font-weight: 800;
+  gap: 0.75rem;
+  align-content: start;
 }
 
-.field span,
-.upload-box span {
-  color: var(--admin-theme-contrast-soft);
-}
-
-.field input,
-.field textarea,
-.upload-box input {
-  width: 100%;
-  border: 1px solid var(--admin-theme-border-strong);
-  border-radius: 6px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.65rem 0.75rem;
-}
-
-.field textarea {
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.field input:focus,
-.field textarea:focus,
-.upload-box input:focus {
-  border-color: var(--admin-theme-primary);
-  outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
-}
-
-.upload-box {
-  grid-template-columns: auto 1fr;
+/* ── Upload button (modern pill button, replaces the old file-input dropzone) ── */
+.upload-btn {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  border: 1px dashed var(--admin-theme-border-strong);
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 38%, var(--admin-theme-surface));
-  padding: 0.75rem;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 40px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
+  padding: 0.65rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.upload-box input {
-  grid-column: 1 / -1;
-  padding: 0.55rem;
+.upload-btn:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary) 20%, var(--admin-theme-surface));
 }
 
-.image-control-panel {
-  display: grid;
-  gap: 0.85rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 42%, var(--admin-theme-surface));
-  padding: 0.9rem;
+.upload-btn:focus-within {
+  outline: 3px solid color-mix(in srgb, var(--admin-theme-primary) 20%, transparent);
+  outline-offset: 2px;
+}
+
+.upload-btn:has(input:disabled) {
+  cursor: not-allowed;
+  color: var(--admin-theme-muted);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 55%, var(--admin-theme-surface));
+}
+
+/* Native file input stays functional/accessible via the wrapping <label>, just visually hidden */
+.upload-btn input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .cards-list {
   gap: 0.95rem;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
 .cards-list.two-col {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* ── Card editor ── */
 .card-editor {
   border: 1px solid var(--admin-theme-border);
   border-radius: 8px;
   background: var(--admin-theme-surface);
   overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-editor:hover {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  box-shadow: 0 4px 14px rgba(15, 95, 73, 0.08);
 }
 
 .card-editor-header {
@@ -1277,7 +1470,7 @@ function cloneCard(card: SupportCard): SupportCard {
   gap: 1rem;
   border-bottom: 1px solid var(--admin-theme-border);
   background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
-  padding: 0.75rem 0.85rem;
+  padding: 0.75rem 1.5rem;
 }
 
 .card-heading {
@@ -1319,33 +1512,27 @@ function cloneCard(card: SupportCard): SupportCard {
 }
 
 .card-editor-top {
-  display: grid;
-  grid-template-columns: 170px minmax(280px, 1fr);
-  align-items: start;
-  gap: 1rem;
-  padding: 0.9rem 0.9rem 0;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.card-image-upload {
+  width: 200px;
 }
 
 .card-preview {
-  width: 170px;
+  width: 100%;
   aspect-ratio: 1.35;
-  flex: 0 0 auto;
-}
-
-.card-image-controls {
-  display: grid;
-  gap: 0.85rem;
 }
 
 .card-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-  padding: 0.9rem;
+  gap: 1.6rem 0.85rem;
+  padding: 1.25rem 1.5rem;
 }
 
-:global(.admin-dark) .btn-primary {
-  color: #071311;
+.card-form-grid .field-wide {
+  grid-column: 1 / -1;
 }
 
 @media (min-width: 900px) {
@@ -1367,30 +1554,42 @@ function cloneCard(card: SupportCard): SupportCard {
   }
 
   .section-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .section-nav-tabs {
     overflow-x: auto;
+    flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
 
-  .section-nav::-webkit-scrollbar {
+  .section-nav-tabs::-webkit-scrollbar {
     display: none;
   }
 
+  .section-nav-save {
+    justify-content: space-between;
+  }
+
   .manager-hero,
-  .panel-header,
   .card-editor-header {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .hero-actions,
-  .hero-actions .btn,
-  .card-actions {
+  .hero-actions {
     width: 100%;
   }
 
-  .card-actions .icon-btn {
-    flex: 1;
+  .panel-toolbar :deep(.v-toolbar__content) {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .toolbar-actions {
+    flex-wrap: wrap;
   }
 
   .image-editor-grid,
@@ -1399,11 +1598,7 @@ function cloneCard(card: SupportCard): SupportCard {
     grid-template-columns: 1fr;
   }
 
-  .card-editor-top {
-    grid-template-columns: 1fr;
-  }
-
-  .card-preview {
+  .card-image-upload {
     width: 100%;
   }
 
