@@ -1,625 +1,677 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import {
-  BookOpen,
-  ChevronDown,
-  ExternalLink,
-  FolderOpen,
-  Image as ImageIcon,
-  Layers,
-  Pencil,
-  Plus,
-  Save,
-  Shield,
-  Trash2,
-} from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import ImagePickerField from '@/components/admin/ImagePickerField.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminUploadButton from '@/components/admin/AdminUploadButton.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
-const ui = useUiStore()
+const PROGRAM_SLUG = 'programs-child-protection'
+const MAX_STATS = 6
+const MAX_TEAM_CARDS = 8
+const MAX_LIST_ITEMS = 10
+const GALLERY_SIZE = 6
+const TEAM_ICONS: string[] = ['compass', 'map', 'heart', 'chart']
 
-/* ─── Types ─────────────────────────────────────── */
-interface EditableSection {
-  id: string
-  label: string
-  heading: string
-  body: string
-  items: string
-}
+type GalleryImage = { id: string; label: string; url: string }
+type StatItem = { number: string; label: string; description: string }
+type TeamCard = { role: string; icon: string; desc: string }
+type EditableSection = { id: string; label: string; heading: string; body: string; items: string }
 
-interface PageDraft {
-  slug: string
-  route: string
-  group: string
-  title: string
+type ChildProtectionDraft = {
   eyebrow: string
   headline: string
   intro: string
   heroImageUrl: string
-  primaryAction: string
-  secondaryAction: string
-  sections: EditableSection[]
-  updatedAt: string
+  images: GalleryImage[]
+  stats: StatItem[]
+  workItems: string[]
+  approachText: string
+  team: TeamCard[]
 }
 
-interface StatItem {
-  number: string
-  label: string
-  description: string
+// The public Child Protection page never reads the "why it matters" section
+// (confirmed — no reference in ProgramsChildProtectionView.vue), so there's
+// no editor for it, but it's round-tripped unchanged so saving never drops it.
+const staticWhySection: EditableSection = {
+  id: 'child-protection-why',
+  label: 'Why it matters',
+  heading: 'Why it matters',
+  body: 'The border with Vietnam brings both opportunity and risk. Community-led safeguarding is the most durable defense.',
+  items: "The safest village is one where every adult knows every child's name\nEarly identification prevents trafficking before it happens\nLocal networks respond faster than any external agency\nChildren who feel safe stay in school and out of harm",
 }
 
-/* ─── Default Child Protection Page ─────────────── */
-function createDefaultCPPage(): PageDraft {
+let idCounter = 0
+function genId() {
+  return `cp-img-${++idCounter}-${Date.now()}`
+}
+
+function defaultImages(): GalleryImage[] {
+  return Array.from({ length: GALLERY_SIZE }, (_, i) => ({ id: genId(), label: `Gallery image ${i + 1}`, url: '' }))
+}
+
+const defaultContent: ChildProtectionDraft = {
+  eyebrow: 'Child Protection',
+  headline: 'Safeguarding children through local action.',
+  intro:
+    'Cross-border migration, poverty and family separation put rural Cambodian children at risk of unsafe labour and trafficking. Santi Sena works with villages, schools and pagodas to build the safety net closest to the child — before anything goes wrong.',
+  heroImageUrl: '',
+  images: defaultImages(),
+  stats: [
+    { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.' },
+    { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.' },
+    { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.' },
+  ],
+  workItems: [
+    'Anti-trafficking campaigns at borders, markets and schools',
+    'Village Child Protection Networks trained in identification and referral',
+    'Child rights advocacy with commune councils and provincial authorities',
+    'Peer-educator youth groups on safe migration, health and rights',
+    'Family reintegration support for children returning from unsafe labour',
+    'Safeguarding training for every teacher, monk and volunteer',
+  ],
+  approachText:
+    'Every network is anchored by the people children already trust — mothers, monks, teachers, commune council members. We train, coach and connect them to formal referral pathways so every case reaches the provincial social affairs office the same day it is identified.',
+  team: [
+    { role: 'Program Director', icon: 'compass', desc: 'Oversees child protection programs, advocacy, and partnerships across provinces.' },
+    { role: 'Field Coordinators', icon: 'map', desc: 'Manage child protection networks, peer education and safe migration training.' },
+    { role: 'Safeguarding Trainers', icon: 'heart', desc: 'Deliver training for teachers, monks and volunteers on child rights and referral.' },
+    { role: 'Monitoring & Evaluation', icon: 'chart', desc: 'Track case outcomes, network coverage and community impact.' },
+  ],
+}
+
+function cloneContent(content: ChildProtectionDraft): ChildProtectionDraft {
   return {
-    slug: 'programs-child-protection',
-    route: '/programs/child-protection',
-    group: 'Programs',
-    title: 'Child Protection',
-    eyebrow: 'Child Protection',
-    headline: 'Safeguarding children through local action.',
-    intro: 'Cross-border migration, poverty and family separation put rural Cambodian children at risk of unsafe labour and trafficking. Santi Sena works with villages, schools and pagodas to build the safety net closest to the child — before anything goes wrong.',
-    heroImageUrl: '',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'child-protection-work',
-        label: 'What we do',
-        heading: 'What we do',
-        body: 'Anti-trafficking campaigns, village child protection networks, peer-educator groups and family reintegration — safeguarding children through local action.',
-        items: 'Anti-trafficking campaigns at borders, markets and schools\nVillage Child Protection Networks trained in identification and referral\nChild rights advocacy with commune councils and provincial authorities\nPeer-educator youth groups on safe migration, health and rights\nFamily reintegration support for children returning from unsafe labour\nSafeguarding training for every teacher, monk and volunteer',
-      },
-      {
-        id: 'child-protection-approach',
-        label: 'Approach',
-        heading: 'Our approach',
-        body: 'Every network is anchored by the people children already trust — mothers, monks, teachers, commune council members. We train, coach and connect them to formal referral pathways so every case reaches the provincial social affairs office the same day it is identified.',
-        items: '',
-      },
-      {
-        id: 'child-protection-team',
-        label: 'Organizational Structure',
-        heading: 'Who delivers child protection on the ground',
-        body: 'Our dedicated team works across provinces building community safeguarding systems that keep children safe.',
-        items: 'Program Director | compass | Oversees child protection programs, advocacy, and partnerships across provinces.\nField Coordinators | map | Manage child protection networks, peer education and safe migration training.\nSafeguarding Trainers | heart | Deliver training for teachers, monks and volunteers on child rights and referral.\nMonitoring & Evaluation | chart | Track case outcomes, network coverage and community impact.',
-      },
-      {
-        id: 'child-protection-why',
-        label: 'Why it matters',
-        heading: 'Why it matters',
-        body: 'The border with Vietnam brings both opportunity and risk. Community-led safeguarding is the most durable defense.',
-        items: 'The safest village is one where every adult knows every child\'s name\nEarly identification prevents trafficking before it happens\nLocal networks respond faster than any external agency\nChildren who feel safe stay in school and out of harm',
-      },
-    ],
-    updatedAt: '',
+    eyebrow: content.eyebrow,
+    headline: content.headline,
+    intro: content.intro,
+    heroImageUrl: content.heroImageUrl,
+    images: content.images.map((img) => ({ ...img })),
+    stats: content.stats.map((s) => ({ ...s })),
+    workItems: [...content.workItems],
+    approachText: content.approachText,
+    team: content.team.map((t) => ({ ...t })),
   }
 }
 
-const statsBand = ref<StatItem[]>([
-  { number: '43', label: 'COMMUNES', description: 'With active Child Protection Networks.' },
-  { number: '600+', label: 'PEER EDUCATORS', description: 'Youth trained in child rights and safeguarding.' },
-  { number: '24/7', label: 'VILLAGE HOTLINES', description: 'Case referral into commune and provincial authorities.' },
-])
+const ui = useUiStore()
+useAdminTheme()
 
-/* ─── State ─────────────────────────────────────── */
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
+
 const loading = ref(false)
 const saving = ref(false)
-const page = ref<PageDraft>(createDefaultCPPage())
-const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
-const STORAGE_KEY = 'cp-dashboard-page'
+const loadedWhySection = ref<EditableSection>({ ...staticWhySection })
 
-/* ─── Collapsible panels ───────────────────────── */
-const expandedPanels = ref<Record<string, boolean>>({
-  'quick-links': true,
-  'hero-header': true,
-  'stats': true,
-  'content': true,
+const draft = reactive<ChildProtectionDraft>(cloneContent(defaultContent))
+
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+  setupSectionWatch,
+  stopSectionWatch,
+  resetEditingState,
+} = useSectionEditor([
+  {
+    key: 'header',
+    getSnapshot: () => ({ eyebrow: draft.eyebrow, headline: draft.headline, intro: draft.intro, heroImageUrl: draft.heroImageUrl }),
+    applySnapshot: (value) => {
+      draft.eyebrow = value.eyebrow
+      draft.headline = value.headline
+      draft.intro = value.intro
+      draft.heroImageUrl = value.heroImageUrl
+    },
+  },
+  {
+    key: 'images',
+    getSnapshot: () => draft.images.map((img) => ({ ...img })),
+    applySnapshot: (value) => { draft.images = value },
+  },
+  {
+    key: 'stats',
+    getSnapshot: () => draft.stats.map((s) => ({ ...s })),
+    applySnapshot: (value) => { draft.stats = value },
+  },
+  {
+    key: 'content',
+    getSnapshot: () => ({ workItems: [...draft.workItems], approachText: draft.approachText }),
+    applySnapshot: (value) => {
+      draft.workItems = value.workItems
+      draft.approachText = value.approachText
+    },
+  },
+  {
+    key: 'team',
+    getSnapshot: () => draft.team.map((t) => ({ ...t })),
+    applySnapshot: (value) => { draft.team = value },
+  },
+])
+
+const originalSnapshot = ref('')
+const hasChanges = computed(() => JSON.stringify(cloneContent(draft)) !== originalSnapshot.value)
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify(cloneContent(draft))
+}
+
+const canAddStat = computed(() => draft.stats.length < MAX_STATS)
+const canAddTeamCard = computed(() => draft.team.length < MAX_TEAM_CARDS)
+const canAddWorkItem = computed(() => draft.workItems.length < MAX_LIST_ITEMS)
+
+const sections = [
+  { id: 'cp-header', label: 'Header', icon: 'mdi-image-text' },
+  { id: 'cp-images', label: 'Images', icon: 'mdi-image-multiple' },
+  { id: 'cp-stats', label: 'Stats', icon: 'mdi-chart-box' },
+  { id: 'cp-content', label: 'Content', icon: 'mdi-text-box' },
+  { id: 'cp-team', label: 'Team', icon: 'mdi-account-group' },
+] as const
+
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
+
+useUnsavedChangesGuard(hasChanges)
+
+onMounted(() => {
+  void loadPage()
 })
 
-function togglePanel(id: string) {
-  expandedPanels.value[id] = !expandedPanels.value[id]
-}
+onUnmounted(() => {
+  stopSectionWatch()
+})
 
-/* ─── Confirmation helpers ─────────────────────── */
-function confirmDeleteStat(index: number) {
-  const stat = statsBand.value[index]
-  const label = stat?.label?.trim() || `Stat ${index + 1}`
-  ui.openModal(
-    'Delete statistic',
-    `Permanently delete <strong>${stat?.number || ''} ${label}</strong>? This action cannot be undone.`,
-    () => {
-      statsBand.value.splice(index, 1)
-      ui.addToast(`Statistic "${label}" deleted.`, 'success')
-    },
-  )
-}
-
-function loadFromLocalStorage(): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const saved = JSON.parse(raw) as Record<string, unknown>
-      const defaults = createDefaultCPPage()
-      page.value = {
-        ...defaults,
-        eyebrow: (saved.eyebrow as string) || defaults.eyebrow,
-        headline: (saved.headline as string) || defaults.headline,
-        intro: (saved.intro as string) || defaults.intro,
-        heroImageUrl: (saved.heroImageUrl as string) || '',
-        primaryAction: (saved.primaryAction as string) || '',
-        secondaryAction: (saved.secondaryAction as string) || '',
-        sections: saved.sections && Array.isArray(saved.sections)
-          ? mergeSectionsWithDefaults(saved.sections as EditableSection[], defaults)
-          : defaults.sections,
-        updatedAt: (saved.updatedAt as string) || '',
-      }
-      if (saved.statsBand && Array.isArray(saved.statsBand) && saved.statsBand.length > 0) {
-        statsBand.value = saved.statsBand as StatItem[]
-      }
-    }
-  } catch { /* ignore */ }
-}
-
-/* ─── Merge DB sections with defaults to fill empty fields ── */
-function mergeSectionsWithDefaults(dbSections: EditableSection[], defaults: PageDraft): EditableSection[] {
-  // Build result in the CORRECT order (matching defaults), using DB data when available
-  const dbMap = new Map<string, EditableSection>()
-  for (const s of dbSections) dbMap.set(s.id, s)
-
-  return defaults.sections.map(defSec => {
-    const dbSec = dbMap.get(defSec.id)
-    if (!dbSec) return { ...defSec } // missing from DB — use default
-    return {
-      id: dbSec.id,
-      label: dbSec.label?.trim() ? dbSec.label : defSec.label,
-      heading: dbSec.heading?.trim() ? dbSec.heading : defSec.heading,
-      body: dbSec.body?.trim() ? dbSec.body : defSec.body,
-      items: dbSec.items?.trim() ? dbSec.items : defSec.items,
-    }
-  })
-}
-
-function saveToLocalStorage(): void {
-  try {
-    const p = page.value
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      eyebrow: p.eyebrow,
-      headline: p.headline,
-      intro: p.intro,
-      heroImageUrl: p.heroImageUrl,
-      primaryAction: p.primaryAction,
-      secondaryAction: p.secondaryAction,
-      sections: p.sections,
-      statsBand: statsBand.value,
-      updatedAt: new Date().toISOString(),
-    }))
-  } catch { /* ignore */ }
-}
-
-function snapshotData(): string {
-  return JSON.stringify({
-    eyebrow: page.value.eyebrow,
-    headline: page.value.headline,
-    intro: page.value.intro,
-    heroImageUrl: page.value.heroImageUrl,
-    primaryAction: page.value.primaryAction,
-    secondaryAction: page.value.secondaryAction,
-    sections: page.value.sections.map(s => ({ ...s })),
-    statsBand: statsBand.value.map(s => ({ ...s })),
-  })
-}
-
-const isDirty = computed(() => savedSnapshot.value !== snapshotData())
-
-/* ─── Load from programs table ─────────────────── */
-async function loadPageContent() {
+async function loadPage() {
+  resetEditingState()
   loading.value = true
+
   try {
     const { data, error } = await supabase
       .from('programs')
-      .select('title, summary, description, metadata, updated_at')
-      .eq('slug', 'programs-child-protection')
+      .select('metadata')
+      .eq('slug', PROGRAM_SLUG)
       .maybeSingle()
 
-    if (error) {
-      console.warn('Supabase load failed, falling back to localStorage:', error.message)
-      loadFromLocalStorage()
-      storageMode.value = 'local'
-      savedSnapshot.value = snapshotData()
-      loading.value = false
-      return
-    }
+    if (error) throw error
 
-    if (data) {
-      const defaults = createDefaultCPPage()
-      const meta = data.metadata as Record<string, unknown> | null
+    if (data?.metadata) {
+      const meta = data.metadata as Record<string, unknown>
 
-      page.value = {
-        ...defaults,
-        title: data.title || defaults.title,
-        eyebrow: (meta?.eyebrow as string) || defaults.eyebrow,
-        headline: (meta?.headline as string) || defaults.headline,
-        intro: data.summary || (meta?.intro as string) || defaults.intro,
-        heroImageUrl: (meta?.heroImageUrl as string) || '',
-        primaryAction: (meta?.primaryAction as string) || '',
-        secondaryAction: (meta?.secondaryAction as string) || '',
-        sections: meta?.sections && Array.isArray(meta.sections)
-          ? mergeSectionsWithDefaults(meta.sections as EditableSection[], defaults)
-          : defaults.sections,
-        updatedAt: data.updated_at || '',
+      if (typeof meta.eyebrow === 'string' && meta.eyebrow.trim()) draft.eyebrow = meta.eyebrow.trim()
+      if (typeof meta.headline === 'string' && meta.headline.trim()) draft.headline = meta.headline.trim()
+      if (typeof meta.intro === 'string' && meta.intro.trim()) draft.intro = meta.intro.trim()
+      if (typeof meta.heroImageUrl === 'string') draft.heroImageUrl = meta.heroImageUrl
+
+      const galleryFromMeta = meta.gallery as GalleryImage[] | undefined
+      if (Array.isArray(galleryFromMeta) && galleryFromMeta.length > 0) {
+        draft.images = galleryFromMeta.map((g, i) => ({
+          id: g.id || genId(),
+          label: g.label?.trim() ? g.label : `Gallery image ${i + 1}`,
+          url: g.url || '',
+        }))
+      }
+      while (draft.images.length < GALLERY_SIZE) {
+        draft.images.push({ id: genId(), label: `Gallery image ${draft.images.length + 1}`, url: '' })
       }
 
-      if (meta?.statsBand && Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
-        statsBand.value = meta.statsBand as StatItem[]
+      if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+        draft.stats = meta.statsBand as StatItem[]
+      }
+
+      if (Array.isArray(meta.sections)) {
+        const dbSections = meta.sections as { id: string; body?: string; items?: string; label?: string; heading?: string }[]
+
+        const workSection = dbSections.find((s) => s.id === 'child-protection-work')
+        if (workSection?.items?.trim()) {
+          draft.workItems = workSection.items.split('\n').map((l) => l.trim()).filter(Boolean)
+        }
+
+        const approachSection = dbSections.find((s) => s.id === 'child-protection-approach')
+        if (approachSection?.body?.trim()) draft.approachText = approachSection.body.trim()
+
+        const teamSection = dbSections.find((s) => s.id === 'child-protection-team')
+        if (teamSection?.items?.trim()) {
+          const lines = teamSection.items.split('\n').map((l) => l.trim()).filter(Boolean)
+          if (lines.length) {
+            draft.team = lines.map((line) => {
+              const parts = line.split('|').map((p) => p.trim())
+              return { role: parts[0] || '', icon: parts[1] || 'chart', desc: parts[2] || parts[0] || '' }
+            })
+          }
+        }
+
+        const whySection = dbSections.find((s) => s.id === 'child-protection-why')
+        if (whySection) {
+          loadedWhySection.value = {
+            id: whySection.id,
+            label: whySection.label || staticWhySection.label,
+            heading: whySection.heading || staticWhySection.heading,
+            body: whySection.body || staticWhySection.body,
+            items: whySection.items || staticWhySection.items,
+          }
+        }
       }
 
       storageMode.value = 'supabase'
-      saveToLocalStorage()
-    } else {
-      loadFromLocalStorage()
-      storageMode.value = 'local'
     }
-
-    savedSnapshot.value = snapshotData()
-  } catch (e: unknown) {
-    console.warn('Load crashed:', e)
-    loadFromLocalStorage()
+  } catch (error) {
+    console.warn('[ChildProtectionDashboard] load failed:', error)
     storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
+    ui.addToast('Could not load from database — showing last saved draft.', 'error')
   } finally {
     loading.value = false
+    updateSnapshot()
+    setupSectionWatch()
   }
 }
 
-/* ─── Save to programs table ────────────────────── */
-async function savePageContent() {
+async function savePage() {
+  if (saving.value) return
+
+  const validationError = validateDraft()
+  if (validationError) {
+    ui.addToast(validationError, 'error')
+    return
+  }
+
   saving.value = true
+
   try {
-    const now = new Date().toISOString()
-    const p = page.value
+    const workItems = draft.workItems.filter((line) => line.trim()).join('\n')
+    const teamItems = draft.team.map((c) => `${c.role} | ${c.icon} | ${c.desc}`).join('\n')
 
     const payload = {
-      slug: p.slug,
-      title: p.title.trim() || p.headline.trim() || p.slug,
+      slug: PROGRAM_SLUG,
+      title: draft.headline.trim() || 'Child Protection',
       pillar: 'Child Protection',
-      summary: p.intro || '',
-      description: p.intro || '',
+      summary: draft.intro,
+      description: draft.intro,
       status: 'published',
       metadata: {
-        eyebrow: p.eyebrow,
-        headline: p.headline,
-        intro: p.intro,
-        heroImageUrl: p.heroImageUrl,
-        primaryAction: p.primaryAction,
-        secondaryAction: p.secondaryAction,
-        sections: p.sections.map(s => ({
-          id: s.id,
-          label: s.label,
-          heading: s.heading,
-          body: s.body,
-          items: s.items,
-        })),
-        statsBand: statsBand.value,
+        eyebrow: draft.eyebrow,
+        headline: draft.headline,
+        intro: draft.intro,
+        heroImageUrl: draft.heroImageUrl,
+        primaryAction: '',
+        secondaryAction: '',
+        gallery: draft.images,
+        statsBand: draft.stats,
+        sections: [
+          {
+            id: 'child-protection-work',
+            label: 'What we do',
+            heading: 'What we do',
+            body: 'Full list of what the child protection program does, shown on the public page.',
+            items: workItems,
+          },
+          {
+            id: 'child-protection-approach',
+            label: 'Approach',
+            heading: 'Our approach',
+            body: draft.approachText,
+            items: '',
+          },
+          {
+            id: 'child-protection-team',
+            label: 'Organizational Structure',
+            heading: 'Who delivers child protection on the ground',
+            body: 'Our dedicated team works across provinces building community safeguarding systems that keep children safe.',
+            items: teamItems,
+          },
+          loadedWhySection.value,
+        ],
       },
-      updated_at: now,
+      updated_at: new Date().toISOString(),
     }
 
-    saveToLocalStorage()
-
-    const { error } = await supabase
-      .from('programs')
-      .upsert(payload, { onConflict: 'slug' })
-
-    if (error) {
-      console.warn('Supabase save failed:', error)
-      ui.addToast(`DB write blocked: ${error.message}`, 'error')
-      saveToLocalStorage()
-      storageMode.value = 'local'
-      savedSnapshot.value = snapshotData()
-      saving.value = false
-      return
-    }
+    const { error } = await supabase.from('programs').upsert(payload, { onConflict: 'slug' })
+    if (error) throw error
 
     storageMode.value = 'supabase'
-    savedSnapshot.value = snapshotData()
-    ui.addToast(`${p.title} page saved!`, 'success')
-  } catch (e: unknown) {
-    console.error('Save crashed:', e)
-    ui.addToast('Saved to browser (database error)', 'info')
+    ui.addToast('Child Protection page saved.', 'success')
+    updateSnapshot()
+  } catch (error) {
+    console.error('[ChildProtectionDashboard] save failed:', error)
     storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
+    ui.addToast(error instanceof Error ? `Could not save: ${error.message}` : 'Could not save Child Protection page.', 'error')
   } finally {
     saving.value = false
   }
 }
 
-function parsedItemsForSection(section: EditableSection): string[] {
-  return section.items
-    ? section.items.split('\n').map(l => l.trim()).filter(Boolean)
-    : []
+function validateDraft() {
+  if (!draft.headline.trim()) return 'Headline is required.'
+  if (!draft.stats.length) return 'Add at least one statistic.'
+  if (draft.team.some((c) => !c.role.trim())) return 'Each team card needs a role.'
+  return ''
 }
 
-function formatDate(value: string) {
-  if (!value) return 'Not saved yet'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Not saved yet'
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+function addStat() {
+  if (!canAddStat.value) return
+  draft.stats.push({ number: '', label: '', description: '' })
 }
 
-onMounted(async () => {
-  await loadPageContent()
-})
+function removeStat(index: number) {
+  const stat = draft.stats[index]
+  if (!stat) return
+  confirmDialog('Remove statistic?', `Remove "${stat.number} ${stat.label}" from the public Child Protection page?`, () => {
+    draft.stats.splice(index, 1)
+    ui.addToast('Statistic removed.', 'warning')
+  })
+}
+
+function addTeamCard() {
+  if (!canAddTeamCard.value) return
+  draft.team.push({ role: 'New role', icon: 'chart', desc: 'Describe this role.' })
+}
+
+function removeTeamCard(index: number) {
+  const card = draft.team[index]
+  if (!card) return
+  confirmDialog('Remove team card?', `Remove "${card.role}" from the organizational structure?`, () => {
+    draft.team.splice(index, 1)
+    ui.addToast('Team card removed.', 'warning')
+  })
+}
+
+function addWorkItem() {
+  if (!canAddWorkItem.value) return
+  draft.workItems.push('New item')
+}
+
+function removeWorkItem(index: number) {
+  draft.workItems.splice(index, 1)
+}
+
+function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
+  const target = index + direction
+  if (target < 0 || target >= items.length) return
+  const current = items[index]
+  const next = items[target]
+  if (!current || !next) return
+  items[index] = next
+  items[target] = current
+}
 </script>
 
 <template>
-  <div :class="['cp-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['child-protection-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
 
       <main class="manager-main">
         <header class="manager-hero">
-          <div class="hero-glow" aria-hidden="true"></div>
-          <div class="hero-accent-line" aria-hidden="true"></div>
-          <div class="hero-content-wrap">
-            <div class="hero-icon-wrap">
-              <Shield :size="22" aria-hidden="true" />
-            </div>
-            <div class="manager-title">
-              <p class="eyebrow">Child Protection Program</p>
-              <h1>Manage Child Protection page</h1>
-              <div class="manager-meta" aria-label="Editable child protection summary">
-                <span>{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</span>
-                <span>{{ statsBand.length }} stats</span>
-                <span>{{ page.sections.length }} sections</span>
-                <span v-if="isDirty" class="meta-dirty">Unsaved changes</span>
-                <span v-else-if="page.updatedAt">Saved {{ formatDate(page.updatedAt) }}</span>
-              </div>
-            </div>
+          <div class="manager-title">
+            <h1>Manage Child Protection page</h1>
+            <v-chip size="small" variant="tonal" :color="storageMode === 'supabase' ? 'success' : 'warning'">
+              {{ storageMode === 'supabase' ? 'Database' : 'Local only' }}
+            </v-chip>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/programs/child-protection">
-              <ExternalLink :size="16" aria-hidden="true" />
-              <span>View page</span>
-            </RouterLink>
-            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty" @click="savePageContent">
-              <Save :size="16" aria-hidden="true" />
-              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
-            </button>
+            <v-btn variant="tonal" to="/programs/child-protection" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">
-          <span class="state-spinner" aria-hidden="true"></span>
-          <span>Loading Child Protection content...</span>
-        </div>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Child Protection content...</span>
+          </div>
 
-        <div v-else class="content-grid">
-          <!-- ═══ Quick links ═══ -->
-          <section class="editor-panel quick-links-panel" aria-labelledby="quick-links-heading">
-            <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <FolderOpen :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Shortcuts</p>
-                  <h2 id="quick-links-heading">Related tools</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }" aria-hidden="true" />
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['quick-links']" class="panel-body quick-links-body">
-                <RouterLink class="quick-link" to="/admin/media">
-                  <FolderOpen :size="18" aria-hidden="true" />
-                  <div>
-                    <strong>Media Library</strong>
-                    <span>Upload images for this page</span>
-                  </div>
-                </RouterLink>
-                <RouterLink class="quick-link" to="/admin/modules/programs">
-                  <Layers :size="18" aria-hidden="true" />
-                  <div>
-                    <strong>Program Records</strong>
-                    <span>Manage child protection data entries</span>
-                  </div>
-                </RouterLink>
-              </div>
-            </Transition>
-          </section>
+          <div v-else key="content" class="content-grid">
 
-          <!-- ═══ Hero & header ═══ -->
-          <section class="editor-panel" aria-labelledby="hero-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['hero-header']" @click="togglePanel('hero-header')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <Shield :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Public page</p>
-                  <h2 id="hero-heading">Hero &amp; header</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['hero-header'] }" aria-hidden="true" />
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['hero-header']" class="image-editor-grid">
-                <figure class="image-preview hero-preview">
-                  <img v-if="page.heroImageUrl" :src="page.heroImageUrl" alt="" />
-                  <div v-else class="slot-empty">
-                    <ImageIcon :size="22" aria-hidden="true" />
-                    <span>No image set</span>
-                  </div>
-                </figure>
+          <AdminSectionNav
+            :sections="sections"
+            :active-section="activeSection"
+            :has-changes="hasChanges"
+            :saving="saving"
+            aria-label="Child Protection page sections"
+            save-label="Save changes"
+            @navigate="scrollToSection"
+            @save="savePage"
+          />
 
-                <div class="form-stack">
-                  <div class="form-grid">
-                    <label class="field">
-                      <span>Eyebrow / badge</span>
-                      <input v-model="page.eyebrow" type="text" placeholder="e.g. Child Protection" />
-                    </label>
-                    <label class="field wide">
-                      <span>Headline (main title)</span>
-                      <input v-model="page.headline" type="text" placeholder="Safeguarding children through local action." />
-                    </label>
-                    <label class="field wide">
-                      <span>Intro / description</span>
-                      <textarea v-model="page.intro" rows="3" placeholder="Cross-border migration, poverty and family separation put rural Cambodian children at risk."></textarea>
-                    </label>
-                  </div>
-
-                  <ImagePickerField
-                    v-model="page.heroImageUrl"
-                    label="Upload or paste URL"
-                    hint="Background image for the hero section"
-                    hide-preview
-                    @success="(msg) => ui.addToast(msg, 'success')"
-                    @error="(msg) => ui.addToast(msg, 'error')"
-                  />
+          <!-- ── HEADER ── -->
+          <AdminEditorPanel
+            :id="sections[0].id"
+            kicker="Public page header"
+            heading="Safeguarding children through local action."
+            :editing="!!editingSections.header"
+            :collapsed="collapsedSections.header"
+            @toggle-edit="toggleEdit('header')"
+            @cancel="cancelEdit('header')"
+            @toggle-collapse="toggleCollapse('header')"
+          >
+            <div class="image-editor-grid">
+              <div class="image-upload-panel">
+                <v-img v-if="draft.heroImageUrl" :src="draft.heroImageUrl" aspect-ratio="1.6" cover class="image-preview hero-preview" />
+                <div v-else class="image-preview hero-preview image-preview-empty">
+                  <v-icon size="28">mdi-image-outline</v-icon>
                 </div>
+                <AdminUploadButton
+                  :disabled="!editingSections.header"
+                  description="Child Protection hero image"
+                  @update:model-value="(url) => (draft.heroImageUrl = url)"
+                />
               </div>
-            </Transition>
-          </section>
 
-          <!-- ═══ Stats band ═══ -->
-          <section class="editor-panel" aria-labelledby="stats-heading">
-            <div class="panel-header">
-              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('stats')">
-                <div class="panel-icon-wrap">
-                  <Layers :size="18" aria-hidden="true" />
+              <div class="form-stack">
+                <div class="form-grid">
+                  <v-text-field v-model="draft.eyebrow" label="Eyebrow / badge" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draft.headline" label="Headline" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-textarea v-model="draft.intro" label="Intro paragraph" rows="3" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" class="field-wide" />
                 </div>
-                <div>
-                  <p class="panel-kicker">Stats band</p>
-                  <h2 id="stats-heading">Impact statistics</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <button type="button" class="btn btn-secondary btn-sm" @click="statsBand.push({ number: '', label: '', description: '' })">
-                  <Plus :size="15" aria-hidden="true" />
-                  <span>Add stat</span>
-                </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('stats')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }" />
-                </button>
               </div>
             </div>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['stats']" class="panel-body">
-                <p class="panel-desc">Edit the statistics shown on the public Child Protection page.</p>
+          </AdminEditorPanel>
 
-                <div class="stack-list">
-                  <article v-for="(stat, index) in statsBand" :key="index" class="sub-editor">
-                    <header class="sub-editor-header">
+          <!-- ── IMAGES ── -->
+          <AdminEditorPanel
+            :id="sections[1].id"
+            kicker="Public page"
+            heading="Gallery images"
+            :editing="!!editingSections.images"
+            :collapsed="collapsedSections.images"
+            @toggle-edit="toggleEdit('images')"
+            @cancel="cancelEdit('images')"
+            @toggle-collapse="toggleCollapse('images')"
+          >
+            <div class="image-slot-grid pa-4">
+              <div v-for="(image, index) in draft.images" :key="image.id" class="image-slot">
+                <v-img v-if="image.url" :src="image.url" aspect-ratio="1.4" cover class="image-preview" />
+                <div v-else class="image-preview image-preview-empty">
+                  <v-icon size="28">mdi-image-outline</v-icon>
+                </div>
+                <span class="image-slot-label">{{ image.label }}</span>
+                <AdminUploadButton
+                  :disabled="!editingSections.images"
+                  :description="`Child Protection gallery-${index} image`"
+                  @update:model-value="(url) => (image.url = url)"
+                />
+              </div>
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── STATS ── -->
+          <AdminEditorPanel
+            :id="sections[2].id"
+            kicker="Stats band"
+            heading="Impact statistics"
+            :editing="!!editingSections.stats"
+            :collapsed="collapsedSections.stats"
+            @toggle-edit="toggleEdit('stats')"
+            @cancel="cancelEdit('stats')"
+            @toggle-collapse="toggleCollapse('stats')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddStat" @click="addStat">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add stat
+                </v-btn>
+              </v-fade-transition>
+            </template>
+
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(stat, index) in draft.stats" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>Stat {{ index + 1 }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove stat" @click="confirmDeleteStat(index)">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
-                    </header>
-                    <div class="sub-editor-body form-grid">
-                      <label class="field">
-                        <span>Number</span>
-                        <input v-model="stat.number" type="text" placeholder="e.g. 43" />
-                      </label>
-                      <label class="field">
-                        <span>Label</span>
-                        <input v-model="stat.label" type="text" placeholder="e.g. COMMUNES" />
-                      </label>
-                      <label class="field wide">
-                        <span>Description</span>
-                        <input v-model="stat.description" type="text" placeholder="Brief description of this statistic" />
-                      </label>
                     </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
-
-          <!-- ═══ Page sections ═══ -->
-          <section class="editor-panel" aria-labelledby="sections-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['content']" @click="togglePanel('content')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <BookOpen :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Content</p>
-                  <h2 id="sections-heading">What we do, approach &amp; why it matters</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['content'] }" aria-hidden="true" />
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['content']" class="panel-body">
-                <p class="panel-desc">Edit the main content blocks shown on the public Child Protection page.</p>
-
-                <div class="stack-list">
-                  <article v-for="section in page.sections" :key="section.id" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="section-badge">{{ section.label }}</span>
-                      <h3>{{ section.heading || 'No heading yet' }}</h3>
-                    </header>
-                    <div class="sub-editor-body">
-                      <label class="field wide">
-                        <span>Heading</span>
-                        <input v-model="section.heading" type="text" :placeholder="'Heading for ' + section.label" />
-                      </label>
-                      <label class="field wide">
-                        <span>Body / description</span>
-                        <textarea v-model="section.body" rows="3" :placeholder="'Description for ' + section.label"></textarea>
-                      </label>
-                      <label class="field wide">
-                        <span>Bullet items <em>(one per line)</em></span>
-                        <textarea v-model="section.items" rows="5" placeholder="Anti-trafficking campaigns&#10;Child Protection Networks&#10;Child rights advocacy"></textarea>
-                      </label>
-                      <div v-if="parsedItemsForSection(section).length" class="item-chips">
-                        <span v-for="item in parsedItemsForSection(section)" :key="item" class="item-chip">{{ item }}</span>
-                      </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.stats || index === 0" aria-label="Move stat up" @click="moveItem(draft.stats, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.stats || index === draft.stats.length - 1" aria-label="Move stat down" @click="moveItem(draft.stats, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.stats" icon color="error" variant="tonal" size="x-small" aria-label="Remove stat" @click="removeStat(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
                     </div>
-                  </article>
-                </div>
+                  </header>
+                  <div class="item-fields stat-fields">
+                    <v-text-field v-model="stat.number" label="Number" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" />
+                    <v-text-field v-model="stat.label" label="Label" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" />
+                    <v-textarea v-model="stat.description" label="Description" rows="2" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── CONTENT ── -->
+          <AdminEditorPanel
+            :id="sections[3].id"
+            kicker="Content"
+            heading="What we do & approach"
+            :editing="!!editingSections.content"
+            :collapsed="collapsedSections.content"
+            @toggle-edit="toggleEdit('content')"
+            @cancel="cancelEdit('content')"
+            @toggle-collapse="toggleCollapse('content')"
+          >
+            <div class="pa-4 content-subsection">
+              <div class="content-subhead">
+                <h3>What we do</h3>
+                <v-btn v-if="editingSections.content" size="x-small" variant="tonal" :disabled="!canAddWorkItem" @click="addWorkItem">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add item
+                </v-btn>
               </div>
-            </Transition>
-          </section>
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(item, index) in draft.workItems" :key="'work-' + index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === 0" aria-label="Move item up" @click="moveItem(draft.workItems, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === draft.workItems.length - 1" aria-label="Move item down" @click="moveItem(draft.workItems, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.content" icon color="error" variant="tonal" size="x-small" aria-label="Remove item" @click="removeWorkItem(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="draft.workItems[index]" label="Item" :disabled="!editingSections.content" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+
+            <v-divider />
+
+            <div class="pa-4 content-subsection">
+              <div class="content-subhead">
+                <h3>Our approach</h3>
+              </div>
+              <v-textarea v-model="draft.approachText" label="Approach text" rows="4" :disabled="!editingSections.content" hide-details density="comfortable" variant="outlined" />
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── TEAM ── -->
+          <AdminEditorPanel
+            :id="sections[4].id"
+            kicker="Organizational structure"
+            heading="Who delivers child protection on the ground"
+            :editing="!!editingSections.team"
+            :collapsed="collapsedSections.team"
+            @toggle-edit="toggleEdit('team')"
+            @cancel="cancelEdit('team')"
+            @toggle-collapse="toggleCollapse('team')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddTeamCard" @click="addTeamCard">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add card
+                </v-btn>
+              </v-fade-transition>
+            </template>
+
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list two-col">
+                <article v-for="(card, index) in draft.team" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.team || index === 0" aria-label="Move card up" @click="moveItem(draft.team, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.team || index === draft.team.length - 1" aria-label="Move card down" @click="moveItem(draft.team, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.team" icon color="error" variant="tonal" size="x-small" aria-label="Remove card" @click="removeTeamCard(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="card.role" label="Role" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" />
+                    <v-select v-model="card.icon" :items="TEAM_ICONS" label="Icon" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" />
+                    <v-textarea v-model="card.desc" label="Description" rows="2" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
+
         </div>
+    </v-fade-transition>
       </main>
     </div>
-  </div>
+
+    <AdminConfirmDialog
+      v-model="confirmOpen"
+      :title="confirmData.title"
+      :body="confirmData.body"
+      @confirm="confirmData.onConfirm()"
+    />
+  </v-app>
 </template>
 
 <style scoped>
-.cp-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-
+.child-protection-admin {
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -632,469 +684,81 @@ onMounted(async () => {
 
 .manager-main {
   min-height: 100vh;
-  padding: 1.25rem;
+  padding: 1.5rem 2rem 2.5rem;
 }
 
 .manager-hero {
-  position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 1.25rem;
-  padding: 1.25rem 1.35rem;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--admin-theme-surface) 0%, color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 100%);
-  box-shadow: var(--admin-theme-shadow);
-  overflow: hidden;
-}
-
-.hero-glow {
-  position: absolute;
-  top: -60%;
-  right: -10%;
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--admin-theme-primary) 20%, transparent) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.hero-accent-line {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--admin-theme-primary), color-mix(in srgb, var(--admin-theme-primary) 30%, transparent));
-}
-
-.hero-content-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.hero-icon-wrap {
-  display: grid;
-  width: 2.6rem;
-  height: 2.6rem;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
-.manager-title {
-  display: grid;
-  gap: 0.32rem;
-  min-width: 0;
-}
-
-.manager-title .eyebrow {
-  margin: 0;
-}
-
-.manager-title h1 {
+.manager-hero h1 {
   margin: 0;
   color: var(--admin-theme-contrast);
-  font-size: 1.35rem;
+  font-size: 1.32rem;
   line-height: 1.2;
 }
 
-.manager-meta {
+.manager-title {
   display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.1rem;
-}
-
-.manager-meta span {
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border-strong));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 8%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  padding: 0.18rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.manager-meta span.meta-dirty {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 45%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  position: relative;
-  z-index: 1;
-}
-
-.eyebrow,
-.panel-kicker {
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin: 0;
-}
-
-.btn,
-.icon-btn {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0.55rem 0.8rem;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  white-space: nowrap;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+  gap: 0.75rem;
 }
 
-.btn:hover,
-.icon-btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn:active,
-.icon-btn:active {
-  transform: translateY(0px);
-}
-
-.btn:disabled,
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none;
-}
-
-.btn-primary {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  color: #ffffff;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
-}
-
-.btn-primary:hover {
-  box-shadow: 0 14px 28px color-mix(in srgb, var(--admin-theme-primary) 30%, transparent);
-}
-
-.btn-secondary,
-.icon-btn {
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
-  color: var(--admin-theme-contrast);
-}
-
-.icon-btn {
-  width: 34px;
-  min-height: 34px;
-  padding: 0;
-}
-
-.icon-btn.danger {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
-}
-
-.btn-secondary:hover,
-.icon-btn:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.icon-btn.danger:hover {
-  border-color: var(--admin-theme-danger);
-  background: var(--admin-theme-danger);
-  color: #ffffff;
-}
-
-.btn-sm {
-  min-height: 32px;
-  padding: 0.4rem 0.65rem;
-  font-size: 0.78rem;
-}
-
-.state-card {
+.card-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  margin-top: 1rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
-  padding: 2.5rem 1rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.state-spinner {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  border: 2px solid var(--admin-theme-border);
-  border-top-color: var(--admin-theme-primary);
-  border-radius: 50%;
-  animation: state-spin 0.8s linear infinite;
-}
-
-@keyframes state-spin {
-  to { transform: rotate(360deg); }
+  gap: 0.5rem;
 }
 
 .content-grid {
   display: grid;
-  gap: 0.9rem;
+  gap: 1.1rem;
   margin-top: 1rem;
 }
 
-.editor-panel {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
-  overflow: hidden;
-}
-
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 50%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.85rem 1rem;
-}
-
-.panel-header h2 {
-  margin: 0;
-  color: var(--admin-theme-contrast);
-  font-size: 1rem;
-}
-
-.panel-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.panel-header-left > div {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.panel-icon-wrap {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.panel-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-}
-
-.panel-header-clickable {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border: none;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 50%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.85rem 1rem;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.panel-header-clickable:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-}
-
-.panel-header-left-clickable {
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.panel-header-left-clickable:hover {
-  opacity: 0.8;
-}
-
 .panel-body {
-  padding: 1rem;
-}
-
-.panel-desc {
-  color: var(--admin-theme-muted);
-  font-size: 0.82rem;
-  margin-bottom: 0.85rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.35rem;
-  color: var(--admin-theme-muted);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.field span {
-  color: var(--admin-theme-contrast-soft);
-}
-
-.field input,
-.field textarea {
-  width: 100%;
-  border: 1px solid var(--admin-theme-border-strong);
-  border-radius: 6px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.65rem 0.75rem;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.field textarea {
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.field input:focus,
-.field textarea:focus {
-  border-color: var(--admin-theme-primary);
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
+  padding: 1.5rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1.6rem 0.85rem;
 }
 
-.wide {
+.form-grid .field-wide {
   grid-column: 1 / -1;
 }
 
-/* Quick links */
-.quick-links-body {
-  padding: 1rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.65rem;
-}
-
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-primary-deep);
-  padding: 0.7rem 0.85rem;
-  text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
-}
-
-.quick-link:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
-  transform: translateY(-1px);
-}
-
-.quick-link strong {
-  display: block;
-  color: var(--admin-theme-contrast);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.quick-link span {
-  display: block;
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-}
-
-/* Hero image editor */
+/* ── Hero image ── */
 .image-editor-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.7fr) minmax(320px, 1.3fr);
-  gap: 1.1rem;
-  padding: 1.1rem;
+  grid-template-columns: minmax(300px, 0.72fr) minmax(360px, 1.28fr);
+  gap: 1.25rem;
+  padding: 1.5rem;
 }
 
-.image-preview {
-  margin: 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
-  border-radius: 7px;
-  background: var(--admin-theme-surface-soft);
-}
-
-.image-preview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-preview {
-  aspect-ratio: 16 / 10;
-}
-
-.slot-empty {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  color: var(--admin-theme-muted);
-  opacity: 0.7;
-  font-size: 0.76rem;
-  font-weight: 700;
+.image-upload-panel {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
 }
 
 .form-stack {
@@ -1102,190 +766,127 @@ onMounted(async () => {
   gap: 0.85rem;
 }
 
-/* Numbered / repeated item cards shared by stats & sections */
-.stack-list {
+.image-preview {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: var(--admin-theme-surface);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 8%, transparent),
+    0 12px 24px rgba(15, 95, 73, 0.11);
+}
+
+.image-preview-empty {
+  display: grid;
+  place-items: center;
+  color: var(--admin-theme-muted);
+  aspect-ratio: 1.4;
+}
+
+.hero-preview {
+  aspect-ratio: 1.6;
+}
+
+/* ── Image slots ── */
+.image-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.image-slot {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+
+.image-slot-label {
+  color: var(--admin-theme-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* ── Items list (stats / list items / team cards) ── */
+.items-list {
   display: grid;
   gap: 0.75rem;
 }
 
-.sub-editor {
+.items-list.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.item-card {
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--admin-theme-surface);
-  overflow: hidden;
-  transition: border-color 0.18s ease;
+  padding: 0.75rem 1rem;
 }
 
-.sub-editor:hover {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border-strong));
-}
-
-.sub-editor-header {
+.item-header {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 38%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.75rem 0.85rem;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
 }
 
-.sub-editor-header h3 {
-  flex: 1;
-  margin: 0;
-  color: var(--admin-theme-contrast);
-  font-size: 0.94rem;
-  font-weight: 900;
+.item-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .item-number {
   display: grid;
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
+  width: 1.8rem;
+  height: 1.8rem;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
   border-radius: 6px;
   background: var(--admin-theme-surface);
   color: var(--admin-theme-primary-deep);
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   font-weight: 900;
-}
-
-.section-badge {
   flex-shrink: 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  padding: 0.2rem 0.6rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
-.sub-editor-body {
-  padding: 0.9rem;
+.item-fields {
   display: grid;
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
 }
 
-.item-chips {
+.item-fields .field-wide {
+  grid-column: 1 / -1;
+}
+
+.stat-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* ── Content sub-sections ── */
+.content-subsection {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.content-subhead {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.item-chip {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.74rem;
-  font-weight: 700;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
-}
-
-/* Edit icon */
-.edit-icon {
-  color: var(--admin-theme-muted);
-  opacity: 0.5;
-  transition: opacity 0.15s ease, color 0.15s ease;
-  flex-shrink: 0;
-}
-
-.panel-header:hover .edit-icon {
-  opacity: 1;
-  color: var(--admin-theme-primary-deep);
-}
-
-/* Chevron */
-.chevron {
-  color: var(--admin-theme-muted);
-  flex-shrink: 0;
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.chevron-up {
-  transform: rotate(-180deg);
-}
-
-/* Icon button ghost (no border, just icon) */
-.icon-btn-ghost {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 30px !important;
-  min-height: 30px !important;
-  border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  color: var(--admin-theme-muted) !important;
-  cursor: pointer;
-  padding: 0 !important;
-  transition: background 0.15s ease, color 0.15s ease !important;
-}
-
-.icon-btn-ghost:hover {
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface)) !important;
-  color: var(--admin-theme-primary-deep) !important;
-}
-
-/* Collapse transition */
-.collapse-leave-active,
-.collapse-enter-active {
-  transition:
-    opacity 0.24s ease,
-    max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow: hidden;
-}
-
-.collapse-enter-from,
-.collapse-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-
-.collapse-enter-to,
-.collapse-leave-from {
-  opacity: 1;
-  max-height: 6000px;
-}
-
-:global(.admin-dark) .cp-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-}
-
-:global(.admin-dark) .btn-primary {
-  color: #071311;
-}
-
-:global(.admin-dark) .manager-hero {
-  background: linear-gradient(135deg, var(--admin-theme-surface) 0%, color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) 100%);
-}
-
-:global(.admin-dark) .hero-icon-wrap {
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 20%, var(--admin-theme-surface));
-}
-
-:global(.admin-dark) .panel-header-clickable:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
+.content-subhead h3 {
+  margin: 0;
+  color: var(--admin-theme-contrast);
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 @media (min-width: 900px) {
-  .cp-admin.sidebar-open {
+  .child-protection-admin.sidebar-open {
     padding-left: 260px;
   }
 }
@@ -1293,28 +894,26 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
+    padding-top: calc(60px + 1rem);
   }
 
-  .manager-hero,
-  .panel-header,
-  .sub-editor-header {
+  .manager-hero {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .hero-actions,
-  .hero-actions .btn {
+  .hero-actions {
     width: 100%;
   }
 
   .form-grid,
-  .image-editor-grid {
+  .image-editor-grid,
+  .item-fields {
     grid-template-columns: 1fr;
   }
 
-  .hero-content-wrap {
-    flex-direction: column;
-    text-align: center;
+  .items-list.two-col {
+    grid-template-columns: 1fr;
   }
 }
 </style>

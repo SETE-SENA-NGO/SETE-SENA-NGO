@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import ImageCropModal from '@/components/admin/ImageCropModal.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
 import { imageUploadHelpText, isAllowedImageFile, isSameImage } from '@/lib/media'
@@ -58,6 +59,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   for (const id of Object.keys(previews)) revokePreview(id)
+  closeCropTarget()
 })
 
 function revokePreview(id: string) {
@@ -70,6 +72,9 @@ function revokePreview(id: string) {
 function displayedQr(method: DonationMethod) {
   return previews[method.id] || method.qrUrl
 }
+
+// Holds the just-picked (not yet cropped) file while the crop modal is open.
+const cropTarget = ref<{ methodId: string; file: File; src: string } | null>(null)
 
 async function onFileChange(method: DonationMethod, event: Event) {
   const input = event.target as HTMLInputElement
@@ -90,10 +95,31 @@ async function onFileChange(method: DonationMethod, event: Event) {
     return
   }
 
-  revokePreview(method.id)
-  pendingFiles[method.id] = file
-  previews[method.id] = URL.createObjectURL(file)
   delete cardMessages[method.id]
+  cropTarget.value = { methodId: method.id, file, src: URL.createObjectURL(file) }
+}
+
+function closeCropTarget() {
+  if (cropTarget.value) URL.revokeObjectURL(cropTarget.value.src)
+  cropTarget.value = null
+}
+
+function onCropConfirm(croppedFile: File) {
+  const methodId = cropTarget.value?.methodId
+  closeCropTarget()
+  if (!methodId) return
+
+  revokePreview(methodId)
+  pendingFiles[methodId] = croppedFile
+  previews[methodId] = URL.createObjectURL(croppedFile)
+}
+
+function reopenCrop(method: DonationMethod) {
+  const existing = pendingFiles[method.id]
+  if (!existing) return
+  // A fresh object URL for this crop session — independent of `previews`, so
+  // cancelling doesn't revoke the URL the card's thumbnail is still using.
+  cropTarget.value = { methodId: method.id, file: existing, src: URL.createObjectURL(existing) }
 }
 
 function removeQr(method: DonationMethod) {
@@ -216,6 +242,14 @@ async function saveCard(method: DonationMethod, index: number) {
                       {{ displayedQr(activeMethod) ? 'Replace QR image' : 'Upload QR image' }}
                     </label>
                     <button
+                      v-if="pendingFiles[activeMethod.id]"
+                      type="button"
+                      class="crop-btn"
+                      @click="reopenCrop(activeMethod)"
+                    >
+                      Adjust crop
+                    </button>
+                    <button
                       v-if="displayedQr(activeMethod)"
                       type="button"
                       class="remove-btn"
@@ -307,6 +341,17 @@ async function saveCard(method: DonationMethod, index: number) {
       </main>
     </div>
   </div>
+
+  <Teleport to="body">
+    <ImageCropModal
+      v-if="cropTarget"
+      :image-src="cropTarget.src"
+      :file-name="cropTarget.file.name"
+      :mime-type="cropTarget.file.type || 'image/png'"
+      @confirm="onCropConfirm"
+      @cancel="closeCropTarget"
+    />
+  </Teleport>
 </template>
 
 <style scoped>
@@ -603,6 +648,23 @@ h1 {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+.crop-btn {
+  min-height: 42px;
+  border: 1.5px solid var(--admin-border-strong);
+  border-radius: 10px;
+  background: var(--admin-surface-soft);
+  color: var(--admin-text);
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.crop-btn:hover {
+  background: var(--admin-border);
 }
 
 .remove-btn {
