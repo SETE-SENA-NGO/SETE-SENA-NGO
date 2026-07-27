@@ -849,26 +849,19 @@ nav .link.active {
 .submenu-wrap {
   display: grid;
   grid-template-rows: 0fr;
-<<<<<<< HEAD
-  transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-=======
   overflow: hidden;
   visibility: hidden;
   transition:
     grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     visibility 0.25s step-end;
->>>>>>> 69077cc (feat: update navbar style for admin page)
 }
 
 .submenu-wrap.open {
   grid-template-rows: 1fr;
-<<<<<<< HEAD
-=======
   visibility: visible;
   transition:
     grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     visibility 0s step-start;
->>>>>>> 69077cc (feat: update navbar style for admin page)
 }
 
 .submenu {
@@ -876,11 +869,6 @@ nav .link.active {
   overflow: hidden;
   display: grid;
   gap: 0.2rem;
-<<<<<<< HEAD
-  padding: 0.2rem 0 0.35rem 1.4rem;
-  margin-left: 0.35rem;
-  border-left: 1px solid var(--sb-divider);
-=======
   padding: 0.25rem 0 0.35rem 0.95rem;
   margin-left: 0.75rem;
   border-left: 2px solid color-mix(in srgb, var(--sb-accent) 18%, var(--sb-divider));
@@ -908,26 +896,17 @@ nav .link.active {
   transform: scale(1.5);
   background: var(--sb-accent);
   box-shadow: 0 0 6px color-mix(in srgb, var(--sb-accent) 60%, transparent);
->>>>>>> 69077cc (feat: update navbar style for admin page)
 }
 
 .sub-link {
   display: flex;
   align-items: center;
-<<<<<<< HEAD
-  min-height: 40px;
-  gap: 0.6rem;
-  border-radius: 7px;
-  color: var(--sb-muted);
-  padding: 0.55rem 0.7rem;
-=======
   min-height: 38px;
   gap: 0.65rem;
   border-radius: 7px;
   color: var(--sb-text);
   opacity: 0.78;
   padding: 0.48rem 0.75rem;
->>>>>>> 69077cc (feat: update navbar style for admin page)
   font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
