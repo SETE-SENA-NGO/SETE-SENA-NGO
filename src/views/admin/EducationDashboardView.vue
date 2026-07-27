@@ -1,590 +1,704 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import ImagePickerField from '@/components/admin/ImagePickerField.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { supabase } from '@/lib/supabase'
+import { useContentStore } from '@/stores/content.store'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import { useUiStore } from '@/stores/ui.store'
+import { useAuthStore } from '@/stores/auth.store'
 
 const ui = useUiStore()
+const auth = useAuthStore()
+const contentStore = useContentStore()
+const { locale } = useI18n()
 
-const statsCards = [
-  { label: 'Total Schools', value: '17', desc: 'Across rural Cambodia', color: 'blue' },
-  { label: 'Children Reached', value: '3,400+', desc: 'Receiving education', color: 'emerald' },
-  { label: 'Villages Served', value: '43', desc: 'In program areas', color: 'amber' },
-  { label: 'Teachers Supported', value: '120+', desc: 'Trained & equipped', color: 'violet' },
+useAdminTheme()
+
+/* ─── Types ─────────────────────────────────────── */
+interface StatItem {
+  number: string
+  label: string
+  description: string
+}
+
+interface TeamCard {
+  role: string
+  icon: string
+  desc: string
+}
+
+interface EditableSection {
+  id: string
+  label: string
+  heading: string
+  body: string
+  items: string
+}
+
+interface GalleryImage {
+  id: string
+  label: string
+  url: string
+}
+
+const IMAGE_MAP: { field: string; label: string }[] = [
+  { field: 'introImageUrl', label: 'Intro Section Image' },
+  { field: 'readingImageUrl', label: 'What We Do — Reading Image' },
+  { field: 'teacherImageUrl', label: 'What We Do — Teacher Image' },
+  { field: 'studyImageUrl', label: 'Why It Matters — Study Image' },
 ]
 
-const quickLinks = [
-  { title: 'Edit Education Page', desc: 'Update public education content', to: '/admin/editor/programs-education', color: 'blue' },
-  { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'emerald' },
-  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
-  { title: 'Impact Stories', desc: 'Publish success stories', to: '/admin/modules/impact-stories', color: 'violet' },
-]
+let _idCounter = 0
+function genId() { return `img-${++_idCounter}-${Date.now()}` }
 
-const programHighlights = [
-  { title: 'Community Pre-schools', desc: 'Early childhood education in remote villages', count: '17 centers', color: 'blue' },
-  { title: 'Mobile Libraries', desc: 'Books delivered to rural children', count: '12 units', color: 'emerald' },
-  { title: 'Scholarship Program', desc: 'Supporting children from poor families', count: '363 students', color: 'amber' },
-  { title: 'Buddhist Education', desc: 'Traditional learning through pagodas', count: '8 sites', color: 'violet' },
-  { title: 'Teacher Support', desc: 'Training and resources for educators', count: '45 teachers', color: 'slate' },
-  { title: 'Parent Engagement', desc: 'Connecting families with schools', count: '280 families', color: 'emerald' },
-]
+/* ─── State ─────────────────────────────────────── */
+const loading = ref(true)
+const saving = ref(false)
+const loadError = ref('')
+const originalSnapshot = ref('')
+const storageMode = ref<'supabase' | 'local'>('supabase')
+const STORAGE_KEY = 'edu-dashboard-page'
 
-const impactNumbers = [
-  { value: '27,810', label: 'Seedlings distributed to schools' },
-  { value: '293', label: 'Villages in program areas' },
-  { value: '4,555', label: 'Families in saving groups' },
-  { value: '363', label: 'Children in pre-schools' },
-]
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
 
-const infoPages = [
-  { title: 'Education Page Content', slug: 'programs-education', route: '/programs/education' },
-  { title: 'Programs Overview', slug: 'programs', route: '/programs' },
-  { title: 'Impact Numbers', slug: 'impact-numbers', route: '/impact/numbers' },
-]
+const galleryImages = ref<GalleryImage[]>(
+  IMAGE_MAP.map((m) => ({ id: genId(), label: m.label, url: '' })),
+)
+
+const statsBand = ref<StatItem[]>([
+  { number: '120+', label: 'PRE-SCHOOL CHILDREN', description: 'Enrolled each year across remote villages.' },
+  { number: '8', label: 'MOBILE LIBRARIES', description: 'Reaching villages with no school library.' },
+  { number: '60+', label: 'ANNUAL SCHOLARSHIPS', description: 'For the poorest students — especially girls.' },
+])
+
+const teamCards = ref<TeamCard[]>([
+  { role: 'Program Director', icon: 'compass', desc: 'Oversees education initiatives, partnerships, and donor reporting.' },
+  { role: 'Field Coordinators', icon: 'map', desc: 'Manage pre-school, library and scholarship programs in each province.' },
+  { role: 'Teachers & Facilitators', icon: 'heart', desc: 'Deliver early learning, literacy sessions and youth clubs.' },
+  { role: 'Monitoring & Evaluation', icon: 'chart', desc: 'Tracks learning progress, attendance and community outcomes.' },
+])
+
+function defaultSections(): EditableSection[] {
+  return [
+    {
+      id: 'education-work',
+      label: 'What we do',
+      heading: 'What we do',
+      body: 'Community pre-schools led by trained local teachers, mobile libraries reaching remote villages, scholarships for the poorest students.',
+      items: 'Community pre-schools led by trained local teachers in remote villages\nMobile library service bringing books, audio and learning kits to children\nScholarships covering uniforms, supplies and transport for the poorest students\nBuddhist moral education and life-skills classes in pagoda settings\nYouth peer-educator groups on health, environment and child rights\nTeacher training and parent engagement to keep children in school',
+    },
+    {
+      id: 'education-approach',
+      label: 'Approach',
+      heading: 'Our approach',
+      body: 'We hire teachers from the villages we serve, train them in early-childhood pedagogy, and pair every classroom with a parent committee.',
+      items: '',
+    },
+    {
+      id: 'education-why',
+      label: 'Why it matters',
+      heading: 'Why it matters',
+      body: 'Children who attend pre-school are far more likely to complete primary and secondary school.',
+      items: 'Children who attend pre-school are far more likely to complete primary and secondary school\nScholarships keep the poorest girls in class through the most vulnerable years\nMobile libraries reach children a bus route never will\nPagoda-based ethics classes preserve Khmer language and moral tradition',
+    },
+    {
+      id: 'education-team',
+      label: 'Organizational Structure',
+      heading: 'Who delivers education on the ground',
+      body: 'Our dedicated team works across provinces to ensure every child has access to quality education.',
+      items: teamCards.value.map((c) => `${c.role} | ${c.icon} | ${c.desc}`).join('\n'),
+    },
+  ]
+}
+
+const draft = reactive({
+  sections: defaultSections(),
+})
+
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+  setupSectionWatch,
+  stopSectionWatch,
+  resetEditingState,
+} = useSectionEditor([
+  {
+    key: 'images',
+    getSnapshot: () => JSON.parse(JSON.stringify(galleryImages.value)),
+    applySnapshot: (value) => { galleryImages.value = value },
+  },
+  {
+    key: 'stats',
+    getSnapshot: () => statsBand.value.map((s) => ({ ...s })),
+    applySnapshot: (value) => { statsBand.value = value },
+  },
+  {
+    key: 'sections',
+    getSnapshot: () => draft.sections.map((s) => ({ ...s })),
+    applySnapshot: (value) => { draft.sections = value },
+  },
+  {
+    key: 'team',
+    getSnapshot: () => teamCards.value.map((c) => ({ ...c })),
+    applySnapshot: (value) => { teamCards.value = value },
+  },
+])
+
+const hasChanges = computed(() => {
+  const current = JSON.stringify({
+    galleryImages: galleryImages.value.map((g) => ({ ...g })),
+    statsBand: statsBand.value.map((s) => ({ ...s })),
+    sections: draft.sections.map((s) => ({ ...s })),
+    teamCards: teamCards.value.map((c) => ({ ...c })),
+  })
+  return current !== originalSnapshot.value
+})
+
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify({
+    galleryImages: galleryImages.value.map((g) => ({ ...g })),
+    statsBand: statsBand.value.map((s) => ({ ...s })),
+    sections: draft.sections.map((s) => ({ ...s })),
+    teamCards: teamCards.value.map((c) => ({ ...c })),
+  })
+}
+
+const sections = [
+  { id: 'edu-images', label: 'Page Images', icon: 'mdi-image-outline' },
+  { id: 'edu-stats', label: 'Stats Band', icon: 'mdi-chart-bar' },
+  { id: 'edu-sections', label: 'What They Do', icon: 'mdi-view-grid' },
+  { id: 'edu-team', label: 'Team Cards', icon: 'mdi-account-group' },
+] as const
+
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
+
+useUnsavedChangesGuard(hasChanges)
+
+/* ─── Data persistence ─────────────────────────── */
+function saveToLocalStorage(): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      galleryImages: galleryImages.value,
+      sections: draft.sections,
+      statsBand: statsBand.value,
+      teamCards: teamCards.value,
+    }))
+  } catch { /* ignore */ }
+}
+
+function loadFromLocalStorage(): void {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return
+    const saved = JSON.parse(raw) as Record<string, unknown>
+    if (Array.isArray(saved.galleryImages)) {
+      galleryImages.value = saved.galleryImages as GalleryImage[]
+    }
+    padGalleryToFour()
+    if (Array.isArray(saved.statsBand)) statsBand.value = saved.statsBand as StatItem[]
+    if (Array.isArray(saved.teamCards)) teamCards.value = saved.teamCards as TeamCard[]
+  } catch { /* ignore */ }
+}
+
+function padGalleryToFour() {
+  while (galleryImages.value.length < 4) {
+    galleryImages.value.push({ id: genId(), label: IMAGE_MAP[galleryImages.value.length]?.label || `Image ${galleryImages.value.length + 1}`, url: '' })
+  }
+}
+
+function parseTeamFromSection() {
+  const section = draft.sections.find((s) => s.id === 'education-team')
+  if (section?.items?.trim()) {
+    const lines = section.items.split('\n').map((l) => l.trim()).filter(Boolean)
+    if (lines.length > 0) {
+      teamCards.value = lines.map((line) => {
+        const parts = line.split('|').map((p) => p.trim())
+        return { role: parts[0] || '', icon: parts[1] || 'chart', desc: parts[2] || parts[0] || '' }
+      })
+    }
+  }
+}
+
+function saveTeamToSection() {
+  const section = draft.sections.find((s) => s.id === 'education-team')
+  if (section) {
+    section.items = teamCards.value.map((c) => `${c.role} | ${c.icon} | ${c.desc}`).join('\n')
+  }
+}
+
+function getImg(index: number) { return galleryImages.value[index] || null }
+
+function onGalleryImageSaved(msg: string) {
+  ui.addToast(msg, 'success')
+  void savePageContent()
+}
+
+function clearGalleryImage(index: number) {
+  const slotName = IMAGE_MAP[index]?.label || `Slot ${index + 1}`
+  confirmDialog(`Remove image from "${slotName}"?`, 'This will show the default fallback on the public page.', () => {
+    if (galleryImages.value[index]) galleryImages.value[index].url = ''
+    ui.addToast(`Image cleared for "${slotName}"`, 'info')
+    void savePageContent()
+  })
+}
+
+function missingImageWarning(): string {
+  const names: string[] = []
+  if (!galleryImages.value[0]?.url?.trim()) names.push('Intro Section')
+  if (!galleryImages.value[1]?.url?.trim()) names.push('What We Do — Reading')
+  if (!galleryImages.value[2]?.url?.trim()) names.push('What We Do — Teacher')
+  if (!galleryImages.value[3]?.url?.trim()) names.push('Why It Matters — Study')
+  if (names.length === 0) return ''
+  return `${names.length} image slot${names.length > 1 ? 's' : ''} missing: ${names.join(', ')}.`
+}
+
+async function loadPageContent() {
+  resetEditingState()
+  loading.value = true
+  loadError.value = ''
+  try {
+    const { data, error } = await supabase
+      .from('programs')
+      .select('title, summary, description, metadata, updated_at')
+      .eq('slug', 'programs-education')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('Supabase load failed:', error.message)
+      loadFromLocalStorage()
+      storageMode.value = 'local'
+      updateSnapshot()
+      loading.value = false
+      return
+    }
+
+    if (data?.metadata) {
+      const meta = data.metadata as Record<string, unknown>
+      const gallery = meta.gallery as GalleryImage[] | undefined
+      if (Array.isArray(gallery) && gallery.length > 0) {
+        galleryImages.value = gallery.map((g, i) => ({
+          id: g.id || genId(),
+          label: g.label?.trim() ? g.label : IMAGE_MAP[i]?.label || `Slot ${i + 1}`,
+          url: g.url || '',
+        }))
+        padGalleryToFour()
+      }
+      if (Array.isArray(meta.statsBand)) statsBand.value = meta.statsBand as StatItem[]
+      if (Array.isArray(meta.sections)) {
+        const dbSections = meta.sections as EditableSection[]
+        draft.sections = defaultSections().map((defSec) => {
+          const match = dbSections.find((s) => s.id === defSec.id)
+          return match ? { ...defSec, ...match } : defSec
+        })
+      }
+      const teamSection = draft.sections.find((s) => s.id === 'education-team')
+      if (teamSection) parseTeamFromSection()
+      storageMode.value = 'supabase'
+      saveToLocalStorage()
+    } else {
+      loadFromLocalStorage()
+      storageMode.value = 'local'
+    }
+    updateSnapshot()
+  } catch (e: unknown) {
+    console.warn('Load crashed:', e)
+    loadFromLocalStorage()
+    storageMode.value = 'local'
+    updateSnapshot()
+  } finally {
+    loading.value = false
+    setupSectionWatch()
+  }
+}
+
+async function savePageContent() {
+  if (saving.value) return
+  saving.value = true
+  try {
+    saveTeamToSection()
+    const payload = {
+      slug: 'programs-education',
+      title: 'Education Program',
+      pillar: 'Education',
+      summary: 'Community pre-schools, mobile libraries, scholarships and Buddhist education.',
+      description: 'Helping rural children keep learning through local teachers, libraries and family support.',
+      status: 'published',
+      metadata: {
+        gallery: galleryImages.value,
+        introImageUrl: galleryImages.value[0]?.url || '',
+        readingImageUrl: galleryImages.value[1]?.url || '',
+        teacherImageUrl: galleryImages.value[2]?.url || '',
+        studyImageUrl: galleryImages.value[3]?.url || '',
+        statsBand: statsBand.value,
+        sections: draft.sections.map((s) => ({ id: s.id, label: s.label, heading: s.heading, body: s.body, items: s.items })),
+      },
+      updated_at: new Date().toISOString(),
+    }
+    saveToLocalStorage()
+
+    let { error } = await supabase.from('programs').upsert(payload, { onConflict: 'slug' })
+    if (error && error.message?.includes('row-level security')) {
+      const { error: insertError } = await supabase.from('programs').insert(payload)
+      if (insertError && insertError.message?.includes('duplicate key')) {
+        const { error: updateError } = await supabase.from('programs').update(payload).eq('slug', 'programs-education')
+        if (!updateError) error = null
+        else error = updateError
+      } else if (!insertError) {
+        error = null
+      } else {
+        error = insertError
+      }
+    }
+    if (error) {
+      console.warn('Supabase save failed:', error)
+      ui.addToast(`DB write blocked: ${error.message}`, 'error')
+      saveToLocalStorage()
+      storageMode.value = 'local'
+      updateSnapshot()
+      saving.value = false
+      return
+    }
+    storageMode.value = 'supabase'
+    updateSnapshot()
+    ui.addToast('Education page saved!', 'success')
+  } catch (e: unknown) {
+    console.error('Save crashed:', e)
+    ui.addToast('Saved to browser (database error)', 'info')
+    storageMode.value = 'local'
+    updateSnapshot()
+  } finally {
+    saving.value = false
+  }
+}
+
+function parsedItemsForSection(section: EditableSection): string[] {
+  return section.items ? section.items.split('\n').map((l) => l.trim()).filter(Boolean) : []
+}
+
+onMounted(() => {
+  contentStore.useLocalFallback()
+  void auth.init().catch(() => {})
+  void loadPageContent()
+})
+
+onUnmounted(() => { stopSectionWatch() })
 </script>
 
 <template>
-  <div :class="['edu-dash', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['edu-dash', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
-    <div class="dash-layout">
+    <div class="admin-layout">
       <AdminSidebar />
-      <main class="dash-main">
-        <!-- PREMIUM BANNER -->
-        <header class="dash-banner">
-          <div class="banner-glow" aria-hidden="true"></div>
-          <div class="banner-particles" aria-hidden="true">
-            <span></span><span></span><span></span><span></span>
+      <main class="manager-main">
+        <header class="manager-hero">
+          <div class="manager-title">
+            <h1>Education Dashboard</h1>
+            <div class="manager-meta">
+              <v-chip v-if="missingImageWarning()" size="small" variant="tonal" color="warning" :title="missingImageWarning()">
+                <v-icon start size="x-small">mdi-alert</v-icon>
+                Missing images
+              </v-chip>
+            </div>
           </div>
-          <div class="banner-inner">
-            <div class="banner-breadcrumb">
-              <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-label">Programs</span>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-current">Education</span>
-            </div>
-            <div class="banner-content">
-              <div class="banner-text">
-                <div class="banner-badge">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2 2 6 2s6-.9 6-2v-5"/></svg>
-                  Education Program
-                </div>
-                <h1 class="banner-title">Education Dashboard</h1>
-                <p class="banner-desc">Manage education content, track schools, students, and impact across Cambodia.</p>
-              </div>
-              <div class="banner-actions">
-                <RouterLink class="btn btn-ghost" to="/admin/editor/programs-education">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit Content
-                </RouterLink>
-                <RouterLink class="btn btn-primary" to="/programs/education">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  View Page
-                </RouterLink>
-              </div>
-            </div>
-            <div class="banner-stats">
-              <div v-for="stat in statsCards" :key="stat.label" class="bstat" :class="'bstat-' + stat.color">
-                <div class="bstat-icon">
-                  <svg v-if="stat.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2 2 6 2s6-.9 6-2v-5"/></svg>
-                  <svg v-else-if="stat.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  <svg v-else-if="stat.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ stat.value }}</strong>
-                  <small>{{ stat.label }}</small>
-                  <span class="bstat-desc">{{ stat.desc }}</span>
-                </div>                </div>
-            </div>
+          <div class="hero-actions">
+            <v-btn variant="tonal" to="/programs/education" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
           </div>
         </header>
 
-        <!-- CONTENT GRID -->
-        <div class="content-grid">
-          <div class="content-main">
-            <!-- Quick Links -->
-            <section class="card-section">
-              <div class="card-hdr">
-                <div class="card-hdr-left">
-                  <span class="card-badge">Quick access</span>
-                  <h2 class="card-title">Frequent actions</h2>
-                </div>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Education content...</span>
+          </div>
+          <div v-else-if="loadError" key="error">
+            <v-alert type="error" variant="tonal" closable @click:close="loadError = ''">
+              <template #title>Could not load content</template>
+              <div class="d-flex align-center justify-space-between ga-2">
+                <span>{{ loadError }}</span>
+                <v-btn variant="tonal" size="small" @click="loadPageContent">Try again</v-btn>
               </div>
-              <div class="card-body">
-                <div class="links-grid">
-                  <RouterLink v-for="link in quickLinks" :key="link.title" :to="link.to" class="link-card" :class="'link-' + link.color">
-                    <span class="link-icon">
-                      <svg v-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      <svg v-else-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                      <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                      <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                    </span>
-                    <div class="link-text">
-                      <strong>{{ link.title }}</strong>
-                      <small>{{ link.desc }}</small>
-                    </div>
-                    <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                  </RouterLink>
-                </div>
-              </div>
-            </section>
-
-            <!-- Program Highlights -->
-            <section class="card-section">
-              <div class="card-hdr">
-                <div class="card-hdr-left">
-                  <span class="card-badge">Initiatives</span>
-                  <h2 class="card-title">Education programs</h2>
-                </div>
-                <RouterLink class="card-hdr-link" to="/admin/modules/programs">
-                  View all
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </RouterLink>
-              </div>
-              <div class="card-body">
-                <div class="highlights-grid">
-                  <div v-for="item in programHighlights" :key="item.title" class="hcard" :class="'hcard-' + item.color">
-                    <div class="hcard-top">
-                      <span class="hcard-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-                      </span>
-                      <span class="hcard-count">{{ item.count }}</span>
-                    </div>
-                    <div class="hcard-body">
-                      <strong>{{ item.title }}</strong>
-                      <small>{{ item.desc }}</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+            </v-alert>
           </div>
 
-          <!-- SIDEBAR -->
-          <aside class="content-side">
-            <div class="side-card">
-              <div class="side-card-hdr">
-                <span class="side-card-badge">Impact</span>
-                <h3>Key numbers</h3>
-              </div>
-              <div class="side-list">
-                <div v-for="item in impactNumbers" :key="item.label" class="side-item">
-                  <div class="side-item-dot"></div>
-                  <div class="side-item-info">
-                    <strong>{{ item.value }}</strong>
-                    <small>{{ item.label }}</small>
+          <div v-else key="content" class="content-grid">
+            <AdminSectionNav
+              :sections="sections"
+              :active-section="activeSection"
+              :has-changes="hasChanges"
+              :saving="saving"
+              aria-label="Education page sections"
+              save-label="Save Change"
+              @navigate="scrollToSection"
+              @save="savePageContent"
+            />
+
+            <!-- ── IMAGES ── -->
+            <AdminEditorPanel
+              :id="sections[0].id"
+              kicker="Page Images"
+              heading="Upload section images"
+              :editing="!!editingSections.images"
+              :collapsed="collapsedSections.images"
+              @toggle-edit="toggleEdit('images')"
+              @cancel="cancelEdit('images')"
+              @toggle-collapse="toggleCollapse('images')"
+            >
+              <div class="pa-4">
+                <p class="text-body-2 text-medium-emphasis mb-4">Each slot matches a section on the public Education page. Clear an image to show the default fallback.</p>
+                <div class="img-grid">
+                  <div v-for="(img, index) in galleryImages" :key="img.id" class="img-card" :class="{ 'img-set': !!img.url?.trim() }">
+                    <div class="img-frame">
+                      <template v-if="img.url?.trim()">
+                        <img :src="img.url" :alt="img.label" class="img-preview" />
+                        <v-btn v-if="editingSections.images" icon size="x-small" color="error" class="img-clear" @click="clearGalleryImage(index)" title="Remove image">
+                          <v-icon size="small">mdi-delete</v-icon>
+                        </v-btn>
+                      </template>
+                      <template v-else>
+                        <div class="img-frame-empty">
+                          <v-icon size="28" class="mb-1">mdi-image-outline</v-icon>
+                          <span class="img-frame-empty-text">No image set</span>
+                          <span class="img-frame-empty-hint">Fallback will be used</span>
+                        </div>
+                      </template>
+                    </div>
+                    <div class="img-card-body">
+                      <div class="img-card-header">
+                        <v-chip size="x-small" color="primary" variant="tonal">{{ img.label }}</v-chip>
+                      </div>
+                      <ImagePickerField
+                        v-model="galleryImages[index].url"
+                        :label="`Upload or paste URL`"
+                        hide-preview
+                        :disabled="!editingSections.images"
+                        @success="onGalleryImageSaved"
+                        @error="(msg) => ui.addToast(msg, 'error')"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </AdminEditorPanel>
 
-            <div class="side-card">
-              <div class="side-card-hdr">
-                <span class="side-card-badge">Content</span>
-                <h3>Related pages</h3>
-              </div>
-              <div class="side-nav">
-                <RouterLink v-for="page in infoPages" :key="page.slug" :to="'/admin/editor/' + page.slug" class="side-nav-link">
-                  <div class="side-nav-info">
-                    <strong>{{ page.title }}</strong>
-                    <small>{{ page.route }}</small>
+            <!-- ── STATS BAND ── -->
+            <AdminEditorPanel
+              :id="sections[1].id"
+              kicker="Stats Band"
+              heading="Statistics shown on the public page"
+              :editing="!!editingSections.stats"
+              :collapsed="collapsedSections.stats"
+              @toggle-edit="toggleEdit('stats')"
+              @cancel="cancelEdit('stats')"
+              @toggle-collapse="toggleCollapse('stats')"
+            >
+              <div class="pa-4">
+                <div v-for="(stat, index) in statsBand" :key="index" class="stat-editor">
+                  <div class="stat-editor-hdr">
+                    <span class="stat-editor-num">Stat {{ index + 1 }}</span>
+                    <v-btn v-if="editingSections.stats" icon color="error" variant="tonal" size="x-small" @click="statsBand.splice(index, 1)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
                   </div>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </RouterLink>
+                  <div class="form-row">
+                    <v-text-field v-model="stat.number" label="Number" :disabled="!editingSections.stats" hide-details density="comfortable" variant="outlined" placeholder="e.g. 120+" />
+                    <v-text-field v-model="stat.label" label="Label" :disabled="!editingSections.stats" hide-details density="comfortable" variant="outlined" placeholder="e.g. PRE-SCHOOL CHILDREN" />
+                  </div>
+                  <v-text-field v-model="stat.description" label="Description" :disabled="!editingSections.stats" hide-details density="comfortable" variant="outlined" placeholder="Brief description" class="mt-2" />
+                </div>
+                <v-btn v-if="editingSections.stats" color="accent" variant="tonal" size="small" class="mt-2" @click="statsBand.push({ number: '', label: '', description: '' })">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add Stat
+                </v-btn>
               </div>
-            </div>
+            </AdminEditorPanel>
 
-            <div class="side-card">
-              <div class="side-card-hdr">
-                <span class="side-card-badge">Actions</span>
-                <h3>Manage</h3>
+            <!-- ── WHAT THEY DO ── -->
+            <AdminEditorPanel
+              :id="sections[2].id"
+              kicker="What They Do"
+              heading="Content sections"
+              :editing="!!editingSections.sections"
+              :collapsed="collapsedSections.sections"
+              @toggle-edit="toggleEdit('sections')"
+              @cancel="cancelEdit('sections')"
+              @toggle-collapse="toggleCollapse('sections')"
+            >
+              <div class="pa-4">
+                <div class="sections-list">
+                  <div v-for="(section, index) in draft.sections.filter((s) => s.id !== 'education-team')" :key="section.id" class="section-edit-card">
+                    <details :open="index === 0">
+                      <summary class="sec-summary">
+                        <div class="sec-summary-left">
+                          <span class="sec-badge">{{ section.label }}</span>
+                          <span class="sec-heading-preview">{{ section.heading || 'No heading' }}</span>
+                        </div>
+                        <v-icon class="sec-chevron">mdi-chevron-down</v-icon>
+                      </summary>
+                      <div class="sec-body">
+                        <v-text-field v-model="section.heading" label="Heading" :disabled="!editingSections.sections" hide-details density="comfortable" variant="outlined" />
+                        <v-textarea v-model="section.body" label="Body / Description" rows="3" :disabled="!editingSections.sections" hide-details density="comfortable" variant="outlined" />
+                        <v-textarea v-model="section.items" label="Bullet items (one per line)" rows="5" :disabled="!editingSections.sections" hide-details density="comfortable" variant="outlined" />
+                        <div v-if="section.items" class="item-preview">
+                          <span class="field-label">Preview ({{ parsedItemsForSection(section).length }} items)</span>
+                          <div class="item-chips">
+                            <v-chip v-for="item in parsedItemsForSection(section)" :key="item" size="x-small" color="primary" variant="tonal">{{ item }}</v-chip>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
               </div>
-              <RouterLink class="side-btn" to="/admin/modules/programs">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                Program records
-              </RouterLink>
-              <RouterLink class="side-btn" to="/admin/editor/programs-education">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit page content
-              </RouterLink>
-              <RouterLink class="side-btn" to="/admin/media">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                Media library
-              </RouterLink>
-            </div>
-          </aside>
-        </div>
+            </AdminEditorPanel>
+
+            <!-- ── TEAM CARDS ── -->
+            <AdminEditorPanel
+              :id="sections[3].id"
+              kicker="Team Cards"
+              heading="Organizational structure"
+              :editing="!!editingSections.team"
+              :collapsed="collapsedSections.team"
+              @toggle-edit="toggleEdit('team')"
+              @cancel="cancelEdit('team')"
+              @toggle-collapse="toggleCollapse('team')"
+            >
+              <div class="pa-4">
+                <div v-for="(card, index) in teamCards" :key="index" class="sub-editor-card">
+                  <div class="sub-editor-hdr">
+                    <span class="sub-num">Card {{ index + 1 }}</span>
+                    <v-btn v-if="editingSections.team" icon color="error" variant="tonal" size="x-small" @click="teamCards.splice(index, 1)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
+                  <div class="form-row">
+                    <v-text-field v-model="card.role" label="Role / Title" :disabled="!editingSections.team" hide-details density="comfortable" variant="outlined" placeholder="e.g. Program Director" />
+                    <v-select v-model="card.icon" label="Icon" :items="[{value:'compass',title:'Compass'},{value:'map',title:'Map'},{value:'heart',title:'Heart'},{value:'chart',title:'Chart'}]" :disabled="!editingSections.team" hide-details density="comfortable" variant="outlined" item-title="title" item-value="value" />
+                  </div>
+                  <v-textarea v-model="card.desc" label="Description" rows="2" :disabled="!editingSections.team" hide-details density="comfortable" variant="outlined" class="mt-2" />
+                </div>
+                <v-btn v-if="editingSections.team" color="accent" variant="tonal" size="small" class="mt-2" @click="teamCards.push({ role: '', icon: 'chart', desc: '' })">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add Card
+                </v-btn>
+              </div>
+            </AdminEditorPanel>
+          </div>
+        </v-fade-transition>
       </main>
     </div>
-  </div>
+    <AdminConfirmDialog
+      v-model="confirmOpen"
+      :title="confirmData.title"
+      :body="confirmData.body"
+      @confirm="confirmData.onConfirm()"
+    />
+  </v-app>
 </template>
 
 <style scoped>
 .edu-dash {
-  --bg: #f3f6fd;
-  --surface: #ffffff;
-  --border: #e8edf6;
-  --border-s: #d4dcee;
-  --text: #1e2a4a;
-  --contrast: #0a142d;
-  --muted: #6a7fa0;
-  --blue: #2563eb;
-  --blue-glow: rgba(37,99,235,0.25);
-  --blue-soft: #ecf2ff;
-  --emerald: #059669;
-  --emerald-glow: rgba(5,150,105,0.25);
-  --emerald-soft: #eafaf5;
-  --amber: #d97706;
-  --amber-glow: rgba(217,119,6,0.25);
-  --amber-soft: #fef8ee;
-  --violet: #7c3aed;
-  --violet-glow: rgba(124,58,237,0.25);
-  --violet-soft: #f3efff;
-  --slate: #64748b;
-  --slate-soft: #f0f3f8;
-  --shadow-xs: 0 1px 2px rgba(10,20,45,0.04);
-  --shadow-sm: 0 2px 8px rgba(10,20,45,0.06);
-  --shadow-md: 0 4px 16px rgba(10,20,45,0.07);
-  --shadow-lg: 0 8px 32px rgba(10,20,45,0.09);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-
   min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
-  transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  transition: padding-left 0.25s ease;
 }
 
-:global(.admin-dark) .edu-dash {
-  --bg: #06100F;
-  --surface: #0a1a14;
-  --border: #1d3b33;
-  --border-s: #263252;
-  --text: #c8d2e6;
-  --contrast: #eaf0f8;
-  --muted: #7a8aaa;
-  --blue: #3b82f6;
-  --blue-glow: rgba(59,130,246,0.2);
-  --blue-soft: #0f1f18;
-  --emerald: #10b981;
-  --emerald-glow: rgba(16,185,129,0.2);
-  --emerald-soft: #142a22;
-  --amber: #f59e0b;
-  --amber-glow: rgba(245,158,11,0.2);
-  --amber-soft: #1f1a10;
-  --violet: #a78bfa;
-  --violet-glow: rgba(167,139,250,0.2);
-  --violet-soft: #1c1640;
-  --slate: #8896b0;
-  --slate-soft: #121a2e;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.15);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.3);
+.admin-layout { min-height: 100vh; }
+
+.manager-main {
+  min-height: 100vh;
+  padding: 1.5rem 2rem 2.5rem;
 }
 
-.dash-layout { display: flex; }
-.dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; }
-
-/* ─── BUTTONS ─── */
-.btn {
-  display: inline-flex; align-items: center; gap: 0.45rem;
-  min-height: 36px; padding: 0.4rem 1rem;
-  border-radius: var(--radius-sm); font-weight: 750; font-size: 0.82rem;
-  cursor: pointer; text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
-  border: 1px solid transparent; font-family: inherit;
-}
-.btn:hover { transform: translateY(-1px); }
-.btn-primary {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: #fff; border-color: transparent;
-  box-shadow: 0 4px 14px rgba(37,99,235,0.3);
-}
-.btn-primary:hover { box-shadow: 0 6px 24px rgba(37,99,235,0.4); }
-.btn-ghost {
-  background: rgba(255,255,255,0.7); color: var(--contrast);
-  border-color: var(--border); backdrop-filter: blur(8px);
-}
-.btn-ghost:hover { background: var(--surface); border-color: var(--border-s); box-shadow: var(--shadow-sm); }
-:global(.admin-dark) .btn-ghost { background: rgba(16,24,38,0.7); border-color: var(--border); }
-
-/* ─── BANNER ─── */
-.dash-banner {
-  position: relative; background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl); box-shadow: var(--shadow-md);
-  overflow: hidden;
-}
-.banner-glow {
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 400px 200px at 10% 30%, rgba(37,99,235,0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 300px 200px at 90% 80%, rgba(5,150,105,0.05) 0%, transparent 70%);
-  pointer-events: none;
-}
-.banner-particles {
-  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
-}
-.banner-particles span {
-  position: absolute; width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(37,99,235,0.1);
-}
-.banner-particles span:nth-child(1) { top: 15%; left: 10%; animation: float 8s ease-in-out infinite; }
-.banner-particles span:nth-child(2) { top: 60%; right: 15%; width: 4px; height: 4px; animation: float 6s ease-in-out infinite reverse; }
-.banner-particles span:nth-child(3) { bottom: 20%; left: 40%; width: 5px; height: 5px; animation: float 10s ease-in-out infinite 2s; }
-.banner-particles span:nth-child(4) { top: 25%; right: 30%; animation: float 7s ease-in-out infinite 1s; }
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
-  50% { transform: translateY(-12px) scale(1.2); opacity: 0.8; }
+.manager-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
-.banner-inner { position: relative; z-index: 1; }
-.banner-breadcrumb {
-  display: flex; align-items: center; gap: 0.4rem;
-  padding: 0.6rem 1.25rem;
-  background: rgba(255,255,255,0.5);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-  font-size: 0.76rem; font-weight: 700;
+.manager-hero h1 {
+  margin: 0;
+  color: var(--admin-theme-contrast);
+  font-size: 1.32rem;
+  line-height: 1.2;
 }
-:global(.admin-dark) .banner-breadcrumb { background: rgba(16,24,38,0.5); }
-.bcrumb-link { color: var(--blue); text-decoration: none; }
-.bcrumb-link:hover { text-decoration: underline; }
-.bcrumb-sep { color: var(--muted); width: 10px; }
-.bcrumb-label { color: var(--muted); }
-.bcrumb-current { color: var(--contrast); }
 
-.banner-content {
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
-  padding: 1.25rem 1.25rem 0.75rem;
-}
-.banner-text { display: grid; gap: 0.3rem; }
-.banner-badge {
-  display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content;
-  font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue); background: var(--blue-soft);
-  padding: 0.2rem 0.7rem; border-radius: 999px;
-}
-.banner-title {
-  margin: 0; color: var(--contrast);
-  font-size: clamp(1.35rem,2.8vw,1.85rem); font-weight: 900;
-  letter-spacing: -0.025em; line-height: 1.1;
-}
-.banner-desc { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.5; max-width: 460px; }
-.banner-actions { display: flex; gap: 0.45rem; flex-shrink: 0; flex-wrap: wrap; }
+.manager-title { display: grid; gap: 0.32rem; }
+.manager-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.content-grid { display: grid; gap: 1.1rem; margin-top: 1rem; }
 
-.banner-stats {
-  display: grid; grid-template-columns: repeat(4,1fr);
-  border-top: 1px solid var(--border);
-}
-.bstat {
-  display: flex; align-items: center; gap: 0.7rem;
-  padding: 0.75rem 1rem;
-  border-right: 1px solid var(--border);
-  text-decoration: none; transition: all 0.2s ease;
-}
-.bstat:last-child { border-right: none; }
-.bstat:hover { background: var(--surface); }
-.bstat-icon {
-  width: 40px; height: 40px; display: grid; place-items: center;
-  border-radius: var(--radius-sm); flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.bstat:hover .bstat-icon { transform: scale(1.08); }
-.bstat-blue .bstat-icon { background: var(--blue-soft); color: var(--blue);
-  box-shadow: 0 0 0 0 var(--blue-glow); }
-.bstat-blue:hover .bstat-icon { box-shadow: 0 0 0 4px var(--blue-glow); }
-.bstat-emerald .bstat-icon { background: var(--emerald-soft); color: var(--emerald);
-  box-shadow: 0 0 0 0 var(--emerald-glow); }
-.bstat-emerald:hover .bstat-icon { box-shadow: 0 0 0 4px var(--emerald-glow); }
-.bstat-amber .bstat-icon { background: var(--amber-soft); color: var(--amber);
-  box-shadow: 0 0 0 0 var(--amber-glow); }
-.bstat-amber:hover .bstat-icon { box-shadow: 0 0 0 4px var(--amber-glow); }
-.bstat-violet .bstat-icon { background: var(--violet-soft); color: var(--violet);
-  box-shadow: 0 0 0 0 var(--violet-glow); }
-.bstat-violet:hover .bstat-icon { box-shadow: 0 0 0 4px var(--violet-glow); }
-.bstat-info strong { display: block; color: var(--contrast); font-size: 1.05rem; font-weight: 900; line-height: 1.2; }
-.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
-.bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 600; margin-top: 1px; }
+/* ─── Image grid ─── */
+.img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.img-card { border: 1px solid var(--admin-theme-border); border-radius: 8px; overflow: hidden; background: var(--admin-theme-surface); transition: border-color 0.2s ease; }
+.img-card:hover { border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border)); }
+.img-card.img-set { border-color: color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border)); }
+.img-frame { position: relative; width: 100%; height: 150px; background: var(--admin-theme-surface-soft); overflow: hidden; }
+.img-preview { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+.img-card:hover .img-preview { transform: scale(1.04); }
+.img-clear { position: absolute; top: 6px; right: 6px; }
+.img-frame-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 0.2rem; color: var(--admin-theme-muted); opacity: 0.5; }
+.img-frame-empty-text { font-size: 0.8rem; font-weight: 700; }
+.img-frame-empty-hint { font-size: 0.65rem; font-style: italic; }
+.img-card-body { padding: 0.75rem 0.85rem; display: grid; gap: 0.5rem; }
+.img-card-header { display: flex; align-items: center; gap: 0.4rem; }
+.img-path { font-size: 0.75rem; font-weight: 600; color: var(--admin-theme-muted); }
 
-/* ─── CONTENT GRID ─── */
-.content-grid {
-  display: grid; grid-template-columns: minmax(0,1fr) 280px;
-  gap: 1.25rem; margin-top: 1.25rem; align-items: start;
-}
-.content-main { display: grid; gap: 1.25rem; }
-.content-side { display: grid; gap: 0.85rem; position: sticky; top: calc(60px + 1.25rem); }
+/* ─── Stats editor ─── */
+.stat-editor { border: 1px solid var(--admin-theme-border); border-radius: 8px; padding: 1rem; margin-bottom: 0.65rem; background: var(--admin-theme-surface); }
+.stat-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem; }
+.stat-editor-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--admin-theme-teal); }
 
-/* ─── CARD ─── */
-.card-section {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
-  overflow: hidden; transition: box-shadow 0.2s ease;
-}
-.card-section:hover { box-shadow: var(--shadow-md); }
-.card-hdr {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
-  padding: 0.85rem 1.2rem;
-  border-bottom: 1px solid var(--border);
-}
-.card-hdr-left { display: grid; gap: 0.15rem; }
-.card-badge {
-  font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue);
-}
-.card-title { margin: 0; color: var(--contrast); font-size: 0.95rem; font-weight: 850; }
-.card-hdr-link {
-  display: inline-flex; align-items: center; gap: 0.3rem;
-  font-size: 0.78rem; font-weight: 700; color: var(--blue); text-decoration: none;
-  padding: 0.3rem 0.6rem; border-radius: var(--radius-sm);
-  transition: background 0.15s ease;
-}
-.card-hdr-link:hover { background: var(--blue-soft); }
-.card-body { padding: 1rem 1.2rem 1.2rem; }
+/* ─── Sub editor (team cards) ─── */
+.sub-editor-card { border: 1px solid var(--admin-theme-border); border-radius: 8px; padding: 1rem; margin-bottom: 0.65rem; background: var(--admin-theme-surface); }
+.sub-editor-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem; }
+.sub-num { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--admin-theme-primary); }
 
-/* ─── LINKS GRID ─── */
-.links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; }
-.link-card {
-  display: flex; align-items: center; gap: 0.7rem;
-  padding: 0.75rem 0.85rem; border-radius: var(--radius-md);
-  border: 1px solid var(--border); background: var(--surface);
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
-}
-.link-card:hover {
-  border-color: var(--border-s);
-  box-shadow: var(--shadow-sm); transform: translateY(-2px);
-}
-.link-icon {
-  width: 36px; height: 36px; display: grid; place-items: center;
-  border-radius: var(--radius-sm); flex-shrink: 0;
-  transition: transform 0.2s ease;
-}
-.link-card:hover .link-icon { transform: scale(1.1); }
-.link-blue .link-icon { background: var(--blue-soft); color: var(--blue); }
-.link-emerald .link-icon { background: var(--emerald-soft); color: var(--emerald); }
-.link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
-.link-violet .link-icon { background: var(--violet-soft); color: var(--violet); }
-.link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 800; margin-bottom: 1px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.2s ease; }
-.link-card:hover .link-arrow { transform: translateX(3px); color: var(--blue); }
+/* ─── Sections list ─── */
+.sections-list { display: grid; gap: 0.65rem; }
+.section-edit-card { border: 1px solid var(--admin-theme-border); border-radius: 8px; background: var(--admin-theme-surface); overflow: hidden; transition: border-color 0.15s ease; }
+.section-edit-card:hover { border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border)); }
+.sec-summary { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; cursor: pointer; user-select: none; list-style: none; }
+.sec-summary::-webkit-details-marker { display: none; }
+.sec-summary-left { display: flex; align-items: center; gap: 0.7rem; }
+.sec-badge { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--admin-theme-teal); background: color-mix(in srgb, var(--admin-theme-teal) 12%, transparent); padding: 0.15rem 0.5rem; border-radius: 4px; }
+.sec-heading-preview { font-size: 0.88rem; font-weight: 600; color: var(--admin-theme-contrast); }
+.sec-chevron { color: var(--admin-theme-muted); transition: transform 0.2s ease; }
+details[open] .sec-chevron { transform: rotate(180deg); }
+.sec-body { padding: 0 1rem 1rem; display: grid; gap: 0.65rem; }
+.item-preview { border: 1px solid var(--admin-theme-border); border-radius: 6px; padding: 0.75rem; background: var(--admin-theme-surface-soft); }
+.item-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.3rem; }
 
-/* ─── HIGHLIGHTS GRID ─── */
-.highlights-grid {
-  display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem;
-}
-.hcard {
-  border: 1px solid var(--border); border-radius: var(--radius-md);
-  background: var(--surface); overflow: hidden;
-  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
-}
-.hcard:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm);
-  border-color: color-mix(in srgb, var(--hc) 25%, var(--border-s)); }
-.hcard-blue { --hc: var(--blue); }
-.hcard-emerald { --hc: var(--emerald); }
-.hcard-amber { --hc: var(--amber); }
-.hcard-violet { --hc: var(--violet); }
-.hcard-slate { --hc: var(--slate); }
-.hcard-top {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.55rem 0.7rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-.hcard-icon {
-  width: 26px; height: 26px; display: grid; place-items: center;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--hc) 12%, var(--surface));
-  color: var(--hc);
-}
-.hcard-count {
-  font-size: 0.72rem; font-weight: 800; color: var(--muted);
-  padding: 0.1rem 0.4rem; border-radius: 999px;
-  background: var(--surface); border: 1px solid var(--border);
-}
-.hcard-body { padding: 0.5rem 0.7rem 0.65rem; display: grid; gap: 0.12rem; }
-.hcard-body strong { color: var(--contrast); font-size: 0.8rem; font-weight: 800; }
-.hcard-body small { color: var(--muted); font-size: 0.7rem; font-weight: 600; line-height: 1.4; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.65rem; }
+.field-label { font-size: 0.75rem; font-weight: 700; color: var(--admin-theme-muted); text-transform: uppercase; letter-spacing: 0.04em; }
 
-/* ─── SIDEBAR ─── */
-.side-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 0.85rem;
-  box-shadow: var(--shadow-xs); transition: box-shadow 0.2s ease;
-}
-.side-card:hover { box-shadow: var(--shadow-sm); }
-.side-card-hdr { display: grid; gap: 0.15rem; margin-bottom: 0.7rem; }
-.side-card-badge {
-  font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue);
-}
-.side-card-hdr h3 { margin: 0; color: var(--contrast); font-size: 0.85rem; font-weight: 800; }
-
-.side-list { display: grid; gap: 0.5rem; }
-.side-item {
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.5rem 0.6rem; border-radius: var(--radius-sm);
-  background: var(--surface); border: 1px solid var(--border);
-  transition: border-color 0.15s ease;
-}
-.side-item:hover { border-color: var(--border-s); }
-.side-item-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--blue); flex-shrink: 0;
-}
-.side-item-info strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 900; line-height: 1.2; }
-.side-item-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; }
-
-.side-nav { display: grid; gap: 0.25rem; }
-.side-nav-link {
-  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
-  padding: 0.45rem 0.6rem; border-radius: var(--radius-sm);
-  text-decoration: none; transition: background 0.15s ease;
-}
-.side-nav-link:hover { background: var(--surface); }
-.side-nav-info strong { display: block; color: var(--contrast); font-size: 0.78rem; font-weight: 800; }
-.side-nav-info small { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 600; }
-.side-nav-link > svg { color: var(--muted); flex-shrink: 0; }
-
-.side-btn {
-  display: flex; align-items: center; gap: 0.45rem;
-  padding: 0.45rem 0.6rem; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); background: var(--surface);
-  color: var(--text); font-size: 0.78rem; font-weight: 700;
-  text-decoration: none; transition: all 0.15s ease;
-  margin-bottom: 0.3rem;
-}
-.side-btn:last-child { margin-bottom: 0; }
-.side-btn:hover { border-color: var(--border-s); background: var(--surface); color: var(--contrast); box-shadow: var(--shadow-xs); }
-
-/* ─── RESPONSIVE ─── */
+@media (max-width: 700px) { .img-grid { grid-template-columns: 1fr; } }
 @media (min-width: 900px) { .edu-dash.sidebar-open { padding-left: 260px; } }
-@media (max-width: 1100px) {
-  .content-grid { grid-template-columns: 1fr; }
-  .content-side { position: static; }
-}
 @media (max-width: 900px) {
-  .banner-stats { grid-template-columns: repeat(2,1fr); }
-  .links-grid { grid-template-columns: 1fr; }
-  .highlights-grid { grid-template-columns: repeat(2,1fr); }
-}
-@media (max-width: 720px) {
-  .dash-main { padding: 1rem; }
-  .banner-content { flex-direction: column; }
-  .banner-stats { grid-template-columns: 1fr; }
-  .bstat { border-right: none; border-bottom: 1px solid var(--border); }
-  .bstat:last-child { border-bottom: none; }
-  .highlights-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 600px) {
-  .banner-actions { width: 100%; }
-  .banner-actions .btn { flex: 1; justify-content: center; }
+  .manager-main { padding: 1rem; padding-top: calc(60px + 1rem); }
+  .manager-hero { flex-direction: column; align-items: stretch; }
+  .hero-actions { width: 100%; }
 }
 </style>

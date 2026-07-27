@@ -1,630 +1,295 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import ImageUploader from '@/components/admin/ImageUploader.vue'
+import { useAdminTheme } from '@/composables/useAdminTheme'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useUiStore } from '@/stores/ui.store'
+import { useContentStore } from '@/stores/content.store'
+import { supabase } from '@/lib/supabase'
+import { explainPageSaveError, savePageByLocale, type PageLocalePayload } from '@/lib/pagePersistence'
 
 const ui = useUiStore()
+const contentStore = useContentStore()
+const { locale } = useI18n()
 
-const statsCards = [
-  { label: 'Total Schools', value: '17', desc: 'Across rural Cambodia', color: 'blue' },
-  { label: 'Children Reached', value: '3,400+', desc: 'Receiving education', color: 'emerald' },
-  { label: 'Villages Served', value: '43', desc: 'In program areas', color: 'amber' },
-  { label: 'Teachers Supported', value: '120+', desc: 'Trained & equipped', color: 'violet' },
-]
+useAdminTheme()
 
-const quickLinks = [
-  { title: 'Edit Education Page', desc: 'Update public education content', to: '/admin/editor/programs-education', color: 'blue' },
-  { title: 'Manage Records', desc: 'Create & organize data entries', to: '/admin/modules/programs', color: 'emerald' },
-  { title: 'Media Library', desc: 'Upload images & documents', to: '/admin/media', color: 'amber' },
-  { title: 'Impact Stories', desc: 'Publish success stories', to: '/admin/modules/impact-stories', color: 'violet' },
-]
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
 
-const programHighlights = [
-  { title: 'Community Pre-schools', desc: 'Early childhood education in remote villages', count: '17 centers', color: 'blue' },
-  { title: 'Mobile Libraries', desc: 'Books delivered to rural children', count: '12 units', color: 'emerald' },
-  { title: 'Scholarship Program', desc: 'Supporting children from poor families', count: '363 students', color: 'amber' },
-  { title: 'Buddhist Education', desc: 'Traditional learning through pagodas', count: '8 sites', color: 'violet' },
-  { title: 'Teacher Support', desc: 'Training and resources for educators', count: '45 teachers', color: 'slate' },
-  { title: 'Parent Engagement', desc: 'Connecting families with schools', count: '280 families', color: 'emerald' },
-]
+const activeLocale = computed(() => (locale.value === 'kh' ? 'kh' : 'en'))
+const publicPageUrl = computed(() => `${window.location.origin}/programs`)
 
-const impactNumbers = [
-  { value: '27,810', label: 'Seedlings distributed to schools' },
-  { value: '293', label: 'Villages in program areas' },
-  { value: '4,555', label: 'Families in saving groups' },
-  { value: '363', label: 'Children in pre-schools' },
-]
+/* ─── Types ─────────────────────────────────────── */
+interface GoalForm {
+  tag: string
+  title: string
+  intro: string
+  whatWeDo: string
+  whyItMatters: string
+  quote: string
+  image: string
+  color: 'emerald' | 'blue' | 'amber' | 'violet'
+}
 
-const infoPages = [
-  { title: 'Education Page Content', slug: 'programs-education', route: '/programs/education' },
-  { title: 'Programs Overview', slug: 'programs', route: '/programs' },
-  { title: 'Impact Numbers', slug: 'impact-numbers', route: '/impact/numbers' },
-]
+/* ─── State ─────────────────────────────────────── */
+const loading = ref(true)
+const saving = ref(false)
+const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
+
+const draftBanner = reactive({
+  eyebrow: 'Our Programs',
+  headline: 'Four roots. One tree of peace.',
+  intro: "Santi Sena's work follows four interwoven strategic goals: environment, education, livelihoods and child protection.",
+  primaryAction: 'Explore programs',
+})
+
+const goals = reactive<GoalForm[]>([
+  { tag: 'GOAL 01', title: 'Environment', intro: 'Community forestry, biogas digesters, rainwater harvesting and WASH.', whatWeDo: 'Facilitate community forest agreements, install biogas systems, dig wells and support smallholder tree nurseries.', whyItMatters: 'Southeastern Cambodia is one of the most climate-vulnerable regions.', quote: 'The forest belongs to the pagoda and the pagoda belongs to the village.', image: '', color: 'emerald' },
+  { tag: 'GOAL 02', title: 'Education', intro: 'Pre-schools in remote hamlets, community libraries, and youth scholarships.', whatWeDo: 'Set up village pre-schools, train local teachers, stock small libraries.', whyItMatters: 'In the districts we work in, many hamlets are more than an hour\'s walk from the nearest school.', quote: 'Our library used to be a bag of ten books under the pagoda.', image: '', color: 'blue' },
+  { tag: 'GOAL 03', title: 'Livelihood', intro: 'Saving-for-Change groups, women-led cooperatives, and rural enterprises.', whatWeDo: 'Train Saving-for-Change facilitators, seed household enterprises.', whyItMatters: 'Cash predictability is what lets a family send their child to school.', quote: 'Before the savings group, I borrowed at 10% a month. Now I lend at zero.', image: '', color: 'amber' },
+  { tag: 'GOAL 04', title: 'Child Protection', intro: 'Village-level Child Protection Networks, anti-trafficking outreach.', whatWeDo: 'Set up Child Protection Networks, train monks and elders as safeguarding leads.', whyItMatters: 'The border with Vietnam brings both opportunity and risk.', quote: 'The safest village is one where every adult knows every child\'s name.', image: '', color: 'violet' },
+])
+
+const priorities = reactive<string[]>([
+  'Strengthened governance and accountability',
+  'Staff and volunteer development',
+  'Income and funding diversification',
+  'Research and knowledge management',
+  'Public advocacy',
+])
+
+const originalSnapshot = ref('')
+
+const hasChanges = computed(() => {
+  const current = JSON.stringify({ banner: { ...draftBanner }, goals: goals.map((g) => ({ ...g })), priorities: [...priorities] })
+  return current !== originalSnapshot.value
+})
+
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify({ banner: { ...draftBanner }, goals: goals.map((g) => ({ ...g })), priorities: [...priorities] })
+}
+
+const sections = [
+  { id: 'progs-banner', label: 'Banner', icon: 'mdi-creation' },
+  { id: 'progs-goals', label: 'Program Goals', icon: 'mdi-folder-heart' },
+  { id: 'progs-priorities', label: 'Priorities', icon: 'mdi-format-list-checks' },
+] as const
+
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
+useUnsavedChangesGuard(hasChanges)
+
+/* ─── Business logic ───────────────────────────── */
+function addPriority() { priorities.push('') }
+function removePriority(index: number) { priorities.splice(index, 1) }
+
+async function loadPage() {
+  resetEditingState()
+  loading.value = true
+  notice.value = null
+  try {
+    const localeToLoad = activeLocale.value
+    const locales = localeToLoad === 'en' ? ['en'] : [localeToLoad, 'en']
+    const { data, error } = await supabase.from('pages').select('body, locale, updated_at').eq('slug', 'programs').in('locale', locales)
+    if (error) throw error
+    const rows = (data ?? []) as { body: string; locale: string; updated_at: string | null }[]
+    const row = rows.find((r) => r.locale === localeToLoad) ?? rows.find((r) => r.locale === 'en')
+    if (row?.body) {
+      try {
+        const parsed = JSON.parse(row.body)
+        if (parsed?.kind === 'santi-sena-page-content') {
+          draftBanner.eyebrow = parsed.eyebrow || draftBanner.eyebrow
+          draftBanner.headline = parsed.headline || draftBanner.headline
+          draftBanner.intro = parsed.intro || draftBanner.intro
+          draftBanner.primaryAction = parsed.primaryAction || draftBanner.primaryAction
+          const goalsSection = parsed.sections?.find((s: { id: string }) => s.id === 'programs-goals')
+          if (goalsSection?.items) {
+            try {
+              const loaded = JSON.parse(goalsSection.items)
+              if (Array.isArray(loaded)) { loaded.forEach((g: Partial<GoalForm>, i: number) => { if (goals[i]) Object.assign(goals[i], g) }) }
+            } catch { /* keep defaults */ }
+          }
+          const priSection = parsed.sections?.find((s: { id: string }) => s.id === 'programs-priorities')
+          if (priSection?.items) { priorities.length = 0; priorities.push(...priSection.items.split('\n').filter((l: string) => l.trim())) }
+        }
+      } catch { /* keep defaults */ }
+    }
+    updateSnapshot()
+  } catch (e: unknown) {
+    console.error('loadPage error:', e)
+    notice.value = { type: 'error', message: e instanceof Error ? e.message : 'Could not load page content.' }
+  } finally { loading.value = false; setupSectionWatch() }
+}
+
+async function savePage() {
+  saving.value = true
+  notice.value = null
+  try {
+    const goalsItems = JSON.stringify(goals)
+    const prioritiesItems = priorities.filter((l) => l.trim()).join('\n')
+    const body = JSON.stringify({
+      kind: 'santi-sena-page-content', version: 2, route: '/programs', group: 'Programs',
+      eyebrow: draftBanner.eyebrow, headline: draftBanner.headline, intro: draftBanner.intro,
+      heroImageUrl: '', primaryAction: draftBanner.primaryAction, secondaryAction: '',
+      sections: [
+        { id: 'programs-goals', label: 'Program goals', heading: 'Four strategic goals', body: 'Full goal cards', items: goalsItems },
+        { id: 'programs-priorities', label: 'Operational priorities', heading: 'How we keep the tree alive', body: 'Internal priorities', items: prioritiesItems },
+      ],
+    })
+    const payload: PageLocalePayload = {
+      slug: 'programs', title: draftBanner.headline.trim() || 'Programs', body, route_path: '/programs',
+      nav_group: 'Programs', locale: activeLocale.value, template: 'standard', status: 'published',
+      hero_eyebrow: draftBanner.eyebrow.trim() || null, hero_headline: draftBanner.headline.trim() || null,
+      hero_intro: draftBanner.intro.trim() || null, primary_cta_label: draftBanner.primaryAction.trim() || null,
+      primary_cta_url: '/programs', secondary_cta_label: null, secondary_cta_url: null,
+      seo_title: draftBanner.headline.trim() || 'Programs', seo_description: draftBanner.intro.trim() || null,
+      sort_order: 4, published_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    }
+    const { error } = await savePageByLocale(payload, 'body')
+    if (error) throw explainPageSaveError(error)
+    notice.value = { type: 'success', message: `Programs page (${activeLocale.value === 'kh' ? 'Khmer' : 'English'}) saved successfully.` }
+    ui.addToast('Programs page saved.', 'success')
+    resetEditingState()
+    updateSnapshot()
+  } catch (e: unknown) {
+    console.error('savePage error:', e)
+    notice.value = { type: 'error', message: e instanceof Error ? e.message : 'Could not save page.' }
+    ui.addToast(notice.value.message, 'error')
+  } finally { saving.value = false }
+}
+
+async function viewPage() {
+  try {
+    await savePage()
+    if (notice.value?.type !== 'error') { window.open(publicPageUrl.value, '_blank', 'noopener,noreferrer') }
+  } catch (e) { console.error('View page failed:', e) }
+}
+
+const { editingSections, collapsedSections, toggleCollapse, toggleEdit, cancelEdit, setupSectionWatch, stopSectionWatch, resetEditingState } = useSectionEditor([
+  { key: 'banner', getSnapshot: () => ({ ...draftBanner }), applySnapshot: (v) => { Object.assign(draftBanner, v) } },
+  { key: 'goals', getSnapshot: () => goals.map((g) => ({ ...g })), applySnapshot: (v) => { goals.length = 0; v.forEach((g: GoalForm) => goals.push(g)) } },
+  { key: 'priorities', getSnapshot: () => [...priorities], applySnapshot: (v) => { priorities.length = 0; priorities.push(...v) } },
+])
+
+onMounted(() => { contentStore.useLocalFallback(); void loadPage() })
+onUnmounted(() => { stopSectionWatch() })
 </script>
 
 <template>
-  <div :class="['edu-dash', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['progs-overview', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
-    <div class="dash-layout">
+    <div class="admin-layout">
       <AdminSidebar />
-      <main class="dash-main">
-        <!-- PREMIUM BANNER -->
-        <header class="dash-banner">
-          <div class="banner-glow" aria-hidden="true"></div>
-          <div class="banner-particles" aria-hidden="true">
-            <span></span><span></span><span></span><span></span>
+      <main class="manager-main">
+        <header class="manager-hero">
+          <div class="manager-title">
+            <h1>Programs Overview</h1>
+            <div class="manager-meta">
+              <v-chip size="small" variant="tonal" color="primary">{{ activeLocale === 'kh' ? 'Khmer' : 'English' }} content</v-chip>
+            </div>
           </div>
-          <div class="banner-inner">
-            <div class="banner-breadcrumb">
-              <RouterLink to="/admin" class="bcrumb-link">Dashboard</RouterLink>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-label">Programs</span>
-              <svg class="bcrumb-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              <span class="bcrumb-current">Education</span>
-            </div>
-            <div class="banner-content">
-              <div class="banner-text">
-                <div class="banner-badge">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2 2 6 2s6-.9 6-2v-5"/></svg>
-                  Education Program
-                </div>
-                <h1 class="banner-title">Education Dashboard</h1>
-                <p class="banner-desc">Manage education content, track schools, students, and impact across Cambodia.</p>
-              </div>
-              <div class="banner-actions">
-                <RouterLink class="btn btn-ghost" to="/admin/editor/programs-education">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  Edit Content
-                </RouterLink>
-                <RouterLink class="btn btn-primary" to="/programs/education">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  View Page
-                </RouterLink>
-              </div>
-            </div>
-            <div class="banner-stats">
-              <div v-for="stat in statsCards" :key="stat.label" class="bstat" :class="'bstat-' + stat.color">
-                <div class="bstat-icon">
-                  <svg v-if="stat.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2 2 6 2s6-.9 6-2v-5"/></svg>
-                  <svg v-else-if="stat.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  <svg v-else-if="stat.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </div>
-                <div class="bstat-info">
-                  <strong>{{ stat.value }}</strong>
-                  <small>{{ stat.label }}</small>
-                  <span class="bstat-desc">{{ stat.desc }}</span>
-                </div>                </div>
-            </div>
+          <div class="hero-actions">
+            <v-btn variant="tonal" to="/programs" target="_blank"><v-icon start>mdi-open-in-new</v-icon>View page</v-btn>
           </div>
         </header>
 
-        <!-- CONTENT GRID -->
-        <div class="content-grid">
-          <div class="content-main">
-            <!-- Quick Links -->
-            <section class="card-section">
-              <div class="card-hdr">
-                <div class="card-hdr-left">
-                  <span class="card-badge">Quick access</span>
-                  <h2 class="card-title">Frequent actions</h2>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="links-grid">
-                  <RouterLink v-for="link in quickLinks" :key="link.title" :to="link.to" class="link-card" :class="'link-' + link.color">
-                    <span class="link-icon">
-                      <svg v-if="link.color === 'blue'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                      <svg v-else-if="link.color === 'emerald'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                      <svg v-else-if="link.color === 'amber'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                      <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                    </span>
-                    <div class="link-text">
-                      <strong>{{ link.title }}</strong>
-                      <small>{{ link.desc }}</small>
-                    </div>
-                    <svg class="link-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                  </RouterLink>
-                </div>
-              </div>
-            </section>
+        <!-- Notice -->
+        <v-slide-y-reverse-transition>
+          <v-alert v-if="notice" :type="notice.type" variant="tonal" closable class="mt-3" @click:close="notice = null">{{ notice.message }}</v-alert>
+        </v-slide-y-reverse-transition>
 
-            <!-- Program Highlights -->
-            <section class="card-section">
-              <div class="card-hdr">
-                <div class="card-hdr-left">
-                  <span class="card-badge">Initiatives</span>
-                  <h2 class="card-title">Education programs</h2>
-                </div>
-                <RouterLink class="card-hdr-link" to="/admin/modules/programs">
-                  View all
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </RouterLink>
-              </div>
-              <div class="card-body">
-                <div class="highlights-grid">
-                  <div v-for="item in programHighlights" :key="item.title" class="hcard" :class="'hcard-' + item.color">
-                    <div class="hcard-top">
-                      <span class="hcard-icon">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-                      </span>
-                      <span class="hcard-count">{{ item.count }}</span>
-                    </div>
-                    <div class="hcard-body">
-                      <strong>{{ item.title }}</strong>
-                      <small>{{ item.desc }}</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Programs content...</span>
           </div>
 
-          <!-- SIDEBAR -->
-          <aside class="content-side">
-            <div class="side-card">
-              <div class="side-card-hdr">
-                <span class="side-card-badge">Impact</span>
-                <h3>Key numbers</h3>
-              </div>
-              <div class="side-list">
-                <div v-for="item in impactNumbers" :key="item.label" class="side-item">
-                  <div class="side-item-dot"></div>
-                  <div class="side-item-info">
-                    <strong>{{ item.value }}</strong>
-                    <small>{{ item.label }}</small>
-                  </div>
+          <div v-else key="content" class="content-grid">
+            <AdminSectionNav :sections="sections" :active-section="activeSection" :has-changes="hasChanges" :saving="saving" save-label="Save & view page" @navigate="scrollToSection" @save="viewPage" />
+
+            <!-- ── BANNER ── -->
+            <AdminEditorPanel :id="sections[0].id" kicker="Banner" heading="Eyebrow, headline & intro" :editing="!!editingSections.banner" :collapsed="collapsedSections.banner" @toggle-edit="toggleEdit('banner')" @cancel="cancelEdit('banner')" @toggle-collapse="toggleCollapse('banner')">
+              <div class="pa-4">
+                <div class="form-grid">
+                  <v-text-field v-model="draftBanner.eyebrow" label="Eyebrow" :disabled="!editingSections.banner" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draftBanner.headline" label="Headline" :disabled="!editingSections.banner" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-textarea v-model="draftBanner.intro" label="Intro" rows="3" :disabled="!editingSections.banner" hide-details density="comfortable" variant="outlined" class="field-wide" />
                 </div>
               </div>
-            </div>
+            </AdminEditorPanel>
 
-            <div class="side-card">
-              <div class="side-card-hdr">
-                <span class="side-card-badge">Content</span>
-                <h3>Related pages</h3>
+            <!-- ── PROGRAM GOALS ── -->
+            <AdminEditorPanel :id="sections[1].id" kicker="Program Goals" heading="Four strategic goal cards" :editing="!!editingSections.goals" :collapsed="collapsedSections.goals" @toggle-edit="toggleEdit('goals')" @cancel="cancelEdit('goals')" @toggle-collapse="toggleCollapse('goals')">
+              <div class="pa-4">
+                <v-slide-y-transition group tag="div" class="goal-grid">
+                  <v-card v-for="(goal, index) in goals" :key="index" variant="outlined" class="goal-card">
+                    <v-card-title class="d-flex align-center justify-space-between pa-3 text-body-2 font-weight-bold">
+                      <span>{{ goal.tag }} — {{ goal.title }}</span>
+                      <v-btn v-if="editingSections.goals" icon variant="text" size="x-small" color="error" @click="goals.splice(index, 1)"><v-icon size="small">mdi-delete</v-icon></v-btn>
+                    </v-card-title>
+                    <v-card-text class="pa-3 pt-0">
+                      <div class="form-grid">
+                        <v-text-field v-model="goal.tag" label="Tag" :disabled="!editingSections.goals" hide-details density="compact" variant="outlined" />
+                        <v-text-field v-model="goal.title" label="Title" :disabled="!editingSections.goals" hide-details density="compact" variant="outlined" />
+                        <v-textarea v-model="goal.intro" label="Intro" rows="2" :disabled="!editingSections.goals" hide-details density="compact" variant="outlined" class="field-wide" />
+                        <v-textarea v-model="goal.whatWeDo" label="What we do" rows="2" :disabled="!editingSections.goals" hide-details density="compact" variant="outlined" class="field-wide" />
+                        <v-textarea v-model="goal.whyItMatters" label="Why it matters" rows="2" :disabled="!editingSections.goals" hide-details density="compact" variant="outlined" class="field-wide" />
+                        <v-textarea v-model="goal.quote" label="Quote" rows="2" :disabled="!editingSections.goals" hide-details density="compact" variant="outlined" class="field-wide" />
+                        <v-text-field v-model="goal.image" label="Image URL" :disabled="!editingSections.goals" hide-details density="compact" variant="outlined" class="field-wide" />
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </v-slide-y-transition>
               </div>
-              <div class="side-nav">
-                <RouterLink v-for="page in infoPages" :key="page.slug" :to="'/admin/editor/' + page.slug" class="side-nav-link">
-                  <div class="side-nav-info">
-                    <strong>{{ page.title }}</strong>
-                    <small>{{ page.route }}</small>
+            </AdminEditorPanel>
+
+            <!-- ── PRIORITIES ── -->
+            <AdminEditorPanel :id="sections[2].id" kicker="Priorities" heading="Operational priorities" :editing="!!editingSections.priorities" :collapsed="collapsedSections.priorities" @toggle-edit="toggleEdit('priorities')" @cancel="cancelEdit('priorities')" @toggle-collapse="toggleCollapse('priorities')">
+              <div class="pa-4">
+                <div class="priority-grid">
+                  <div v-for="(item, index) in priorities" :key="index" class="priority-row">
+                    <v-text-field v-model="priorities[index]" label="Priority" :disabled="!editingSections.priorities" hide-details density="comfortable" variant="outlined" />
+                    <v-btn v-if="editingSections.priorities" icon variant="tonal" size="small" color="error" @click="removePriority(index)"><v-icon size="small">mdi-delete</v-icon></v-btn>
                   </div>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </RouterLink>
+                </div>
+                <v-btn v-if="editingSections.priorities" color="accent" variant="tonal" size="small" class="mt-2" @click="addPriority"><v-icon start>mdi-plus</v-icon>Add Priority</v-btn>
               </div>
-            </div>
-
-            <div class="side-card">
-              <div class="side-card-hdr">
-                <span class="side-card-badge">Actions</span>
-                <h3>Manage</h3>
-              </div>
-              <RouterLink class="side-btn" to="/admin/modules/programs">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                Program records
-              </RouterLink>
-              <RouterLink class="side-btn" to="/admin/editor/programs-education">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Edit page content
-              </RouterLink>
-              <RouterLink class="side-btn" to="/admin/media">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                Media library
-              </RouterLink>
-            </div>
-          </aside>
-        </div>
+            </AdminEditorPanel>
+          </div>
+        </v-fade-transition>
       </main>
     </div>
-  </div>
+    <AdminConfirmDialog v-model="confirmOpen" :title="confirmData.title" :body="confirmData.body" @confirm="confirmData.onConfirm()" />
+  </v-app>
 </template>
 
 <style scoped>
-.edu-dash {
-  --bg: #f3f6fd;
-  --surface: #02110e;
-  --border: #e8edf6;
-  --border-s: #d4dcee;
-  --text: #2b54c5;
-  --contrast: #0d9656;
-  --muted: #6a7fa0;
-  --blue: #b4c9f3;
-  --blue-glow: rgba(37,99,235,0.25);
-  --blue-soft: #ecf2ff;
-  --emerald: #059669;
-  --emerald-glow: rgba(5,150,105,0.25);
-  --emerald-soft: #eafaf5;
-  --amber: #d97706;
-  --amber-glow: rgba(217,119,6,0.25);
-  --amber-soft: #fef8ee;
-  --violet: #7c3aed;
-  --violet-glow: rgba(124,58,237,0.25);
-  --violet-soft: #f3efff;
-  --slate: #64748b;
-  --slate-soft: #f0f3f8;
-  --shadow-xs: 0 1px 2px rgba(10,20,45,0.04);
-  --shadow-sm: 0 2px 8px rgba(10,20,45,0.06);
-  --shadow-md: 0 4px 16px rgba(10,20,45,0.07);
-  --shadow-lg: 0 8px 32px rgba(10,20,45,0.09);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
-  transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
-}
-
-:global(.admin-dark) .edu-dash {
-  --bg: #06100F;
-  --surface: #0a1a14;
-  --border: #1d3b33;
-  --border-s: #263252;
-  --text: #c8d2e6;
-  --contrast: #eaf0f8;
-  --muted: #7a8aaa;
-  --blue: #3b82f6;
-  --blue-glow: rgba(59,130,246,0.2);
-  --blue-soft: #0f1f18;
-  --emerald: #10b981;
-  --emerald-glow: rgba(16,185,129,0.2);
-  --emerald-soft: #142a22;
-  --amber: #f59e0b;
-  --amber-glow: rgba(245,158,11,0.2);
-  --amber-soft: #1f1a10;
-  --violet: #a78bfa;
-  --violet-glow: rgba(167,139,250,0.2);
-  --violet-soft: #1c1640;
-  --slate: #8896b0;
-  --slate-soft: #121a2e;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.15);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.3);
-}
-
-.dash-layout { display: flex; }
-.dash-main { flex: 1; width: 100%; padding: 1.25rem 1.5rem 2rem; }
-
-/* ─── BUTTONS ─── */
-.btn {
-  display: inline-flex; align-items: center; gap: 0.45rem;
-  min-height: 36px; padding: 0.4rem 1rem;
-  border-radius: var(--radius-sm); font-weight: 750; font-size: 0.82rem;
-  cursor: pointer; text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
-  border: 1px solid transparent; font-family: inherit;
-}
-.btn:hover { transform: translateY(-1px); }
-.btn-primary {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: #fff; border-color: transparent;
-  box-shadow: 0 4px 14px rgba(37,99,235,0.3);
-}
-.btn-primary:hover { box-shadow: 0 6px 24px rgba(37,99,235,0.4); }
-.btn-ghost {
-  background: rgba(255,255,255,0.7); color: var(--contrast);
-  border-color: var(--border); backdrop-filter: blur(8px);
-}
-.btn-ghost:hover { background: var(--surface); border-color: var(--border-s); box-shadow: var(--shadow-sm); }
-:global(.admin-dark) .btn-ghost { background: rgba(16,24,38,0.7); border-color: var(--border); }
-
-/* ─── BANNER ─── */
-.dash-banner {
-  position: relative; background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl); box-shadow: var(--shadow-md);
-  overflow: hidden;
-}
-.banner-glow {
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 400px 200px at 10% 30%, rgba(37,99,235,0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 300px 200px at 90% 80%, rgba(5,150,105,0.05) 0%, transparent 70%);
-  pointer-events: none;
-}
-.banner-particles {
-  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
-}
-.banner-particles span {
-  position: absolute; width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(37,99,235,0.1);
-}
-.banner-particles span:nth-child(1) { top: 15%; left: 10%; animation: float 8s ease-in-out infinite; }
-.banner-particles span:nth-child(2) { top: 60%; right: 15%; width: 4px; height: 4px; animation: float 6s ease-in-out infinite reverse; }
-.banner-particles span:nth-child(3) { bottom: 20%; left: 40%; width: 5px; height: 5px; animation: float 10s ease-in-out infinite 2s; }
-.banner-particles span:nth-child(4) { top: 25%; right: 30%; animation: float 7s ease-in-out infinite 1s; }
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
-  50% { transform: translateY(-12px) scale(1.2); opacity: 0.8; }
-}
-
-.banner-inner { position: relative; z-index: 1; }
-.banner-breadcrumb {
-  display: flex; align-items: center; gap: 0.4rem;
-  padding: 0.6rem 1.25rem;
-  background: rgb(31, 69, 63);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-  font-size: 0.76rem; font-weight: 700;
-}
-:global(.admin-dark) .banner-breadcrumb { background: rgba(16,24,38,0.5); }
-.bcrumb-link { color: var(--blue); text-decoration: none; }
-.bcrumb-link:hover { text-decoration: underline; }
-.bcrumb-sep { color: var(--muted); width: 10px; }
-.bcrumb-label { color: var(--muted); }
-.bcrumb-current { color: var(--contrast); }
-
-.banner-content {
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
-  padding: 1.25rem 1.25rem 0.75rem;
-}
-.banner-text { display: grid; gap: 0.3rem; }
-.banner-badge {
-  display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content;
-  font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue); background: var(--blue-soft);
-  padding: 0.2rem 0.7rem; border-radius: 999px;
-}
-.banner-title {
-  margin: 0; color: var(--contrast);
-  font-size: clamp(1.35rem,2.8vw,1.85rem); font-weight: 900;
-  letter-spacing: -0.025em; line-height: 1.1;
-}
-.banner-desc { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.5; max-width: 460px; }
-.banner-actions { display: flex; gap: 0.45rem; flex-shrink: 0; flex-wrap: wrap; }
-
-.banner-stats {
-  display: grid; grid-template-columns: repeat(4,1fr);
-  border-top: 1px solid var(--border);
-}
-.bstat {
-  display: flex; align-items: center; gap: 0.7rem;
-  padding: 0.75rem 1rem;
-  border-right: 1px solid var(--border);
-  text-decoration: none; transition: all 0.2s ease;
-}
-.bstat:last-child { border-right: none; }
-.bstat:hover { background: var(--surface); }
-.bstat-icon {
-  width: 40px; height: 40px; display: grid; place-items: center;
-  border-radius: var(--radius-sm); flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.bstat:hover .bstat-icon { transform: scale(1.08); }
-.bstat-blue .bstat-icon { background: var(--blue-soft); color: var(--blue);
-  box-shadow: 0 0 0 0 var(--blue-glow); }
-.bstat-blue:hover .bstat-icon { box-shadow: 0 0 0 4px var(--blue-glow); }
-.bstat-emerald .bstat-icon { background: var(--emerald-soft); color: var(--emerald);
-  box-shadow: 0 0 0 0 var(--emerald-glow); }
-.bstat-emerald:hover .bstat-icon { box-shadow: 0 0 0 4px var(--emerald-glow); }
-.bstat-amber .bstat-icon { background: var(--amber-soft); color: var(--amber);
-  box-shadow: 0 0 0 0 var(--amber-glow); }
-.bstat-amber:hover .bstat-icon { box-shadow: 0 0 0 4px var(--amber-glow); }
-.bstat-violet .bstat-icon { background: var(--violet-soft); color: var(--violet);
-  box-shadow: 0 0 0 0 var(--violet-glow); }
-.bstat-violet:hover .bstat-icon { box-shadow: 0 0 0 4px var(--violet-glow); }
-.bstat-info strong { display: block; color: var(--contrast); font-size: 1.05rem; font-weight: 900; line-height: 1.2; }
-.bstat-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
-.bstat-desc { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 600; margin-top: 1px; }
-
-/* ─── CONTENT GRID ─── */
-.content-grid {
-  display: grid; grid-template-columns: minmax(0,1fr) 280px;
-  gap: 1.25rem; margin-top: 1.25rem; align-items: start;
-}
-.content-main { display: grid; gap: 1.25rem; }
-.content-side { display: grid; gap: 0.85rem; position: sticky; top: calc(60px + 1.25rem); }
-
-/* ─── CARD ─── */
-.card-section {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
-  overflow: hidden; transition: box-shadow 0.2s ease;
-}
-.card-section:hover { box-shadow: var(--shadow-md); }
-.card-hdr {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
-  padding: 0.85rem 1.2rem;
-  border-bottom: 1px solid var(--border);
-}
-.card-hdr-left { display: grid; gap: 0.15rem; }
-.card-badge {
-  font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue);
-}
-.card-title { margin: 0; color: var(--contrast); font-size: 0.95rem; font-weight: 850; }
-.card-hdr-link {
-  display: inline-flex; align-items: center; gap: 0.3rem;
-  font-size: 0.78rem; font-weight: 700; color: var(--blue); text-decoration: none;
-  padding: 0.3rem 0.6rem; border-radius: var(--radius-sm);
-  transition: background 0.15s ease;
-}
-.card-hdr-link:hover { background: var(--blue-soft); }
-.card-body { padding: 1rem 1.2rem 1.2rem; }
-
-/* ─── LINKS GRID ─── */
-.links-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.7rem; }
-.link-card {
-  display: flex; align-items: center; gap: 0.7rem;
-  padding: 0.75rem 0.85rem; border-radius: var(--radius-md);
-  border: 1px solid var(--border); background: var(--surface);
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
-}
-.link-card:hover {
-  border-color: var(--border-s);
-  box-shadow: var(--shadow-sm); transform: translateY(-2px);
-}
-.link-icon {
-  width: 36px; height: 36px; display: grid; place-items: center;
-  border-radius: var(--radius-sm); flex-shrink: 0;
-  transition: transform 0.2s ease;
-}
-.link-card:hover .link-icon { transform: scale(1.1); }
-.link-blue .link-icon { background: var(--blue-soft); color: var(--blue); }
-.link-emerald .link-icon { background: var(--emerald-soft); color: var(--emerald); }
-.link-amber .link-icon { background: var(--amber-soft); color: var(--amber); }
-.link-violet .link-icon { background: var(--violet-soft); color: var(--violet); }
-.link-text { flex: 1; min-width: 0; }
-.link-text strong { display: block; color: var(--contrast); font-size: 0.82rem; font-weight: 800; margin-bottom: 1px; }
-.link-text small { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.link-arrow { flex-shrink: 0; color: var(--muted); transition: transform 0.2s ease; }
-.link-card:hover .link-arrow { transform: translateX(3px); color: var(--blue); }
-
-/* ─── HIGHLIGHTS GRID ─── */
-.highlights-grid {
-  display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem;
-}
-.hcard {
-  border: 1px solid var(--border); border-radius: var(--radius-md);
-  background: var(--surface); overflow: hidden;
-  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
-}
-.hcard:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm);
-  border-color: color-mix(in srgb, var(--hc) 25%, var(--border-s)); }
-.hcard-blue { --hc: var(--blue); }
-.hcard-emerald { --hc: var(--emerald); }
-.hcard-amber { --hc: var(--amber); }
-.hcard-violet { --hc: var(--violet); }
-.hcard-slate { --hc: var(--slate); }
-.hcard-top {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.55rem 0.7rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-.hcard-icon {
-  width: 26px; height: 26px; display: grid; place-items: center;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--hc) 12%, var(--surface));
-  color: var(--hc);
-}
-.hcard-count {
-  font-size: 0.72rem; font-weight: 800; color: var(--muted);
-  padding: 0.1rem 0.4rem; border-radius: 999px;
-  background: var(--surface); border: 1px solid var(--border);
-}
-.hcard-body { padding: 0.5rem 0.7rem 0.65rem; display: grid; gap: 0.12rem; }
-.hcard-body strong { color: var(--contrast); font-size: 0.8rem; font-weight: 800; }
-.hcard-body small { color: var(--muted); font-size: 0.7rem; font-weight: 600; line-height: 1.4; }
-
-/* ─── SIDEBAR ─── */
-.side-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 0.85rem;
-  box-shadow: var(--shadow-xs); transition: box-shadow 0.2s ease;
-}
-.side-card:hover { box-shadow: var(--shadow-sm); }
-.side-card-hdr { display: grid; gap: 0.15rem; margin-bottom: 0.7rem; }
-.side-card-badge {
-  font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--blue);
-}
-.side-card-hdr h3 { margin: 0; color: var(--contrast); font-size: 0.85rem; font-weight: 800; }
-
-.side-list { display: grid; gap: 0.5rem; }
-.side-item {
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.5rem 0.6rem; border-radius: var(--radius-sm);
-  background: var(--surface); border: 1px solid var(--border);
-  transition: border-color 0.15s ease;
-}
-.side-item:hover { border-color: var(--border-s); }
-.side-item-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--blue); flex-shrink: 0;
-}
-.side-item-info strong { display: block; color: var(--contrast); font-size: 0.9rem; font-weight: 900; line-height: 1.2; }
-.side-item-info small { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; }
-
-.side-nav { display: grid; gap: 0.25rem; }
-.side-nav-link {
-  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
-  padding: 0.45rem 0.6rem; border-radius: var(--radius-sm);
-  text-decoration: none; transition: background 0.15s ease;
-}
-.side-nav-link:hover { background: var(--surface); }
-.side-nav-info strong { display: block; color: var(--contrast); font-size: 0.78rem; font-weight: 800; }
-.side-nav-info small { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 600; }
-.side-nav-link > svg { color: var(--muted); flex-shrink: 0; }
-
-.side-btn {
-  display: flex; align-items: center; gap: 0.45rem;
-  padding: 0.45rem 0.6rem; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); background: var(--surface);
-  color: var(--text); font-size: 0.78rem; font-weight: 700;
-  text-decoration: none; transition: all 0.15s ease;
-  margin-bottom: 0.3rem;
-}
-.side-btn:last-child { margin-bottom: 0; }
-.side-btn:hover { border-color: var(--border-s); background: var(--surface); color: var(--contrast); box-shadow: var(--shadow-xs); }
-
-/* ─── RESPONSIVE ─── */
-@media (min-width: 900px) { .edu-dash.sidebar-open { padding-left: 260px; } }
-@media (max-width: 1100px) {
-  .content-grid { grid-template-columns: 1fr; }
-  .content-side { position: static; }
-}
+.progs-overview { min-height: 100vh; background: var(--admin-bg); color: var(--admin-text); transition: padding-left 0.25s ease; }
+.admin-layout { min-height: 100vh; }
+.manager-main { min-height: 100vh; padding: 1.5rem 2rem 2.5rem; }
+.manager-hero { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding: 1rem 1.5rem; border: 1px solid var(--admin-theme-border); border-radius: 8px; background: var(--admin-theme-surface); box-shadow: var(--admin-theme-shadow); }
+.manager-hero h1 { margin: 0; color: var(--admin-theme-contrast); font-size: 1.32rem; line-height: 1.2; }
+.manager-title { display: grid; gap: 0.32rem; }
+.manager-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.content-grid { display: grid; gap: 1.1rem; margin-top: 1rem; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem; }
+.form-grid .field-wide { grid-column: 1 / -1; }
+.goal-grid { display: grid; gap: 0.85rem; }
+.priority-grid { display: grid; gap: 0.5rem; }
+.priority-row { display: flex; align-items: center; gap: 0.5rem; }
+@media (min-width: 900px) { .progs-overview.sidebar-open { padding-left: 260px; } }
 @media (max-width: 900px) {
-  .banner-stats { grid-template-columns: repeat(2,1fr); }
-  .links-grid { grid-template-columns: 1fr; }
-  .highlights-grid { grid-template-columns: repeat(2,1fr); }
-}
-@media (max-width: 720px) {
-  .dash-main { padding: 1rem; }
-  .banner-content { flex-direction: column; }
-  .banner-stats { grid-template-columns: 1fr; }
-  .bstat { border-right: none; border-bottom: 1px solid var(--border); }
-  .bstat:last-child { border-bottom: none; }
-  .highlights-grid { grid-template-columns: 1fr; }
-}
-@media (max-width: 600px) {
-  .banner-actions { width: 100%; }
-  .banner-actions .btn { flex: 1; justify-content: center; }
-}
-</style>
-
-<!-- Non-scoped dark mode overrides for Programs overview -->
-<style>
-.admin-dark .edu-dash {
-  background: #06100F !important;
-}
-.admin-dark .edu-dash .dash-layout {
-  background: #06100F !important;
-}
-.admin-dark .edu-dash .dash-main {
-  background: #06100F !important;
-}
-.admin-dark .dash-banner,
-.admin-dark .dashboard-cards,
-.admin-dark .stat-card,
-.admin-dark .banner-stats {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-}
-.admin-dark .btn,
-.admin-dark .btn-primary,
-.admin-dark .btn-secondary,
-.admin-dark .btn-ghost {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
-}
-.admin-dark .btn-primary {
-  background: #38c982 !important;
-  border-color: #74e0ae !important;
-  color: #06100F !important;
-}
-.admin-dark input,
-.admin-dark textarea,
-.admin-dark select {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
+  .manager-main { padding: 1rem; padding-top: calc(60px + 1rem); }
+  .manager-hero { flex-direction: column; align-items: stretch; }
+  .hero-actions { width: 100%; }
 }
 </style>

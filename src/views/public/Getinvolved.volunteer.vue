@@ -1,103 +1,217 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { normalizeMediaUrl } from '@/lib/media'
+import { useContentStore } from '@/stores/content.store'
+import type { SupportedLocale } from '@/i18n'
 
-import buddhistEducationImage from '@/assets/volunteer/buddhist-education.png'
-import childProtectionImage from '@/assets/volunteer/child-protection.png'
-import communityForestryImage from '@/assets/volunteer/community-forestry.png'
-import livelihoodImage from '@/assets/volunteer/livelihood-home-garden.png'
-import mobileLibraryImage from '@/assets/volunteer/mobile-library.png'
-import volunteerHeroImage from '@/assets/volunteer/volunteer-hero.png'
-import washSchoolImage from '@/assets/volunteer/wash-school.png'
+type ActionLink = { label: string; to: string }
+
+type ServiceCard = {
+  label: string
+  title: string
+  body: string
+  image: string
+  alt: string
+  to: string
+}
+
+type HelpCard = { title: string; body: string; to: string }
+
+type GalleryItem = { title: string; caption: string; image: string; alt: string }
+
+type VolunteerPageContent = {
+  serviceSection: { kicker: string; heading: string; description: string }
+  serviceCards: ServiceCard[]
+  storySection: {
+    kicker: string
+    heading: string
+    body: string
+    image: string
+    alt: string
+    cta: ActionLink
+  }
+  helpSection: { kicker: string; heading: string }
+  helpCards: HelpCard[]
+  campaignSection: { kicker: string; heading: string; body: string; cta: ActionLink }
+  gallerySection: { kicker: string; heading: string }
+  galleryImages: GalleryItem[]
+  supportSection: {
+    kicker: string
+    heading: string
+    body: string
+    cardTitle: string
+    cardBody: string
+    details: string[]
+    cta: ActionLink
+  }
+}
 
 defineOptions({ name: 'GetInvolvedVolunteerView' })
 
-const serviceCards = [
-  {
-    label: 'Education',
-    title: 'Child education',
-    body: 'Support reading, Buddhist primary education and practical learning materials for children.',
-    image: mobileLibraryImage,
-    alt: 'Children reading with a volunteer in a Cambodian school setting',
-    to: '/programs/education',
-  },
-  {
-    label: 'Livelihoods',
-    title: 'Livelihoods',
-    body: 'Help families strengthen home gardens, savings groups and local food security.',
-    image: livelihoodImage,
-    alt: 'A volunteer and farmers reviewing a Cambodian home garden',
-    to: '/programs/livelihood',
-  },
-  {
-    label: 'Community care',
-    title: 'Environment & WASH',
-    body: 'Join field activities around tree planting, hygiene awareness and safer school environments.',
-    image: communityForestryImage,
-    alt: 'Volunteers and villagers planting tree seedlings in rural Cambodia',
-    to: '/programs/environment',
-  },
-]
+const PAGE_SLUG = 'volunteer'
 
-const helpCards = [
-  {
-    title: 'Donate',
-    body: 'Support learning materials, community activities and field work for vulnerable villages.',
-    to: '/qr-donate',
-  },
-  {
-    title: 'Volunteer',
-    body: 'Bring your time, skills and care to practical work with children and communities.',
-    to: '/contact',
-  },
-  {
-    title: 'Partner',
-    body: 'Collaborate with Santi Sena through shared values, technical skill or grant support.',
-    to: '/get-involved/partner',
-  },
-]
+const contentStore = useContentStore()
+const { locale } = useI18n()
 
-const galleryImages = [
-  {
-    title: 'Youth learning',
-    caption: 'Child protection and peer education activities.',
-    image: childProtectionImage,
-    alt: 'Children and youth peer educators meeting in a Cambodian village',
-  },
-  {
-    title: 'Healthy schools',
-    caption: 'WASH practice with students and teachers.',
-    image: washSchoolImage,
-    alt: 'Children practicing handwashing at a rural Cambodian school',
-  },
-  {
-    title: 'Pagoda learning',
-    caption: 'Books and materials for Buddhist education.',
-    image: buddhistEducationImage,
-    alt: 'Young monks and volunteers organizing learning materials',
-  },
-  {
-    title: 'Field visits',
-    caption: 'Community work carried with local teams.',
-    image: volunteerHeroImage,
-    alt: 'Volunteer team walking on a rural Cambodian road',
-  },
-]
+const activeLocale = computed<SupportedLocale>(() =>
+  locale.value === 'kh' ? 'kh' : 'en',
+)
 
-const supportDetails = [
-  'Prey Chlak pagoda, Svay Rieng City, Svay Rieng province',
-  '+855 77 65 54 64, +855 87 67 57 57, +855 71 877 55 33',
-  'santisenamonk@gmail.com, santisena@santisenacambodia.org',
-]
+const fallbackContent: VolunteerPageContent = {
+  serviceSection: {
+    kicker: 'Opportunities',
+    heading: 'Three ways to serve',
+    description:
+      'Volunteers can support long-term community development through practical, compassionate programs already moving in the field.',
+  },
+  serviceCards: [
+    {
+      label: 'Education',
+      title: 'Child education',
+      body: 'Support reading, Buddhist primary education and practical learning materials for children.',
+      image: '/images/programs/education.jpg',
+      alt: 'Children reading with a volunteer in a Cambodian school setting',
+      to: '/programs/education',
+    },
+    {
+      label: 'Livelihoods',
+      title: 'Livelihoods',
+      body: 'Help families strengthen home gardens, savings groups and local food security.',
+      image: '/images/programs/livelihood-hero2.jpg',
+      alt: 'A volunteer and farmers reviewing a Cambodian home garden',
+      to: '/programs/livelihood',
+    },
+    {
+      label: 'Community care',
+      title: 'Environment & WASH',
+      body: 'Join field activities around tree planting, hygiene awareness and safer school environments.',
+      image: '/images/programs/environment-hero1.jpg',
+      alt: 'Volunteers and villagers planting tree seedlings in rural Cambodia',
+      to: '/programs/environment',
+    },
+  ],
+  storySection: {
+    kicker: 'Impact story',
+    heading: 'Small support changes lives',
+    body: 'Through patient support, local partnership and compassionate action, volunteers help communities move toward stability, dignity and hope.',
+    image: '/images/programs/child-protection2.jpg',
+    alt: 'Children and youth holding learning materials after a field activity',
+    cta: { label: 'View programs', to: '/programs' },
+  },
+  helpSection: { kicker: 'How you can help', heading: 'Make change with us' },
+  helpCards: [
+    { title: 'Donate', body: 'Support learning materials, community activities and field work for vulnerable villages.', to: '/qr-donate' },
+    { title: 'Volunteer', body: 'Bring your time, skills and care to practical work with children and communities.', to: '/contact' },
+    { title: 'Partner', body: 'Collaborate with Santi Sena through shared values, technical skill or grant support.', to: '/get-involved/partner' },
+  ],
+  campaignSection: {
+    kicker: 'Featured campaign',
+    heading: 'Support children\u2019s learning',
+    body: 'Your contribution can help provide learning materials, safe activities and community care for children who need it most.',
+    cta: { label: 'Support this mission', to: '/qr-donate' },
+  },
+  gallerySection: { kicker: 'Gallery', heading: 'Field moments' },
+  galleryImages: [
+    { title: 'Youth learning', caption: 'Child protection and peer education activities.', image: '/images/programs/child-protection2.jpg', alt: 'Children and youth peer educators meeting in a Cambodian village' },
+    { title: 'Healthy schools', caption: 'WASH practice with students and teachers.', image: '/images/programs/education.jpg', alt: 'Children practicing handwashing at a rural Cambodian school' },
+    { title: 'Pagoda learning', caption: 'Books and materials for Buddhist education.', image: '/images/programs/education.jpg', alt: 'Young monks and volunteers organizing learning materials' },
+    { title: 'Field visits', caption: 'Community work carried with local teams.', image: '/images/programs/hero-2.jpg', alt: 'Volunteer team walking on a rural Cambodian road' },
+  ],
+  supportSection: {
+    kicker: 'Volunteer contact',
+    heading: 'Strengthen local work',
+    body: 'Share your skills, available dates, language ability and the program area you care about. The team will help match your interest with practical needs.',
+    cardTitle: 'Start here',
+    cardBody: 'Contact the team to discuss a volunteer placement, field visit or practical support.',
+    details: [
+      'Prey Chlak pagoda, Svay Rieng City, Svay Rieng province',
+      '+855 77 65 54 64, +855 87 67 57 57, +855 71 877 55 33',
+      'santisenamonk@gmail.com, santisena@santisenacambodia.org',
+    ],
+    cta: { label: 'Contact the volunteer team', to: '/contact' },
+  },
+}
 
-const description =
-  'Volunteer with Santi Sena through community forestry, livelihoods, WASH, education, Buddhist education and child protection programs.'
+const cmsContent = ref<Partial<VolunteerPageContent> | null>(null)
+
+const page = computed<VolunteerPageContent>(() => {
+  return mergeContent(fallbackContent, cmsContent.value)
+})
+
+function parseCmsBody(body: string): Partial<VolunteerPageContent> | null {
+  if (!body.trim()) return null
+  try {
+    const parsed = JSON.parse(body) as unknown
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+      ? (parsed as Partial<VolunteerPageContent>)
+      : null
+  } catch {
+    return null
+  }
+}
+
+function mergeContent(base: VolunteerPageContent, override: Partial<VolunteerPageContent> | null): VolunteerPageContent {
+  if (!override) return base
+  return {
+    serviceSection: { ...base.serviceSection, ...override.serviceSection },
+    serviceCards: Array.isArray(override.serviceCards) && override.serviceCards.length
+      ? override.serviceCards.map((c) => ({
+          ...base.serviceCards[0],
+          ...c,
+          image: normalizeMediaUrl(c.image) || c.image,
+        }))
+      : base.serviceCards,
+    storySection: {
+      ...base.storySection,
+      ...override.storySection,
+      image: normalizeMediaUrl(override.storySection?.image) || base.storySection.image,
+      cta: { ...base.storySection.cta, ...override.storySection?.cta },
+    },
+    helpSection: { ...base.helpSection, ...override.helpSection },
+    helpCards: Array.isArray(override.helpCards) && override.helpCards.length
+      ? override.helpCards.map((c) => ({ ...base.helpCards[0], ...c }))
+      : base.helpCards,
+    campaignSection: {
+      ...base.campaignSection,
+      ...override.campaignSection,
+      cta: { ...base.campaignSection.cta, ...override.campaignSection?.cta },
+    },
+    gallerySection: { ...base.gallerySection, ...override.gallerySection },
+    galleryImages: Array.isArray(override.galleryImages) && override.galleryImages.length
+      ? override.galleryImages.map((g) => ({
+          ...base.galleryImages[0],
+          ...g,
+          image: normalizeMediaUrl(g.image) || g.image,
+        }))
+      : base.galleryImages,
+    supportSection: {
+      ...base.supportSection,
+      ...override.supportSection,
+      details: Array.isArray(override.supportSection?.details) && override.supportSection.details.length
+        ? override.supportSection.details.map(String)
+        : base.supportSection.details,
+      cta: { ...base.supportSection?.cta, ...override.supportSection?.cta } as ActionLink,
+    },
+  }
+}
+
+async function loadCmsContent() {
+  const pageRow = await contentStore.fetchBySlug(PAGE_SLUG, activeLocale.value)
+  cmsContent.value = pageRow ? parseCmsBody(pageRow.body) : null
+}
+
+let unsubscribe: (() => void) | null = null
 
 let previousTitle = ''
 let descriptionMeta: HTMLMetaElement | null = null
 let previousDescription: string | null = null
 let createdDescriptionMeta = false
 let revealObserver: IntersectionObserver | null = null
+
+const description =
+  'Volunteer with Santi Sena through community forestry, livelihoods, WASH, education, Buddhist education and child protection programs.'
 
 onMounted(async () => {
   previousTitle = document.title
@@ -115,6 +229,11 @@ onMounted(async () => {
 
   descriptionMeta.setAttribute('content', description)
 
+  unsubscribe = contentStore.subscribeToSlug(PAGE_SLUG, () => {
+    void loadCmsContent()
+  })
+
+  await loadCmsContent()
   await nextTick()
   setupRevealAnimations()
 })
@@ -130,6 +249,7 @@ onUnmounted(() => {
 
   revealObserver?.disconnect()
   revealObserver = null
+  unsubscribe?.()
 })
 
 function setupRevealAnimations() {
@@ -180,15 +300,13 @@ function setupRevealAnimations() {
     <section class="program-section" aria-labelledby="program-heading">
       <div class="section-shell">
         <div class="section-heading section-heading--center pop-reveal">
-          <h2 id="program-heading">Three ways to serve</h2>
-          <p>
-            Volunteers can support long-term community development through practical, compassionate
-            programs already moving in the field.
-          </p>
+          <p class="section-kicker">{{ page.serviceSection.kicker }}</p>
+          <h2 id="program-heading">{{ page.serviceSection.heading }}</h2>
+          <p>{{ page.serviceSection.description }}</p>
         </div>
 
         <div class="program-grid">
-          <article v-for="card in serviceCards" :key="card.title" class="program-card pop-reveal">
+          <article v-for="card in page.serviceCards" :key="card.title" class="program-card pop-reveal">
             <img :src="card.image" :alt="card.alt" loading="lazy" />
             <div class="program-card__body">
               <span>{{ card.label }}</span>
@@ -204,20 +322,17 @@ function setupRevealAnimations() {
     <section class="story-section" aria-labelledby="story-heading">
       <div class="section-shell story-grid">
         <img
-          :src="childProtectionImage"
-          alt="Children and youth holding learning materials after a field activity"
+          :src="page.storySection.image"
+          :alt="page.storySection.alt"
           class="story-image pop-reveal"
           loading="lazy"
         />
 
         <div class="story-copy pop-reveal">
-          <p class="section-kicker">Impact story</p>
-          <h2 id="story-heading">Small support changes lives</h2>
-          <p>
-            Through patient support, local partnership and compassionate action, volunteers help
-            communities move toward stability, dignity and hope.
-          </p>
-          <RouterLink to="/programs" class="primary-button">View programs</RouterLink>
+          <p class="section-kicker">{{ page.storySection.kicker }}</p>
+          <h2 id="story-heading">{{ page.storySection.heading }}</h2>
+          <p>{{ page.storySection.body }}</p>
+          <RouterLink :to="page.storySection.cta.to" class="primary-button">{{ page.storySection.cta.label }}</RouterLink>
         </div>
       </div>
     </section>
@@ -225,13 +340,13 @@ function setupRevealAnimations() {
     <section class="help-section" aria-labelledby="help-heading">
       <div class="section-shell">
         <div class="section-heading section-heading--center pop-reveal">
-          <p class="section-kicker">How you can help</p>
-          <h2 id="help-heading">Make change with us</h2>
+          <p class="section-kicker">{{ page.helpSection.kicker }}</p>
+          <h2 id="help-heading">{{ page.helpSection.heading }}</h2>
         </div>
 
         <div class="help-grid">
           <RouterLink
-            v-for="card in helpCards"
+            v-for="card in page.helpCards"
             :key="card.title"
             :to="card.to"
             class="help-card pop-reveal"
@@ -246,14 +361,11 @@ function setupRevealAnimations() {
     <section class="campaign-section" aria-labelledby="campaign-heading">
       <div class="section-shell">
         <div class="campaign-card pop-reveal">
-          <RouterLink to="/qr-donate" class="campaign-button">Support this mission</RouterLink>
+          <RouterLink :to="page.campaignSection.cta.to" class="campaign-button">{{ page.campaignSection.cta.label }}</RouterLink>
           <div>
-            <p class="section-kicker">Featured campaign</p>
-            <h2 id="campaign-heading">Support children’s learning</h2>
-            <p>
-              Your contribution can help provide learning materials, safe activities and community
-              care for children who need it most.
-            </p>
+            <p class="section-kicker">{{ page.campaignSection.kicker }}</p>
+            <h2 id="campaign-heading">{{ page.campaignSection.heading }}</h2>
+            <p>{{ page.campaignSection.body }}</p>
           </div>
         </div>
       </div>
@@ -262,13 +374,13 @@ function setupRevealAnimations() {
     <section class="gallery-section" aria-labelledby="gallery-heading">
       <div class="section-shell">
         <div class="section-heading section-heading--center pop-reveal">
-          <p class="section-kicker">Gallery</p>
-          <h2 id="gallery-heading">Field moments</h2>
+          <p class="section-kicker">{{ page.gallerySection.kicker }}</p>
+          <h2 id="gallery-heading">{{ page.gallerySection.heading }}</h2>
         </div>
 
         <div class="gallery-grid">
           <figure
-            v-for="item in galleryImages"
+            v-for="item in page.galleryImages"
             :key="item.alt"
             class="gallery-tile pop-reveal"
             tabindex="0"
@@ -280,31 +392,24 @@ function setupRevealAnimations() {
             </figcaption>
           </figure>
         </div>
-
-        <RouterLink to="/news" class="gallery-link">View stories</RouterLink>
       </div>
     </section>
 
     <section class="support-section" aria-labelledby="support-heading">
       <div class="section-shell support-grid">
         <div class="support-copy pop-reveal">
-          <p class="section-kicker">Volunteer contact</p>
-          <h2 id="support-heading">Strengthen local work</h2>
-          <p>
-            Share your skills, available dates, language ability and the program area you care
-            about. The team will help match your interest with practical needs.
-          </p>
+          <p class="section-kicker">{{ page.supportSection.kicker }}</p>
+          <h2 id="support-heading">{{ page.supportSection.heading }}</h2>
+          <p>{{ page.supportSection.body }}</p>
         </div>
 
         <div class="support-card pop-reveal">
-          <h3>Start here</h3>
-          <p>
-            Contact the team to discuss a volunteer placement, field visit or practical support.
-          </p>
+          <h3>{{ page.supportSection.cardTitle }}</h3>
+          <p>{{ page.supportSection.cardBody }}</p>
           <ul>
-            <li v-for="item in supportDetails" :key="item">{{ item }}</li>
+            <li v-for="item in page.supportSection.details" :key="item">{{ item }}</li>
           </ul>
-          <RouterLink to="/contact" class="primary-button">Contact the volunteer team</RouterLink>
+          <RouterLink :to="page.supportSection.cta.to" class="primary-button">{{ page.supportSection.cta.label }}</RouterLink>
         </div>
       </div>
     </section>
@@ -383,8 +488,7 @@ function setupRevealAnimations() {
   line-height: 1.75;
 }
 
-.card-link,
-.gallery-link {
+.card-link {
   display: inline-flex;
   width: fit-content;
   align-items: center;
@@ -395,8 +499,7 @@ function setupRevealAnimations() {
   text-decoration: none;
 }
 
-.card-link:hover,
-.gallery-link:hover {
+.card-link:hover {
   color: var(--primary-color);
 }
 
@@ -676,10 +779,6 @@ function setupRevealAnimations() {
 .gallery-tile:focus-visible figcaption {
   opacity: 1;
   transform: translateY(0) scale(1);
-}
-
-.gallery-link {
-  margin: 1.4rem auto 0;
 }
 
 .support-section {

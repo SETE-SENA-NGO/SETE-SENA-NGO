@@ -72,8 +72,18 @@ function confirmModal() {
   ui.closeModal()
 }
 
+// ── Back to Dashboard ──
+// Any admin page that opens a public page (via a "view page" action) must
+// first do: localStorage.setItem('admin_return_path', route.path)
+// before window.open(...). This reads it back and clears it, so the
+// button returns to whichever admin page the user actually came from.
+// If nothing was stored (e.g. the user navigated to the site normally),
+// it falls back to /admin.
 function goToAdmin() {
   void router.push(adminTargetRoute.value)
+  const returnPath = localStorage.getItem('admin_return_path')
+  localStorage.removeItem('admin_return_path')
+  void router.push(returnPath || '/admin')
 }
 </script>
 

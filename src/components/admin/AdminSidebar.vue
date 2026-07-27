@@ -42,7 +42,7 @@ const workspaceLinks: NavItem[] = [
 ]
 
 const pageGroups: PageGroup[] = [
-  { slug: 'home', labelKey: 'admin.sidebar.home', items: [] },
+  { slug: 'home', labelKey: 'admin.sidebar.home', path: '/admin/home', items: [] },
   {
     slug: 'slideshow',
     labelKey: 'admin.sidebar.slideshow',
@@ -100,15 +100,9 @@ const pageGroups: PageGroup[] = [
     path: '/admin/get-involved',
     items: [
       { slug: 'get-involved-donate', labelKey: 'admin.sidebar.donate' },
-      { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer' },
+      { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer', path: '/admin/volunteer' },
       { slug: 'get-involved-partner', labelKey: 'admin.sidebar.partner' },
     ],
-  },
-  {
-    slug: 'news',
-    labelKey: 'admin.sidebar.news',
-    path: '/admin/news',
-    items: [{ slug: 'news-detail', labelKey: 'admin.sidebar.newsDetail' }],
   },
   {
     slug: 'contact',
@@ -574,23 +568,6 @@ nav {
   border-left: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: skewX(-24deg);
-}
-
-.icon-news::before {
-  inset: 0.08rem;
-  border: 2px solid currentColor;
-  border-radius: 2px;
-}
-
-.icon-news::after {
-  left: 0.18rem;
-  right: 0.18rem;
-  top: 0.28rem;
-  height: 0.06rem;
-  background: currentColor;
-  box-shadow:
-    0 0.2rem 0 currentColor,
-    0 0.4rem 0 currentColor;
 }
 
 .icon-programs::before {

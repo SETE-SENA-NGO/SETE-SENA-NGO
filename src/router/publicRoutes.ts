@@ -4,7 +4,6 @@ import AboutVisionView from '@/views/public/AboutVisionView.vue'
 import ProgramEnviromentView from '@/views/public/ProgramEnviromentView.vue'
 import OrganizationView from '@/views/public/OrganizationView.vue'
 import EducationView from '@/views/public/EducationView.vue'
-import ImpactView from '@/views/public/ImpactView.vue'
 import ImpactPartnersView from '@/views/public/ImpactPartnersView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import ImpactTimelineView from '@/views/public/ImpactTimelineView.vue'
@@ -24,10 +23,6 @@ import ProgramsView from '@/views/public/ProgramsView.vue'
 import ProgramsLivelihoodView from '@/views/public/ProgramsLivelihoodView.vue'
 import ProgramsChildProtectionView from '@/views/public/ProgramsChildProtectionView.vue'
 import QrDonateView from '@/views/public/DonateView.vue'
-
-// 👇 NEW: import news views
-import NewsView from '@/views/public/NewsView.vue'
-import NewsDetailView from '@/views/public/NewsDetailView.vue'
 
 type ManagedPageOptions = {
   name?: string
@@ -74,7 +69,6 @@ export const publicRoutes = [
   managedPage('/services', 'services'),
 
   // Impact
-  managedPage('/impact', 'impact', ImpactView),
   managedPage('/impact/numbers', 'impact-numbers', ImpactNumbersView),
   managedPage('/impact/partners', 'impact-partners', ImpactPartnersView),
   managedPage('/impact/timeline', 'impact-timeline', ImpactTimelineView),
@@ -96,8 +90,4 @@ export const publicRoutes = [
 
   // Donation (QR)
   managedPage('/qr-donate', 'qr-donate', QrDonateView),
-
-  // 👇 NEW: News routes
-  { path: '/news', component: NewsView, name: 'news' },
-  { path: '/news/:id', component: NewsDetailView, name: 'news-detail' },
 ]

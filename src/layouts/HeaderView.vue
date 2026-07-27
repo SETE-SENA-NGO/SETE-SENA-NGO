@@ -33,8 +33,12 @@ const menus: Menu[] = [
   {
     key: 'programs',
     labelKey: 'nav.programs',
-    to: '/programs',
     items: [
+      {
+        titleKey: 'nav.programsOverview',
+        descKey: 'nav.programsOverviewDesc',
+        to: '/programs',
+      },
       {
         titleKey: 'nav.education',
         descKey: 'nav.educationDesc',

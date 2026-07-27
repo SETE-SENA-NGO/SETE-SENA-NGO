@@ -414,8 +414,8 @@ onBeforeUnmount(() => {
             <span class="cta-label">Partnership</span>
             <h3>Ready to take the next step?</h3>
           </div>
-          <RouterLink to="/impact" class="cta-button">
-            Back to impact
+          <RouterLink to="/impact/numbers" class="cta-button">
+            View impact numbers
             <span class="arrow">→</span>
           </RouterLink>
         </div>

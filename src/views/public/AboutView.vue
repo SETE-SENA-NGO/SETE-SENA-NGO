@@ -506,17 +506,14 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border: 0px solid color-mix(in srgb, var(--about-saffron) 18%, transparent);
 }
 
-/* ─── Scroll-Reveal (Dropdown style, two-way) ─── */
+/* ─── Scroll-Reveal — only opacity (no transform conflict with hover) ─── */
 .reveal {
   opacity: 0;
-  transform: translateY(-24px);
-  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .reveal.revealed {
   opacity: 1;
-  transform: translateY(0);
 }
 
 /* ═══════════════════════════════════════════════
@@ -867,7 +864,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .logo-frame:hover {
-  transform: translateY(-4px) scale(1.02);
+  transform: scale(1.04);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
   border-color: color-mix(in srgb, var(--about-highlight) 30%, transparent);
 }
@@ -1030,24 +1027,6 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   animation-delay: -8s;
 }
 
-@keyframes vmgFloat {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(30px, -20px) scale(1.05);
-  }
-
-  66% {
-    transform: translate(-20px, 15px) scale(0.95);
-  }
-
-  100% {
-    transform: translate(10px, -30px) scale(1.02);
-  }
-}
-
 .vmg-badge-row {
   margin-bottom: 0.75rem;
   position: relative;
@@ -1109,10 +1088,11 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   position: relative;
   border-radius: 1.5rem;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+  will-change: transform;
 }
 
 .vmg-card:hover {
-  transform: translateY(-10px) scale(1.02);
+  transform: scale(1.03);
 }
 
 /* ── Glowing border effect ── */
@@ -1120,63 +1100,42 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   position: absolute;
   inset: -2px;
   border-radius: 1.6rem;
-  background: none;
   background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd, #3b82f6);
-  background-size: 300% 300%;
-  animation: gradientShift 4s ease infinite;
+  opacity: 0;
+  transition: opacity 0.5s ease;
 }
 
 .mission-glow {
   background: linear-gradient(135deg, var(--about-primary), #4ade80, #86efac, var(--about-primary));
-  background-size: 300% 300%;
-  animation: gradientShift 4s ease infinite;
 }
 
 .goal-glow {
   background: linear-gradient(135deg, #f59e0b, #fbbf24, #fcd34d, #f59e0b);
-  background-size: 300% 300%;
-  animation: gradientShift 4s ease infinite;
-}
-
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
 }
 
 .vmg-card:hover .vmg-card-glow {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 /* ── Card Inner ── */
 .vmg-card-inner {
   position: relative;
   z-index: 1;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 1.5rem;
   padding: 2rem 1.5rem;
   height: 100%;
   display: flex;
   flex-direction: column;
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .vmg-card:hover .vmg-card-inner {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.97);
   border-color: rgba(255, 255, 255, 0.9);
   box-shadow:
     0 20px 48px rgba(0, 0, 0, 0.1),
@@ -1220,19 +1179,11 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border-radius: 50%;
   margin-bottom: 1.25rem;
   position: relative;
-  animation: vmgIconFloat 3s ease-in-out infinite;
+  transition: transform 0.5s ease;
 }
 
-@keyframes vmgIconFloat {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-5px);
-  }
+.vmg-card:hover .vmg-icon-ring {
+  transform: scale(1.06);
 }
 
 .vmg-card:nth-child(1) .vmg-icon-ring {
@@ -1398,14 +1349,15 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   border: 1px solid var(--about-border);
   border-radius: 1.125rem;
   padding: 1.5rem 1.25rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
   display: flex;
   flex-direction: column;
+  will-change: transform;
 }
 
 .value-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  transform: scale(1.04);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07);
   border-color: color-mix(in srgb, var(--about-saffron) 30%, transparent);
 }
 
@@ -1482,7 +1434,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .org-logo-float {
-  animation: logoFloat 5s ease-in-out infinite;
+  animation: logoFloat 6s ease-in-out infinite;
+  will-change: transform;
 }
 
 .org-logo {
@@ -1508,7 +1461,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   }
 
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-5px);
   }
 }
 
@@ -1530,12 +1483,13 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   padding: 1.25rem 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid var(--about-border);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  will-change: transform;
 }
 
 .team-card:hover {
-  transform: translateX(5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  transform: translateX(6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   border-color: var(--about-saffron);
 }
 
@@ -1662,6 +1616,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
     box-shadow 0.4s ease,
     border-color 0.4s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  will-change: transform;
 }
 
 .geo-card::before {
@@ -1669,18 +1624,11 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   position: absolute;
   inset: -1px;
   border-radius: 1.35rem;
-  background: conic-gradient(from 0deg,
-      transparent,
-      var(--province-accent),
-      transparent 30%,
-      transparent 70%,
-      var(--province-accent),
-      transparent);
+  background: linear-gradient(135deg, transparent 40%, var(--province-accent), transparent 60%);
   opacity: 0;
   transition: opacity 0.5s ease;
   z-index: 0;
   pointer-events: none;
-  animation: none !important;
 }
 
 @keyframes geoSpin {
@@ -1690,12 +1638,12 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .geo-card:hover::before {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .geo-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
+  transform: scale(1.03);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.1);
   border-color: var(--province-accent);
 }
 
@@ -1797,7 +1745,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .geo-card:hover .geo-marker-icon {
-  transform: scale(1.1);
+  transform: scale(1.08);
   background: color-mix(in srgb, var(--province-accent) 18%, transparent);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--province-accent) 12%, transparent);
 }
@@ -1809,7 +1757,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 }
 
 .geo-card:hover .geo-marker-icon svg {
-  transform: translateY(-1px);
+  transform: scale(1.1);
 }
 
 /* ── Province Name ── */
@@ -1876,7 +1824,7 @@ function setGeoRef(el: HTMLElement | null, index: number) {
 .geo-card:hover .geo-stat {
   background: color-mix(in srgb, var(--province-accent) 8%, transparent);
   border-color: color-mix(in srgb, var(--province-accent) 25%, transparent);
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
 .geo-stat-number {
@@ -2002,15 +1950,64 @@ function setGeoRef(el: HTMLElement | null, index: number) {
   .value-card:hover,
   .geo-card:hover,
   .team-card:hover {
+    transform: none !important;
+  }
+
+  .vmg-card:hover .vmg-card-inner {
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .vmg-card-glow,
+  .geo-card::before {
+    opacity: 0 !important;
+  }
+
+  .vmg-card:hover .vmg-icon-ring {
     transform: none;
   }
 
-  .geo-card::before {
+  .org-logo-float {
+    animation: none;
+  }
+
+  .photo-caption-dot {
     animation: none !important;
+  }
+
+  .geo-card::before {
+    opacity: 0 !important;
   }
 
   .geo-marker-pulse {
     animation: none !important;
+  }
+
+  .geo-card:hover .geo-card-band-inner {
+    width: 0%;
+  }
+
+  .geo-card:hover .geo-marker-icon {
+    transform: none;
+    background: color-mix(in srgb, var(--province-accent) 10%, transparent);
+    box-shadow: none;
+  }
+
+  .geo-card:hover .geo-name {
+    color: var(--about-ink);
+  }
+
+  .geo-card:hover .geo-card-divider {
+    width: 40px;
+  }
+
+  .geo-card:hover .geo-stat {
+    transform: none;
+    background: var(--about-cream);
+    border-color: var(--about-border);
   }
 
   .photo-frame {

@@ -777,6 +777,7 @@ onUnmounted(() => {
                 required
                 rows="5"
                 :maxlength="messageMaxLength"
+                autocomplete="off"
                 :placeholder="formContent.messagePlaceholder"
               ></textarea>
             </span>
@@ -916,7 +917,7 @@ onUnmounted(() => {
 .centers-section {
   width: min(100%, var(--container-max-width));
   margin: 0 auto;
-  padding: clamp(4rem, 8vw, 6.5rem) var(--container-padding);
+  padding: clamp(2rem, 6vw, 4rem) var(--container-padding);
 }
 
 .headquarters-section {
@@ -925,19 +926,19 @@ onUnmounted(() => {
 
 .section-intro {
   max-width: 860px;
-  margin: 0 auto clamp(3rem, 6vw, 5.5rem);
+  margin: 0 auto clamp(1.25rem, 4vw, 2.5rem);
   text-align: center;
 }
 
 .section-intro h2 {
-  margin: 0.75rem 0 1rem;
+  margin: 0.45rem 0 0.65rem;
   color: var(--color-ink);
   font-size: clamp(2rem, 4.5vw, 3.4rem);
   line-height: 1.08;
 }
 
 .section-intro p:last-child {
-  margin: 0 auto;
+  margin: 0.25rem auto 0;
   max-width: 760px;
   color: var(--color-ink-soft);
   font-size: 1rem;

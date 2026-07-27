@@ -1,30 +1,85 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import heroImage from '@/assets/hero-impact.jpg'
-import heroForest from '@/assets/hero-impact-forest.jpg'
-import heroVillage from '@/assets/hero-impact-village.jpg'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import Slideshow from '@/components/shared/Slideshow.vue'
+import { imageUrls } from '@/lib/imageUrls'
+import { supabase } from '@/lib/supabase'
 
-const props = defineProps<{
-  content?: {
-    headline?: string
-    intro?: string
-    sections?: Array<{
-      id: string
-      heading: string
-      body: string
-      items: string
-    }>
-  } | null
-}>()
+/* ─── Dynamic slideshow images (loaded from pages.metadata) ── */
+const slideImages = ref<string[]>([
+  imageUrls.impact.hero,
+  imageUrls.impact.forest,
+  imageUrls.impact.village,
+])
 
-const slideItems = [
-  { image: heroImage, caption: '' },
-  { image: heroForest, caption: '' },
-  { image: heroVillage, caption: '' },
-]
+const slideItems = computed(() => [
+  { image: slideImages.value[0] || imageUrls.impact.hero, caption: '' },
+  { image: slideImages.value[1] || slideImages.value[0] || imageUrls.impact.hero, caption: '' },
+  { image: slideImages.value[2] || slideImages.value[0] || imageUrls.impact.hero, caption: '' },
+])
 
-const defaultStats = [
+/* ─── Load from pages table metadata ─────────────────────── */
+async function loadFromDb() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('metadata')
+      .eq('slug', 'impact')
+      .maybeSingle()
+
+    if (error) {
+      console.warn('[ImpactView] DB load failed:', error.message)
+      return
+    }
+
+    if (data?.metadata) {
+      const meta = data.metadata as Record<string, unknown>
+      const rawSlides = meta.slideImages
+      if (Array.isArray(rawSlides) && rawSlides.length > 0) {
+        const urls = rawSlides.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+        if (urls.length > 0) {
+          slideImages.value = urls
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[ImpactView] DB load crashed:', e)
+  }
+}
+
+/* ─── Real-time subscription for live updates ────────────── */
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+
+function setupRealtime() {
+  realtimeChannel = supabase
+    .channel('impact-page-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'pages',
+        filter: 'slug=eq.impact',
+      },
+      (payload) => {
+        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && payload.new) {
+          const row = payload.new as Record<string, unknown>
+          if (row.metadata) {
+            const meta = row.metadata as Record<string, unknown>
+            const rawSlides = meta.slideImages
+            if (Array.isArray(rawSlides) && rawSlides.length > 0) {
+              const urls = rawSlides.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+              if (urls.length > 0) {
+                slideImages.value = urls
+              }
+            }
+          }
+        }
+      },
+    )
+    .subscribe()
+}
+
+const stats = [
   {
     value: '293',
     label: 'Villages served',
@@ -57,7 +112,7 @@ const defaultStats = [
   },
 ]
 
-const defaultTimelineItems = [
+const timelineItems = [
   {
     year: '1994',
     title: 'Founding',
@@ -85,66 +140,20 @@ const defaultTimelineItems = [
   },
 ]
 
-const defaultDonors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Children', 'ActionAid', 'Care']
+const donors = ['UNDP', 'ADB', 'Oxfam', 'CIDA', 'World Vision', 'Save the Children', 'ActionAid', 'Care']
 
-const headline = computed(() => props.content?.headline || 'Three decades. One quiet revolution.')
-const intro = computed(() => props.content?.intro || 'Every number below is a household with a safer roof, a child with a teacher, a forest still standing.')
+/* ─── Lifecycle ──────────────────────────────────────────── */
+onMounted(async () => {
+  document.title = 'Impact — Santi Sena'
+  await loadFromDb()
+  setupRealtime()
+})
 
-const statsHeader = computed(() => {
-  const section = props.content?.sections?.find(s => s.id === 'impact-stats')
-  return {
-    heading: section?.heading || 'Thirty years of measurable change.',
-    body: section?.body || 'Every number represents a household strengthened, a forest protected, a life improved.'
+onBeforeUnmount(() => {
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel)
+    realtimeChannel = null
   }
-})
-
-const stats = computed(() => {
-  const section = props.content?.sections?.find(s => s.id === 'impact-stats')
-  if (!section || !section.items) return defaultStats
-  
-  return section.items.split('\n').filter(line => line.trim()).map(line => {
-    const parts = line.split('|').map(s => s.trim())
-    return {
-      value: parts[0] || '',
-      label: parts[1] || '',
-      description: parts[2] || ''
-    }
-  })
-})
-
-const timelineHeader = computed(() => {
-  const section = props.content?.sections?.find(s => s.id === 'impact-timeline')
-  return {
-    heading: section?.heading || 'A journey rooted in patience.'
-  }
-})
-
-const timelineItems = computed(() => {
-  const section = props.content?.sections?.find(s => s.id === 'impact-timeline')
-  if (!section || !section.items) return defaultTimelineItems
-  
-  return section.items.split('\n').filter(line => line.trim()).map(line => {
-    const parts = line.split('|').map(s => s.trim())
-    return {
-      year: parts[0] || '',
-      title: parts[1] || '',
-      description: parts[2] || ''
-    }
-  })
-})
-
-const partnersHeader = computed(() => {
-  const section = props.content?.sections?.find(s => s.id === 'impact-partners')
-  return {
-    heading: section?.heading || 'Trusted by partners across the world.',
-    body: section?.body || 'Santi Sena has successfully managed grants from more than ten international institutions, with transparent reporting and audited accounts every year.'
-  }
-})
-
-const donors = computed(() => {
-  const section = props.content?.sections?.find(s => s.id === 'impact-partners')
-  if (!section || !section.items) return defaultDonors
-  return section.items.split('\n').filter(line => line.trim())
 })
 </script>
 
@@ -154,16 +163,18 @@ const donors = computed(() => {
       <div class="hero-overlay" />
       <div class="hero-content">
         <span class="eyebrow">Our Impact</span>
-        <h1>{{ headline }}</h1>
-        <p>{{ intro }}</p>
+        <h1>Three decades. One quiet revolution.</h1>
+        <p>
+          Every number below is a household with a safer roof, a child with a teacher, a forest still standing.
+        </p>
       </div>
     </Slideshow>
 
     <section id="numbers" class="stats-section">
       <div class="stats-header">
         <span class="eyebrow">Impact by the Numbers</span>
-        <h2>{{ statsHeader.heading }}</h2>
-        <p>{{ statsHeader.body }}</p>
+        <h2>Thirty years of measurable change.</h2>
+        <p>Every number represents a household strengthened, a forest protected, a life improved.</p>
       </div>
       <div class="stats-grid">
         <article v-for="stat in stats" :key="stat.label" class="stat-card">
@@ -177,7 +188,7 @@ const donors = computed(() => {
     <section id="timeline" class="timeline-section">
       <div class="timeline-shell">
         <span class="eyebrow">Timeline</span>
-        <h2>{{ timelineHeader.heading }}</h2>
+        <h2>A journey rooted in patience.</h2>
         <ol class="timeline-list">
           <li v-for="item in timelineItems" :key="item.year" class="timeline-item">
             <span class="timeline-dot" />
@@ -194,8 +205,11 @@ const donors = computed(() => {
     <section id="partners" class="partners-section">
       <div class="partners-heading">
         <span class="eyebrow">Financial stewardship</span>
-        <h2>{{ partnersHeader.heading }}</h2>
-        <p>{{ partnersHeader.body }}</p>
+        <h2>Trusted by partners across the world.</h2>
+        <p>
+          Santi Sena has successfully managed grants from more than ten international institutions,
+          with transparent reporting and audited accounts every year.
+        </p>
       </div>
 
       <div class="marquee-mask">
@@ -326,7 +340,7 @@ h1 {
 }
 
 .stat-card {
-  background: #fffdfa;
+  background: var(--color-white);
   padding: 1.75rem;
 }
 
@@ -348,7 +362,7 @@ h1 {
   margin-top: 0.6rem;
   line-height: 1.6;
   font-size: 0.9rem;
-  color: rgba(31, 41, 55, 0.72);
+  color: var(--color-ink-soft);
 }
 
 .timeline-shell {
@@ -398,7 +412,7 @@ h1 {
 .timeline-description {
   margin-top: 0.5rem;
   line-height: 1.7;
-  color: rgba(31, 41, 55, 0.74);
+  color: var(--color-ink-soft);
 }
 
 .partners-heading {
@@ -416,7 +430,7 @@ h1 {
   margin: 1rem auto 0;
   max-width: 640px;
   line-height: 1.75;
-  color: rgba(31, 41, 55, 0.72);
+  color: var(--color-ink-soft);
 }
 
 .marquee-mask {

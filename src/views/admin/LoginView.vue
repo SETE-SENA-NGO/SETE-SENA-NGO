@@ -62,6 +62,7 @@
                   v-model="email"
                   name="email"
                   type="email"
+                  autocomplete="email"
                   placeholder="Enter your email"
                   required
                 />
@@ -78,6 +79,7 @@
       v-model="password"
       name="password"
       :type="showPassword ? 'text' : 'password'"
+      autocomplete="current-password"
       placeholder="Enter your password"
       required
     />
@@ -109,7 +111,7 @@
             <!-- Options -->
             <div class="form-options">
               <label class="remember-me">
-                <input id="remember-me" v-model="remember" name="remember-me" type="checkbox" />
+                <input id="remember-me" v-model="remember" name="remember-me" type="checkbox" autocomplete="off" />
                 <span>Remember Me</span>
               </label>
             </div>

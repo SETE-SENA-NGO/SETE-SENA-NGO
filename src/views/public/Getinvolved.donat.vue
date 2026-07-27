@@ -1,13 +1,33 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, reactive } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useScrollReveal } from '@/composables/useScrollReveal'
+import { supabase } from '@/lib/supabase'
 
 defineOptions({
   name: 'GetInvolvedDonateView',
 })
 
-const giftUses = [
+interface GiftUse {
+  label: string
+  title: string
+  image: string
+  summary: string
+  detail: string
+}
+
+interface TrustNote {
+  title: string
+  body: string
+}
+
+// ── Defaults — used until (or unless) Supabase has saved content ──
+const giftSection = reactive({
+  eyebrow: 'Gift use',
+  heading: 'Small items. Real field value.',
+})
+
+const giftUses = reactive<GiftUse[]>([
   {
     label: 'Education',
     title: 'School essentials',
@@ -37,9 +57,16 @@ const giftUses = [
     detail:
       'Agriculture inputs help families apply vegetable, animal, rice and fish production training.',
   },
-]
+])
 
-const trustNotes = [
+const trustSection = reactive({
+  eyebrow: 'Stewardship',
+  heading: 'Clear handling matters.',
+  intro:
+    'Practical giving needs careful records, written guidance and clear reporting back to the work it supports.',
+})
+
+const trustNotes = reactive<TrustNote[]>([
   {
     title: 'Finance team',
     body: 'Santi Sena keeps financial information prepared, maintained and available for reporting.',
@@ -52,10 +79,54 @@ const trustNotes = [
     title: 'Field use',
     body: 'Giving is directed into practical materials, learning support and community follow-up.',
   },
-]
+])
+
+const cta = reactive({
+  eyebrow: 'Ready to give',
+  heading: 'Support the next practical need.',
+  quote:
+    'The strongest giving is simple, specific and steady. Your donation helps Santi Sena turn urgent local needs into practical materials communities can use.',
+  primaryLabel: 'Donate by QR',
+  primaryLink: '/qr-donate',
+  secondaryLabel: 'Contact team',
+  secondaryLink: '/contact',
+  imageSmall: '/images/programs/hero-2.jpg',
+  imageLarge: '/images/programs/livelihood-hero3.jpg',
+})
 
 const description =
   'Donate to Santi Sena through practical support for school materials, safe water, learning books and rural livelihood inputs.'
+
+// ── Load saved content from Supabase, falling back to the defaults above ──
+async function loadContent() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('body')
+      .eq('slug', 'get-involved-donate')
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data?.body) return
+
+    const parsed = JSON.parse(data.body)
+    if (parsed?.kind !== 'santi-sena-donate-content') return
+
+    if (parsed.giftSection) Object.assign(giftSection, parsed.giftSection)
+    if (Array.isArray(parsed.giftUses) && parsed.giftUses.length) {
+      giftUses.splice(0, giftUses.length, ...parsed.giftUses)
+    }
+
+    if (parsed.trustSection) Object.assign(trustSection, parsed.trustSection)
+    if (Array.isArray(parsed.trustNotes) && parsed.trustNotes.length) {
+      trustNotes.splice(0, trustNotes.length, ...parsed.trustNotes)
+    }
+
+    if (parsed.cta) Object.assign(cta, parsed.cta)
+  } catch (e) {
+    console.error('Could not load donate page content:', e)
+  }
+}
 
 useScrollReveal()
 
@@ -64,7 +135,7 @@ let descriptionMeta: HTMLMetaElement | null = null
 let previousDescription: string | null = null
 let createdDescriptionMeta = false
 
-onMounted(() => {
+onMounted(async () => {
   previousTitle = document.title
   document.title = 'Donate to Santi Sena'
 
@@ -79,6 +150,8 @@ onMounted(() => {
   }
 
   descriptionMeta.setAttribute('content', description)
+
+  await loadContent()
 })
 
 onUnmounted(() => {
@@ -96,8 +169,8 @@ onUnmounted(() => {
   <main class="donate-page">
     <section id="gift-use" class="gift-section" aria-labelledby="gift-heading">
       <div class="section-heading reveal">
-        <p class="eyebrow">Gift use</p>
-        <h2 id="gift-heading">Small items. Real field value.</h2>
+        <p class="eyebrow">{{ giftSection.eyebrow }}</p>
+        <h2 id="gift-heading">{{ giftSection.heading }}</h2>
       </div>
 
       <div class="gift-grid">
@@ -125,12 +198,9 @@ onUnmounted(() => {
 
     <section class="trust-section" aria-labelledby="trust-heading">
       <div class="trust-copy reveal">
-        <p class="eyebrow">Stewardship</p>
-        <h2 id="trust-heading">Clear handling matters.</h2>
-        <p>
-          Practical giving needs careful records, written guidance and clear reporting back to the
-          work it supports.
-        </p>
+        <p class="eyebrow">{{ trustSection.eyebrow }}</p>
+        <h2 id="trust-heading">{{ trustSection.heading }}</h2>
+        <p>{{ trustSection.intro }}</p>
       </div>
       <div class="trust-grid">
         <article
@@ -149,25 +219,22 @@ onUnmounted(() => {
       <div class="cta-band__inner">
         <div class="cta-band__visual reveal" aria-hidden="true">
           <figure class="cta-photo cta-photo--small reveal" style="animation-delay: 0.08s">
-            <img src="/images/programs/hero-2.jpg" alt="" loading="lazy" />
+            <img :src="cta.imageSmall" alt="" loading="lazy" />
           </figure>
           <figure class="cta-photo cta-photo--large reveal" style="animation-delay: 0.18s">
-            <img src="/images/programs/livelihood-hero3.jpg" alt="" loading="lazy" />
+            <img :src="cta.imageLarge" alt="" loading="lazy" />
           </figure>
         </div>
 
         <div class="cta-band__copy reveal" style="animation-delay: 0.12s">
-          <p class="eyebrow">Ready to give</p>
-          <h2 id="cta-heading">Support the next practical need.</h2>
+          <p class="eyebrow">{{ cta.eyebrow }}</p>
+          <h2 id="cta-heading">{{ cta.heading }}</h2>
           <div class="cta-quote reveal" style="animation-delay: 0.24s">
-            <p>
-              The strongest giving is simple, specific and steady. Your donation helps Santi Sena
-              turn urgent local needs into practical materials communities can use.
-            </p>
+            <p>{{ cta.quote }}</p>
           </div>
           <div class="cta-actions reveal" style="animation-delay: 0.34s">
-            <RouterLink to="/qr-donate" class="button button-primary">Donate by QR</RouterLink>
-            <RouterLink to="/contact" class="button button-secondary">Contact team</RouterLink>
+            <RouterLink :to="cta.primaryLink" class="button button-primary">{{ cta.primaryLabel }}</RouterLink>
+            <RouterLink :to="cta.secondaryLink" class="button button-secondary">{{ cta.secondaryLabel }}</RouterLink>
           </div>
         </div>
       </div>

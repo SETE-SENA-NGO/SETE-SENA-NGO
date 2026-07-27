@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { RouterLink, onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
@@ -13,7 +13,6 @@ import {
 } from '@/lib/pagePersistence'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
-
 type EditableSection = {
   id: string
   label: string
@@ -62,73 +61,6 @@ type StoredPageBody = {
 const contentKind = 'santi-sena-page-content'
 
 const defaultPages: PageDraft[] = [
-  {
-    slug: 'news',
-    route: '/news',
-    group: 'News',
-    title: 'News',
-    eyebrow: 'News manager',
-    headline: 'News',
-    intro: '',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'news-list',
-        label: 'News list',
-        heading: 'News list',
-        body: 'Used by the News manager editor page.',
-        items: '',
-      },
-    ],
-    updatedAt: '',
-  },
-  {
-    slug: 'news-detail',
-    route: '/news/:id',
-    previewRoute: '/news/1',
-    group: 'News',
-    title: 'News Detail',
-    eyebrow: 'News detail',
-    headline: 'Community stories, updates and field notes.',
-    intro:
-      'A detail page template for public news stories, including the article header, body content, related updates and donation call to action.',
-    primaryAction: 'All news',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'news-detail-hero',
-        label: 'Article header',
-        heading: 'Story header',
-        body: 'Controls the headline area shown on individual public news stories.',
-        items:
-          'Category | Community update\nDate | Published date\nAuthor | Santi Sena team\nReading time | 5 min read',
-      },
-      {
-        id: 'news-detail-body',
-        label: 'Article body',
-        heading: 'Story content',
-        body: 'Use this section for the article introduction, main body and closing note.',
-        items:
-          'Introduction | Open with the community need or program moment.\nMain story | Describe the people, place, activities and outcomes.\nClosing note | Invite readers to continue learning or supporting the work.',
-      },
-      {
-        id: 'news-detail-related',
-        label: 'Related stories',
-        heading: 'More from Santi Sena',
-        body: 'Related news cards shown near the end of a story.',
-        items: 'Environment updates\nEducation stories\nLivelihood field notes\nChild protection news',
-      },
-      {
-        id: 'news-detail-cta',
-        label: 'Call to action',
-        heading: 'Stand with village-led change.',
-        body: 'A short donation or support invitation that appears after a news article.',
-        items: 'Donate\nGet involved\nContact us',
-      },
-    ],
-    updatedAt: '',
-  },
   {
     slug: 'home',
     route: '/',
@@ -938,32 +870,6 @@ const defaultPages: PageDraft[] = [
     ],
     updatedAt: '',
   },
-  {
-    slug: 'news',
-    route: '/news',
-    group: 'News',
-    title: 'News',
-    eyebrow: 'News & Updates',
-    headline: 'Announcements, stories and updates from the field.',
-    intro: 'Keep up to date with Santi Sena\'s work in community development, environment and education.',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [],
-    updatedAt: '',
-  },
-  {
-    slug: 'news-detail',
-    route: '/news/:slug',
-    group: 'News',
-    title: 'News Detail',
-    eyebrow: 'Article',
-    headline: 'News Article Title Placeholder',
-    intro: 'News Article Introduction Summary Placeholder',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [],
-    updatedAt: '',
-  },
 ]
 
 const route = useRoute()
@@ -984,11 +890,6 @@ const uploadingCell = ref<{ sectionId: string; rowIndex: number; colIndex: numbe
 
 // ─── Section Filter State ─────────────────────────────────
 const activeSectionFilter = ref<string | null>(null)
-
-const activePageDirty = computed(() => {
-  const page = activePage.value
-  return savedSnapshot.value[page.slug] !== snapshot(page)
-})
 
 const filteredSections = computed(() => {
   if (!activeSectionFilter.value) return activePage.value.sections
@@ -1019,12 +920,49 @@ async function handleImageCellUpload(event: Event, section: EditableSection, row
   }
 }
 
+function getRowLabel(sectionId: string): string {
+  const labelsMap: Record<string, string> = {
+    'impact-stats': 'Stat',
+    'timeline-stats': 'Stat',
+    'timeline-events': 'Milestone',
+    'numbers-overview': 'Stat',
+    'numbers-card-environment': 'Stat',
+    'numbers-card-education': 'Stat',
+    'numbers-card-livelihoods': 'Stat',
+    'partners-supporters': 'Partner',
+    'partners-government': 'Agency / Ministry',
+    'partners-local': 'Local Partner',
+    'partners-why': 'Highlight',
+    'donate-support': 'Method',
+    'donate-areas': 'Area',
+    'donate-contact': 'Contact Method',
+    'volunteer-pathways': 'Pathway',
+    'volunteer-skills': 'Skill',
+    'volunteer-steps': 'Step',
+    'partner-practice': 'Practice',
+    'partner-areas': 'Area',
+    'partner-commitments': 'Commitment',
+    'contact-offices': 'Office Contact',
+    'contact-form': 'Field',
+    'head-office-contact': 'Contact Detail',
+    'head-office-travel': 'Travel Note',
+    'head-office-guidance': 'Guidance Note',
+    'field-offices-list': 'Office',
+    'field-offices-visits': 'Visit Guideline',
+    'field-offices-hours': 'Hours Detail',
+    'qr-methods': 'QR Method',
+    'qr-notice': 'Notice Note',
+  }
+  return labelsMap[sectionId] || 'Row'
+}
+
 const drafts = ref<PageDraft[]>(defaultPages.map(clonePage))
 const loading = ref(false)
 const savingSlug = ref<string | null>(null)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 const savedSnapshot = ref<Record<string, string>>({})
 const activeSectionIndex = ref<number | null>(null)
+const previewVisible = ref(false)
 
 
 // ─── Visual Table Editor Helpers ─────────────────────────────────
@@ -1149,6 +1087,7 @@ const activePage = computed<PageDraft>(() => {
   )
 })
 
+const activePageDirty = computed(() => isDirty(activePage.value.slug))
 
 const _unused_previewItems = computed(() => {
   return activePage.value.sections.map((section) => ({
@@ -1183,6 +1122,15 @@ watch(
   },
   { immediate: true },
 )
+
+onBeforeRouteLeave(() => {
+  if (activePageDirty.value) {
+    const confirmed = confirm('Discard unsaved changes?')
+    if (!confirmed) return false
+    return true
+  }
+  return true
+})
 
 function clonePage(page: PageDraft): PageDraft {
   return {
@@ -1516,6 +1464,24 @@ function applyDefaultReset() {
   ui.addToast(`${fallback.title} reset to default draft.`, 'info')
 }
 
+async function discardChanges() {
+  if (!activePageDirty.value) {
+    router.push('/admin/pages')
+    return
+  }
+
+  await new Promise<void>((resolve) => {
+    ui.openModal(
+      'Discard unsaved changes?',
+      `Any edits on ${activePage.value.title} will be lost if you leave now.`,
+      () => resolve(),
+    )
+  })
+
+  await loadPages()
+  router.push('/admin/pages')
+}
+
 function formatDate(value: string) {
   if (!value) return 'Not saved yet'
 
@@ -1565,53 +1531,25 @@ function formatDate(value: string) {
               </div>
             </div>
             <div class="impact-hero-actions">
-              <RouterLink class="btn btn-secondary" :to="activePage.route">View page</RouterLink>
-              <button type="button" class="btn btn-ghost" @click="resetCurrentToDefault">Reset draft</button>
+              <RouterLink class="btn btn-secondary" :to="activePage.route">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                <span>View page</span>
+              </RouterLink>
               <button
                 type="button"
                 class="btn btn-primary"
-                :disabled="savingSlug === activePage.slug || loading"
+                :disabled="savingSlug === activePage.slug || loading || !activePageDirty"
                 @click="saveCurrentPage"
               >
                 <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
-                {{ savingSlug === activePage.slug ? 'Saving...' : 'Save changes' }}
+                <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <span>{{ savingSlug === activePage.slug ? 'Saving...' : 'Save changes' }}</span>
               </button>
             </div>
           </header>
 
           <!-- Content Grid -->
           <div class="impact-content-grid">
-            <!-- Page Identity Panel -->
-            <section class="impact-panel" aria-labelledby="impact-identity-heading">
-              <div class="impact-panel-header">
-                <div>
-                  <p class="impact-kicker">Page setup</p>
-                  <h2 id="impact-identity-heading">Page identity</h2>
-                </div>
-                <span v-if="!activePageDirty" class="impact-saved-pill">Saved</span>
-                <span v-else class="impact-unsaved-pill">Unsaved</span>
-              </div>
-              <div class="impact-panel-body">
-                <div class="impact-form-grid">
-                  <label class="impact-field">
-                    <span>Admin title</span>
-                    <input v-model="activePage.title" type="text" placeholder="Page title" />
-                  </label>
-                  <label class="impact-field">
-                    <span>Slug</span>
-                    <input :value="activePage.slug" type="text" disabled />
-                  </label>
-                  <label class="impact-field">
-                    <span>Route</span>
-                    <input :value="activePage.route" type="text" disabled />
-                  </label>
-                  <label class="impact-field">
-                    <span>Eyebrow</span>
-                    <input v-model="activePage.eyebrow" type="text" placeholder="Section eyebrow text" />
-                  </label>
-                </div>
-              </div>
-            </section>
 
             <!-- Hero Content Panel -->
             <section class="impact-panel" aria-labelledby="impact-hero-heading">
@@ -1677,9 +1615,6 @@ function formatDate(value: string) {
                       <button type="button" class="impact-icon-btn" :disabled="index === activePage.sections.length - 1" @click="moveSection(index, 1)" title="Move down">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                       </button>
-                      <button type="button" class="impact-icon-btn" @click="duplicateSection(index)" title="Duplicate">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                      </button>
                       <button type="button" class="impact-icon-btn danger" @click="removeSection(index)" title="Remove">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       </button>
@@ -1738,7 +1673,6 @@ function formatDate(value: string) {
                         <table class="impact-table">
                           <thead>
                             <tr>
-                              <th class="col-drag"></th>
                               <th
                                 v-for="(header, hIdx) in getColumnHeaders(section.id, getSectionColCount(section))"
                                 :key="hIdx"
@@ -1750,24 +1684,6 @@ function formatDate(value: string) {
                           </thead>
                           <tbody>
                             <tr v-for="(row, rIdx) in parseItemsToRows(section.items)" :key="rIdx">
-                              <td class="col-drag">
-                                <div class="impact-row-arrows">
-                                  <button
-                                    type="button"
-                                    class="impact-arrow-btn"
-                                    :disabled="rIdx === 0"
-                                    @click="moveRow(section, rIdx, -1)"
-                                    title="Move row up"
-                                  >▲</button>
-                                  <button
-                                    type="button"
-                                    class="impact-arrow-btn"
-                                    :disabled="rIdx === parseItemsToRows(section.items).length - 1"
-                                    @click="moveRow(section, rIdx, 1)"
-                                    title="Move row down"
-                                  >▼</button>
-                                </div>
-                              </td>
                               <td
                                 v-for="cIdx in getSectionColCount(section)"
                                 :key="cIdx - 1"
@@ -1833,7 +1749,7 @@ function formatDate(value: string) {
                           @click="addRow(section, getSectionColCount(section))"
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                          Add Row
+                          Add {{ getRowLabel(section.id) }}
                         </button>
                       </div>
                     </div>
@@ -1860,6 +1776,15 @@ function formatDate(value: string) {
             <!-- Page Header -->
             <header class="editor-header">
               <div class="header-left">
+                <button
+                  class="btn btn-ghost back-btn"
+                  type="button"
+                  @click="discardChanges"
+                  title="Back to pages"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Back
+                </button>
                 <div class="breadcrumb">
                   <RouterLink to="/admin" class="breadcrumb-link">Dashboard</RouterLink>
                   <span class="breadcrumb-sep" aria-hidden="true">
@@ -2328,7 +2253,7 @@ function formatDate(value: string) {
             <!-- ==============================
                  STEP 3: Status / Publish
                  ============================== -->
-            <template v-if="activeStep === 'status'">
+            <template>
               <div class="form-panels step-panel-enter">
 
                 <!-- Publish Status Card -->
@@ -4481,7 +4406,7 @@ input::placeholder, textarea::placeholder {
 }
 </style>
 
-<!-- Non-scoped dark mode overrides for page editor (Home, About, Programs, News) -->
+<!-- Non-scoped dark mode overrides for page editor (Home, About, Programs) -->
 <style>
 .admin-dark .editor-page {
   background: #06100F !important;
