@@ -6,51 +6,35 @@ import {
   ChevronDown,
   ExternalLink,
   FolderOpen,
-  Image as ImageIcon,
   Layers,
+  Lock,
   MessageSquareQuote,
   Pencil,
   Plus,
   Save,
   Sprout,
   Trash2,
+  Users,
 } from 'lucide-vue-next'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import CollapsiblePanel from '@/components/admin/CollapsiblePanel.vue'
 import ImagePickerField from '@/components/admin/ImagePickerField.vue'
-import ImageSlotEditor from '@/components/admin/ImageSlotEditor.vue'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
 const ui = useUiStore()
 
 /* ─── Types ─────────────────────────────────────── */
-interface EditableSection {
-  id: string
-  label: string
-  heading: string
-  body: string
-  items: string
-}
-
-interface PageDraft {
-  slug: string
-  route: string
-  group: string
+interface WorkItem {
   title: string
-  eyebrow: string
-  headline: string
-  intro: string
-  heroImageUrl: string
-  primaryAction: string
-  secondaryAction: string
-  sections: EditableSection[]
-  updatedAt: string
+  text: string
+  imageUrl: string
 }
 
-interface QuoteContent {
-  text: string
+interface TeamCard {
+  role: string
+  icon: string
+  desc: string
 }
 
 interface StatItem {
@@ -59,80 +43,51 @@ interface StatItem {
   description: string
 }
 
-interface GalleryImage {
-  id: string
-  label: string
-  url: string
+interface ImpactCard {
+  text: string
+  imageUrl: string
 }
 
-/* ─── Gallery slots — order matters: public page reads by array index,
-   items 0-5 feed "What we do", 6-9 feed "Why it matters" ─────────── */
-const GALLERY_MAP: { label: string; badge: string; hint: string }[] = [
-  { label: 'Integrated Farming', badge: 'What we do — 1', hint: 'Integrated Farming' },
-  { label: 'Saving-for-Change', badge: 'What we do — 2', hint: 'Saving-for-Change' },
-  { label: 'Cooperatives', badge: 'What we do — 3', hint: 'Cooperatives' },
-  { label: 'Rural Enterprise', badge: 'What we do — 4', hint: 'Rural Enterprise' },
-  { label: 'Financial Literacy', badge: 'What we do — 5', hint: 'Financial Literacy' },
-  { label: 'Market Linkages', badge: 'What we do — 6', hint: 'Market Linkages' },
-  { label: 'Why it matters — 1', badge: 'Why it matters — 1', hint: 'Debt & trafficking risk' },
-  { label: 'Why it matters — 2', badge: 'Why it matters — 2', hint: 'Women-led savings' },
-  { label: 'Why it matters — 3', badge: 'Why it matters — 3', hint: 'Cooperative marketplace' },
-  { label: 'Why it matters — 4', badge: 'Why it matters — 4', hint: 'Local enterprise' },
+interface QuoteContent {
+  text: string
+}
+
+interface PageDraft {
+  slug: string
+  title: string
+  eyebrow: string
+  headline: string
+  intro: string
+  updatedAt: string
+}
+
+/* ─── Default data ──────────────────────────────── */
+const DEFAULT_WORK_ITEMS: WorkItem[] = [
+  { title: 'Integrated Farming', text: 'Rice, fish, vegetables and livestock combined on one plot for year-round food and income.', imageUrl: '' },
+  { title: 'Saving-for-Change', text: 'Self-help savings groups, primarily women-led, meeting weekly to pool and lend.', imageUrl: '' },
+  { title: 'Cooperatives', text: 'Agricultural cooperatives for collective bargaining and shared equipment.', imageUrl: '' },
+  { title: 'Rural Enterprise', text: 'Small enterprise development — melaleuca oil, honey and handicrafts.', imageUrl: '' },
+  { title: 'Financial Literacy', text: 'Bookkeeping and micro-enterprise training for household budgeting.', imageUrl: '' },
+  { title: 'Market Linkages', text: 'Connecting producers with provincial buyers and social enterprises.', imageUrl: '' },
 ]
 
-let _idCounter = 0
-function genId() { return `live-img-${++_idCounter}-${Date.now()}` }
+const DEFAULT_TEAM_CARDS: TeamCard[] = [
+  { role: 'Program Director', icon: 'compass', desc: 'Oversees livelihood programs, savings groups, and enterprise partnerships across provinces.' },
+  { role: 'Field Coordinators', icon: 'map', desc: 'Manage Saving-for-Change groups and cooperative development in target villages.' },
+  { role: 'Agricultural Trainers', icon: 'heart', desc: 'Deliver farmer field schools and climate-smart agriculture training.' },
+  { role: 'Enterprise Officers', icon: 'chart', desc: 'Support small business development, market linkages and financial literacy.' },
+]
 
-function createDefaultGallery(): GalleryImage[] {
-  return GALLERY_MAP.map(m => ({ id: genId(), label: m.label, url: '' }))
-}
+const DEFAULT_IMPACT_CARDS: ImpactCard[] = [
+  { text: 'Household income diversification reduces the risk of debt bondage and trafficking', imageUrl: '' },
+  { text: 'Women-led savings shift decision-making power inside the household', imageUrl: '' },
+  { text: 'Cooperatives break the isolation of the smallholder in the marketplace', imageUrl: '' },
+  { text: 'Local enterprise keeps young adults in the village, near their children', imageUrl: '' },
+]
 
-/* ─── Default Livelihood Page ───────────────────── */
-function createDefaultLivelihoodPage(): PageDraft {
-  return {
-    slug: 'programs-livelihood',
-    route: '/programs/livelihood',
-    group: 'Programs',
-    title: 'Livelihood',
-    eyebrow: 'Livelihood',
-    headline: 'Growing practical income and food security.',
-    intro: 'Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena answers with income at home — soil restored, savings pooled, cooperatives negotiating fair prices, and small enterprises rooted in local resources.',
-    heroImageUrl: '',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'livelihood-work',
-        label: 'What we do',
-        heading: 'What we do',
-        body: 'Integrated farming, savings groups, cooperatives, rural enterprise, financial literacy and market linkages that build family income.',
-        items: 'Integrated Farming\nSaving-for-Change\nCooperatives\nRural Enterprise\nFinancial Literacy\nMarket Linkages',
-      },
-      {
-        id: 'livelihood-approach',
-        label: 'Approach',
-        heading: 'Our approach',
-        body: 'We do not distribute cash. We build the systems — saving groups, cooperatives, farmer schools — that let a household earn, save, invest and repeat. Every group is coached for 18–24 months, then graduates to independence with our field team on call.',
-        items: '',
-      },
-      {
-        id: 'livelihood-team',
-        label: 'Organizational Structure',
-        heading: 'Who delivers livelihood programs on the ground',
-        body: 'Our dedicated team works across provinces building sustainable income and food security for rural families.',
-        items: 'Program Director | compass | Oversees livelihood programs, savings groups, and enterprise partnerships across provinces.\nField Coordinators | map | Manage Saving-for-Change groups and cooperative development in target villages.\nAgricultural Trainers | heart | Deliver farmer field schools and climate-smart agriculture training.\nEnterprise Officers | chart | Support small business development, market linkages and financial literacy.',
-      },
-      {
-        id: 'livelihood-why',
-        label: 'Why it matters',
-        heading: 'Why it matters',
-        body: 'Cash predictability is what lets a family send their child to school this term instead of to a garment factory.',
-        items: 'Household income diversification reduces the risk of debt bondage and trafficking\nWomen-led savings shift decision-making power inside the household\nCooperatives break the isolation of the smallholder in the marketplace\nLocal enterprise keeps young adults in the village, near their children',
-      },
-    ],
-    updatedAt: '',
-  }
-}
+const workItems = ref<WorkItem[]>(DEFAULT_WORK_ITEMS.map(w => ({ ...w })))
+const teamCards = ref<TeamCard[]>(DEFAULT_TEAM_CARDS.map(t => ({ ...t })))
+const impactCards = ref<ImpactCard[]>(DEFAULT_IMPACT_CARDS.map(c => ({ ...c })))
 
 const statsBand = ref<StatItem[]>([
   { number: '180+', label: 'SAVINGS GROUPS', description: 'Women-led Saving-for-Change circles active across three provinces.' },
@@ -144,22 +99,21 @@ const quoteContent = ref<QuoteContent>({
   text: 'Our group has lent to twelve families for chickens and school fees. Nobody has left for Thailand this year.',
 })
 
-const galleryImages = ref<GalleryImage[]>(createDefaultGallery())
-
-function padGalleryToTen() {
-  while (galleryImages.value.length < GALLERY_MAP.length) {
-    const i = galleryImages.value.length
-    galleryImages.value.push({ id: genId(), label: GALLERY_MAP[i]?.label || `Image ${i + 1}`, url: '' })
-  }
-}
+const page = ref<PageDraft>({
+  slug: 'programs-livelihood',
+  title: 'Livelihood',
+  eyebrow: 'Livelihood',
+  headline: 'Growing practical income and food security.',
+  intro: 'Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena answers with income at home — soil restored, savings pooled, cooperatives negotiating fair prices, and small enterprises rooted in local resources.',
+  updatedAt: '',
+})
 
 /* ─── Collapsible panels ───────────────────────── */
 const expandedPanels = ref<Record<string, boolean>>({
   'quick-links': true,
-  'hero-header': true,
-  'gallery': true,
-  'stats': true,
-  'content': true,
+  'our-work': true,
+  'org-structure': true,
+  'our-impact': true,
   'quote': true,
 })
 
@@ -181,31 +135,45 @@ function confirmDeleteStat(index: number) {
   )
 }
 
-function clearGalleryImage(index: number) {
-  const slotName = GALLERY_MAP[index]?.label || `Slot ${index + 1}`
-  if (!galleryImages.value[index]?.url?.trim()) return
+function clearWorkImage(index: number) {
+  const item = workItems.value[index]
+  if (!item?.imageUrl?.trim()) return
+  const title = item?.title?.trim() || `Item ${index + 1}`
   ui.openModal(
     'Remove image',
-    `Are you sure you want to remove the image from <strong>${slotName}</strong>? The public page will show the default fallback image instead.`,
+    `Remove the image from <strong>${title}</strong>?`,
     () => {
-      galleryImages.value[index]!.url = ''
-      ui.addToast(`Image removed from "${slotName}".`, 'success')
+      workItems.value[index]!.imageUrl = ''
+      ui.addToast(`Image removed from "${title}".`, 'success')
       void savePageContent()
     },
   )
 }
 
-function onGalleryImageSaved(msg: string) {
-  ui.addToast(msg, 'success')
-  void savePageContent()
+function clearImpactImage(index: number) {
+  const card = impactCards.value[index]
+  if (!card?.imageUrl?.trim()) return
+  ui.openModal(
+    'Remove image',
+    `Remove the image from impact card <strong>${index + 1}</strong>?`,
+    () => {
+      impactCards.value[index]!.imageUrl = ''
+      ui.addToast(`Image removed from impact card ${index + 1}.`, 'success')
+      void savePageContent()
+    },
+  )
 }
 
 /* ─── State ─────────────────────────────────────── */
 const loading = ref(false)
 const saving = ref(false)
-const page = ref<PageDraft>(createDefaultLivelihoodPage())
 const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
+const editing = ref(false)
+
+function toggleEditing() {
+  editing.value = !editing.value
+}
 const STORAGE_KEY = 'live-dashboard-page'
 
 function loadFromLocalStorage(): void {
@@ -213,18 +181,12 @@ function loadFromLocalStorage(): void {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const saved = JSON.parse(raw) as Record<string, unknown>
-      const defaults = createDefaultLivelihoodPage()
+      const defaults = { eyebrow: 'Livelihood', headline: 'Growing practical income and food security.', intro: 'Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena answers with income at home — soil restored, savings pooled, cooperatives negotiating fair prices, and small enterprises rooted in local resources.' }
       page.value = {
-        ...defaults,
+        ...page.value,
         eyebrow: (saved.eyebrow as string) || defaults.eyebrow,
         headline: (saved.headline as string) || defaults.headline,
         intro: (saved.intro as string) || defaults.intro,
-        heroImageUrl: (saved.heroImageUrl as string) || '',
-        primaryAction: (saved.primaryAction as string) || '',
-        secondaryAction: (saved.secondaryAction as string) || '',
-        sections: saved.sections && Array.isArray(saved.sections)
-          ? mergeSectionsWithDefaults(saved.sections as EditableSection[], defaults)
-          : defaults.sections,
         updatedAt: (saved.updatedAt as string) || '',
       }
       if (saved.statsBand && Array.isArray(saved.statsBand) && saved.statsBand.length > 0) {
@@ -233,46 +195,30 @@ function loadFromLocalStorage(): void {
       if (saved.quoteContent && typeof saved.quoteContent === 'object') {
         quoteContent.value = { ...quoteContent.value, ...saved.quoteContent as Partial<QuoteContent> }
       }
-      if (Array.isArray(saved.galleryImages) && saved.galleryImages.length > 0) {
-        galleryImages.value = saved.galleryImages as GalleryImage[]
-        padGalleryToTen()
+      if (Array.isArray(saved.workItems) && saved.workItems.length > 0) {
+        workItems.value = saved.workItems as WorkItem[]
+      }
+      if (Array.isArray(saved.teamCards) && saved.teamCards.length > 0) {
+        teamCards.value = saved.teamCards as TeamCard[]
+      }
+      if (Array.isArray(saved.impactCards) && saved.impactCards.length > 0) {
+        impactCards.value = saved.impactCards as ImpactCard[]
       }
     }
   } catch { /* ignore */ }
 }
 
-/* ─── Merge DB sections with defaults to fill empty fields ── */
-function mergeSectionsWithDefaults(dbSections: EditableSection[], defaults: PageDraft): EditableSection[] {
-  // Build result in the CORRECT order (matching defaults), using DB data when available
-  const dbMap = new Map<string, EditableSection>()
-  for (const s of dbSections) dbMap.set(s.id, s)
-
-  return defaults.sections.map(defSec => {
-    const dbSec = dbMap.get(defSec.id)
-    if (!dbSec) return { ...defSec } // missing from DB — use default
-    return {
-      id: dbSec.id,
-      label: dbSec.label?.trim() ? dbSec.label : defSec.label,
-      heading: dbSec.heading?.trim() ? dbSec.heading : defSec.heading,
-      body: dbSec.body?.trim() ? dbSec.body : defSec.body,
-      items: dbSec.items?.trim() ? dbSec.items : defSec.items,
-    }
-  })
-}
-
 function saveToLocalStorage(): void {
   try {
-    const p = page.value
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      eyebrow: p.eyebrow,
-      headline: p.headline,
-      intro: p.intro,
-      heroImageUrl: p.heroImageUrl,
-      primaryAction: p.primaryAction,
-      secondaryAction: p.secondaryAction,
-      sections: p.sections,
+      eyebrow: page.value.eyebrow,
+      headline: page.value.headline,
+      intro: page.value.intro,
       statsBand: statsBand.value,
       quoteContent: quoteContent.value,
+      workItems: workItems.value,
+      teamCards: teamCards.value,
+      impactCards: impactCards.value,
       updatedAt: new Date().toISOString(),
     }))
   } catch { /* ignore */ }
@@ -283,13 +229,11 @@ function snapshotData(): string {
     eyebrow: page.value.eyebrow,
     headline: page.value.headline,
     intro: page.value.intro,
-    heroImageUrl: page.value.heroImageUrl,
-    primaryAction: page.value.primaryAction,
-    secondaryAction: page.value.secondaryAction,
-    sections: page.value.sections.map(s => ({ ...s })),
     statsBand: statsBand.value.map(s => ({ ...s })),
     quoteContent: { ...quoteContent.value },
-    galleryImages: galleryImages.value.map(g => ({ ...g })),
+    workItems: workItems.value.map(w => ({ ...w })),
+    teamCards: teamCards.value.map(t => ({ ...t })),
+    impactCards: impactCards.value.map(c => ({ ...c })),
   })
 }
 
@@ -315,21 +259,14 @@ async function loadPageContent() {
     }
 
     if (data) {
-      const defaults = createDefaultLivelihoodPage()
       const meta = data.metadata as Record<string, unknown> | null
 
       page.value = {
-        ...defaults,
-        title: data.title || defaults.title,
-        eyebrow: (meta?.eyebrow as string) || defaults.eyebrow,
-        headline: (meta?.headline as string) || defaults.headline,
-        intro: data.summary || (meta?.intro as string) || defaults.intro,
-        heroImageUrl: (meta?.heroImageUrl as string) || '',
-        primaryAction: (meta?.primaryAction as string) || '',
-        secondaryAction: (meta?.secondaryAction as string) || '',
-        sections: meta?.sections && Array.isArray(meta.sections)
-          ? mergeSectionsWithDefaults(meta.sections as EditableSection[], defaults)
-          : defaults.sections,
+        ...page.value,
+        title: data.title || page.value.title,
+        eyebrow: (meta?.eyebrow as string) || page.value.eyebrow,
+        headline: (meta?.headline as string) || page.value.headline,
+        intro: data.summary || (meta?.intro as string) || page.value.intro,
         updatedAt: data.updated_at || '',
       }
 
@@ -339,15 +276,14 @@ async function loadPageContent() {
       if (meta?.quoteContent && typeof meta.quoteContent === 'object') {
         quoteContent.value = { ...quoteContent.value, ...meta.quoteContent as Partial<QuoteContent> }
       }
-      if (meta?.gallery && Array.isArray(meta.gallery) && meta.gallery.length > 0) {
-        galleryImages.value = (meta.gallery as GalleryImage[]).map((g, i) => ({
-          id: g.id || genId(),
-          label: g.label?.trim() ? g.label : GALLERY_MAP[i]?.label || `Image ${i + 1}`,
-          url: g.url || '',
-        }))
-        padGalleryToTen()
-      } else {
-        galleryImages.value = createDefaultGallery()
+      if (Array.isArray(meta?.workItems) && meta.workItems.length > 0) {
+        workItems.value = meta.workItems as WorkItem[]
+      }
+      if (Array.isArray(meta?.teamCards) && meta.teamCards.length > 0) {
+        teamCards.value = meta.teamCards as TeamCard[]
+      }
+      if (Array.isArray(meta?.impactCards) && meta.impactCards.length > 0) {
+        impactCards.value = meta.impactCards as ImpactCard[]
       }
 
       storageMode.value = 'supabase'
@@ -386,19 +322,11 @@ async function savePageContent() {
         eyebrow: p.eyebrow,
         headline: p.headline,
         intro: p.intro,
-        heroImageUrl: p.heroImageUrl,
-        primaryAction: p.primaryAction,
-        secondaryAction: p.secondaryAction,
-        sections: p.sections.map(s => ({
-          id: s.id,
-          label: s.label,
-          heading: s.heading,
-          body: s.body,
-          items: s.items,
-        })),
         statsBand: statsBand.value,
         quoteContent: quoteContent.value,
-        gallery: galleryImages.value,
+        workItems: workItems.value,
+        teamCards: teamCards.value,
+        impactCards: impactCards.value,
       },
       updated_at: now,
     }
@@ -432,12 +360,6 @@ async function savePageContent() {
   }
 }
 
-function parsedItemsForSection(section: EditableSection): string[] {
-  return section.items
-    ? section.items.split('\n').map(l => l.trim()).filter(Boolean)
-    : []
-}
-
 function formatDate(value: string) {
   if (!value) return 'Not saved yet'
   const date = new Date(value)
@@ -469,8 +391,8 @@ onMounted(async () => {
               <h1>Manage Livelihood page</h1>
               <div class="manager-meta" aria-label="Editable livelihood summary">
                 <span>{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</span>
-                <span>{{ statsBand.length }} stats</span>
-                <span>{{ page.sections.length }} sections</span>
+                <span>{{ workItems.length }} work items</span>
+                <span>{{ teamCards.length }} team cards</span>
                 <span v-if="isDirty" class="meta-dirty">Unsaved changes</span>
                 <span v-else-if="page.updatedAt">Saved {{ formatDate(page.updatedAt) }}</span>
               </div>
@@ -481,7 +403,11 @@ onMounted(async () => {
               <ExternalLink :size="16" aria-hidden="true" />
               <span>View page</span>
             </RouterLink>
-            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty" @click="savePageContent">
+            <button type="button" class="btn btn-edit" :class="{ 'btn-edit-active': editing }" @click="toggleEditing">
+              <Lock :size="15" aria-hidden="true" />
+              <span>{{ editing ? 'Editing enabled' : 'Enable editing' }}</span>
+            </button>
+            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty || !editing" @click="savePageContent">
               <Save :size="16" aria-hidden="true" />
               <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
             </button>
@@ -493,7 +419,7 @@ onMounted(async () => {
           <span>Loading Livelihood content...</span>
         </div>
 
-        <div v-else class="content-grid">
+        <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
           <!-- ═══ Quick links ═══ -->
           <section class="editor-panel quick-links-panel" aria-labelledby="quick-links-heading">
             <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
@@ -520,134 +446,160 @@ onMounted(async () => {
                     <span>Upload images for this page</span>
                   </div>
                 </RouterLink>
-                <RouterLink class="quick-link" to="/admin/modules/programs">
-                  <Layers :size="18" aria-hidden="true" />
-                  <div>
-                    <strong>Program Records</strong>
-                    <span>Manage livelihood data entries</span>
-                  </div>
-                </RouterLink>
               </div>
             </Transition>
           </section>
 
-          <!-- ═══ Hero & header ═══ -->
-          <section class="editor-panel" aria-labelledby="hero-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['hero-header']" @click="togglePanel('hero-header')">
+          <!-- ═══ Our Work ═══ -->
+          <section class="editor-panel" aria-labelledby="our-work-heading">
+            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['our-work']" @click="togglePanel('our-work')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <Sprout :size="18" aria-hidden="true" />
+                  <BookOpen :size="18" aria-hidden="true" />
                 </div>
                 <div>
-                  <p class="panel-kicker">Public page</p>
-                  <h2 id="hero-heading">Hero &amp; header</h2>
+                  <p class="panel-kicker">Section 1</p>
+                  <h2 id="our-work-heading">Our Work</h2>
                 </div>
               </div>
               <div class="panel-header-actions">
                 <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['hero-header'] }" aria-hidden="true" />
+                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['our-work'] }" aria-hidden="true" />
               </div>
             </button>
             <Transition name="collapse">
-              <div v-show="expandedPanels['hero-header']" class="image-editor-grid">
-                <figure class="image-preview hero-preview">
-                  <img v-if="page.heroImageUrl" :src="page.heroImageUrl" alt="" />
-                  <div v-else class="slot-empty">
-                    <ImageIcon :size="22" aria-hidden="true" />
-                    <span>No image set</span>
-                  </div>
-                </figure>
+              <div v-show="expandedPanels['our-work']" class="panel-body">
+                <p class="panel-desc">Edit the 6 work items shown in the "What we do" section. Each item has a title, description, and its own image.</p>
 
-                <div class="form-stack">
-                  <div class="form-grid">
-                    <label class="field">
-                      <span>Eyebrow / badge</span>
-                      <input v-model="page.eyebrow" type="text" placeholder="e.g. Livelihood" />
-                    </label>
-                    <label class="field wide">
-                      <span>Headline (main title)</span>
-                      <input v-model="page.headline" type="text" placeholder="Growing practical income and food security." />
-                    </label>
-                    <label class="field wide">
-                      <span>Intro / description</span>
-                      <textarea v-model="page.intro" rows="3" placeholder="Saving-for-Change groups, women-led cooperatives, and rural enterprises that keep families out of debt."></textarea>
-                    </label>
-                  </div>
-
-                  <ImagePickerField
-                    v-model="page.heroImageUrl"
-                    label="Upload or paste URL"
-                    hint="Background image for the hero section"
-                    hide-preview
-                    @success="(msg) => ui.addToast(msg, 'success')"
-                    @error="(msg) => ui.addToast(msg, 'error')"
-                  />
+                <div class="stack-list">
+                  <article v-for="(item, index) in workItems" :key="index" class="sub-editor">
+                    <header class="sub-editor-header">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <h3>{{ item.title || `Work item ${index + 1}` }}</h3>
+                      <button type="button" class="icon-btn ghost-icon-btn" :disabled="!editing" aria-label="Remove image" @click="clearWorkImage(index)">
+                        <Trash2 :size="14" aria-hidden="true" />
+                      </button>
+                    </header>
+                    <div class="sub-editor-body">
+                      <div class="form-grid">
+                        <label class="field">
+                          <span>Title</span>
+                          <input v-model="item.title" type="text" placeholder="e.g. Integrated Farming" />
+                        </label>
+                      </div>
+                      <div class="field wide upload-wrap" :class="{ 'upload-disabled': !editing }">
+                        <span>Image</span>
+                        <ImagePickerField
+                          v-model="item.imageUrl"
+                          :label="item.title || `Work item ${index + 1} image`"
+                          hide-preview
+                          @success="(msg: string) => ui.addToast(msg, 'success')"
+                          @error="(msg: string) => ui.addToast(msg, 'error')"
+                        />
+                        <div v-if="item.imageUrl" class="image-preview-thumb">
+                          <img :src="item.imageUrl" alt="" @error="item.imageUrl = ''" />
+                        </div>
+                      </div>
+                      <label class="field wide">
+                        <span>Description</span>
+                        <textarea v-model="item.text" rows="2" :placeholder="'Description for ' + item.title"></textarea>
+                      </label>
+                    </div>
+                  </article>
                 </div>
               </div>
             </Transition>
           </section>
 
-          <!-- ═══ Gallery images ═══ -->
-          <CollapsiblePanel
-            v-model:expanded="expandedPanels['gallery']"
-            title="Section images"
-            kicker="What we do &amp; Why it matters"
-            heading-id="gallery-heading"
-          >
-            <template #icon>
-              <ImageIcon :size="18" aria-hidden="true" />
-            </template>
-
-            <p class="panel-desc">Upload a photo for each item below. These feed the "What we do" and "Why it matters" images on the public page.</p>
-            <div class="image-slot-grid">
-              <ImageSlotEditor
-                v-for="(slot, index) in galleryImages"
-                :key="slot.id"
-                v-model="galleryImages[index]!.url"
-                :index="index"
-                :badge="GALLERY_MAP[index]?.badge || `Image ${index + 1}`"
-                :hint="GALLERY_MAP[index]?.hint || ''"
-                :alt="slot.label"
-                @clear="clearGalleryImage(index)"
-                @saved="onGalleryImageSaved"
-                @error="(msg) => ui.addToast(msg, 'error')"
-              />
-            </div>
-          </CollapsiblePanel>
-
-          <!-- ═══ Stats band ═══ -->
-          <section class="editor-panel" aria-labelledby="stats-heading">
-            <div class="panel-header">
-              <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('stats')">
+          <!-- ═══ Organizational Structure ═══ -->
+          <section class="editor-panel" aria-labelledby="org-structure-heading">
+            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['org-structure']" @click="togglePanel('org-structure')">
+              <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <Layers :size="18" aria-hidden="true" />
+                  <Users :size="18" aria-hidden="true" />
                 </div>
                 <div>
-                  <p class="panel-kicker">Stats band</p>
-                  <h2 id="stats-heading">Impact statistics</h2>
+                  <p class="panel-kicker">Section 2</p>
+                  <h2 id="org-structure-heading">Organizational Structure</h2>
                 </div>
               </div>
               <div class="panel-header-actions">
                 <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <button type="button" class="btn btn-secondary btn-sm" @click="statsBand.push({ number: '', label: '', description: '' })">
+                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['org-structure'] }" aria-hidden="true" />
+              </div>
+            </button>
+            <Transition name="collapse">
+              <div v-show="expandedPanels['org-structure']" class="panel-body">
+                <p class="panel-desc">Edit the team cards that appear under "Organizational Structure" on the public page.</p>
+
+                <div class="stack-list">
+                  <article v-for="(card, index) in teamCards" :key="index" class="sub-editor">
+                    <header class="sub-editor-header">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <h3>{{ card.role || `Team member ${index + 1}` }}</h3>
+                    </header>
+                    <div class="sub-editor-body">
+                      <div class="form-grid">
+                        <label class="field">
+                          <span>Role</span>
+                          <input v-model="card.role" type="text" placeholder="e.g. Program Director" />
+                        </label>
+                        <label class="field">
+                          <span>Icon</span>
+                          <select v-model="card.icon">
+                            <option value="compass">Compass</option>
+                            <option value="map">Map</option>
+                            <option value="heart">Heart</option>
+                            <option value="chart">Chart</option>
+                          </select>
+                        </label>
+                      </div>
+                      <label class="field wide">
+                        <span>Description</span>
+                        <textarea v-model="card.desc" rows="2" :placeholder="'Description for ' + card.role"></textarea>
+                      </label>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </Transition>
+          </section>
+
+          <!-- ═══ Our Impact ═══ -->
+          <section class="editor-panel" aria-labelledby="our-impact-heading">
+            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['our-impact']" @click="togglePanel('our-impact')">
+              <div class="panel-header-left">
+                <div class="panel-icon-wrap">
+                  <Layers :size="18" aria-hidden="true" />
+                </div>
+                <div>
+                  <p class="panel-kicker">Section 3</p>
+                  <h2 id="our-impact-heading">Our Impact</h2>
+                </div>
+              </div>
+              <div class="panel-header-actions">
+                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
+                <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="statsBand.push({ number: '', label: '', description: '' })">
                   <Plus :size="15" aria-hidden="true" />
                   <span>Add stat</span>
                 </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('stats')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }" />
+                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('our-impact')">
+                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['our-impact'] }" />
                 </button>
               </div>
-            </div>
+            </button>
             <Transition name="collapse">
-              <div v-show="expandedPanels['stats']" class="panel-body">
-                <p class="panel-desc">Edit the statistics shown on the public Livelihood page.</p>
+              <div v-show="expandedPanels['our-impact']" class="panel-body">
+                <!-- Stats -->
+                <p class="panel-desc">Edit the impact statistics and "Why it matters" cards shown on the public page.</p>
 
-                <div class="stack-list">
-                  <article v-for="(stat, index) in statsBand" :key="index" class="sub-editor">
+                <h3 class="subsection-heading">Impact statistics</h3>
+                <div class="stack-list mb-lg">
+                  <article v-for="(stat, index) in statsBand" :key="'stat-' + index" class="sub-editor">
                     <header class="sub-editor-header">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
                       <h3>Stat {{ index + 1 }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove stat" @click="confirmDeleteStat(index)">
+                      <button type="button" class="icon-btn danger" :disabled="!editing" aria-label="Remove stat" @click="confirmDeleteStat(index)">
                         <Trash2 :size="15" aria-hidden="true" />
                       </button>
                     </header>
@@ -660,59 +612,38 @@ onMounted(async () => {
                         <span>Label</span>
                         <input v-model="stat.label" type="text" placeholder="e.g. SAVINGS GROUPS" />
                       </label>
-                      <label class="field wide">
-                        <span>Description</span>
-                        <input v-model="stat.description" type="text" placeholder="Brief description of this statistic" />
-                      </label>
                     </div>
                   </article>
                 </div>
-              </div>
-            </Transition>
-          </section>
 
-          <!-- ═══ Page sections ═══ -->
-          <section class="editor-panel" aria-labelledby="sections-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['content']" @click="togglePanel('content')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <BookOpen :size="18" aria-hidden="true" />
-                </div>
-                <div>
-                  <p class="panel-kicker">Content</p>
-                  <h2 id="sections-heading">What we do, approach &amp; why it matters</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['content'] }" aria-hidden="true" />
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['content']" class="panel-body">
-                <p class="panel-desc">Edit the main content blocks shown on the public Livelihood page.</p>
-
+                <!-- Why it matters cards -->
+                <h3 class="subsection-heading">Why it matters</h3>
                 <div class="stack-list">
-                  <article v-for="section in page.sections" :key="section.id" class="sub-editor">
+                  <article v-for="(card, index) in impactCards" :key="'impact-' + index" class="sub-editor">
                     <header class="sub-editor-header">
-                      <span class="section-badge">{{ section.label }}</span>
-                      <h3>{{ section.heading || 'No heading yet' }}</h3>
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                      <h3>Card {{ index + 1 }}</h3>
+                      <button type="button" class="icon-btn ghost-icon-btn" :disabled="!editing" aria-label="Remove image" @click="clearImpactImage(index)">
+                        <Trash2 :size="14" aria-hidden="true" />
+                      </button>
                     </header>
-                    <div class="sub-editor-body">
+                    <div class="sub-editor-body form-grid">
                       <label class="field wide">
-                        <span>Heading</span>
-                        <input v-model="section.heading" type="text" :placeholder="'Heading for ' + section.label" />
+                        <span>Text</span>
+                        <textarea v-model="card.text" rows="2" placeholder="Enter the impact card text..."></textarea>
                       </label>
-                      <label class="field wide">
-                        <span>Body / description</span>
-                        <textarea v-model="section.body" rows="3" :placeholder="'Description for ' + section.label"></textarea>
-                      </label>
-                      <label class="field wide">
-                        <span>Bullet items <em>(one per line)</em></span>
-                        <textarea v-model="section.items" rows="5" placeholder="Integrated farming systems&#10;Saving-for-Change groups&#10;Agricultural cooperatives"></textarea>
-                      </label>
-                      <div v-if="parsedItemsForSection(section).length" class="item-chips">
-                        <span v-for="item in parsedItemsForSection(section)" :key="item" class="item-chip">{{ item }}</span>
+                      <div class="field wide upload-wrap" :class="{ 'upload-disabled': !editing }">
+                        <span>Image</span>
+                        <ImagePickerField
+                          v-model="card.imageUrl"
+                          :label="`Impact card ${index + 1} image`"
+                          hide-preview
+                          @success="(msg: string) => ui.addToast(msg, 'success')"
+                          @error="(msg: string) => ui.addToast(msg, 'error')"
+                        />
+                        <div v-if="card.imageUrl" class="image-preview-thumb">
+                          <img :src="card.imageUrl" alt="" @error="card.imageUrl = ''" />
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -782,7 +713,7 @@ onMounted(async () => {
 
 .manager-main {
   min-height: 100vh;
-  padding: 1.25rem;
+  padding: 0 1.25rem 1.25rem;
 }
 
 .manager-hero {
@@ -896,6 +827,19 @@ onMounted(async () => {
   margin: 0;
 }
 
+.subsection-heading {
+  color: var(--admin-theme-contrast);
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--admin-theme-border);
+}
+
+.mb-lg {
+  margin-bottom: 1.5rem;
+}
+
 .btn,
 .icon-btn {
   display: inline-flex;
@@ -968,6 +912,19 @@ onMounted(async () => {
   color: var(--admin-theme-danger);
 }
 
+.ghost-icon-btn {
+  border: none !important;
+  background: transparent !important;
+  color: var(--admin-theme-muted) !important;
+  width: 30px !important;
+  min-height: 30px !important;
+}
+
+.ghost-icon-btn:hover {
+  color: var(--admin-theme-danger) !important;
+  background: color-mix(in srgb, var(--admin-theme-danger) 8%, transparent) !important;
+}
+
 .btn-secondary:hover,
 .icon-btn:hover {
   border-color: var(--admin-theme-primary);
@@ -985,6 +942,69 @@ onMounted(async () => {
   min-height: 32px;
   padding: 0.4rem 0.65rem;
   font-size: 0.78rem;
+}
+
+/* ─── View mode (editing disabled) ────────────── */
+.view-mode input,
+.view-mode textarea,
+.view-mode select {
+  pointer-events: none;
+  opacity: 0.6;
+  background: var(--admin-theme-surface-soft);
+  user-select: none;
+  cursor: default;
+}
+
+.view-mode :deep(input),
+.view-mode :deep(textarea),
+.view-mode :deep(select) {
+  pointer-events: none;
+  opacity: 0.6;
+  user-select: none;
+  cursor: default;
+}
+
+.view-mode .sub-editor:hover {
+  border-color: var(--admin-theme-border);
+}
+
+.view-mode .icon-btn-pencil {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: transparent;
+  color: var(--admin-theme-primary-deep);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+  transition: all 0.18s ease;
+}
+
+.btn-edit:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, transparent);
+  border-color: var(--admin-theme-primary);
+  transform: translateY(-1px);
+}
+
+.btn-edit-active {
+  background: var(--admin-theme-primary);
+  color: #ffffff;
+  border-color: var(--admin-theme-primary-deep);
+}
+
+.btn-edit-active:hover {
+  background: var(--admin-theme-primary-deep);
 }
 
 .state-card {
@@ -1099,15 +1119,6 @@ onMounted(async () => {
   background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
 }
 
-.panel-header-left-clickable {
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.panel-header-left-clickable:hover {
-  opacity: 0.8;
-}
-
 .panel-body {
   padding: 1rem;
 }
@@ -1139,7 +1150,8 @@ onMounted(async () => {
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.field select {
   width: 100%;
   border: 1px solid var(--admin-theme-border-strong);
   border-radius: 6px;
@@ -1158,7 +1170,8 @@ onMounted(async () => {
 }
 
 .field input:focus,
-.field textarea:focus {
+.field textarea:focus,
+.field select:focus {
   border-color: var(--admin-theme-primary);
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
@@ -1172,6 +1185,29 @@ onMounted(async () => {
 
 .wide {
   grid-column: 1 / -1;
+}
+
+/* Image upload row */
+.upload-disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.image-preview-thumb {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--admin-theme-border);
+  background: var(--admin-theme-surface-soft);
+}
+
+.image-preview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Quick links */
@@ -1215,61 +1251,10 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-/* Hero image editor */
-.image-editor-grid {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.7fr) minmax(320px, 1.3fr);
-  gap: 1.1rem;
-  padding: 1.1rem;
-}
-
-.image-preview {
-  margin: 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
-  border-radius: 7px;
-  background: var(--admin-theme-surface-soft);
-}
-
-.image-preview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-preview {
-  aspect-ratio: 16 / 10;
-}
-
-.slot-empty {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  color: var(--admin-theme-muted);
-  opacity: 0.7;
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
-.form-stack {
-  display: grid;
-  gap: 0.85rem;
-}
-
-/* Numbered / repeated item cards shared by stats & sections */
+/* Numbered / repeated item cards */
 .stack-list {
   display: grid;
   gap: 0.75rem;
-}
-
-.image-slot-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 0.85rem;
 }
 
 .sub-editor {
@@ -1315,39 +1300,10 @@ onMounted(async () => {
   font-weight: 900;
 }
 
-.section-badge {
-  flex-shrink: 0;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  padding: 0.2rem 0.6rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
 .sub-editor-body {
   padding: 0.9rem;
   display: grid;
   gap: 0.75rem;
-}
-
-.item-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.item-chip {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.74rem;
-  font-weight: 700;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
 }
 
 /* Edit icon */
@@ -1471,8 +1427,7 @@ onMounted(async () => {
     width: 100%;
   }
 
-  .form-grid,
-  .image-editor-grid {
+  .form-grid {
     grid-template-columns: 1fr;
   }
 

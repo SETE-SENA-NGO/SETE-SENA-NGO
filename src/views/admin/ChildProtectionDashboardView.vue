@@ -8,6 +8,7 @@ import {
   FolderOpen,
   Image as ImageIcon,
   Layers,
+  Lock,
   Pencil,
   Plus,
   Save,
@@ -111,6 +112,11 @@ const saving = ref(false)
 const page = ref<PageDraft>(createDefaultCPPage())
 const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
+const editing = ref(false)
+
+function toggleEditing() {
+  editing.value = !editing.value
+}
 const STORAGE_KEY = 'cp-dashboard-page'
 
 /* ─── Collapsible panels ───────────────────────── */
@@ -387,7 +393,11 @@ onMounted(async () => {
               <ExternalLink :size="16" aria-hidden="true" />
               <span>View page</span>
             </RouterLink>
-            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty" @click="savePageContent">
+            <button type="button" class="btn btn-edit" :class="{ 'btn-edit-active': editing }" @click="toggleEditing">
+              <Lock :size="15" aria-hidden="true" />
+              <span>{{ editing ? 'Editing enabled' : 'Enable editing' }}</span>
+            </button>
+            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty || !editing" @click="savePageContent">
               <Save :size="16" aria-hidden="true" />
               <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
             </button>
@@ -399,7 +409,7 @@ onMounted(async () => {
           <span>Loading Child Protection content...</span>
         </div>
 
-        <div v-else class="content-grid">
+        <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
           <!-- ═══ Quick links ═══ -->
           <section class="editor-panel quick-links-panel" aria-labelledby="quick-links-heading">
             <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
@@ -507,7 +517,7 @@ onMounted(async () => {
               </div>
               <div class="panel-header-actions">
                 <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <button type="button" class="btn btn-secondary btn-sm" @click="statsBand.push({ number: '', label: '', description: '' })">
+                <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="statsBand.push({ number: '', label: '', description: '' })">
                   <Plus :size="15" aria-hidden="true" />
                   <span>Add stat</span>
                 </button>
@@ -525,7 +535,7 @@ onMounted(async () => {
                     <header class="sub-editor-header">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
                       <h3>Stat {{ index + 1 }}</h3>
-                      <button type="button" class="icon-btn danger" aria-label="Remove stat" @click="confirmDeleteStat(index)">
+                      <button type="button" class="icon-btn danger" :disabled="!editing" aria-label="Remove stat" @click="confirmDeleteStat(index)">
                         <Trash2 :size="15" aria-hidden="true" />
                       </button>
                     </header>
@@ -835,6 +845,69 @@ onMounted(async () => {
   min-height: 32px;
   padding: 0.4rem 0.65rem;
   font-size: 0.78rem;
+}
+
+/* ─── View mode (editing disabled) ────────────── */
+.view-mode input,
+.view-mode textarea,
+.view-mode select {
+  pointer-events: none;
+  opacity: 0.6;
+  background: var(--admin-theme-surface-soft);
+  user-select: none;
+  cursor: default;
+}
+
+.view-mode :deep(input),
+.view-mode :deep(textarea),
+.view-mode :deep(select) {
+  pointer-events: none;
+  opacity: 0.6;
+  user-select: none;
+  cursor: default;
+}
+
+.view-mode .sub-editor:hover {
+  border-color: var(--admin-theme-border);
+}
+
+.view-mode .icon-btn-pencil {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: transparent;
+  color: var(--admin-theme-primary-deep);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+  transition: all 0.18s ease;
+}
+
+.btn-edit:hover {
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, transparent);
+  border-color: var(--admin-theme-primary);
+  transform: translateY(-1px);
+}
+
+.btn-edit-active {
+  background: var(--admin-theme-primary);
+  color: #ffffff;
+  border-color: var(--admin-theme-primary-deep);
+}
+
+.btn-edit-active:hover {
+  background: var(--admin-theme-primary-deep);
 }
 
 .state-card {
