@@ -28,8 +28,12 @@ function applySidebarState(open: boolean) {
 
 function getInitialSidebarOpen() {
   if (typeof window === 'undefined') return false
+  if (window.innerWidth < 900) return false
 
-  return window.innerWidth >= 900
+  const stored = window.localStorage.getItem('admin-sidebar-open')
+  if (stored !== null) return stored === 'true'
+
+  return true
 }
 
 export const useUiStore = defineStore('ui', () => {
@@ -83,6 +87,10 @@ export const useUiStore = defineStore('ui', () => {
   function setSidebarOpen(state: boolean) {
     sidebarOpen.value = state
     applySidebarState(state)
+
+    if (typeof window !== 'undefined' && window.innerWidth >= 900) {
+      window.localStorage.setItem('admin-sidebar-open', state ? 'true' : 'false')
+    }
   }
 
   function setDarkMode(state: boolean) {

@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
@@ -36,9 +35,35 @@ function goToSite() {
 <template>
   <header class="admin-header">
     <div class="admin-header-inner">
+      <button
+        class="icon-btn sidebar-toggle-btn"
+        type="button"
+        :aria-label="
+          ui.sidebarOpen
+            ? t('admin.actions.hideSidebar')
+            : t('admin.actions.showSidebar')
+        "
+        :aria-pressed="ui.sidebarOpen"
+        @click="ui.toggleSidebar"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+
       <div class="actions">
         <div class="icon-group">
-          <LanguageSwitcher class="admin-language-switcher" />
           <button
             class="icon-btn view-site-btn"
             type="button"
@@ -149,9 +174,31 @@ function goToSite() {
   padding: 0 2rem;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 0.75rem;
   min-height: 60px;
+}
+
+.sidebar-toggle-btn {
+  flex-shrink: 0;
+}
+
+.sidebar-toggle-btn[aria-pressed='true'] {
+  border-color: var(--hdr-primary-deep);
+  background: var(--hdr-primary-deep);
+  color: #ffffff;
+}
+
+.sidebar-toggle-btn[aria-pressed='true']:hover {
+  border-color: var(--hdr-primary);
+  background: var(--hdr-primary);
+  color: #ffffff;
+}
+
+.sidebar-toggle-btn[aria-pressed='false'] {
+  border-color: var(--hdr-border);
+  background: transparent;
+  color: var(--hdr-muted);
 }
 
 /* Actions */
@@ -165,14 +212,6 @@ function goToSite() {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-}
-
-.admin-language-switcher {
-  --language-switcher-text: var(--hdr-muted);
-  --language-switcher-surface: var(--hdr-surface);
-  --language-switcher-border: var(--hdr-border);
-  --language-switcher-hover: var(--admin-theme-surface-soft);
-  --language-switcher-accent: var(--hdr-primary-deep);
 }
 
 .icon-btn {
