@@ -519,7 +519,7 @@ const pillarStats = computed(() => {
   flex: 1;
   width: 100%;
   padding: 1.5rem 2rem 2.5rem;
-  padding-top: calc(60px + 1.5rem);
+  padding-top: calc(60px + 0.25rem);
 }
 
 @media (min-width: 900px) {
@@ -1214,7 +1214,7 @@ const pillarStats = computed(() => {
 @media (max-width: 780px) {
   .dash-main {
     padding: 1rem;
-    padding-top: calc(60px + 1rem);
+    padding-top: calc(60px + 0.25rem);
   }
 
   .welcome-banner {
