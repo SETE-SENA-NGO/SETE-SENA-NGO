@@ -62,9 +62,15 @@ function revokePreview(id: string) {
   if (previews[id]) { URL.revokeObjectURL(previews[id]); delete previews[id] }
 }
 
-function displayedQr(method: DonationMethod) {
-  return previews[method.id] || method.qrUrl
+function triggerFileUpload() {
+  const el = document.getElementById(activeMethod.value.id + '-qr-upload')
+  el?.click()
 }
+
+const activeQrSrc = computed(() => {
+  const method = activeMethod.value
+  return previews[method.id] || method.qrUrl || ''
+})
 
 const cropTarget = ref<{ methodId: string; file: File; src: string } | null>(null)
 
@@ -168,7 +174,7 @@ async function saveCard(method: DonationMethod, index: number) {
               <div class="method-body">
                 <div class="method-body-col">
                   <div class="qr-preview" :style="{ borderColor: activeMethod.headerColor }">
-                    <v-img v-if="displayedQr(activeMethod)" :src="displayedQr(activeMethod)" :alt="`${activeMethod.bank || 'Bank'} donation QR code`" max-height="260" contain class="bg-white rounded-lg" />
+                    <v-img v-if="activeQrSrc" :key="activeMethod.id" :src="activeQrSrc" :alt="`${activeMethod.bank || 'Bank'} donation QR code`" max-height="260" contain class="bg-white rounded-lg" />
                     <div v-else class="qr-empty">
                       <v-icon size="32" color="disabled">mdi-qrcode</v-icon>
                       <span class="text-body-2">No QR uploaded yet</span>
@@ -177,15 +183,15 @@ async function saveCard(method: DonationMethod, index: number) {
                   </div>
 
                   <div class="d-flex flex-wrap ga-2">
-                    <v-btn variant="elevated" color="primary" @click="document.getElementById(activeMethod.id + '-qr-upload')?.click()">
-                      {{ displayedQr(activeMethod) ? 'Replace QR image' : 'Upload QR image' }}
+                    <v-btn variant="elevated" color="primary" @click="triggerFileUpload">
+                      {{ activeQrSrc ? 'Replace QR image' : 'Upload QR image' }}
                     </v-btn>
                     <input :id="`${activeMethod.id}-qr-upload`" type="file" accept="image/*" class="d-none"
                       @change="onFileChange(activeMethod, $event)" />
                     <v-btn v-if="pendingFiles[activeMethod.id]" variant="tonal" @click="reopenCrop(activeMethod)">
                       Adjust crop
                     </v-btn>
-                    <v-btn v-if="displayedQr(activeMethod)" variant="tonal" color="error" @click="removeQr(activeMethod)">
+                    <v-btn v-if="activeQrSrc" variant="tonal" color="error" @click="removeQr(activeMethod)">
                       Remove QR
                     </v-btn>
                   </div>
