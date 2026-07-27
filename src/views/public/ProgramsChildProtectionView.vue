@@ -65,6 +65,8 @@ const teamCards = ref(FALLBACK_TEAM_CARDS)
 const introText = ref(
   'Cross-border migration, poverty and family separation put rural Cambodian children at risk of unsafe labour and trafficking. Santi Sena works with villages, schools and pagodas to build the safety net closest to the child — before anything goes wrong.'
 )
+const pageEyebrow = ref('Child Protection')
+const pageTitle = ref('Safeguarding children through local action.')
 const approachText = ref(
   'Every network is anchored by the people children already trust — mothers, monks, teachers, commune council members. We train, coach and connect them to formal referral pathways so a case identified in a village at dawn reaches the provincial social affairs office by dusk.'
 )
@@ -190,6 +192,10 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
     introText.value = meta.intro.trim()
   }
 
+  // Page title / eyebrow
+  if (typeof meta.eyebrow === 'string' && meta.eyebrow.trim()) pageEyebrow.value = meta.eyebrow.trim()
+  if (typeof meta.headline === 'string' && meta.headline.trim()) pageTitle.value = meta.headline.trim()
+
   // Hero image — from meta.heroImageUrl (saved by Child Protection admin dashboard)
   // Since the admin only has one image field, update all three collage images
   if (typeof meta.heroImageUrl === 'string' && meta.heroImageUrl.trim()) {
@@ -206,9 +212,9 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
       .map((g: Record<string, unknown>) => typeof g.url === 'string' ? g.url.trim() : '')
       .filter(Boolean)
     // Map gallery URLs to CP hero refs for the story collage
-    if (galleryUrls.length > 0) cpHeroRef.value = galleryUrls[0]
-    if (galleryUrls.length > 1) cpHero1Ref.value = galleryUrls[1]
-    if (galleryUrls.length > 2) cpHero3Ref.value = galleryUrls[2]
+    if (galleryUrls.length > 0) cpHeroRef.value = galleryUrls[0]!
+    if (galleryUrls.length > 1) cpHero1Ref.value = galleryUrls[1]!
+    if (galleryUrls.length > 2) cpHero3Ref.value = galleryUrls[2]!
   }
 
   // Stats band
@@ -407,6 +413,14 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="child-protection-page">
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="container">
+        <p class="page-header-eyebrow">{{ pageEyebrow }}</p>
+        <h1 class="page-header-title">{{ pageTitle }}</h1>
+      </div>
+    </div>
+
     <!-- Trust bar -->
     <section class="trust-bar">
       <div class="container trust-bar-inner" ref="trustBarEl">
@@ -708,6 +722,31 @@ onBeforeUnmount(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.page-header {
+  background: var(--color-cream-soft, var(--color-cream));
+  padding: 3.5rem 0 2.5rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(22, 52, 42, 0.08);
+}
+
+.page-header-eyebrow {
+  color: var(--primary-color);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.page-header-title {
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--primary-dark);
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 /* ===== Cream / light sections ===== */

@@ -522,7 +522,7 @@ onBeforeUnmount(() => {
         <div class="impact-layout">
           <div :ref="(el) => setRevealRef(el, 11)" class="reveal impact-image-wrap">
             <div class="impact-image-frame">
-              <img src="/src/assets/child5.jpg" alt="Children studying together in a rural school" loading="lazy"
+              <img :src="childStudyImage" alt="Children studying together in a rural school" loading="lazy"
                 decoding="async" />
             </div>
             <div class="impact-image-badge">

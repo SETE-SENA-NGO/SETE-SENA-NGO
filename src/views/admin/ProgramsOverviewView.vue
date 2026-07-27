@@ -22,59 +22,13 @@ const activeLocale = computed(() => (locale.value === 'kh' ? 'kh' : 'en'))
 const loading = ref(false)
 const saving = ref(false)
 const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
+const savedSnapshot = ref('')
 
-// ── Image upload — reuses the same Google Drive upload flow as the
-// Media Library page (media.store.ts → uploadToGoogleDrive → Netlify
-// function /api/google-drive-upload). No separate storage bucket needed.
-const uploadingIndex = ref<number | null>(null)
-const dragIndex = ref<number | null>(null)
-const uploadError = ref<string | null>(null)
-
-async function uploadGoalImage(file: File, index: number) {
-  if (!file.type.startsWith('image/')) {
-    uploadError.value = 'Please choose an image file.'
-    return
-  }
-  const target = goals[index]
-  if (!target) return
-
-  uploadingIndex.value = index
-  uploadError.value = null
-  try {
-    const displayName = `${target.title || 'Program goal'} image`
-    const item = await media.uploadToGoogleDrive(file, displayName)
-    target.image = item.url
-    notice.value = {
-      type: 'success',
-      message: 'Image uploaded to Google Drive. Click "Save & view page" to publish it.',
-    }
-  } catch (e: unknown) {
-    console.error('uploadGoalImage error:', e)
-    uploadError.value = e instanceof Error ? e.message : 'Image upload failed.'
-  } finally {
-    uploadingIndex.value = null
-  }
-}
-
-function onFileInputChange(e: Event, index: number) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (file) uploadGoalImage(file, index)
-  input.value = ''
-}
-
-function onImageDrop(e: DragEvent, index: number) {
-  dragIndex.value = null
-  const file = e.dataTransfer?.files?.[0]
-  if (file) uploadGoalImage(file, index)
-}
-
-function onImageDragOver(index: number) {
-  dragIndex.value = index
-}
-
-function onImageDragLeave(index: number) {
-  if (dragIndex.value === index) dragIndex.value = null
+// ── Per-card image editor toggle — shows/hides the ImageUploader
+// widget (which handles its own Google Drive upload) under each goal card.
+const imageEditorsOpen = reactive<Record<string, boolean>>({})
+function toggleImageEditor(key: string) {
+  imageEditorsOpen[key] = !imageEditorsOpen[key]
 }
 
 // Public route this admin page edits.
@@ -224,6 +178,16 @@ function removePriority(index: number) {
   form2.priorities.splice(index, 1)
 }
 
+function snapshotData(): string {
+  return JSON.stringify({
+    form: { ...form },
+    goals: goals.map((g) => ({ ...g })),
+    priorities: [...form2.priorities],
+  })
+}
+
+const isDirty = computed(() => savedSnapshot.value !== snapshotData())
+
 // ── Load from Supabase (locale-aware, falls back to English) ────
 async function loadPage() {
   loading.value = true
@@ -280,6 +244,7 @@ async function loadPage() {
     notice.value = { type: 'error', message: e instanceof Error ? e.message : 'Could not load page content.' }
   } finally {
     loading.value = false
+    savedSnapshot.value = snapshotData()
   }
 }
 
@@ -353,6 +318,7 @@ async function savePage() {
       message: `Programs page (${activeLocale.value === 'kh' ? 'Khmer' : 'English'}) saved successfully.`,
     }
     ui.addToast('Programs page saved.', 'success')
+    savedSnapshot.value = snapshotData()
     closeEditors()
   } catch (e: unknown) {
     console.error('savePage error:', e)
@@ -428,7 +394,7 @@ watch(activeLocale, () => {
                   Edit content
                 </button>
                 <button v-if="bannerEditing" class="btn btn-ghost" type="button" @click="closeEditors">Cancel</button>
-                <button class="btn btn-primary" type="button" :disabled="saving" @click="viewPage">
+                <button class="btn btn-primary" type="button" :disabled="saving || !isDirty" @click="viewPage">
                   <svg v-if="saving" class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
                   <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                   {{ saving ? 'Saving...' : 'Save & view page' }}
@@ -438,8 +404,14 @@ watch(activeLocale, () => {
           </div>
         </header>
 
+        <!-- LOADING STATE -->
+        <div v-if="loading" class="state-card">
+          <span class="state-spinner" aria-hidden="true"></span>
+          <span>Loading Programs content...</span>
+        </div>
+
         <!-- CONTENT GRID -->
-        <div class="content-grid">
+        <div v-else class="content-grid">
             <!-- ══════════ BOX 1: PROGRAM GOALS ══════════ -->
             <section v-if="!bannerEditing && !prioritiesEditing" class="card-section">
               <div class="card-hdr">
@@ -642,6 +614,32 @@ watch(activeLocale, () => {
 .btn-ghost:hover { background: var(--bg); }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── LOADING STATE ─── */
+.state-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  padding: 2.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.86rem;
+  text-align: center;
+}
+.state-spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--border-s);
+  border-top-color: var(--emerald);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
 
 /* ─── BANNER ─── */
 .dash-banner {

@@ -62,73 +62,6 @@ const contentKind = 'santi-sena-page-content'
 
 const defaultPages: PageDraft[] = [
   {
-    slug: 'news',
-    route: '/news',
-    group: 'News',
-    title: 'News',
-    eyebrow: 'News manager',
-    headline: 'News',
-    intro: '',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'news-list',
-        label: 'News list',
-        heading: 'News list',
-        body: 'Used by the News manager editor page.',
-        items: '',
-      },
-    ],
-    updatedAt: '',
-  },
-  {
-    slug: 'news-detail',
-    route: '/news/:id',
-    previewRoute: '/news/1',
-    group: 'News',
-    title: 'News Detail',
-    eyebrow: 'News detail',
-    headline: 'Community stories, updates and field notes.',
-    intro:
-      'A detail page template for public news stories, including the article header, body content, related updates and donation call to action.',
-    primaryAction: 'All news',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'news-detail-hero',
-        label: 'Article header',
-        heading: 'Story header',
-        body: 'Controls the headline area shown on individual public news stories.',
-        items:
-          'Category | Community update\nDate | Published date\nAuthor | Santi Sena team\nReading time | 5 min read',
-      },
-      {
-        id: 'news-detail-body',
-        label: 'Article body',
-        heading: 'Story content',
-        body: 'Use this section for the article introduction, main body and closing note.',
-        items:
-          'Introduction | Open with the community need or program moment.\nMain story | Describe the people, place, activities and outcomes.\nClosing note | Invite readers to continue learning or supporting the work.',
-      },
-      {
-        id: 'news-detail-related',
-        label: 'Related stories',
-        heading: 'More from Santi Sena',
-        body: 'Related news cards shown near the end of a story.',
-        items: 'Environment updates\nEducation stories\nLivelihood field notes\nChild protection news',
-      },
-      {
-        id: 'news-detail-cta',
-        label: 'Call to action',
-        heading: 'Stand with village-led change.',
-        body: 'A short donation or support invitation that appears after a news article.',
-        items: 'Donate\nGet involved\nContact us',
-      },
-    ],
-    updatedAt: '',
-  },
-  {
     slug: 'home',
     route: '/',
     group: 'Home',
@@ -186,20 +119,12 @@ const defaultPages: PageDraft[] = [
     secondaryAction: '',
     sections: [
       {
-        id: 'about-vmg',
-        label: 'Vision, mission, goal',
-        heading: 'Vision, Mission, Goal',
-        body: 'Vision: A Cambodia where peace, justice and harmony flourish. Mission: Alleviate poverty through community-led development rooted in Buddhist ethics. Goal: Better work and living situations for vulnerable rural households.',
-        items:
-          'Vision | A Cambodia where peace, justice and harmony flourish across every village and generation.\nMission | To alleviate poverty through community-led development rooted in Buddhist ethics.\nGoal | Better work and living situations for the most vulnerable rural households of southeastern Cambodia.',
-      },
-      {
         id: 'about-values',
         label: 'Core values',
-        heading: 'Five vows that shape every program',
-        body: 'The values listed on the About page.',
+        heading: 'Values That Guide The Work',
+        body: 'These values shape how Santi Sena works with communities, donors and partners.',
         items:
-          'Honesty | We have honesty with donors, target groups, operational partners and working groups.\nNon-discrimination | We do not discriminate by disability, religion, color, race, target group or political faction.\nCollective Benefits | We do not utilize organization property for private benefit.\nFlexibility | We respect and accept good comments from target groups and development partners.\nEmpowerment | We do not deliver development; we hand it back to the community.',
+          'Honesty | Clear communication and transparent relationships with donors, communities, partners and staff.\nNon-discrimination | Respect for people across disability, religion, background, race, community status and political belief.\nCollective Benefit | Organizational resources and knowledge are used for shared benefit, not private advantage.\nFlexibility | Plans adapt to community feedback, partner advice, available resources and real field needs.',
       },
       {
         id: 'about-team',
@@ -215,42 +140,6 @@ const defaultPages: PageDraft[] = [
         heading: 'Three provinces. Forty-three communes. Two hundred and ninety-three villages.',
         body: 'Santi Sena works across Svay Rieng, Prey Veng and Kratie.',
         items: 'Svay Rieng\nPrey Veng\nKratie',
-      },
-    ],
-    updatedAt: '',
-  },
-  {
-    slug: 'about-vision',
-    route: '/about/vision',
-    group: 'About',
-    title: 'Vision & Mission',
-    eyebrow: 'Vision & Mission',
-    headline: 'Shaping a Future of Equity & Opportunity',
-    intro:
-      'A focused page for Santi Sena vision, mission, values and the practical commitments that guide long-term village work.',
-    primaryAction: 'Join Us',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'vision-strive',
-        label: 'What we strive for',
-        heading: 'What We Strive For',
-        body: 'Peace With Justice, Community Ownership and Sustainable Livelihoods.',
-        items: 'Peace With Justice | A Cambodia where peace, justice and harmony are lived in daily village life, not only written in plans.\nCommunity Ownership | Villagers, monks, local authorities, schools and community organizations lead the work together.\nSustainable Livelihoods | Families build better lives through education, child protection, rural income and care for natural resources.',
-      },
-      {
-        id: 'vision-guides',
-        label: 'Mission',
-        heading: 'How The Mission Becomes Practical',
-        body: 'Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics. Its work connects moral leadership with practical programs in education, livelihoods, environment and child protection.',
-        items: 'Work with monks, villagers, local government and schools\nStrengthen education, savings groups and rural livelihoods\nProtect children from trafficking, unsafe migration and exploitation\nPreserve community forests, water resources and local resilience',
-      },
-      {
-        id: 'mission-content',
-        label: 'Mission',
-        heading: 'How The Mission Becomes Practical',
-        body: 'Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics. Its work connects moral leadership with practical programs in education, livelihoods, environment and child protection.',
-        items: 'Work with monks, villagers, local government and schools\nStrengthen education, savings groups and rural livelihoods\nProtect children from trafficking, unsafe migration and exploitation\nPreserve community forests, water resources and local resilience',
       },
     ],
     updatedAt: '',
@@ -981,32 +870,6 @@ const defaultPages: PageDraft[] = [
     ],
     updatedAt: '',
   },
-  {
-    slug: 'news',
-    route: '/news',
-    group: 'News',
-    title: 'News',
-    eyebrow: 'News & Updates',
-    headline: 'Announcements, stories and updates from the field.',
-    intro: 'Keep up to date with Santi Sena\'s work in community development, environment and education.',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [],
-    updatedAt: '',
-  },
-  {
-    slug: 'news-detail',
-    route: '/news/:slug',
-    group: 'News',
-    title: 'News Detail',
-    eyebrow: 'Article',
-    headline: 'News Article Title Placeholder',
-    intro: 'News Article Introduction Summary Placeholder',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [],
-    updatedAt: '',
-  },
 ]
 
 const route = useRoute()
@@ -1024,6 +887,20 @@ const ui = useUiStore()
 const mediaStore = useMediaStore()
 
 const uploadingCell = ref<{ sectionId: string; rowIndex: number; colIndex: number } | null>(null)
+
+// ─── Section Filter State ─────────────────────────────────
+const activeSectionFilter = ref<string | null>(null)
+
+const filteredSections = computed(() => {
+  if (!activeSectionFilter.value) return activePage.value.sections
+  return activePage.value.sections.filter(s => s.id === activeSectionFilter.value)
+})
+
+const sectionFilterOptions = computed(() => {
+  const sections = activePage.value.sections
+  if (!sections.length) return []
+  return sections.map(s => ({ id: s.id, label: s.label || 'Untitled block' }))
+})
 
 async function handleImageCellUpload(event: Event, section: EditableSection, rowIndex: number, colIndex: number) {
   const file = (event.target as HTMLInputElement).files?.[0]
@@ -1086,6 +963,7 @@ const notice = ref<{ type: 'success' | 'error'; message: string } | null>(null)
 const savedSnapshot = ref<Record<string, string>>({})
 const activeSectionIndex = ref<number | null>(null)
 const previewVisible = ref(false)
+
 
 // ─── Visual Table Editor Helpers ─────────────────────────────────
 const showRawItems = ref<Record<string, boolean>>({})
@@ -1211,9 +1089,7 @@ const activePage = computed<PageDraft>(() => {
 
 const activePageDirty = computed(() => isDirty(activePage.value.slug))
 
-const activePreviewRoute = computed(() => getPreviewRoute(activePage.value))
-
-const previewItems = computed(() => {
+const _unused_previewItems = computed(() => {
   return activePage.value.sections.map((section) => ({
     ...section,
     parsedItems: section.items
@@ -1261,11 +1137,6 @@ function clonePage(page: PageDraft): PageDraft {
     ...page,
     sections: page.sections.map((section) => ({ ...section })),
   }
-}
-
-function getPreviewRoute(page: PageDraft) {
-  if (page.previewRoute) return page.previewRoute
-  return page.route.replace(/:id\b/g, '1')
 }
 
 function cloneSection(section?: Partial<EditableSection>): EditableSection {
@@ -1328,6 +1199,7 @@ function ctaUrlForPage(page: PageDraft, actionIndex: 0 | 1) {
   return '/contact'
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isDirty(slug: string) {
   const page = drafts.value.find((item) => item.slug === slug)
   if (!page) return false
@@ -1995,37 +1867,9 @@ function formatDate(value: string) {
               <span class="status-right">{{ sectionCountLabel }} · {{ activePage.slug }}</span>
             </div>
 
-            <!-- Workflow Steps -->
-            <div class="workflow-steps">
-              <div class="step active completed">
-                <div class="step-indicator">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-                <div class="step-content">
-                  <span class="step-label">Page</span>
-                  <span class="step-desc">Identity</span>
-                </div>
-              </div>
-              <div class="step active">
-                <div class="step-indicator">2</div>
-                <div class="step-content">
-                  <span class="step-label">Content</span>
-                  <span class="step-desc">Blocks</span>
-                </div>
-              </div>
-              <div class="step" :class="{ active: !activePageDirty }">
-                <div class="step-indicator" :class="{ success: !activePageDirty }">
-                  <svg v-if="!activePageDirty" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <template v-else>3</template>
-                </div>
-                <div class="step-content">
-                  <span class="step-label">{{ activePageDirty ? 'Unsaved' : 'Published' }}</span>
-                  <span class="step-desc">Status</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Form Panels -->
+            <!-- ==============================
+                 PAGE IDENTITY, HERO + CONTENT BLOCKS (always visible)
+                 ============================== -->
             <div class="form-panels">
               <!-- Page Setup -->
               <section class="form-card">
@@ -2239,8 +2083,270 @@ function formatDate(value: string) {
                 </div>
               </section>
             </div>
+<!-- ==============================
+                 STEP 3: Status / Publish (stale - kept for reference)
+                 ============================== -->
+            <template v-if="false">
+              <div class="form-panels step-panel-enter">
 
-            <!-- Bottom Save Bar -->
+                <!-- Section Filter Pills -->
+                <div v-if="sectionFilterOptions.length > 0" class="section-filter-bar">
+                  <button
+                    class="filter-pill"
+                    :class="{ active: activeSectionFilter === null }"
+                    @click="activeSectionFilter = null"
+                  >
+                    All blocks
+                  </button>
+                  <button
+                    v-for="opt in sectionFilterOptions"
+                    :key="opt.id"
+                    class="filter-pill"
+                    :class="{ active: activeSectionFilter === opt.id }"
+                    @click="activeSectionFilter = opt.id"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </div>
+
+                <!-- Page Sections (filtered) -->
+                <section class="form-card sections-card" aria-label="Page sections">
+                  <div class="card-header">
+                    <div class="card-header-left">
+                      <div class="card-icon card-icon-amber">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                      </div>
+                      <div>
+                        <span class="card-eyebrow">Content blocks</span>
+                        <h3 class="card-title">{{ sectionCountLabel }}</h3>
+                      </div>
+                    </div>
+                    <button class="btn btn-secondary add-section-btn" type="button" @click="addSection">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Add block
+                    </button>
+                  </div>
+
+                  <div class="card-body sections-body">
+                    <TransitionGroup name="section-list" tag="div" class="sections-list">
+                      <article
+                        v-for="(section, index) in filteredSections"
+                        :id="`edit-${section.id}`"
+                        :key="section.id"
+                        class="section-block"
+                        :class="{ 'section-active': activeSectionIndex === index }"
+                      >
+                        <details open @toggle="setActiveSectionFromToggle($event, index)">
+                          <summary class="section-summary">
+                            <div class="summary-drag">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                            </div>
+                            <div class="summary-content">
+                              <span class="summary-index">{{ index + 1 }}</span>
+                              <div class="summary-text">
+                                <strong>{{ section.label || 'Untitled block' }}</strong>
+                                <small v-if="section.heading">{{ section.heading }}</small>
+                                <small v-else class="empty-hint">No heading</small>
+                              </div>
+                            </div>
+                            <div class="summary-badge">
+                              {{ section.items ? `${section.items.split('\n').length} items` : 'Text' }}
+                            </div>
+                          </summary>
+
+                          <div class="section-body">
+                            <div class="section-toolbar">
+                              <div class="section-tabs">
+                                <span class="section-tab active">Content</span>
+                              </div>
+                              <div class="section-actions">
+                                <button
+                                  type="button"
+                                  class="btn-icon"
+                                  :disabled="index === 0"
+                                  aria-label="Move section up"
+                                  title="Move up"
+                                  @click.stop="moveSection(index, -1)"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn-icon"
+                                  :disabled="index === activePage.sections.length - 1"
+                                  aria-label="Move section down"
+                                  title="Move down"
+                                  @click.stop="moveSection(index, 1)"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
+                                <div class="btn-sep"></div>
+                                <button
+                                  type="button"
+                                  class="btn-icon"
+                                  aria-label="Duplicate section"
+                                  title="Duplicate"
+                                  @click.stop="duplicateSection(index)"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn-icon danger"
+                                  aria-label="Remove section"
+                                  title="Remove"
+                                  @click.stop="removeSection(index)"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div class="section-fields">
+                              <div class="form-grid">
+                                <label class="field">
+                                  <span class="field-label">Block label</span>
+                                  <input v-model="section.label" :name="`section-${section.id}-label`" placeholder="e.g. Mission, Stats" />
+                                </label>
+                                <label class="field">
+                                  <span class="field-label">Heading</span>
+                                  <input v-model="section.heading" :name="`section-${section.id}-heading`" placeholder="Section heading" />
+                                </label>
+                              </div>
+
+                              <label class="field field-block">
+                                <span class="field-label">Body</span>
+                                <textarea v-model="section.body" :name="`section-${section.id}-body`" rows="3" placeholder="Descriptive body text"></textarea>
+                              </label>
+
+                              <div class="items-editor-container">
+                                <label class="field field-block" style="margin-top: 0;">
+                                  <span class="field-label">
+                                    Items
+                                    <span class="field-hint">One per line. Use <code>Title | Detail</code> for paired content.</span>
+                                  </span>
+                                  <textarea
+                                    v-model="section.items"
+                                    :name="`section-${section.id}-items`"
+                                    rows="4"
+                                    placeholder="Item 1&#10;Item 2&#10;Title | Description"
+                                  ></textarea>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </details>
+                      </article>
+                    </TransitionGroup>
+
+                    <div v-if="!activePage.sections.length" class="empty-sections">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                      <p>No content blocks yet</p>
+                      <button class="btn btn-secondary" type="button" @click="addSection">Add your first block</button>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            </template>
+
+            <!-- ==============================
+                 STEP 3: Status / Publish
+                 ============================== -->
+            <template>
+              <div class="form-panels step-panel-enter">
+
+                <!-- Publish Status Card -->
+                <section class="form-card">
+                  <div class="card-header">
+                    <div class="card-header-left">
+                      <div class="card-icon card-icon-blue">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      </div>
+                      <div>
+                        <span class="card-eyebrow">Status</span>
+                        <h3 class="card-title">Publish state</h3>
+                      </div>
+                    </div>
+                    <span class="status-pill" :class="{ dirty: activePageDirty }">
+                      {{ activePageDirty ? 'Unsaved' : 'Saved' }}
+                    </span>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-grid">
+                      <label class="field">
+                        <span class="field-label">Current state</span>
+                        <input :value="activePageDirty ? 'Unsaved changes' : 'Published'" disabled />
+                      </label>
+                      <label class="field">
+                        <span class="field-label">Last saved</span>
+                        <input :value="formatDate(activePage.updatedAt)" disabled />
+                      </label>
+                      <label class="field">
+                        <span class="field-label">Page slug</span>
+                        <input :value="activePage.slug" disabled />
+                      </label>
+                      <label class="field">
+                        <span class="field-label">Locale</span>
+                        <input :value="activeLocaleName" disabled />
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Quick Actions Card -->
+                <section class="form-card">
+                  <div class="card-header">
+                    <div class="card-header-left">
+                      <div class="card-icon card-icon-amber">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                      </div>
+                      <div>
+                        <span class="card-eyebrow">Actions</span>
+                        <h3 class="card-title">Quick actions</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                      <button
+                        class="btn btn-primary"
+                        type="button"
+                        :disabled="savingSlug === activePage.slug || loading"
+                        @click="saveCurrentPage"
+                      >
+                        <svg v-if="savingSlug === activePage.slug" class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+                        <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        {{ savingSlug === activePage.slug ? 'Saving...' : 'Save page' }}
+                      </button>
+                      <button class="btn btn-ghost" type="button" @click="resetCurrentToDefault">Reset draft</button>
+                      <button
+                        class="btn btn-ghost"
+                        type="button"
+                        :disabled="loading"
+                        @click="loadPages"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Reload
+                      </button>
+                      <RouterLink
+                        v-if="activePage.route !== 'global'"
+                        class="btn btn-ghost"
+                        :to="activePage.route"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Preview
+                      </RouterLink>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            </template>
+
+            <!-- ==============================
+                 BOTTOM SAVE BAR (always visible)
+                 ============================== -->
             <div class="save-bar">
               <div class="save-bar-left">
                 <span class="save-dot-large" :class="{ dirty: activePageDirty }"></span>
@@ -2265,77 +2371,7 @@ function formatDate(value: string) {
             </div>
           </section>
 
-          <!-- Preview Column -->
-          <Transition name="preview-slide">
-            <aside v-if="previewVisible" class="preview-column" aria-label="Content preview">
-              <div class="preview-header">
-                <div class="preview-header-left">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <span>Live preview</span>
-                </div>
-                <button class="btn-icon-sm" type="button" @click="previewVisible = false" aria-label="Close preview">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              </div>
-
-              <div class="preview-content">
-                <!-- Hero Preview -->
-                <div class="preview-hero">
-                  <span class="preview-eyebrow">{{ activePage.eyebrow || 'Eyebrow text' }}</span>
-                  <h2 class="preview-headline">{{ activePage.headline || 'Headline' }}</h2>
-                  <p class="preview-intro">{{ activePage.intro || 'Intro text...' }}</p>
-                  <div v-if="activePage.primaryAction || activePage.secondaryAction" class="preview-actions">
-                    <span v-if="activePage.primaryAction" class="preview-btn preview-btn-primary">{{ activePage.primaryAction }}</span>
-                    <span v-if="activePage.secondaryAction" class="preview-btn preview-btn-secondary">{{ activePage.secondaryAction }}</span>
-                  </div>
-                </div>
-
-                <!-- Sections Preview -->
-                <div class="preview-sections">
-                  <div
-                    v-for="(section, idx) in previewItems"
-                    :key="section.id"
-                    class="preview-section"
-                    :class="{ 'preview-section-active': activeSectionIndex === idx }"
-                    @click="activeSectionIndex = idx"
-                  >
-                    <div class="preview-section-indicator" v-if="activeSectionIndex === idx"></div>
-                    <h3 class="preview-section-heading">{{ section.heading || 'Section heading' }}</h3>
-                    <p class="preview-section-body" v-if="section.body">{{ section.body }}</p>
-
-                    <!-- Items as cards/list -->
-                    <div v-if="section.parsedItems.length" class="preview-items">
-                      <template v-for="item in section.parsedItems" :key="item">
-                        <div v-if="item.includes('|')" class="preview-item-card">
-                          <strong>{{ item.split('|')[0]?.trim() }}</strong>
-                          <span>{{ item.split('|').slice(1).join('|').trim() }}</span>
-                        </div>
-                        <div v-else class="preview-item-simple">
-                          <span class="previewBullet"></span>
-                          <span>{{ item }}</span>
-                        </div>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="preview-footer">
-                <span>Auto-refreshes on edit</span>
-              </div>
-            </aside>
-          </Transition>
-
-          <!-- Preview toggle button (when preview is hidden) -->
-          <button
-            v-if="!previewVisible"
-            class="preview-toggle-btn"
-            type="button"
-            @click="previewVisible = true"
-            title="Show preview"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+          
         </div>
         </template>
       </main>
@@ -2654,47 +2690,47 @@ function formatDate(value: string) {
 }
 
 .btn-primary {
-  background: var(--admin-blue);
+  border-color: var(--admin-theme-primary-deep);
+  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
   color: #ffffff;
-  border-color: var(--admin-blue);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  border-color: var(--admin-theme-primary-deep);
+  background: linear-gradient(180deg, var(--admin-theme-primary-deep), var(--admin-theme-primary));
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--admin-theme-primary) 28%, transparent);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
-  border-color: var(--admin-border-strong);
+  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
+  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
+  color: var(--admin-theme-contrast);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--admin-muted);
-  background: var(--admin-surface-soft);
-  box-shadow: var(--admin-shadow);
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
 }
 
 .btn-ghost {
-  background: transparent;
-  color: var(--admin-muted);
-  border-color: transparent;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-contrast);
+  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--admin-bg);
-  color: var(--admin-contrast);
-  border-color: var(--admin-border);
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
+  color: var(--admin-theme-primary-deep);
 }
 
 .btn-ghost.danger:hover:not(:disabled) {
-  color: #dc2626;
-  background: var(--admin-red-soft);
-  border-color: rgba(220, 38, 38, 0.2);
+  color: var(--admin-theme-danger);
+  background: color-mix(in srgb, var(--admin-theme-danger) 10%, var(--admin-theme-surface));
+  border-color: var(--admin-theme-danger);
 }
 
 .btn-icon {
@@ -2822,11 +2858,6 @@ function formatDate(value: string) {
   background: var(--admin-blue-soft);
 }
 
-.step.completed {
-  border-color: var(--admin-green);
-  background: var(--admin-green-soft);
-}
-
 .step-indicator {
   width: 28px;
   height: 28px;
@@ -2844,11 +2875,6 @@ function formatDate(value: string) {
 .step.active .step-indicator {
   background: var(--admin-blue);
   border-color: var(--admin-blue);
-  color: #ffffff;
-}
-
-.step.completed .step-indicator {
-  background: var(--admin-green);
   color: #ffffff;
 }
 
@@ -3366,246 +3392,62 @@ input::placeholder, textarea::placeholder {
   gap: 0.5rem;
 }
 
+/* Preview-related CSS removed */
+
 /* ==============================
-   PREVIEW COLUMN
+   SECTION FILTER PILLS
    ============================== */
-.preview-column {
-  width: 340px;
-  flex-shrink: 0;
-  position: sticky;
-  top: calc(60px + 1.25rem);
-  align-self: flex-start;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow-lg);
-  overflow: hidden;
+.section-filter-bar {
   display: flex;
-  flex-direction: column;
-  max-height: calc(100vh - 60px - 2.5rem);
-}
-
-.preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid var(--admin-border);
-  background: var(--admin-bg-deep);
-  flex-shrink: 0;
-}
-
-.preview-header-left {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.45rem;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
+  padding: 0.65rem 0;
 }
 
-.preview-header-left svg {
-  color: var(--admin-blue);
-}
-
-.preview-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 1rem;
-  display: grid;
-  gap: 1.25rem;
-}
-
-.preview-hero {
-  display: grid;
-  gap: 0.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--admin-border);
-}
-
-.preview-eyebrow {
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--admin-blue);
-}
-
-.preview-headline {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
-  line-height: 1.25;
-}
-
-.preview-intro {
-  margin: 0;
-  font-size: 0.78rem;
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 999px;
+  background: var(--admin-surface);
   color: var(--admin-muted);
-  line-height: 1.55;
-}
-
-.preview-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.15rem;
-}
-
-.preview-btn {
-  display: inline-block;
-  padding: 0.3rem 0.65rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.75rem;
   font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.preview-btn-primary {
+.filter-pill:hover {
+  border-color: var(--admin-blue);
+  color: var(--admin-blue);
+  background: var(--admin-blue-soft);
+}
+
+.filter-pill.active {
+  border-color: var(--admin-blue);
   background: var(--admin-blue);
   color: #ffffff;
 }
 
-.preview-btn-secondary {
-  border: 1px solid var(--admin-border-strong);
-  color: var(--admin-contrast);
+/* ==============================
+   STEP PANEL ENTER ANIMATION
+   ============================== */
+.step-panel-enter {
+  animation: stepPanelFadeIn 0.3s ease;
 }
 
-.preview-sections {
-  display: grid;
-  gap: 1rem;
-}
-
-.preview-section {
-  position: relative;
-  cursor: pointer;
-  padding: 0.65rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.preview-section:hover {
-  background: var(--admin-surface-soft);
-}
-
-.preview-section-active {
-  border-color: var(--admin-blue) !important;
-  background: var(--admin-blue-soft) !important;
-}
-
-.preview-section-indicator {
-  position: absolute;
-  left: -1px;
-  top: 0.5rem;
-  bottom: 0.5rem;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--admin-blue);
-}
-
-.preview-section-heading {
-  margin: 0 0 0.35rem;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
-}
-
-.preview-section-body {
-  margin: 0 0 0.5rem;
-  font-size: 0.72rem;
-  color: var(--admin-muted);
-  line-height: 1.5;
-}
-
-.preview-items {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.preview-item-card {
-  padding: 0.45rem 0.55rem;
-  border: 1px solid var(--admin-border);
-  border-radius: 6px;
-  background: var(--admin-surface-soft);
-}
-
-.preview-item-card strong {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: var(--admin-contrast);
-  margin-bottom: 0.08rem;
-}
-
-.preview-item-card span {
-  font-size: 0.68rem;
-  color: var(--admin-muted);
-}
-
-.preview-item-simple {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  color: var(--admin-text);
-}
-
-.preview-bullet {
-  width: 4px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--admin-muted-light);
-  flex-shrink: 0;
-  margin-top: 0.3em;
-}
-
-.preview-footer {
-  padding: 0.5rem 0.85rem;
-  border-top: 1px solid var(--admin-border);
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--admin-muted-light);
-  text-align: center;
-  flex-shrink: 0;
-}
-
-/* Preview Slider Transitions */
-.preview-slide-enter-active,
-.preview-slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.preview-slide-enter-from,
-.preview-slide-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-/* Preview toggle button */
-.preview-toggle-btn {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 5rem;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--admin-border);
-  border-radius: 12px;
-  background: var(--admin-surface);
-  color: var(--admin-muted);
-  cursor: pointer;
-  box-shadow: var(--admin-shadow-lg);
-  z-index: 20;
-  transition: all 0.2s ease;
-}
-
-.preview-toggle-btn:hover {
-  color: var(--admin-blue);
-  border-color: var(--admin-blue);
-  box-shadow: var(--admin-shadow-xl);
-  transform: translateY(-2px);
+@keyframes stepPanelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ==============================
@@ -4564,7 +4406,7 @@ input::placeholder, textarea::placeholder {
 }
 </style>
 
-<!-- Non-scoped dark mode overrides for page editor (Home, About, Programs, News) -->
+<!-- Non-scoped dark mode overrides for page editor (Home, About, Programs) -->
 <style>
 .admin-dark .editor-page {
   background: #06100F !important;
@@ -4595,9 +4437,21 @@ input::placeholder, textarea::placeholder {
   color: #f2fbf6 !important;
 }
 .admin-dark .btn-primary {
-  background: #38c982 !important;
-  border-color: #74e0ae !important;
-  color: #06100F !important;
+  color: #071311;
+}
+
+.admin-dark .btn-secondary,
+.admin-dark .btn-ghost {
+  background: var(--admin-theme-surface) !important;
+  border-color: var(--admin-theme-border) !important;
+  color: var(--admin-theme-contrast) !important;
+}
+
+.admin-dark .btn-secondary:hover,
+.admin-dark .btn-ghost:hover {
+  border-color: var(--admin-theme-primary) !important;
+  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) !important;
+  color: var(--admin-theme-primary-deep) !important;
 }
 .admin-dark input,
 .admin-dark textarea,
@@ -4636,5 +4490,31 @@ html.admin-dark .editor-page .section-summary {
   --admin-amber-soft: #1a150b !important;
   --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
   --admin-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Dark mode: Workflow step buttons ── */
+.admin-dark .workflow-steps .step {
+  border-color: #1d3b33 !important;
+  background: #0a1a14 !important;
+}
+.admin-dark .workflow-steps .step.active {
+  border-color: #38c982 !important;
+  background: rgba(56, 201, 130, 0.12) !important;
+}
+.admin-dark .step .step-label {
+  color: #f2fbf6 !important;
+}
+.admin-dark .step .step-desc {
+  color: #b9ead5 !important;
+}
+.admin-dark .step-indicator {
+  background: #1d3b33 !important;
+  color: #90aaa0 !important;
+}
+.admin-dark .step.active .step-indicator,
+.admin-dark .step-indicator.success {
+  background: #38c982 !important;
+  color: #06100F !important;
+  border-color: #74e0ae !important;
 }
 </style>

@@ -7,12 +7,61 @@ import { useLocalizedDomContent } from '@/i18n/useLocalizedDomContent'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
+const adminRouteMap: Record<string, string> = {
+  '/': '/admin',
+  '/about': '/admin/about',
+  '/about/vision': '/admin/vision-mission',
+  '/about/organization': '/admin/editor/about-organization',
+  '/programs': '/admin/programs',
+  '/programs/education': '/admin/education',
+  '/programs/environment': '/admin/environment',
+  '/programs/livelihood': '/admin/livelihood',
+  '/programs/child-protection': '/admin/child-protection',
+  '/impact/numbers': '/admin/editor/impact-numbers',
+  '/impact/timeline': '/admin/editor/impact-timeline',
+  '/impact/partners': '/admin/editor/impact-partners',
+  '/get-involved': '/admin/get-involved',
+  '/get-involved/donate': '/admin/donate',
+  '/get-involved/volunteer': '/admin/get-involved',
+  '/get-involved/partner': '/admin/get-involved',
+  '/news': '/admin/news',
+  '/contact': '/admin/contact',
+}
+
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
 const auth = useAuthStore()
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 const showAdminBar = computed(() => !isAdminRoute.value && auth.isAuthenticated)
+
+const adminTargetRoute = computed(() => {
+  return adminRouteMap[route.path] || '/admin'
+})
+
+const pageLabel = computed(() => {
+  const labels: Record<string, string> = {
+    '/': 'Home',
+    '/about': 'About',
+    '/about/vision': 'Vision & Mission',
+    '/about/organization': 'Organization',
+    '/programs': 'Programs',
+    '/programs/education': 'Education',
+    '/programs/environment': 'Environment',
+    '/programs/livelihood': 'Livelihood',
+    '/programs/child-protection': 'Child Protection',
+    '/impact/numbers': 'Impact Numbers',
+    '/impact/timeline': 'Impact Timeline',
+    '/impact/partners': 'Impact Partners',
+    '/get-involved': 'Get Involved',
+    '/get-involved/donate': 'Donate',
+    '/get-involved/volunteer': 'Volunteer',
+    '/get-involved/partner': 'Partner',
+    '/news': 'News',
+    '/contact': 'Contact',
+  }
+  return labels[route.path] || ''
+})
 
 // Initialize auth session
 void auth.init()
@@ -24,16 +73,14 @@ function confirmModal() {
 }
 
 // ── Back to Dashboard ──
-// Any admin page that opens a public page (via a "view page" action) should
+// Any admin page that opens a public page (via a "view page" action) must
 // first do: localStorage.setItem('admin_return_path', route.path)
-// before window.open(...). localStorage is shared across all tabs of the
-// same origin (unlike sessionStorage, which only copies to a new tab when
-// window.open is called WITHOUT 'noopener' — since our admin pages use
-// 'noopener,noreferrer' for security, we need localStorage instead).
-// This reads it back and clears it, so the button returns to whichever
-// admin page the user actually came from. If nothing was stored (e.g. the
-// user navigated to the site normally), it falls back to /admin.
+// before window.open(...). This reads it back and clears it, so the
+// button returns to whichever admin page the user actually came from.
+// If nothing was stored (e.g. the user navigated to the site normally),
+// it falls back to /admin.
 function goToAdmin() {
+  void router.push(adminTargetRoute.value)
   const returnPath = localStorage.getItem('admin_return_path')
   localStorage.removeItem('admin_return_path')
   void router.push(returnPath || '/admin')
@@ -67,7 +114,7 @@ function goToAdmin() {
               <path d="M19 12H5" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-            Back to Dashboard
+            {{ pageLabel ? 'Edit ' + pageLabel : 'Dashboard' }}
           </button>
         </div>
       </div>
@@ -88,25 +135,36 @@ function goToAdmin() {
     </div>
   </div>
 
-  <div v-if="ui.modal.open" class="confirm-overlay" @click.self="ui.closeModal">
-    <section
-      class="confirm-dialog"
-      role="dialog"
-      aria-modal="true"
-      :aria-label="ui.modal.title"
-    >
-      <h2>{{ ui.modal.title }}</h2>
-      <p>{{ ui.modal.body }}</p>
-      <div class="confirm-actions">
-        <button type="button" class="confirm-secondary" @click="ui.closeModal">
-          Cancel
-        </button>
-        <button type="button" class="confirm-primary" @click="confirmModal">
-          Confirm
-        </button>
-      </div>
-    </section>
-  </div>
+  <Transition name="confirm-slide">
+    <div v-if="ui.modal.open" class="confirm-overlay" @click.self="ui.closeModal">
+      <section
+        class="confirm-dialog"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="ui.modal.title"
+      >
+        <div class="confirm-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18" />
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+        </div>
+        <h2>{{ ui.modal.title }}</h2>
+        <p v-html="ui.modal.body"></p>
+        <div class="confirm-actions">
+          <button type="button" class="confirm-secondary" @click="ui.closeModal">
+            Cancel
+          </button>
+          <button type="button" class="confirm-primary" @click="confirmModal">
+            Delete
+          </button>
+        </div>
+      </section>
+    </div>
+  </Transition>
 </template>
 
 <style>
@@ -154,19 +212,35 @@ function goToAdmin() {
   inset: 0;
   z-index: 130;
   display: grid;
-  place-items: center;
+  align-items: flex-start;
+  justify-items: center;
+  padding-top: 12vh;
   background: rgba(15, 23, 42, 0.58);
-  padding: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  backdrop-filter: blur(2px);
 }
 
 .confirm-dialog {
-  width: min(430px, 100%);
+  width: min(460px, 100%);
   border: 1px solid var(--admin-theme-border, #dbe3ef);
   border-radius: 16px;
   background: var(--admin-theme-surface, #ffffff);
   color: var(--admin-theme-contrast, #172033);
   padding: 1.25rem;
   box-shadow: var(--admin-theme-shadow, 0 24px 80px rgba(15, 23, 42, 0.25));
+  text-align: center;
+}
+
+.confirm-badge {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 0.85rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, #dc2626 12%, var(--admin-theme-surface, #ffffff));
+  color: #dc2626;
 }
 
 .confirm-dialog h2 {
@@ -181,22 +255,31 @@ function goToAdmin() {
   margin: 0;
   color: var(--admin-theme-muted, #667085);
   line-height: 1.6;
+  font-weight: 600;
 }
 
 .confirm-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 0.7rem;
   margin-top: 1.25rem;
 }
 
 .confirm-secondary,
 .confirm-primary {
-  min-height: 40px;
+  flex: 1;
+  min-height: 42px;
   border-radius: 10px;
   padding: 0.55rem 0.9rem;
   font-weight: 850;
+  font-size: 0.85rem;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.confirm-secondary:hover,
+.confirm-primary:hover {
+  transform: translateY(-1px);
 }
 
 .confirm-secondary {
@@ -205,13 +288,55 @@ function goToAdmin() {
   color: var(--admin-theme-contrast, #172033);
 }
 
+.confirm-secondary:hover {
+  border-color: var(--admin-theme-border-strong, #bcc8dd);
+  background: var(--admin-theme-surface-soft, #f5f8fd);
+}
+
 .confirm-primary {
   border: 1px solid #dc2626;
   background: #dc2626;
   color: #ffffff;
 }
 
+.confirm-primary:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+/* ─── Slide-down animation ─── */
+.confirm-slide-enter-active {
+  transition: opacity 0.2s ease;
+}
+.confirm-slide-enter-active .confirm-dialog {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+}
+.confirm-slide-leave-active {
+  transition: opacity 0.15s ease;
+}
+.confirm-slide-leave-active .confirm-dialog {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.confirm-slide-enter-from {
+  opacity: 0;
+}
+.confirm-slide-enter-from .confirm-dialog {
+  transform: translateY(-30px) scale(0.96);
+  opacity: 0;
+}
+.confirm-slide-leave-to {
+  opacity: 0;
+}
+.confirm-slide-leave-to .confirm-dialog {
+  transform: translateY(-20px) scale(0.97);
+  opacity: 0;
+}
+
 .admin-dark .toast,
+.admin-dark .confirm-overlay {
+  background: rgba(0, 0, 0, 0.68);
+}
+
 .admin-dark .confirm-dialog {
   border-color: var(--admin-theme-border);
   background: var(--admin-theme-surface);
@@ -223,10 +348,19 @@ function goToAdmin() {
   color: var(--admin-theme-muted);
 }
 
+.admin-dark .confirm-badge {
+  background: color-mix(in srgb, #dc2626 20%, var(--admin-theme-surface));
+}
+
 .admin-dark .confirm-secondary {
   border-color: var(--admin-theme-border-strong);
   background: var(--admin-theme-surface-soft);
   color: var(--admin-theme-contrast);
+}
+
+.admin-dark .confirm-secondary:hover {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
 }
 
 .admin-top-bar {

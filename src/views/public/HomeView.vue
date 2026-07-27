@@ -1,21 +1,135 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import Slideshow from '@/components/shared/Slideshow.vue'
 import { useScrollReveal } from '@/composables/useScrollReveal'
 import { defaultHomeSlides, fetchHomeSlides, type HomeSlide } from '@/lib/slidesSettings'
 import { subscribeToTableChanges } from '@/lib/realtime'
+import { supabase } from '@/lib/supabase'
 import environmentImg from '@/assets/home-image/environtment.jpg'
 import educationImg from '@/assets/home-image/education.jpg'
 import livelihoodImg from '@/assets/home-image/livelihood.jpg'
 import childImg from '@/assets/home-image/child.jpg'
 
-const stats = [
+// ── Editable content — loaded from the admin Home page, falls back to
+// these defaults if nothing has been saved yet. ─────────────────────
+interface StatItem {
+  value: string
+  label: string
+}
+
+interface PillarItem {
+  goal: string
+  title: string
+  description: string
+  image: string
+}
+
+const stats = reactive<StatItem[]>([
   { value: '293', label: 'Villages Reached' },
   { value: '43', label: 'Communes Served' },
   { value: '30+', label: 'Years of Service' },
   { value: '10+', label: 'International Partners' },
-]
+])
+
+const mission = reactive({
+  eyebrow: 'Our Mission',
+  title: 'Peace is planted, not declared.',
+  text:
+    "Santi Sena — the Peace Army — was founded by Cambodian Buddhist monks in 1994 to alleviate poverty and rebuild moral, environmental and economic life after decades of conflict. Today our 30+ staff serve 293 villages with programs that combine the wisdom of the Dharma with rigorous community-led development.",
+})
+
+const pillarsSection = reactive({
+  eyebrow: 'Four Pillars',
+  title: 'Strategic goals',
+  linkLabel: 'Explore all programs',
+})
+
+// The built-in photos stay as the fallback for each card — an admin can
+// override any of them by saving an image path/URL for that pillar.
+const defaultPillarImages = [environmentImg, educationImg, livelihoodImg, childImg]
+
+const pillars = reactive<PillarItem[]>([
+  {
+    goal: 'Goal 01',
+    title: 'Natural Resource & Environment',
+    description:
+      'Community forestry, tree nurseries, WASH and sanitation, climate adaptation and biogas — protecting the land that sustains every village.',
+    image: '',
+  },
+  {
+    goal: 'Goal 02',
+    title: 'Access to Education',
+    description:
+      'Community pre-schools, mobile libraries, scholarships for poor children and the preservation of Buddhist education.',
+    image: '',
+  },
+  {
+    goal: 'Goal 03',
+    title: 'Livelihood & Economic Improvement',
+    description:
+      'Integrated farming, Saving-for-Change groups, agricultural cooperatives and rural enterprises such as melaleuca oil.',
+    image: '',
+  },
+  {
+    goal: 'Goal 04',
+    title: 'Child Protection',
+    description:
+      'Anti-trafficking campaigns, Child Protection Networks, peer educator groups and child rights advocacy.',
+    image: '',
+  },
+])
+
+function pillarImage(index: number) {
+  return pillars[index]?.image || defaultPillarImages[index]
+}
+
+const quote = reactive({
+  text: 'When we plant a tree, we plant peace. When we teach a child, we end a war that has not yet begun.',
+  attrib: 'Founding Spirit of Santi Sena',
+})
+
+const cta = reactive({
+  title: 'Join the Peace Army.',
+  desc: 'Donate, partner, volunteer — every act seeds another village with hope.',
+  primaryLabel: 'Support Us',
+  primaryLink: '/qr-donate',
+  secondaryLabel: 'Partner with us',
+  secondaryLink: '/about',
+})
+
+async function loadHomeContent() {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('body')
+      .eq('slug', 'home')
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data?.body) return
+
+    const parsed = JSON.parse(data.body)
+    if (parsed?.kind !== 'santi-sena-home-content') return
+
+    if (Array.isArray(parsed.stats)) {
+      parsed.stats.forEach((s: Partial<StatItem>, i: number) => {
+        if (stats[i]) Object.assign(stats[i], s)
+      })
+    }
+    if (parsed.mission) Object.assign(mission, parsed.mission)
+    if (parsed.pillarsSection) Object.assign(pillarsSection, parsed.pillarsSection)
+    if (Array.isArray(parsed.pillars)) {
+      parsed.pillars.forEach((p: Partial<PillarItem>, i: number) => {
+        if (pillars[i]) Object.assign(pillars[i], p)
+      })
+    }
+    if (parsed.quote) Object.assign(quote, parsed.quote)
+    if (parsed.cta) Object.assign(cta, parsed.cta)
+  } catch {
+    // Keep the defaults if the saved home content can't be loaded.
+  }
+}
 
 interface NgoSlide {
   image: string
@@ -57,7 +171,7 @@ onMounted(async () => {
   stopSlidesSubscription = subscribeToTableChanges('home_slides', () => {
     void loadSlides()
   })
-  await loadSlides()
+  await Promise.all([loadSlides(), loadHomeContent()])
 })
 
 onUnmounted(() => {
@@ -97,7 +211,7 @@ useScrollReveal()
       </div>
     </Slideshow>
 
-    <!-- Stats + News button -->
+    <!-- Stats -->
     <section class="stats">
       <div class="stats-inner">
         <div
@@ -110,132 +224,64 @@ useScrollReveal()
           <div class="stat-label">{{ stat.label }}</div>
         </div>
       </div>
-      <!-- 👇 NEW: button row under stats -->
-      <div class="stats-news-row">
-        <RouterLink to="/news" class="btn btn--news"> See all news </RouterLink>
-      </div>
     </section>
 
     <section class="mission">
       <div class="eyebrow-rule reveal">
         <span class="rule" />
-        <span class="eyebrow">Our Mission</span>
+        <span class="eyebrow">{{ mission.eyebrow }}</span>
         <span class="rule" />
       </div>
       <h2 class="mission-title reveal" style="animation-delay: 0.12s">
-        Peace is planted, not declared.
+        {{ mission.title }}
       </h2>
       <p class="mission-text reveal" style="animation-delay: 0.24s">
-        Santi Sena — the <em>Peace Army</em> — was founded by Cambodian Buddhist monks in 1994 to
-        alleviate poverty and rebuild moral, environmental and economic life after decades of
-        conflict. Today our 30+ staff serve 293 villages with programs that combine the wisdom of
-        the Dharma with rigorous community-led development.
+        {{ mission.text }}
       </p>
     </section>
 
     <section class="pillars">
       <div class="pillars-header reveal">
         <div>
-          <p class="eyebrow">Four Pillars</p>
-          <h2 class="pillars-title">Strategic goals</h2>
+          <p class="eyebrow">{{ pillarsSection.eyebrow }}</p>
+          <h2 class="pillars-title">{{ pillarsSection.title }}</h2>
         </div>
-        <RouterLink to="/programs" class="pillars-link">Explore all programs</RouterLink>
+        <RouterLink to="/programs" class="pillars-link">{{ pillarsSection.linkLabel }}</RouterLink>
       </div>
 
       <div class="pillars-grid">
-        <article class="pillar-card reveal">
-          <div class="pillar-image pillar-image--forest">
-            <img
-              :src="environmentImg"
-              alt="Community forestry in a Cambodian village"
-              class="pillar-photo"
-            />
+        <article
+          v-for="(pillar, index) in pillars"
+          :key="index"
+          class="pillar-card reveal"
+          :style="{ animationDelay: `${index * 0.12}s` }"
+        >
+          <div class="pillar-image">
+            <img :src="pillarImage(index)" :alt="pillar.title" class="pillar-photo" />
           </div>
           <div class="pillar-body">
-            <p class="pillar-goal">Goal 01</p>
-            <h3 class="pillar-title">Natural Resource &amp; Environment</h3>
-            <p class="pillar-desc">
-              Community forestry, tree nurseries, WASH and sanitation, climate adaptation and biogas
-              — protecting the land that sustains every village.
-            </p>
-          </div>
-        </article>
-
-        <article class="pillar-card reveal" style="animation-delay: 0.12s">
-          <div class="pillar-image pillar-image--education">
-            <img
-              :src="educationImg"
-              alt="Children learning at a community pre-school"
-              class="pillar-photo"
-            />
-          </div>
-          <div class="pillar-body">
-            <p class="pillar-goal">Goal 02</p>
-            <h3 class="pillar-title">Access to Education</h3>
-            <p class="pillar-desc">
-              Community pre-schools, mobile libraries, scholarships for poor children and the
-              preservation of Buddhist education.
-            </p>
-          </div>
-        </article>
-
-        <article class="pillar-card reveal" style="animation-delay: 0.12s">
-          <div class="pillar-image pillar-image--livelihood">
-            <img
-              :src="livelihoodImg"
-              alt="Villagers working on rural livelihood activities"
-              class="pillar-photo"
-            />
-          </div>
-          <div class="pillar-body">
-            <p class="pillar-goal">Goal 03</p>
-            <h3 class="pillar-title">Livelihood &amp; Economic Improvement</h3>
-            <p class="pillar-desc">
-              Integrated farming, Saving-for-Change groups, agricultural cooperatives and rural
-              enterprises such as melaleuca oil.
-            </p>
-          </div>
-        </article>
-
-        <article class="pillar-card reveal" style="animation-delay: 0.24s">
-          <div class="pillar-image pillar-image--protection">
-            <img
-              :src="childImg"
-              alt="Children protected and cared for in their community"
-              class="pillar-photo"
-            />
-          </div>
-          <div class="pillar-body">
-            <p class="pillar-goal">Goal 04</p>
-            <h3 class="pillar-title">Child Protection</h3>
-            <p class="pillar-desc">
-              Anti-trafficking campaigns, Child Protection Networks, peer educator groups and child
-              rights advocacy.
-            </p>
+            <p class="pillar-goal">{{ pillar.goal }}</p>
+            <h3 class="pillar-title">{{ pillar.title }}</h3>
+            <p class="pillar-desc">{{ pillar.description }}</p>
           </div>
         </article>
       </div>
     </section>
 
     <section class="quote reveal">
-      <p class="quote-text">
-        &ldquo;When we plant a tree, we plant peace. When we teach a child, we end a war that has
-        not yet begun.&rdquo;
-      </p>
-      <p class="quote-attrib">— Founding Spirit of Santi Sena</p>
+      <p class="quote-text">&ldquo;{{ quote.text }}&rdquo;</p>
+      <p class="quote-attrib">— {{ quote.attrib }}</p>
     </section>
 
     <section class="cta reveal">
       <div class="cta-card">
         <div class="cta-text">
-          <h2 class="cta-title">Join the Peace Army.</h2>
-          <p class="cta-desc">
-            Donate, partner, volunteer — every act seeds another village with hope.
-          </p>
+          <h2 class="cta-title">{{ cta.title }}</h2>
+          <p class="cta-desc">{{ cta.desc }}</p>
         </div>
         <div class="cta-actions">
-          <RouterLink to="/qr-donate" class="btn btn--primary">Support Us</RouterLink>
-          <RouterLink to="/about" class="btn btn--outline">Partner with us</RouterLink>
+          <RouterLink :to="cta.primaryLink" class="btn btn--primary">{{ cta.primaryLabel }}</RouterLink>
+          <RouterLink :to="cta.secondaryLink" class="btn btn--outline">{{ cta.secondaryLabel }}</RouterLink>
         </div>
       </div>
     </section>
@@ -458,35 +504,6 @@ useScrollReveal()
   .stat + .stat {
     border-left: 1px solid var(--color-border);
   }
-}
-
-/* 👇 NEW: news button row */
-.stats-news-row {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem 0.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.btn--news {
-  background: transparent;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  padding: 0.65rem 2rem;
-  font-weight: 600;
-  transition:
-    background 0.25s,
-    color 0.25s,
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-.btn--news:hover {
-  background: var(--primary-color);
-  color: #fff;
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(22, 48, 42, 0.18);
 }
 
 /* Mission */

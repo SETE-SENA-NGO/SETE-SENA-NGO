@@ -75,11 +75,11 @@ const adminEmail = ref('')
                 <h2>Security</h2>
               </header>
               <div class="settings-field">
-                <label>Authentication</label>
+                <p class="settings-label">Authentication</p>
                 <p class="settings-note">Admin authentication is managed through Supabase.</p>
               </div>
               <div class="settings-field">
-                <label>Session</label>
+                <p class="settings-label">Session</p>
                 <p class="settings-note">You are currently logged in as an administrator.</p>
               </div>
             </article>
@@ -237,7 +237,8 @@ h1 {
   gap: 0.4rem;
 }
 
-.settings-field label {
+.settings-field label,
+.settings-label {
   font-size: 0.84rem;
   font-weight: 700;
   color: var(--admin-contrast-soft);
