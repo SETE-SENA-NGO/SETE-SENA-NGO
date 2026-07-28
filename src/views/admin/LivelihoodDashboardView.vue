@@ -1,635 +1,761 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import ImagePickerField from '@/components/admin/ImagePickerField.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminUploadButton from '@/components/admin/AdminUploadButton.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
+
+const PROGRAM_SLUG = 'programs-livelihood'
+const MAX_STATS = 6
+const MAX_TEAM_CARDS = 8
+const MAX_LIST_ITEMS = 10
+const TEAM_ICONS: string[] = ['compass', 'map', 'heart', 'chart']
+
+// Gallery slots — order matters: the public page reads by array index,
+// items 0-5 feed "What we do", 6-9 feed "Why it matters".
+const GALLERY_MAP = [
+  { label: 'Integrated Farming', description: 'Livelihood gallery — Integrated Farming' },
+  { label: 'Saving-for-Change', description: 'Livelihood gallery — Saving-for-Change' },
+  { label: 'Cooperatives', description: 'Livelihood gallery — Cooperatives' },
+  { label: 'Rural Enterprise', description: 'Livelihood gallery — Rural Enterprise' },
+  { label: 'Financial Literacy', description: 'Livelihood gallery — Financial Literacy' },
+  { label: 'Market Linkages', description: 'Livelihood gallery — Market Linkages' },
+  { label: 'Why it matters — 1', description: 'Livelihood gallery — Why it matters 1' },
+  { label: 'Why it matters — 2', description: 'Livelihood gallery — Why it matters 2' },
+  { label: 'Why it matters — 3', description: 'Livelihood gallery — Why it matters 3' },
+  { label: 'Why it matters — 4', description: 'Livelihood gallery — Why it matters 4' },
+] as const
+
+type GalleryImage = { id: string; label: string; url: string }
+type StatItem = { number: string; label: string; description: string }
+type TeamCard = { role: string; icon: string; desc: string }
+
+type LivelihoodDraft = {
+  eyebrow: string
+  headline: string
+  intro: string
+  heroImageUrl: string
+  images: GalleryImage[]
+  stats: StatItem[]
+  workItems: string[]
+  approachText: string
+  whyItems: string[]
+  team: TeamCard[]
+  quoteText: string
+}
+
+let idCounter = 0
+function genId() {
+  return `live-img-${++idCounter}-${Date.now()}`
+}
+
+function defaultImages(): GalleryImage[] {
+  return GALLERY_MAP.map((m) => ({ id: genId(), label: m.label, url: '' }))
+}
+
+const defaultContent: LivelihoodDraft = {
+  eyebrow: 'Livelihood',
+  headline: 'Growing practical income and food security.',
+  intro:
+    'Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena answers with income at home — soil restored, savings pooled, cooperatives negotiating fair prices, and small enterprises rooted in local resources.',
+  heroImageUrl: '',
+  images: defaultImages(),
+  stats: [
+    { number: '180+', label: 'SAVINGS GROUPS', description: 'Women-led Saving-for-Change circles active across three provinces.' },
+    { number: '2,400+', label: 'MEMBERS', description: 'Saving, lending and investing together.' },
+    { number: '12', label: 'COOPERATIVES', description: 'Rice, vegetables, melaleuca oil and handicrafts.' },
+  ],
+  workItems: ['Integrated Farming', 'Saving-for-Change', 'Cooperatives', 'Rural Enterprise', 'Financial Literacy', 'Market Linkages'],
+  approachText:
+    'We do not distribute cash. We build the systems — saving groups, cooperatives, farmer schools — that let a household earn, save, invest and repeat. Every group is coached for 18–24 months, then graduates to independence with our field team on call.',
+  whyItems: [
+    'Household income diversification reduces the risk of debt bondage and trafficking',
+    'Women-led savings shift decision-making power inside the household',
+    'Cooperatives break the isolation of the smallholder in the marketplace',
+    'Local enterprise keeps young adults in the village, near their children',
+  ],
+  team: [
+    { role: 'Program Director', icon: 'compass', desc: 'Oversees livelihood programs, savings groups, and enterprise partnerships across provinces.' },
+    { role: 'Field Coordinators', icon: 'map', desc: 'Manage Saving-for-Change groups and cooperative development in target villages.' },
+    { role: 'Agricultural Trainers', icon: 'heart', desc: 'Deliver farmer field schools and climate-smart agriculture training.' },
+    { role: 'Enterprise Officers', icon: 'chart', desc: 'Support small business development, market linkages and financial literacy.' },
+  ],
+  quoteText: 'Our group has lent to twelve families for chickens and school fees. Nobody has left for Thailand this year.',
+}
+
+function cloneContent(content: LivelihoodDraft): LivelihoodDraft {
+  return {
+    eyebrow: content.eyebrow,
+    headline: content.headline,
+    intro: content.intro,
+    heroImageUrl: content.heroImageUrl,
+    images: content.images.map((img) => ({ ...img })),
+    stats: content.stats.map((s) => ({ ...s })),
+    workItems: [...content.workItems],
+    approachText: content.approachText,
+    whyItems: [...content.whyItems],
+    team: content.team.map((t) => ({ ...t })),
+    quoteText: content.quoteText,
+  }
+}
 
 const ui = useUiStore()
 useAdminTheme()
 
-/* ─── Types ─────────────────────────────────────── */
-interface WorkItem {
-  title: string
-  text: string
-  imageUrl: string
-}
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
 
-interface TeamCard {
-  role: string
-  icon: string
-  desc: string
-}
-
-interface StatItem {
-  number: string
-  label: string
-  description: string
-}
-
-interface ImpactCard {
-  text: string
-  imageUrl: string
-}
-
-interface QuoteContent {
-  text: string
-}
-
-interface PageDraft {
-  slug: string
-  title: string
-  eyebrow: string
-  headline: string
-  intro: string
-  updatedAt: string
-}
-
-/* ─── Default data ──────────────────────────────── */
-const DEFAULT_WORK_ITEMS: WorkItem[] = [
-  { title: 'Integrated Farming', text: 'Rice, fish, vegetables and livestock combined on one plot for year-round food and income.', imageUrl: '' },
-  { title: 'Saving-for-Change', text: 'Self-help savings groups, primarily women-led, meeting weekly to pool and lend.', imageUrl: '' },
-  { title: 'Cooperatives', text: 'Agricultural cooperatives for collective bargaining and shared equipment.', imageUrl: '' },
-  { title: 'Rural Enterprise', text: 'Small enterprise development — melaleuca oil, honey and handicrafts.', imageUrl: '' },
-  { title: 'Financial Literacy', text: 'Bookkeeping and micro-enterprise training for household budgeting.', imageUrl: '' },
-  { title: 'Market Linkages', text: 'Connecting producers with provincial buyers and social enterprises.', imageUrl: '' },
-]
-
-const DEFAULT_TEAM_CARDS: TeamCard[] = [
-  { role: 'Program Director', icon: 'compass', desc: 'Oversees livelihood programs, savings groups, and enterprise partnerships across provinces.' },
-  { role: 'Field Coordinators', icon: 'map', desc: 'Manage Saving-for-Change groups and cooperative development in target villages.' },
-  { role: 'Agricultural Trainers', icon: 'heart', desc: 'Deliver farmer field schools and climate-smart agriculture training.' },
-  { role: 'Enterprise Officers', icon: 'chart', desc: 'Support small business development, market linkages and financial literacy.' },
-]
-
-const DEFAULT_IMPACT_CARDS: ImpactCard[] = [
-  { text: 'Household income diversification reduces the risk of debt bondage and trafficking', imageUrl: '' },
-  { text: 'Women-led savings shift decision-making power inside the household', imageUrl: '' },
-  { text: 'Cooperatives break the isolation of the smallholder in the marketplace', imageUrl: '' },
-  { text: 'Local enterprise keeps young adults in the village, near their children', imageUrl: '' },
-]
-
-const workItems = ref<WorkItem[]>(DEFAULT_WORK_ITEMS.map(w => ({ ...w })))
-const teamCards = ref<TeamCard[]>(DEFAULT_TEAM_CARDS.map(t => ({ ...t })))
-const impactCards = ref<ImpactCard[]>(DEFAULT_IMPACT_CARDS.map(c => ({ ...c })))
-
-const statsBand = ref<StatItem[]>([
-  { number: '180+', label: 'SAVINGS GROUPS', description: 'Women-led Saving-for-Change circles active across three provinces.' },
-  { number: '2,400+', label: 'MEMBERS', description: 'Saving, lending and investing together.' },
-  { number: '12', label: 'COOPERATIVES', description: 'Rice, vegetables, melaleuca oil and handicrafts.' },
-])
-
-const quoteContent = ref<QuoteContent>({
-  text: 'Our group has lent to twelve families for chickens and school fees. Nobody has left for Thailand this year.',
-})
-
-const page = ref<PageDraft>({
-  slug: 'programs-livelihood',
-  title: 'Livelihood',
-  eyebrow: 'Livelihood',
-  headline: 'Growing practical income and food security.',
-  intro: 'Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena answers with income at home — soil restored, savings pooled, cooperatives negotiating fair prices, and small enterprises rooted in local resources.',
-  updatedAt: '',
-})
-
-/* ─── Collapsible panels ───────────────────────── */
-const expandedPanels = ref<Record<string, boolean>>({
-  'quick-links': true,
-  'our-work': true,
-  'org-structure': true,
-  'our-impact': true,
-  'quote': true,
-})
-
-function togglePanel(id: string) {
-  expandedPanels.value[id] = !expandedPanels.value[id]
-}
-
-/* ─── Confirmation helpers ─────────────────────── */
-function confirmDeleteStat(index: number) {
-  const stat = statsBand.value[index]
-  const label = stat?.label?.trim() || `Stat ${index + 1}`
-  ui.openModal(
-    'Delete statistic',
-    `Permanently delete <strong>${stat?.number || ''} ${label}</strong>? This action cannot be undone.`,
-    () => {
-      statsBand.value.splice(index, 1)
-      ui.addToast(`Statistic "${label}" deleted.`, 'success')
-    },
-  )
-}
-
-function clearWorkImage(index: number) {
-  const item = workItems.value[index]
-  if (!item?.imageUrl?.trim()) return
-  const title = item?.title?.trim() || `Item ${index + 1}`
-  ui.openModal(
-    'Remove image',
-    `Remove the image from <strong>${title}</strong>?`,
-    () => {
-      workItems.value[index]!.imageUrl = ''
-      ui.addToast(`Image removed from "${title}".`, 'success')
-      void savePageContent()
-    },
-  )
-}
-
-function clearImpactImage(index: number) {
-  const card = impactCards.value[index]
-  if (!card?.imageUrl?.trim()) return
-  ui.openModal(
-    'Remove image',
-    `Remove the image from impact card <strong>${index + 1}</strong>?`,
-    () => {
-      impactCards.value[index]!.imageUrl = ''
-      ui.addToast(`Image removed from impact card ${index + 1}.`, 'success')
-      void savePageContent()
-    },
-  )
-}
-
-/* ─── State ─────────────────────────────────────── */
 const loading = ref(false)
 const saving = ref(false)
-const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
-const editing = ref(false)
 
-function toggleEditing() {
-  editing.value = !editing.value
-}
-const STORAGE_KEY = 'live-dashboard-page'
+const draft = reactive<LivelihoodDraft>(cloneContent(defaultContent))
 
-function loadFromLocalStorage(): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const saved = JSON.parse(raw) as Record<string, unknown>
-      const defaults = { eyebrow: 'Livelihood', headline: 'Growing practical income and food security.', intro: 'Poverty pushes rural Cambodians into unsafe migration and predatory debt. Santi Sena answers with income at home — soil restored, savings pooled, cooperatives negotiating fair prices, and small enterprises rooted in local resources.' }
-      page.value = {
-        ...page.value,
-        eyebrow: (saved.eyebrow as string) || defaults.eyebrow,
-        headline: (saved.headline as string) || defaults.headline,
-        intro: (saved.intro as string) || defaults.intro,
-        updatedAt: (saved.updatedAt as string) || '',
-      }
-      if (saved.statsBand && Array.isArray(saved.statsBand) && saved.statsBand.length > 0) {
-        statsBand.value = saved.statsBand as StatItem[]
-      }
-      if (saved.quoteContent && typeof saved.quoteContent === 'object') {
-        quoteContent.value = { ...quoteContent.value, ...saved.quoteContent as Partial<QuoteContent> }
-      }
-      if (Array.isArray(saved.workItems) && saved.workItems.length > 0) {
-        workItems.value = saved.workItems as WorkItem[]
-      }
-      if (Array.isArray(saved.teamCards) && saved.teamCards.length > 0) {
-        teamCards.value = saved.teamCards as TeamCard[]
-      }
-      if (Array.isArray(saved.impactCards) && saved.impactCards.length > 0) {
-        impactCards.value = saved.impactCards as ImpactCard[]
-      }
-    }
-  } catch { /* ignore */ }
-}
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+  setupSectionWatch,
+  stopSectionWatch,
+  resetEditingState,
+} = useSectionEditor([
+  {
+    key: 'header',
+    getSnapshot: () => ({ eyebrow: draft.eyebrow, headline: draft.headline, intro: draft.intro, heroImageUrl: draft.heroImageUrl }),
+    applySnapshot: (value) => {
+      draft.eyebrow = value.eyebrow
+      draft.headline = value.headline
+      draft.intro = value.intro
+      draft.heroImageUrl = value.heroImageUrl
+    },
+  },
+  {
+    key: 'images',
+    getSnapshot: () => draft.images.map((img) => ({ ...img })),
+    applySnapshot: (value) => { draft.images = value },
+  },
+  {
+    key: 'stats',
+    getSnapshot: () => draft.stats.map((s) => ({ ...s })),
+    applySnapshot: (value) => { draft.stats = value },
+  },
+  {
+    key: 'content',
+    getSnapshot: () => ({
+      workItems: [...draft.workItems],
+      approachText: draft.approachText,
+      whyItems: [...draft.whyItems],
+    }),
+    applySnapshot: (value) => {
+      draft.workItems = value.workItems
+      draft.approachText = value.approachText
+      draft.whyItems = value.whyItems
+    },
+  },
+  {
+    key: 'team',
+    getSnapshot: () => draft.team.map((t) => ({ ...t })),
+    applySnapshot: (value) => { draft.team = value },
+  },
+  {
+    key: 'quote',
+    getSnapshot: () => draft.quoteText,
+    applySnapshot: (value) => { draft.quoteText = value },
+  },
+])
 
-function saveToLocalStorage(): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      eyebrow: page.value.eyebrow,
-      headline: page.value.headline,
-      intro: page.value.intro,
-      statsBand: statsBand.value,
-      quoteContent: quoteContent.value,
-      workItems: workItems.value,
-      teamCards: teamCards.value,
-      impactCards: impactCards.value,
-      updatedAt: new Date().toISOString(),
-    }))
-  } catch { /* ignore */ }
-}
-
-function snapshotData(): string {
-  return JSON.stringify({
-    eyebrow: page.value.eyebrow,
-    headline: page.value.headline,
-    intro: page.value.intro,
-    statsBand: statsBand.value.map(s => ({ ...s })),
-    quoteContent: { ...quoteContent.value },
-    workItems: workItems.value.map(w => ({ ...w })),
-    teamCards: teamCards.value.map(t => ({ ...t })),
-    impactCards: impactCards.value.map(c => ({ ...c })),
-  })
+const originalSnapshot = ref('')
+const hasChanges = computed(() => JSON.stringify(cloneContent(draft)) !== originalSnapshot.value)
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify(cloneContent(draft))
 }
 
-const isDirty = computed(() => savedSnapshot.value !== snapshotData())
+const canAddStat = computed(() => draft.stats.length < MAX_STATS)
+const canAddTeamCard = computed(() => draft.team.length < MAX_TEAM_CARDS)
+const canAddWorkItem = computed(() => draft.workItems.length < MAX_LIST_ITEMS)
+const canAddWhyItem = computed(() => draft.whyItems.length < MAX_LIST_ITEMS)
 
-async function loadPageContent() {
+const sections = [
+  { id: 'live-header', label: 'Header', icon: 'mdi-image-text' },
+  { id: 'live-images', label: 'Images', icon: 'mdi-image-multiple' },
+  { id: 'live-stats', label: 'Stats', icon: 'mdi-chart-box' },
+  { id: 'live-content', label: 'Content', icon: 'mdi-text-box' },
+  { id: 'live-team', label: 'Team', icon: 'mdi-account-group' },
+  { id: 'live-quote', label: 'Quote', icon: 'mdi-format-quote-close' },
+] as const
+
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
+
+useUnsavedChangesGuard(hasChanges)
+
+onMounted(() => {
+  void loadPage()
+})
+
+onUnmounted(() => {
+  stopSectionWatch()
+})
+
+async function loadPage() {
+  resetEditingState()
   loading.value = true
+
   try {
     const { data, error } = await supabase
       .from('programs')
-      .select('title, summary, description, metadata, updated_at')
-      .eq('slug', 'programs-livelihood')
+      .select('metadata')
+      .eq('slug', PROGRAM_SLUG)
       .maybeSingle()
 
-    if (error) {
-      console.warn('Supabase load failed, falling back to localStorage:', error.message)
-      loadFromLocalStorage()
-      storageMode.value = 'local'
-      savedSnapshot.value = snapshotData()
-      loading.value = false
-      return
-    }
+    if (error) throw error
 
-    if (data) {
-      const meta = data.metadata as Record<string, unknown> | null
+    if (data?.metadata) {
+      const meta = data.metadata as Record<string, unknown>
 
-      page.value = {
-        ...page.value,
-        title: data.title || page.value.title,
-        eyebrow: (meta?.eyebrow as string) || page.value.eyebrow,
-        headline: (meta?.headline as string) || page.value.headline,
-        intro: data.summary || (meta?.intro as string) || page.value.intro,
-        updatedAt: data.updated_at || '',
+      if (typeof meta.eyebrow === 'string' && meta.eyebrow.trim()) draft.eyebrow = meta.eyebrow.trim()
+      if (typeof meta.headline === 'string' && meta.headline.trim()) draft.headline = meta.headline.trim()
+      if (typeof meta.intro === 'string' && meta.intro.trim()) draft.intro = meta.intro.trim()
+      if (typeof meta.heroImageUrl === 'string') draft.heroImageUrl = meta.heroImageUrl
+
+      const galleryFromMeta = meta.gallery as GalleryImage[] | undefined
+      if (Array.isArray(galleryFromMeta) && galleryFromMeta.length > 0) {
+        draft.images = galleryFromMeta.map((g, i) => ({
+          id: g.id || genId(),
+          label: g.label?.trim() ? g.label : GALLERY_MAP[i]?.label || `Image ${i + 1}`,
+          url: g.url || '',
+        }))
+      }
+      while (draft.images.length < GALLERY_MAP.length) {
+        draft.images.push({ id: genId(), label: GALLERY_MAP[draft.images.length]?.label || `Image ${draft.images.length + 1}`, url: '' })
       }
 
-      if (meta?.statsBand && Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
-        statsBand.value = meta.statsBand as StatItem[]
+      if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
+        draft.stats = meta.statsBand as StatItem[]
       }
-      if (meta?.quoteContent && typeof meta.quoteContent === 'object') {
-        quoteContent.value = { ...quoteContent.value, ...meta.quoteContent as Partial<QuoteContent> }
+
+      if (Array.isArray(meta.sections)) {
+        const dbSections = meta.sections as { id: string; body?: string; items?: string }[]
+
+        const workSection = dbSections.find((s) => s.id === 'livelihood-work')
+        if (workSection?.items?.trim()) {
+          draft.workItems = workSection.items.split('\n').map((l) => l.trim()).filter(Boolean)
+        }
+
+        const approachSection = dbSections.find((s) => s.id === 'livelihood-approach')
+        if (approachSection?.body?.trim()) draft.approachText = approachSection.body.trim()
+
+        const whySection = dbSections.find((s) => s.id === 'livelihood-why')
+        if (whySection?.items?.trim()) {
+          draft.whyItems = whySection.items.split('\n').map((l) => l.trim()).filter(Boolean)
+        }
+
+        const teamSection = dbSections.find((s) => s.id === 'livelihood-team')
+        if (teamSection?.items?.trim()) {
+          const lines = teamSection.items.split('\n').map((l) => l.trim()).filter(Boolean)
+          if (lines.length) {
+            draft.team = lines.map((line) => {
+              const parts = line.split('|').map((p) => p.trim())
+              return { role: parts[0] || '', icon: parts[1] || 'chart', desc: parts[2] || parts[0] || '' }
+            })
+          }
+        }
       }
-      if (Array.isArray(meta?.workItems) && meta.workItems.length > 0) {
-        workItems.value = meta.workItems as WorkItem[]
-      }
-      if (Array.isArray(meta?.teamCards) && meta.teamCards.length > 0) {
-        teamCards.value = meta.teamCards as TeamCard[]
-      }
-      if (Array.isArray(meta?.impactCards) && meta.impactCards.length > 0) {
-        impactCards.value = meta.impactCards as ImpactCard[]
+
+      if (meta.quoteContent && typeof meta.quoteContent === 'object') {
+        const qc = meta.quoteContent as Record<string, unknown>
+        if (typeof qc.text === 'string' && qc.text.trim()) draft.quoteText = qc.text.trim()
       }
 
       storageMode.value = 'supabase'
-      saveToLocalStorage()
-    } else {
-      loadFromLocalStorage()
-      storageMode.value = 'local'
     }
-
-    savedSnapshot.value = snapshotData()
-  } catch (e: unknown) {
-    console.warn('Load crashed:', e)
-    loadFromLocalStorage()
+  } catch (error) {
+    console.warn('[LivelihoodDashboard] load failed:', error)
     storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
+    ui.addToast('Could not load from database — showing last saved draft.', 'error')
   } finally {
     loading.value = false
+    updateSnapshot()
+    setupSectionWatch()
   }
 }
 
-async function savePageContent() {
+async function savePage() {
+  if (saving.value) return
+
+  const validationError = validateDraft()
+  if (validationError) {
+    ui.addToast(validationError, 'error')
+    return
+  }
+
   saving.value = true
+
   try {
-    const now = new Date().toISOString()
-    const p = page.value
+    const workItems = draft.workItems.filter((line) => line.trim()).join('\n')
+    const whyItems = draft.whyItems.filter((line) => line.trim()).join('\n')
+    const teamItems = draft.team.map((c) => `${c.role} | ${c.icon} | ${c.desc}`).join('\n')
 
     const payload = {
-      slug: p.slug,
-      title: p.title.trim() || p.headline.trim() || p.slug,
+      slug: PROGRAM_SLUG,
+      title: draft.headline.trim() || 'Livelihood',
       pillar: 'Livelihood',
-      summary: p.intro || '',
-      description: p.intro || '',
+      summary: draft.intro,
+      description: draft.intro,
       status: 'published',
       metadata: {
-        eyebrow: p.eyebrow,
-        headline: p.headline,
-        intro: p.intro,
-        statsBand: statsBand.value,
-        quoteContent: quoteContent.value,
-        workItems: workItems.value,
-        teamCards: teamCards.value,
-        impactCards: impactCards.value,
+        eyebrow: draft.eyebrow,
+        headline: draft.headline,
+        intro: draft.intro,
+        heroImageUrl: draft.heroImageUrl,
+        primaryAction: '',
+        secondaryAction: '',
+        gallery: draft.images,
+        statsBand: draft.stats,
+        quoteContent: { text: draft.quoteText },
+        sections: [
+          {
+            id: 'livelihood-work',
+            label: 'What we do',
+            heading: 'What we do',
+            body: 'Full list of what the livelihood program does, shown on the public Livelihood page.',
+            items: workItems,
+          },
+          {
+            id: 'livelihood-approach',
+            label: 'Approach',
+            heading: 'Our approach',
+            body: draft.approachText,
+            items: '',
+          },
+          {
+            id: 'livelihood-team',
+            label: 'Organizational Structure',
+            heading: 'Who delivers livelihood programs on the ground',
+            body: 'Our dedicated team works across provinces building sustainable income and food security for rural families.',
+            items: teamItems,
+          },
+          {
+            id: 'livelihood-why',
+            label: 'Why it matters',
+            heading: 'Why it matters',
+            body: 'Why the livelihood program matters, shown on the public Livelihood page.',
+            items: whyItems,
+          },
+        ],
       },
-      updated_at: now,
+      updated_at: new Date().toISOString(),
     }
 
-    saveToLocalStorage()
-
-    const { error } = await supabase
-      .from('programs')
-      .upsert(payload, { onConflict: 'slug' })
-
-    if (error) {
-      console.warn('Supabase save failed:', error)
-      ui.addToast(`DB write blocked: ${error.message}`, 'error')
-      saveToLocalStorage()
-      storageMode.value = 'local'
-      savedSnapshot.value = snapshotData()
-      saving.value = false
-      return
-    }
+    const { error } = await supabase.from('programs').upsert(payload, { onConflict: 'slug' })
+    if (error) throw error
 
     storageMode.value = 'supabase'
-    savedSnapshot.value = snapshotData()
-    ui.addToast(`${p.title} page saved!`, 'success')
-  } catch (e: unknown) {
-    console.error('Save crashed:', e)
-    ui.addToast('Saved to browser (database error)', 'info')
+    ui.addToast('Livelihood page saved.', 'success')
+    updateSnapshot()
+  } catch (error) {
+    console.error('[LivelihoodDashboard] save failed:', error)
     storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
+    ui.addToast(error instanceof Error ? `Could not save: ${error.message}` : 'Could not save Livelihood page.', 'error')
   } finally {
     saving.value = false
   }
 }
 
+function validateDraft() {
+  if (!draft.headline.trim()) return 'Headline is required.'
+  if (!draft.stats.length) return 'Add at least one statistic.'
+  if (draft.team.some((c) => !c.role.trim())) return 'Each team card needs a role.'
+  return ''
+}
 
-onMounted(async () => {
-  await loadPageContent()
-})
+function addStat() {
+  if (!canAddStat.value) return
+  draft.stats.push({ number: '', label: '', description: '' })
+}
+
+function removeStat(index: number) {
+  const stat = draft.stats[index]
+  if (!stat) return
+  confirmDialog('Remove statistic?', `Remove "${stat.number} ${stat.label}" from the public Livelihood page?`, () => {
+    draft.stats.splice(index, 1)
+    ui.addToast('Statistic removed.', 'warning')
+  })
+}
+
+function addTeamCard() {
+  if (!canAddTeamCard.value) return
+  draft.team.push({ role: 'New role', icon: 'chart', desc: 'Describe this role.' })
+}
+
+function removeTeamCard(index: number) {
+  const card = draft.team[index]
+  if (!card) return
+  confirmDialog('Remove team card?', `Remove "${card.role}" from the organizational structure?`, () => {
+    draft.team.splice(index, 1)
+    ui.addToast('Team card removed.', 'warning')
+  })
+}
+
+function addWorkItem() {
+  if (!canAddWorkItem.value) return
+  draft.workItems.push('New item')
+}
+
+function removeWorkItem(index: number) {
+  draft.workItems.splice(index, 1)
+}
+
+function addWhyItem() {
+  if (!canAddWhyItem.value) return
+  draft.whyItems.push('New item')
+}
+
+function removeWhyItem(index: number) {
+  draft.whyItems.splice(index, 1)
+}
+
+function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
+  const target = index + direction
+  if (target < 0 || target >= items.length) return
+  const current = items[index]
+  const next = items[target]
+  if (!current || !next) return
+  items[index] = next
+  items[target] = current
+}
 </script>
 
 <template>
-  <v-app :class="['live-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['livelihood-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
 
       <main class="manager-main">
         <header class="manager-hero">
-          <div class="hero-glow" aria-hidden="true"></div>
-          <div class="hero-accent-line" aria-hidden="true"></div>
-          <div class="hero-content-wrap">
-            <div class="hero-icon-wrap">
-              <v-icon size="22" color="primary">mdi-sprout</v-icon>
-            </div>
-            <div class="manager-title">
-              <p class="eyebrow">Livelihood Program</p>
-              <h1>Manage Livelihood page</h1>
-            </div>
+          <div class="manager-title">
+            <h1>Manage Livelihood page</h1>
+            <v-chip size="small" variant="tonal" :color="storageMode === 'supabase' ? 'success' : 'warning'">
+              {{ storageMode === 'supabase' ? 'Database' : 'Local only' }}
+            </v-chip>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/programs/livelihood" target="_blank" size="small">
-              <v-icon start size="16">mdi-open-in-new</v-icon>
+            <v-btn variant="tonal" to="/programs/livelihood" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn
-              variant="tonal"
-              :color="editing ? 'primary' : 'default'"
-              size="small"
-              @click="toggleEditing"
-            >
-              <v-icon start size="16">{{ editing ? 'mdi-lock-open' : 'mdi-lock' }}</v-icon>
-              {{ editing ? 'Editing enabled' : 'Enable editing' }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              size="small"
-              :loading="saving"
-              :disabled="saving || loading || !isDirty || !editing"
-              @click="savePageContent"
-            >
-              <v-icon start size="16">mdi-content-save</v-icon>
-              {{ saving ? 'Saving...' : 'Save changes' }}
             </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
-          <v-progress-circular indeterminate color="primary" :size="36" :width="4" />
-          <span class="mt-4 font-weight-bold">Loading Livelihood content...</span>
-        </div>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Livelihood content...</span>
+          </div>
 
-        <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
-          <!-- ═══ Quick links ═══ -->
-          <section class="editor-panel quick-links-panel" aria-labelledby="quick-links-heading">
-            <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-folder-open</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Shortcuts</p>
-                  <h2 id="quick-links-heading">Related tools</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['quick-links']" class="panel-body quick-links-body">
-                <RouterLink class="quick-link" to="/admin/media">
-                  <v-icon size="18">mdi-folder-open</v-icon>
-                  <div>
-                    <strong>Media Library</strong>
-                    <span>Upload images for this page</span>
-                  </div>
-                </RouterLink>
-              </div>
-            </Transition>
-          </section>
+          <div v-else key="content" class="content-grid">
 
-          <!-- ═══ Our Work ═══ -->
-          <section class="editor-panel" aria-labelledby="our-work-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['our-work']" @click="togglePanel('our-work')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-book-open-variant</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Section 1</p>
-                  <h2 id="our-work-heading">Our Work</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['our-work'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['our-work']" class="panel-body">
-                <p class="panel-desc">Edit the 6 work items shown in the "What we do" section. Each item has a title, description, and its own image.</p>
+          <AdminSectionNav
+            :sections="sections"
+            :active-section="activeSection"
+            :has-changes="hasChanges"
+            :saving="saving"
+            aria-label="Livelihood page sections"
+            save-label="Save changes"
+            @navigate="scrollToSection"
+            @save="savePage"
+          />
 
-                <div class="stack-list">
-                  <article v-for="(item, index) in workItems" :key="index" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>{{ item.title || `Work item ${index + 1}` }}</h3>
-                      <v-btn icon variant="text" size="x-small" color="error" @click="clearWorkImage(index)">
-                        <v-icon size="14">mdi-trash-can</v-icon>
-                      </v-btn>
-                    </header>
-                    <div class="sub-editor-body">
-                      <v-text-field v-model="item.title" label="Title" placeholder="e.g. Integrated Farming" hide-details density="compact" variant="outlined" />
-                      <div class="upload-wrap" :class="{ 'upload-disabled': !editing }">
-                        <label class="field-label">Image</label>
-                        <ImagePickerField
-                          v-model="item.imageUrl"
-                          :label="item.title || `Work item ${index + 1} image`"
-                          hide-preview
-                          @success="(msg: string) => ui.addToast(msg, 'success')"
-                          @error="(msg: string) => ui.addToast(msg, 'error')"
-                        />
-                        <div v-if="item.imageUrl" class="image-preview-thumb">
-                          <img :src="item.imageUrl" alt="" @error="item.imageUrl = ''" />
-                        </div>
-                      </div>
-                      <v-textarea v-model="item.text" label="Description" rows="2" :placeholder="'Description for ' + item.title" hide-details density="compact" variant="outlined" />
-                    </div>
-                  </article>
+          <!-- ── HEADER ── -->
+          <AdminEditorPanel
+            :id="sections[0].id"
+            kicker="Public page header"
+            heading="Growing practical income and food security."
+            :editing="!!editingSections.header"
+            :collapsed="collapsedSections.header"
+            @toggle-edit="toggleEdit('header')"
+            @cancel="cancelEdit('header')"
+            @toggle-collapse="toggleCollapse('header')"
+          >
+            <div class="image-editor-grid">
+              <div class="image-upload-panel">
+                <v-img v-if="draft.heroImageUrl" :src="draft.heroImageUrl" aspect-ratio="1.6" cover class="image-preview hero-preview" />
+                <div v-else class="image-preview hero-preview image-preview-empty">
+                  <v-icon size="28">mdi-image-outline</v-icon>
                 </div>
+                <AdminUploadButton
+                  :disabled="!editingSections.header"
+                  description="Livelihood hero image"
+                  @update:model-value="(url) => (draft.heroImageUrl = url)"
+                />
               </div>
-            </Transition>
-          </section>
 
-          <!-- ═══ Organizational Structure ═══ -->
-          <section class="editor-panel" aria-labelledby="org-structure-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['org-structure']" @click="togglePanel('org-structure')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-account-group</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Section 2</p>
-                  <h2 id="org-structure-heading">Organizational Structure</h2>
+              <div class="form-stack">
+                <div class="form-grid">
+                  <v-text-field v-model="draft.eyebrow" label="Eyebrow / badge" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="draft.headline" label="Headline" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" class="field-wide" />
+                  <v-textarea v-model="draft.intro" label="Intro paragraph" rows="3" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" class="field-wide" />
                 </div>
               </div>
-              <div class="panel-header-actions">
-                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['org-structure'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['org-structure']" class="panel-body">
-                <p class="panel-desc">Edit the team cards that appear under "Organizational Structure" on the public page.</p>
+            </div>
+          </AdminEditorPanel>
 
-                <div class="stack-list">
-                  <article v-for="(card, index) in teamCards" :key="index" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>{{ card.role || `Team member ${index + 1}` }}</h3>
-                    </header>
-                    <div class="sub-editor-body form-grid">
-                      <v-text-field v-model="card.role" label="Role" placeholder="e.g. Program Director" hide-details density="compact" variant="outlined" />
-                      <v-select v-model="card.icon" :items="[{ title: 'Compass', value: 'compass' }, { title: 'Map', value: 'map' }, { title: 'Heart', value: 'heart' }, { title: 'Chart', value: 'chart' }]" label="Icon" hide-details density="compact" variant="outlined" />
-                      <v-textarea v-model="card.desc" label="Description" rows="2" :placeholder="'Description for ' + card.role" hide-details density="compact" variant="outlined" class="field-wide" />
-                    </div>
-                  </article>
+          <!-- ── IMAGES ── -->
+          <AdminEditorPanel
+            :id="sections[1].id"
+            kicker="What we do & Why it matters"
+            heading="Section images"
+            :editing="!!editingSections.images"
+            :collapsed="collapsedSections.images"
+            @toggle-edit="toggleEdit('images')"
+            @cancel="cancelEdit('images')"
+            @toggle-collapse="toggleCollapse('images')"
+          >
+            <div class="image-slot-grid pa-4">
+              <div v-for="(image, index) in draft.images" :key="image.id" class="image-slot">
+                <v-img v-if="image.url" :src="image.url" aspect-ratio="1.4" cover class="image-preview" />
+                <div v-else class="image-preview image-preview-empty">
+                  <v-icon size="28">mdi-image-outline</v-icon>
                 </div>
+                <span class="image-slot-label">{{ GALLERY_MAP[index]?.label || image.label }}</span>
+                <AdminUploadButton
+                  :disabled="!editingSections.images"
+                  :description="GALLERY_MAP[index]?.description || 'Livelihood image'"
+                  @update:model-value="(url) => (image.url = url)"
+                />
               </div>
-            </Transition>
-          </section>
+            </div>
+          </AdminEditorPanel>
 
-          <!-- ═══ Our Impact ═══ -->
-          <section class="editor-panel" aria-labelledby="our-impact-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['our-impact']" @click="togglePanel('our-impact')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-layers</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Section 3</p>
-                  <h2 id="our-impact-heading">Our Impact</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
-                <v-btn v-if="editing" variant="tonal" color="accent" size="x-small" @click="statsBand.push({ number: '', label: '', description: '' })">
-                  <v-icon start size="14">mdi-plus</v-icon>
+          <!-- ── STATS ── -->
+          <AdminEditorPanel
+            :id="sections[2].id"
+            kicker="Stats band"
+            heading="Impact statistics"
+            :editing="!!editingSections.stats"
+            :collapsed="collapsedSections.stats"
+            @toggle-edit="toggleEdit('stats')"
+            @cancel="cancelEdit('stats')"
+            @toggle-collapse="toggleCollapse('stats')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddStat" @click="addStat">
+                  <v-icon start>mdi-plus</v-icon>
                   Add stat
                 </v-btn>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['our-impact'] }" @click="togglePanel('our-impact')">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['our-impact']" class="panel-body">
-                <p class="panel-desc">Edit the impact statistics and "Why it matters" cards shown on the public page.</p>
+              </v-fade-transition>
+            </template>
 
-                <h3 class="subsection-heading">Impact statistics</h3>
-                <div class="stack-list mb-lg">
-                  <article v-for="(stat, index) in statsBand" :key="'stat-' + index" class="sub-editor">
-                    <header class="sub-editor-header">
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(stat, index) in draft.stats" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>Stat {{ index + 1 }}</h3>
-                      <v-btn v-if="editing" icon variant="tonal" color="error" size="x-small" aria-label="Remove stat" @click="confirmDeleteStat(index)">
-                        <v-icon size="15">mdi-delete</v-icon>
-                      </v-btn>
-                    </header>
-                    <div class="sub-editor-body form-grid">
-                      <v-text-field v-model="stat.number" label="Number" placeholder="e.g. 180+" hide-details density="compact" variant="outlined" />
-                      <v-text-field v-model="stat.label" label="Label" placeholder="e.g. SAVINGS GROUPS" hide-details density="compact" variant="outlined" />
                     </div>
-                  </article>
-                </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.stats || index === 0" aria-label="Move stat up" @click="moveItem(draft.stats, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.stats || index === draft.stats.length - 1" aria-label="Move stat down" @click="moveItem(draft.stats, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.stats" icon color="error" variant="tonal" size="x-small" aria-label="Remove stat" @click="removeStat(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields stat-fields">
+                    <v-text-field v-model="stat.number" label="Number" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" />
+                    <v-text-field v-model="stat.label" label="Label" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" />
+                    <v-textarea v-model="stat.description" label="Description" rows="2" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
 
-                <!-- Why it matters cards -->
-                <h3 class="subsection-heading">Why it matters</h3>
-                <div class="stack-list">
-                  <article v-for="(card, index) in impactCards" :key="'impact-' + index" class="sub-editor">
-                    <header class="sub-editor-header">
+          <!-- ── CONTENT ── -->
+          <AdminEditorPanel
+            :id="sections[3].id"
+            kicker="Content"
+            heading="What we do, approach & why it matters"
+            :editing="!!editingSections.content"
+            :collapsed="collapsedSections.content"
+            @toggle-edit="toggleEdit('content')"
+            @cancel="cancelEdit('content')"
+            @toggle-collapse="toggleCollapse('content')"
+          >
+            <div class="pa-4 content-subsection">
+              <div class="content-subhead">
+                <h3>What we do</h3>
+                <v-btn v-if="editingSections.content" size="x-small" variant="tonal" :disabled="!canAddWorkItem" @click="addWorkItem">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add item
+                </v-btn>
+              </div>
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(item, index) in draft.workItems" :key="'work-' + index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>Card {{ index + 1 }}</h3>
-                      <v-btn icon variant="text" size="x-small" color="error" aria-label="Remove image" @click="clearImpactImage(index)">
-                        <v-icon size="14">mdi-trash-can</v-icon>
-                      </v-btn>
-                    </header>
-                    <div class="sub-editor-body form-grid">
-                      <v-textarea v-model="card.text" label="Text" rows="2" placeholder="Enter the impact card text..." hide-details density="compact" variant="outlined" class="field-wide" />
-                      <div class="field-wide upload-wrap" :class="{ 'upload-disabled': !editing }">
-                        <label class="field-label">Image</label>
-                        <ImagePickerField
-                          v-model="card.imageUrl"
-                          :label="`Impact card ${index + 1} image`"
-                          hide-preview
-                          @success="(msg: string) => ui.addToast(msg, 'success')"
-                          @error="(msg: string) => ui.addToast(msg, 'error')"
-                        />
-                        <div v-if="card.imageUrl" class="image-preview-thumb">
-                          <img :src="card.imageUrl" alt="" @error="card.imageUrl = ''" />
-                        </div>
-                      </div>
                     </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === 0" aria-label="Move item up" @click="moveItem(draft.workItems, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === draft.workItems.length - 1" aria-label="Move item down" @click="moveItem(draft.workItems, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.content" icon color="error" variant="tonal" size="x-small" aria-label="Remove item" @click="removeWorkItem(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="draft.workItems[index]" label="Item" :disabled="!editingSections.content" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
 
-          <!-- ═══ Quote / testimonial ═══ -->
-          <section class="editor-panel" aria-labelledby="quote-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['quote']" @click="togglePanel('quote')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-format-quote-open</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Testimonial</p>
-                  <h2 id="quote-heading">Quote</h2>
-                </div>
+            <v-divider />
+
+            <div class="pa-4 content-subsection">
+              <div class="content-subhead">
+                <h3>Our approach</h3>
               </div>
-              <div class="panel-header-actions">
-                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quote'] }">mdi-chevron-down</v-icon>
+              <v-textarea v-model="draft.approachText" label="Approach text" rows="4" :disabled="!editingSections.content" hide-details density="comfortable" variant="outlined" />
+            </div>
+
+            <v-divider />
+
+            <div class="pa-4 content-subsection">
+              <div class="content-subhead">
+                <h3>Why it matters</h3>
+                <v-btn v-if="editingSections.content" size="x-small" variant="tonal" :disabled="!canAddWhyItem" @click="addWhyItem">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add item
+                </v-btn>
               </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['quote']" class="panel-body">
-                <v-textarea v-model="quoteContent.text" label="Quote text" rows="3" placeholder="Enter the quote..." hide-details density="comfortable" variant="outlined" />
-                <p class="field-hint">This quote appears in the approach section on the public Livelihood page.</p>
-              </div>
-            </Transition>
-          </section>
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(item, index) in draft.whyItems" :key="'why-' + index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === 0" aria-label="Move item up" @click="moveItem(draft.whyItems, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === draft.whyItems.length - 1" aria-label="Move item down" @click="moveItem(draft.whyItems, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.content" icon color="error" variant="tonal" size="x-small" aria-label="Remove item" @click="removeWhyItem(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="draft.whyItems[index]" label="Item" :disabled="!editingSections.content" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── TEAM ── -->
+          <AdminEditorPanel
+            :id="sections[4].id"
+            kicker="Organizational structure"
+            heading="Who delivers livelihood programs on the ground"
+            :editing="!!editingSections.team"
+            :collapsed="collapsedSections.team"
+            @toggle-edit="toggleEdit('team')"
+            @cancel="cancelEdit('team')"
+            @toggle-collapse="toggleCollapse('team')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddTeamCard" @click="addTeamCard">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add card
+                </v-btn>
+              </v-fade-transition>
+            </template>
+
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list two-col">
+                <article v-for="(card, index) in draft.team" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.team || index === 0" aria-label="Move card up" @click="moveItem(draft.team, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.team || index === draft.team.length - 1" aria-label="Move card down" @click="moveItem(draft.team, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.team" icon color="error" variant="tonal" size="x-small" aria-label="Remove card" @click="removeTeamCard(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="card.role" label="Role" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" />
+                    <v-select v-model="card.icon" :items="TEAM_ICONS" label="Icon" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" />
+                    <v-textarea v-model="card.desc" label="Description" rows="2" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── QUOTE ── -->
+          <AdminEditorPanel
+            :id="sections[5].id"
+            kicker="Testimonial"
+            heading="Quote"
+            :editing="!!editingSections.quote"
+            :collapsed="collapsedSections.quote"
+            @toggle-edit="toggleEdit('quote')"
+            @cancel="cancelEdit('quote')"
+            @toggle-collapse="toggleCollapse('quote')"
+          >
+            <div class="panel-body form-grid">
+              <v-textarea v-model="draft.quoteText" label="Quote text" rows="3" :disabled="!editingSections.quote" hide-details density="comfortable" variant="outlined" class="field-wide" />
+            </div>
+          </AdminEditorPanel>
+
         </div>
+    </v-fade-transition>
       </main>
     </div>
+
+    <AdminConfirmDialog
+      v-model="confirmOpen"
+      :title="confirmData.title"
+      :body="confirmData.body"
+      @confirm="confirmData.onConfirm()"
+    />
   </v-app>
 </template>
 
 <style scoped>
-.live-admin {
+.livelihood-admin {
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -642,382 +768,209 @@ onMounted(async () => {
 
 .manager-main {
   min-height: 100vh;
-  padding: 0 1.25rem 1.25rem;
+  padding: 1.5rem 2rem 2.5rem;
 }
 
 .manager-hero {
-  position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 1.25rem;
-  padding: 1.25rem 1.35rem;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--admin-theme-surface) 0%, color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 100%);
-  box-shadow: var(--admin-theme-shadow);
-  overflow: hidden;
-}
-
-.hero-glow {
-  position: absolute;
-  top: -60%;
-  right: -10%;
-  width: 280px;
-  height: 280px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--admin-theme-primary) 20%, transparent) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.hero-accent-line {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--admin-theme-primary), color-mix(in srgb, var(--admin-theme-primary) 30%, transparent));
-}
-
-.hero-content-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.hero-icon-wrap {
-  display: grid;
-  width: 2.6rem;
-  height: 2.6rem;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 12%, var(--admin-theme-surface));
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
-.manager-title {
-  display: grid;
-  gap: 0.32rem;
-  min-width: 0;
-}
-
-.manager-title .eyebrow {
-  margin: 0;
-}
-
-.manager-title h1 {
+.manager-hero h1 {
   margin: 0;
   color: var(--admin-theme-contrast);
-  font-size: 1.35rem;
+  font-size: 1.32rem;
   line-height: 1.2;
 }
 
-.manager-meta {
+.manager-title {
   display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-top: 0.1rem;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
-  position: relative;
-  z-index: 1;
 }
 
-.eyebrow,
-.panel-kicker {
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin: 0;
+.content-grid {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1rem;
 }
 
-.subsection-heading {
-  color: var(--admin-theme-contrast);
-  font-size: 0.88rem;
-  font-weight: 800;
-  margin: 0 0 0.75rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-}
-
-.mb-lg {
-  margin-bottom: 1.5rem;
-}
-
-.panel-desc {
-  color: var(--admin-theme-muted);
-  font-size: 0.82rem;
-  margin-bottom: 0.85rem;
-}
-
-.field-hint {
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-  line-height: 1.4;
-  margin-top: 0.5rem;
-}
-
-.field-label {
-  color: var(--admin-theme-contrast-soft);
-  font-size: 0.78rem;
-  font-weight: 700;
+.panel-body {
+  padding: 1.5rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1.6rem 0.85rem;
 }
 
-.field-wide {
+.form-grid .field-wide {
   grid-column: 1 / -1;
 }
 
-.upload-disabled {
-  pointer-events: none;
-  opacity: 0.5;
+/* ── Hero image ── */
+.image-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.72fr) minmax(360px, 1.28fr);
+  gap: 1.25rem;
+  padding: 1.5rem;
 }
 
-.image-preview-thumb {
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-  border-radius: 6px;
+.image-upload-panel {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.form-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.image-preview {
   overflow: hidden;
-  border: 1px solid var(--admin-theme-border);
-  background: var(--admin-theme-surface-soft);
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: var(--admin-theme-surface);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 8%, transparent),
+    0 12px 24px rgba(15, 95, 73, 0.11);
 }
 
-.image-preview-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.image-preview-empty {
+  display: grid;
+  place-items: center;
+  color: var(--admin-theme-muted);
+  aspect-ratio: 1.4;
 }
 
-.quick-links-body {
-  padding: 1rem;
+.hero-preview {
+  aspect-ratio: 1.6;
+}
+
+/* ── Image slots ── */
+.image-slot-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.65rem;
-}
-
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-primary-deep);
-  padding: 0.7rem 0.85rem;
-  text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
-}
-
-.quick-link:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
-  transform: translateY(-1px);
-}
-
-.quick-link strong {
-  display: block;
-  color: var(--admin-theme-contrast);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.quick-link span {
-  display: block;
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-}
-
-.editor-panel {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
-  overflow: hidden;
-}
-
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
   gap: 1rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 50%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.85rem 1rem;
 }
 
-.panel-header h2 {
-  margin: 0;
-  color: var(--admin-theme-contrast);
-  font-size: 1rem;
-}
-
-.panel-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.panel-header-left > div {
+.image-slot {
   display: grid;
-  gap: 0.15rem;
-  min-width: 0;
+  gap: 0.6rem;
+  align-content: start;
 }
 
-.panel-icon-wrap {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
+.image-slot-label {
+  color: var(--admin-theme-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
-.panel-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-}
-
-.panel-header-clickable {
-  width: 100%;
-  border: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.panel-header-clickable:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-}
-
-.panel-body {
-  padding: 1rem;
-}
-
-.stack-list {
+/* ── Items list (stats / list items / team cards) ── */
+.items-list {
   display: grid;
   gap: 0.75rem;
 }
 
-.sub-editor {
+.items-list.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.item-card {
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--admin-theme-surface);
-  overflow: hidden;
-  transition: border-color 0.18s ease;
+  padding: 0.75rem 1rem;
 }
 
-.sub-editor:hover {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border-strong));
-}
-
-.sub-editor-header {
+.item-header {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 38%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.75rem 0.85rem;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
 }
 
-.sub-editor-header h3 {
-  flex: 1;
-  margin: 0;
-  color: var(--admin-theme-contrast);
-  font-size: 0.94rem;
-  font-weight: 900;
+.item-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .item-number {
   display: grid;
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
+  width: 1.8rem;
+  height: 1.8rem;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
   border-radius: 6px;
   background: var(--admin-theme-surface);
   color: var(--admin-theme-primary-deep);
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   font-weight: 900;
+  flex-shrink: 0;
 }
 
-.sub-editor-body {
-  padding: 0.9rem;
+.item-fields {
   display: grid;
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
 }
 
-.upload-wrap {
+.item-fields .field-wide {
+  grid-column: 1 / -1;
+}
+
+.stat-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* ── Content sub-sections ── */
+.content-subsection {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.85rem;
 }
 
-.chevron {
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+.content-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.chevron-up {
-  transform: rotate(-180deg);
-}
-
-/* Collapse transition */
-.collapse-leave-active,
-.collapse-enter-active {
-  transition:
-    opacity 0.24s ease,
-    max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow: hidden;
-}
-
-.collapse-enter-from,
-.collapse-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-
-.collapse-enter-to,
-.collapse-leave-from {
-  opacity: 1;
-  max-height: 6000px;
-}
-
-/* View mode */
-.view-mode :deep(input),
-.view-mode :deep(textarea),
-.view-mode :deep(select) {
-  pointer-events: none;
-  opacity: 0.6;
-  user-select: none;
-  cursor: default;
+.content-subhead h3 {
+  margin: 0;
+  color: var(--admin-theme-contrast);
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 @media (min-width: 900px) {
-  .live-admin.sidebar-open {
+  .livelihood-admin.sidebar-open {
     padding-left: 260px;
   }
 }
@@ -1025,11 +978,10 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
+    padding-top: calc(60px + 1rem);
   }
 
-  .manager-hero,
-  .panel-header,
-  .sub-editor-header {
+  .manager-hero {
     align-items: stretch;
     flex-direction: column;
   }
@@ -1038,13 +990,14 @@ onMounted(async () => {
     width: 100%;
   }
 
-  .form-grid {
+  .form-grid,
+  .image-editor-grid,
+  .item-fields {
     grid-template-columns: 1fr;
   }
 
-  .hero-content-wrap {
-    flex-direction: column;
-    text-align: center;
+  .items-list.two-col {
+    grid-template-columns: 1fr;
   }
 }
 </style>

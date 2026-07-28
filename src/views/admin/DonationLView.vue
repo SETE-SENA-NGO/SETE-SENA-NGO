@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import ImageCropModal from '@/components/admin/ImageCropModal.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
 import { imageUploadHelpText, isAllowedImageFile, isSameImage } from '@/lib/media'
@@ -54,6 +55,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   for (const id of Object.keys(previews)) revokePreview(id)
+  closeCropTarget()
 })
 
 function revokePreview(id: string) {
@@ -66,6 +68,9 @@ function revokePreview(id: string) {
 function displayedQr(method: DonationMethod) {
   return previews[method.id] || method.qrUrl
 }
+
+// Holds the just-picked (not yet cropped) file while the crop modal is open.
+const cropTarget = ref<{ methodId: string; file: File; src: string } | null>(null)
 
 async function onFileChange(method: DonationMethod, event: Event) {
   const input = event.target as HTMLInputElement
@@ -86,10 +91,31 @@ async function onFileChange(method: DonationMethod, event: Event) {
     return
   }
 
-  revokePreview(method.id)
-  pendingFiles[method.id] = file
-  previews[method.id] = URL.createObjectURL(file)
   delete cardMessages[method.id]
+  cropTarget.value = { methodId: method.id, file, src: URL.createObjectURL(file) }
+}
+
+function closeCropTarget() {
+  if (cropTarget.value) URL.revokeObjectURL(cropTarget.value.src)
+  cropTarget.value = null
+}
+
+function onCropConfirm(croppedFile: File) {
+  const methodId = cropTarget.value?.methodId
+  closeCropTarget()
+  if (!methodId) return
+
+  revokePreview(methodId)
+  pendingFiles[methodId] = croppedFile
+  previews[methodId] = URL.createObjectURL(croppedFile)
+}
+
+function reopenCrop(method: DonationMethod) {
+  const existing = pendingFiles[method.id]
+  if (!existing) return
+  // A fresh object URL for this crop session — independent of `previews`, so
+  // cancelling doesn't revoke the URL the card's thumbnail is still using.
+  cropTarget.value = { methodId: method.id, file: existing, src: URL.createObjectURL(existing) }
 }
 
 function removeQr(method: DonationMethod) {
@@ -226,6 +252,16 @@ async function saveCard(method: DonationMethod, index: number) {
                       {{ displayedQr(activeMethod) ? 'Replace QR image' : 'Upload QR image' }}
                     </v-btn>
                     <v-btn
+                      v-if="pendingFiles[activeMethod.id]"
+                      variant="tonal"
+                      size="small"
+                      :disabled="savingId === activeMethod.id"
+                      @click="reopenCrop(activeMethod)"
+                    >
+                      <v-icon start size="16">mdi-crop</v-icon>
+                      Adjust crop
+                    </v-btn>
+                    <v-btn
                       v-if="displayedQr(activeMethod)"
                       variant="tonal"
                       color="error"
@@ -318,6 +354,17 @@ async function saveCard(method: DonationMethod, index: number) {
         </section>
       </main>
     </div>
+
+    <Teleport to="body">
+      <ImageCropModal
+        v-if="cropTarget"
+        :image-src="cropTarget.src"
+        :file-name="cropTarget.file.name"
+        :mime-type="cropTarget.file.type || 'image/png'"
+        @confirm="onCropConfirm"
+        @cancel="closeCropTarget"
+      />
+    </Teleport>
   </v-app>
 </template>
 

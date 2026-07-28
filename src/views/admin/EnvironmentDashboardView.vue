@@ -1,289 +1,221 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import ImagePickerField from '@/components/admin/ImagePickerField.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminUploadButton from '@/components/admin/AdminUploadButton.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
-import { useAuthStore } from '@/stores/auth.store'
 
-const ui = useUiStore()
-const auth = useAuthStore()
-useAdminTheme()
+const PROGRAM_SLUG = 'programs-environment'
+const MAX_APPROACH_CARDS = 6
+const MAX_INITIATIVES = 10
+const MAX_PROCESS_STEPS = 8
+const MAX_STATS = 6
+const APPROACH_ICONS: string[] = ['shield', 'leaf', 'users', 'tree-pine', 'globe', 'heart']
 
-/* ─── Page content types ─────────────────────────── */
-interface EditableSection {
-  id: string
-  label: string
-  heading: string
-  body: string
-  items: string
-}
+type EditableSection = { id: string; label: string; heading: string; body: string; items: string }
+type ApproachCard = { title: string; text: string; icon: string }
+type InitiativeItem = { title: string; text: string; img: string; tag: string }
+type ProcessStep = { number: string; title: string; text: string }
+type StatItem = { number: string; label: string }
+type QuoteContent = { text: string; cite: string }
 
-interface PageDraft {
-  slug: string
-  route: string
-  group: string
-  title: string
-  eyebrow: string
+type EnvironmentDraft = {
   headline: string
   intro: string
-  heroImageUrl: string
-  primaryAction: string
-  secondaryAction: string
-  sections: EditableSection[]
-  updatedAt: string
+  approachCards: ApproachCard[]
+  initiatives: InitiativeItem[]
+  processSteps: ProcessStep[]
+  stats: StatItem[]
+  quote: QuoteContent
 }
 
-interface InitiativeItem {
-  title: string
-  text: string
-  img: string
-  tag: string
+// Kept for round-trip compatibility with the `programs` row's metadata —
+// the public Environment page (ProgramEnviromentView.vue) doesn't read
+// eyebrow/heroImageUrl/primaryAction/secondaryAction/sections at all, so
+// there's no editor UI for them, but saving must not drop them.
+const staticMetadata = {
+  eyebrow: 'Environment',
+  heroImageUrl: '',
+  primaryAction: '',
+  secondaryAction: '',
+  sections: [
+    {
+      id: 'environment-work',
+      label: 'What we do',
+      heading: 'What we do',
+      body: 'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.',
+      items: 'Community forestry agreements\nBiogas digester installation\nRainwater harvesting systems\nWASH facilities in schools and clinics\nTree nursery support and reforestation',
+    },
+    {
+      id: 'environment-approach',
+      label: 'Approach',
+      heading: 'Our approach',
+      body: 'Our approach combines scientific expertise with community participation to create lasting environmental change. We work alongside villages to restore forests, install renewable energy, and build climate resilience that families can see and sustain.',
+      items: '',
+    },
+    {
+      id: 'environment-team',
+      label: 'Organizational Structure',
+      heading: 'Who delivers environment programs on the ground',
+      body: 'Our dedicated team works across provinces protecting forests, building climate resilience and restoring ecosystems.',
+      items: 'Program Director | compass | Oversees environmental programs, conservation initiatives, and partnerships across provinces.\nField Coordinators | map | Manage community forestry, biogas, and WASH projects in target villages.\nConservation Trainers | heart | Deliver climate-smart agriculture, reforestation and environmental education.\nWASH Officers | chart | Implement clean water, sanitation and rainwater harvesting solutions.',
+    },
+    {
+      id: 'environment-why',
+      label: 'Why it matters',
+      heading: 'Why it matters',
+      body: 'Southeastern Cambodia is one of the most climate-vulnerable regions in the country. Healthy forests and clean water are peacekeeping infrastructure.',
+      items: 'Deforestation leaves communities exposed to floods and droughts\nClean water access prevents disease and keeps children in school\nRenewable energy reduces dependence on charcoal and firewood\nCommunity forests protect biodiversity for future generations',
+    },
+  ] as EditableSection[],
 }
 
-interface ProcessStep {
-  number: string
-  title: string
-  text: string
+const defaultContent: EnvironmentDraft = {
+  headline: 'Protecting the land that sustains villages.',
+  intro: 'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.',
+  approachCards: [
+    { title: 'Conservation', text: 'Protecting and restoring natural habitats, wildlife corridors, and biodiversity hotspots through community-led initiatives and scientific research.', icon: 'shield' },
+    { title: 'Sustainability', text: 'Promoting renewable energy, sustainable agriculture, and circular economy practices that reduce environmental impact while supporting livelihoods.', icon: 'leaf' },
+    { title: 'Community Engagement', text: 'Empowering local communities with knowledge, resources, and tools to actively participate in environmental protection and climate action.', icon: 'users' },
+  ],
+  initiatives: [
+    { title: 'Reforestation Projects', text: "Planting native tree species to restore degraded forests. We've planted over 500,000 trees across 12 communities.", img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80', tag: 'Conservation' },
+    { title: 'Environmental Education', text: 'Developing curriculum and training programs for schools to build environmental literacy from an early age.', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80', tag: 'Education' },
+    { title: 'Renewable Energy Access', text: 'Installing solar panels and clean energy solutions in rural communities, reducing dependence on fossil fuels.', img: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80', tag: 'Energy' },
+    { title: 'Water Conservation', text: 'Implementing rainwater harvesting, watershed management, and water purification systems.', img: 'https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80', tag: 'Water' },
+    { title: 'Sustainable Agriculture', text: 'Training farmers in organic farming, crop rotation, and agroforestry techniques.', img: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80', tag: 'Agriculture' },
+    { title: 'Climate Research & Advocacy', text: 'Conducting climate impact assessments and advocating for policy changes.', img: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80', tag: 'Research' },
+  ],
+  processSteps: [
+    { number: '01', title: 'Assessment', text: 'We conduct comprehensive environmental assessments to understand local ecosystems and identify priorities.' },
+    { number: '02', title: 'Planning', text: 'Working with community leaders, we develop tailored action plans that balance conservation with needs.' },
+    { number: '03', title: 'Implementation', text: 'We execute projects with active community participation, ensuring local ownership.' },
+    { number: '04', title: 'Monitoring', text: 'Continuous monitoring helps us measure impact and adapt strategies for greater effectiveness.' },
+  ],
+  stats: [
+    { number: '500K+', label: 'TREES PLANTED' },
+    { number: '12', label: 'COMMUNITIES SERVED' },
+    { number: '50+', label: 'ECOSYSTEMS PROTECTED' },
+    { number: '10K+', label: 'PEOPLE TRAINED' },
+  ],
+  quote: {
+    text: 'We do not inherit the earth from our ancestors; we borrow it from our children. Our environmental program is a pledge to protect that inheritance and ensure future generations inherit a planet that is healthy, vibrant, and full of possibility.',
+    cite: '— Santi Sena Environmental Team',
+  },
 }
 
-interface QuoteContent {
-  text: string
-  cite: string
-}
-
-interface StatItem {
-  number: string
-  label: string
-}
-
-interface ApproachCard {
-  title: string
-  text: string
-  icon: string
-}
-
-/* ─── Default Environment Page ──────────────────── */
-function createDefaultEnvironmentPage(): PageDraft {
+function cloneContent(content: EnvironmentDraft): EnvironmentDraft {
   return {
-    slug: 'programs-environment',
-    route: '/programs/environment',
-    group: 'Programs',
-    title: 'Environment',
-    eyebrow: 'Environment',
-    headline: 'Protecting the land that sustains villages.',
-    intro: 'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.',
-    heroImageUrl: '',
-    primaryAction: '',
-    secondaryAction: '',
-    sections: [
-      {
-        id: 'environment-work',
-        label: 'What we do',
-        heading: 'What we do',
-        body: 'Community forestry, biogas digesters, rainwater harvesting and WASH — climate resilience built one household at a time.',
-        items: 'Community forestry agreements\nBiogas digester installation\nRainwater harvesting systems\nWASH facilities in schools and clinics\nTree nursery support and reforestation',
-      },
-      {
-        id: 'environment-approach',
-        label: 'Approach',
-        heading: 'Our approach',
-        body: 'Our approach combines scientific expertise with community participation to create lasting environmental change. We work alongside villages to restore forests, install renewable energy, and build climate resilience that families can see and sustain.',
-        items: '',
-      },
-      {
-        id: 'environment-team',
-        label: 'Organizational Structure',
-        heading: 'Who delivers environment programs on the ground',
-        body: 'Our dedicated team works across provinces protecting forests, building climate resilience and restoring ecosystems.',
-        items: 'Program Director | compass | Oversees environmental programs, conservation initiatives, and partnerships across provinces.\nField Coordinators | map | Manage community forestry, biogas, and WASH projects in target villages.\nConservation Trainers | heart | Deliver climate-smart agriculture, reforestation and environmental education.\nWASH Officers | chart | Implement clean water, sanitation and rainwater harvesting solutions.',
-      },
-      {
-        id: 'environment-why',
-        label: 'Why it matters',
-        heading: 'Why it matters',
-        body: 'Southeastern Cambodia is one of the most climate-vulnerable regions in the country. Healthy forests and clean water are peacekeeping infrastructure.',
-        items: 'Deforestation leaves communities exposed to floods and droughts\nClean water access prevents disease and keeps children in school\nRenewable energy reduces dependence on charcoal and firewood\nCommunity forests protect biodiversity for future generations',
-      },
-    ],
-    updatedAt: '',
+    headline: content.headline,
+    intro: content.intro,
+    approachCards: content.approachCards.map((c) => ({ ...c })),
+    initiatives: content.initiatives.map((i) => ({ ...i })),
+    processSteps: content.processSteps.map((s) => ({ ...s })),
+    stats: content.stats.map((s) => ({ ...s })),
+    quote: { ...content.quote },
   }
 }
 
-const statsBand = ref<StatItem[]>([
-  { number: '500K+', label: 'TREES PLANTED' },
-  { number: '12', label: 'COMMUNITIES SERVED' },
-  { number: '50+', label: 'ECOSYSTEMS PROTECTED' },
-  { number: '10K+', label: 'PEOPLE TRAINED' },
-])
+const ui = useUiStore()
+useAdminTheme()
 
-const initiatives = ref<InitiativeItem[]>([
-  { title: 'Reforestation Projects', text: 'Planting native tree species to restore degraded forests. We\'ve planted over 500,000 trees across 12 communities.', img: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80', tag: 'Conservation' },
-  { title: 'Environmental Education', text: 'Developing curriculum and training programs for schools to build environmental literacy from an early age.', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80', tag: 'Education' },
-  { title: 'Renewable Energy Access', text: 'Installing solar panels and clean energy solutions in rural communities.', img: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80', tag: 'Energy' },
-  { title: 'Water Conservation', text: 'Implementing rainwater harvesting, watershed management, and water purification systems.', img: 'https://images.unsplash.com/photo-1548685913-fe6678b0d5c9?w=800&q=80', tag: 'Water' },
-  { title: 'Sustainable Agriculture', text: 'Training farmers in organic farming, crop rotation, and agroforestry techniques.', img: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&q=80', tag: 'Agriculture' },
-  { title: 'Climate Research & Advocacy', text: 'Conducting climate impact assessments and advocating for policy changes.', img: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80', tag: 'Research' },
-])
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
 
-const processSteps = ref<ProcessStep[]>([
-  { number: '01', title: 'Assessment', text: 'We conduct comprehensive environmental assessments to understand local ecosystems and identify priorities.' },
-  { number: '02', title: 'Planning', text: 'Working with community leaders, we develop tailored action plans that balance conservation with needs.' },
-  { number: '03', title: 'Implementation', text: 'We execute projects with active community participation, ensuring local ownership.' },
-  { number: '04', title: 'Monitoring', text: 'Continuous monitoring helps us measure impact and adapt strategies for greater effectiveness.' },
-])
-
-const approachCards = ref<ApproachCard[]>([
-  { title: 'Conservation', text: 'Protecting and restoring natural habitats, wildlife corridors, and biodiversity hotspots through community-led initiatives and scientific research.', icon: 'shield' },
-  { title: 'Sustainability', text: 'Promoting renewable energy, sustainable agriculture, and circular economy practices that reduce environmental impact while supporting livelihoods.', icon: 'leaf' },
-  { title: 'Community Engagement', text: 'Empowering local communities with knowledge, resources, and tools to actively participate in environmental protection and climate action.', icon: 'users' },
-])
-
-const quoteContent = ref<QuoteContent>({
-  text: 'We do not inherit the earth from our ancestors; we borrow it from our children. Our environmental program is a pledge to protect that inheritance and ensure future generations inherit a planet that is healthy, vibrant, and full of possibility.',
-  cite: '— SETE SENA Environmental Team',
-})
-
-/* ─── State ─────────────────────────────────────── */
 const loading = ref(false)
 const saving = ref(false)
-const page = ref<PageDraft>(createDefaultEnvironmentPage())
-const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
-const editing = ref(false)
+// Sections aren't editable here (the public page doesn't read them) but are
+// round-tripped unchanged so saving never drops previously-stored data.
+const loadedSections = ref<EditableSection[]>(staticMetadata.sections)
 
-function toggleEditing() {
-  editing.value = !editing.value
+const draft = reactive<EnvironmentDraft>(cloneContent(defaultContent))
+
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+  setupSectionWatch,
+  stopSectionWatch,
+  resetEditingState,
+} = useSectionEditor([
+  {
+    key: 'header',
+    getSnapshot: () => ({ headline: draft.headline, intro: draft.intro }),
+    applySnapshot: (value) => { draft.headline = value.headline; draft.intro = value.intro },
+  },
+  {
+    key: 'approach',
+    getSnapshot: () => draft.approachCards.map((c) => ({ ...c })),
+    applySnapshot: (value) => { draft.approachCards = value },
+  },
+  {
+    key: 'initiatives',
+    getSnapshot: () => draft.initiatives.map((i) => ({ ...i })),
+    applySnapshot: (value) => { draft.initiatives = value },
+  },
+  {
+    key: 'process',
+    getSnapshot: () => draft.processSteps.map((s) => ({ ...s })),
+    applySnapshot: (value) => { draft.processSteps = value },
+  },
+  {
+    key: 'stats',
+    getSnapshot: () => draft.stats.map((s) => ({ ...s })),
+    applySnapshot: (value) => { draft.stats = value },
+  },
+  {
+    key: 'quote',
+    getSnapshot: () => ({ ...draft.quote }),
+    applySnapshot: (value) => { draft.quote = value },
+  },
+])
+
+const originalSnapshot = ref('')
+const hasChanges = computed(() => JSON.stringify(cloneContent(draft)) !== originalSnapshot.value)
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify(cloneContent(draft))
 }
-const STORAGE_KEY = 'env-dashboard-page'
 
-/* ─── Collapsible panels ───────────────────────── */
-const expandedPanels = ref<Record<string, boolean>>({
-  'quick-links': true,
-  'approach-cards': true,
-  'stats': true,
-  'initiatives': true,
-  'process': true,
-  'quote': true,
+const canAddApproachCard = computed(() => draft.approachCards.length < MAX_APPROACH_CARDS)
+const canAddInitiative = computed(() => draft.initiatives.length < MAX_INITIATIVES)
+const canAddProcessStep = computed(() => draft.processSteps.length < MAX_PROCESS_STEPS)
+const canAddStat = computed(() => draft.stats.length < MAX_STATS)
+
+const sections = [
+  { id: 'env-header', label: 'Header', icon: 'mdi-image-text' },
+  { id: 'env-approach', label: 'Approach', icon: 'mdi-shield-check' },
+  { id: 'env-initiatives', label: 'Initiatives', icon: 'mdi-image-multiple' },
+  { id: 'env-process', label: 'Process', icon: 'mdi-format-list-numbered' },
+  { id: 'env-stats', label: 'Stats', icon: 'mdi-chart-box' },
+  { id: 'env-quote', label: 'Quote', icon: 'mdi-format-quote-close' },
+] as const
+
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
+
+useUnsavedChangesGuard(hasChanges)
+
+onMounted(() => {
+  void loadPage()
 })
 
-function togglePanel(id: string) {
-  expandedPanels.value[id] = !expandedPanels.value[id]
-}
+onUnmounted(() => {
+  stopSectionWatch()
+})
 
-function editPanel(id: string) {
-  expandedPanels.value[id] = true
-  void nextTick(() => {
-    const panel = document.querySelector(`[data-panel-id="${id}"]`)
-    if (!panel) return
-    panel.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    const firstInput = panel.querySelector('input, textarea, select') as HTMLElement | null
-    if (firstInput) {
-      firstInput.focus({ preventScroll: true })
-    }
-  })
-}
-
-/* ─── Confirmation helpers ─────────────────────── */
-function confirmDeleteStat(index: number) {
-  const stat = statsBand.value[index]
-  const label = stat?.label?.trim() || `Stat ${index + 1}`
-  ui.openModal(
-    'Delete statistic',
-    `Permanently delete <strong>${stat?.number || ''} ${label}</strong>? This action cannot be undone.`,
-    () => {
-      statsBand.value.splice(index, 1)
-      ui.addToast(`Statistic "${label}" deleted.`, 'success')
-    },
-  )
-}
-
-function confirmDeleteInitiative(index: number) {
-  const item = initiatives.value[index]
-  const title = item?.title?.trim() || `Initiative ${index + 1}`
-  ui.openModal(
-    'Delete initiative',
-    `Permanently delete <strong>${title}</strong>? This action cannot be undone.`,
-    () => {
-      initiatives.value.splice(index, 1)
-      ui.addToast(`Initiative "${title}" deleted.`, 'success')
-    },
-  )
-}
-
-function confirmDeleteProcessStep(index: number) {
-  const step = processSteps.value[index]
-  const title = step?.title?.trim() || `Step ${index + 1}`
-  ui.openModal(
-    'Delete step',
-    `Permanently delete <strong>${title}</strong> from the process steps? This action cannot be undone.`,
-    () => {
-      processSteps.value.splice(index, 1)
-      ui.addToast(`Step "${title}" deleted.`, 'success')
-    },
-  )
-}
-
-function confirmDeleteApproachCard(index: number) {
-  const card = approachCards.value[index]
-  const title = card?.title?.trim() || `Card ${index + 1}`
-  ui.openModal(
-    'Delete approach card',
-    `Permanently delete <strong>${title}</strong> from approach cards? This action cannot be undone.`,
-    () => {
-      approachCards.value.splice(index, 1)
-      ui.addToast(`Card "${title}" deleted.`, 'success')
-    },
-  )
-}
-
-/* ─── LocalStorage fallback ────────────────────── */
-function loadFromLocalStorage(): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const saved = JSON.parse(raw) as Record<string, unknown>
-      const defaults = createDefaultEnvironmentPage()
-      page.value = {
-        ...defaults,
-        eyebrow: (saved.eyebrow as string) || defaults.eyebrow,
-        headline: (saved.headline as string) || defaults.headline,
-        intro: (saved.intro as string) || defaults.intro,
-        heroImageUrl: (saved.heroImageUrl as string) || '',
-        primaryAction: (saved.primaryAction as string) || '',
-        secondaryAction: (saved.secondaryAction as string) || '',
-        sections: saved.sections && Array.isArray(saved.sections)
-          ? mergeSectionsWithDefaults(saved.sections as EditableSection[], defaults)
-          : defaults.sections,
-        updatedAt: (saved.updatedAt as string) || '',
-      }
-      if (saved.statsBand && Array.isArray(saved.statsBand) && saved.statsBand.length > 0) {
-        statsBand.value = saved.statsBand as StatItem[]
-      }
-      if (saved.initiatives && Array.isArray(saved.initiatives)) {
-        initiatives.value = saved.initiatives as InitiativeItem[]
-      }
-      if (saved.processSteps && Array.isArray(saved.processSteps)) {
-        processSteps.value = saved.processSteps as ProcessStep[]
-      }
-      if (saved.approachCards && Array.isArray(saved.approachCards)) {
-        approachCards.value = saved.approachCards as ApproachCard[]
-      }
-      if (saved.quoteContent && typeof saved.quoteContent === 'object') {
-        quoteContent.value = { ...quoteContent.value, ...saved.quoteContent as Partial<QuoteContent> }
-      }
-    }
-  } catch { /* ignore */ }
-}
-
-function mergeSectionsWithDefaults(dbSections: EditableSection[], defaults: PageDraft): EditableSection[] {
-  const dbMap = new Map<string, EditableSection>()
-  for (const s of dbSections) dbMap.set(s.id, s)
-
-  return defaults.sections.map(defSec => {
+function mergeSectionsWithDefaults(dbSections: EditableSection[]): EditableSection[] {
+  const dbMap = new Map(dbSections.map((s) => [s.id, s]))
+  return staticMetadata.sections.map((defSec) => {
     const dbSec = dbMap.get(defSec.id)
     if (!dbSec) return { ...defSec }
     return {
@@ -296,521 +228,488 @@ function mergeSectionsWithDefaults(dbSections: EditableSection[], defaults: Page
   })
 }
 
-function saveToLocalStorage(): void {
-  try {
-    const p = page.value
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      eyebrow: p.eyebrow,
-      headline: p.headline,
-      intro: p.intro,
-      heroImageUrl: p.heroImageUrl,
-      primaryAction: p.primaryAction,
-      secondaryAction: p.secondaryAction,
-      sections: p.sections,
-      statsBand: statsBand.value,
-      initiatives: initiatives.value,
-      processSteps: processSteps.value,
-      approachCards: approachCards.value,
-      quoteContent: quoteContent.value,
-      updatedAt: new Date().toISOString(),
-    }))
-  } catch { /* ignore */ }
-}
-
-function snapshotData(): string {
-  return JSON.stringify({
-    eyebrow: page.value.eyebrow,
-    headline: page.value.headline,
-    intro: page.value.intro,
-    heroImageUrl: page.value.heroImageUrl,
-    primaryAction: page.value.primaryAction,
-    secondaryAction: page.value.secondaryAction,
-    sections: page.value.sections.map(s => ({ ...s })),
-    statsBand: statsBand.value.map(s => ({ ...s })),
-    initiatives: initiatives.value.map(s => ({ ...s })),
-    processSteps: processSteps.value.map(s => ({ ...s })),
-    approachCards: approachCards.value.map(s => ({ ...s })),
-    quoteContent: { ...quoteContent.value },
-  })
-}
-
-const isDirty = computed(() => savedSnapshot.value !== snapshotData())
-
-async function loadPageContent() {
+async function loadPage() {
+  resetEditingState()
   loading.value = true
+
   try {
     const { data, error } = await supabase
       .from('programs')
-      .select('title, summary, description, metadata, updated_at')
-      .eq('slug', 'programs-environment')
+      .select('metadata')
+      .eq('slug', PROGRAM_SLUG)
       .maybeSingle()
 
-    if (error) {
-      console.warn('Supabase load failed, falling back to localStorage:', error.message)
-      loadFromLocalStorage()
-      storageMode.value = 'local'
-      savedSnapshot.value = snapshotData()
-      loading.value = false
-      return
-    }
+    if (error) throw error
 
-    if (data) {
-      const defaults = createDefaultEnvironmentPage()
-      const meta = data.metadata as Record<string, unknown> | null
+    if (data?.metadata) {
+      const meta = data.metadata as Record<string, unknown>
 
-      page.value = {
-        ...defaults,
-        title: data.title || defaults.title,
-        eyebrow: (meta?.eyebrow as string) || defaults.eyebrow,
-        headline: (meta?.headline as string) || defaults.headline,
-        intro: data.summary || (meta?.intro as string) || defaults.intro,
-        heroImageUrl: (meta?.heroImageUrl as string) || '',
-        primaryAction: (meta?.primaryAction as string) || '',
-        secondaryAction: (meta?.secondaryAction as string) || '',
-        sections: meta?.sections && Array.isArray(meta.sections)
-          ? mergeSectionsWithDefaults(meta.sections as EditableSection[], defaults)
-          : defaults.sections,
-        updatedAt: data.updated_at || '',
+      if (typeof meta.headline === 'string' && meta.headline.trim()) draft.headline = meta.headline.trim()
+      if (typeof meta.intro === 'string' && meta.intro.trim()) draft.intro = meta.intro.trim()
+      if (Array.isArray(meta.approachCards) && meta.approachCards.length) draft.approachCards = meta.approachCards as ApproachCard[]
+      if (Array.isArray(meta.initiatives) && meta.initiatives.length) draft.initiatives = meta.initiatives as InitiativeItem[]
+      if (Array.isArray(meta.processSteps) && meta.processSteps.length) draft.processSteps = meta.processSteps as ProcessStep[]
+      if (Array.isArray(meta.statsBand) && meta.statsBand.length) draft.stats = meta.statsBand as StatItem[]
+      if (meta.quoteContent && typeof meta.quoteContent === 'object') {
+        draft.quote = { ...draft.quote, ...(meta.quoteContent as Partial<QuoteContent>) }
+      }
+      if (Array.isArray(meta.sections)) {
+        loadedSections.value = mergeSectionsWithDefaults(meta.sections as EditableSection[])
       }
 
-      if (meta?.statsBand && Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
-        statsBand.value = meta.statsBand as StatItem[]
-      }
-      if (meta?.initiatives && Array.isArray(meta.initiatives)) {
-        initiatives.value = meta.initiatives as InitiativeItem[]
-      }
-      if (meta?.processSteps && Array.isArray(meta.processSteps)) {
-        processSteps.value = meta.processSteps as ProcessStep[]
-      }
-      if (meta?.approachCards && Array.isArray(meta.approachCards)) {
-        approachCards.value = meta.approachCards as ApproachCard[]
-      }
-      if (meta?.quoteContent && typeof meta.quoteContent === 'object') {
-        quoteContent.value = { ...quoteContent.value, ...meta.quoteContent as Partial<QuoteContent> }
-      }
       storageMode.value = 'supabase'
-      saveToLocalStorage()
-    } else {
-      loadFromLocalStorage()
-      storageMode.value = 'local'
     }
-
-    savedSnapshot.value = snapshotData()
-  } catch (e: unknown) {
-    console.warn('Load crashed, falling back to localStorage:', e)
-    loadFromLocalStorage()
+  } catch (error) {
+    console.warn('[EnvironmentDashboard] load failed:', error)
     storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
+    ui.addToast('Could not load from database — showing last saved draft.', 'error')
   } finally {
     loading.value = false
+    updateSnapshot()
+    setupSectionWatch()
   }
 }
 
-async function savePageContent() {
-  saving.value = true
-  try {
-    const now = new Date().toISOString()
-    const p = page.value
+async function savePage() {
+  if (saving.value) return
 
+  const validationError = validateDraft()
+  if (validationError) {
+    ui.addToast(validationError, 'error')
+    return
+  }
+
+  saving.value = true
+
+  try {
     const payload = {
-      slug: p.slug,
-      title: p.title.trim() || p.headline.trim() || p.slug,
+      slug: PROGRAM_SLUG,
+      title: draft.headline.trim() || 'Environment',
       pillar: 'Environment',
-      summary: p.intro || '',
-      description: p.intro || '',
+      summary: draft.intro,
+      description: draft.intro,
       status: 'published',
       metadata: {
-        eyebrow: p.eyebrow,
-        headline: p.headline,
-        intro: p.intro,
-        heroImageUrl: p.heroImageUrl,
-        primaryAction: p.primaryAction,
-        secondaryAction: p.secondaryAction,
-        sections: p.sections.map(s => ({
-          id: s.id,
-          label: s.label,
-          heading: s.heading,
-          body: s.body,
-          items: s.items,
-        })),
-        statsBand: statsBand.value,
-        initiatives: initiatives.value,
-        processSteps: processSteps.value,
-        approachCards: approachCards.value,
-        quoteContent: quoteContent.value,
+        eyebrow: staticMetadata.eyebrow,
+        headline: draft.headline,
+        intro: draft.intro,
+        heroImageUrl: staticMetadata.heroImageUrl,
+        primaryAction: staticMetadata.primaryAction,
+        secondaryAction: staticMetadata.secondaryAction,
+        sections: loadedSections.value,
+        statsBand: draft.stats,
+        initiatives: draft.initiatives,
+        processSteps: draft.processSteps,
+        approachCards: draft.approachCards,
+        quoteContent: draft.quote,
       },
-      updated_at: now,
+      updated_at: new Date().toISOString(),
     }
 
-    saveToLocalStorage()
-
-    let { error } = await supabase
-      .from('programs')
-      .upsert(payload, { onConflict: 'slug' })
+    let { error } = await supabase.from('programs').upsert(payload, { onConflict: 'slug' })
 
     if (error && error.message?.includes('row-level security')) {
-      console.warn('Upsert blocked by RLS, trying insert/update separately...')
-
-      const { error: insertError } = await supabase
-        .from('programs')
-        .insert(payload)
-
+      const { error: insertError } = await supabase.from('programs').insert(payload)
       if (insertError && insertError.message?.includes('duplicate key')) {
-        const { error: updateError } = await supabase
-          .from('programs')
-          .update(payload)
-          .eq('slug', p.slug)
-
-        if (updateError) {
-          error = updateError
-        } else {
-          error = null
-        }
-      } else if (insertError) {
-        error = insertError
+        const { error: updateError } = await supabase.from('programs').update(payload).eq('slug', PROGRAM_SLUG)
+        error = updateError ?? null
       } else {
-        error = null
+        error = insertError ?? null
       }
     }
 
-    if (error) {
-      console.warn('Supabase save failed:', error)
-      ui.addToast(`DB write blocked: ${error.message}`, 'error')
-      saveToLocalStorage()
-      storageMode.value = 'local'
-      savedSnapshot.value = snapshotData()
-      saving.value = false
-      return
-    }
+    if (error) throw error
 
     storageMode.value = 'supabase'
-    savedSnapshot.value = snapshotData()
-    ui.addToast(`${p.title} page saved!`, 'success')
-  } catch (e: unknown) {
-    console.error('Save crashed:', e)
-    ui.addToast('Saved to browser (database error)', 'info')
+    ui.addToast('Environment page saved.', 'success')
+    updateSnapshot()
+  } catch (error) {
+    console.error('[EnvironmentDashboard] save failed:', error)
     storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
+    ui.addToast(error instanceof Error ? `Could not save: ${error.message}` : 'Could not save Environment page.', 'error')
   } finally {
     saving.value = false
   }
 }
 
+function validateDraft() {
+  if (!draft.headline.trim()) return 'Headline is required.'
+  if (draft.approachCards.some((c) => !c.title.trim())) return 'Each approach card needs a title.'
+  if (draft.initiatives.some((i) => !i.title.trim())) return 'Each initiative needs a title.'
+  return ''
+}
 
-let autosaveTimer: ReturnType<typeof setTimeout> | null = null
+function addApproachCard() {
+  if (!canAddApproachCard.value) return
+  draft.approachCards.push({ title: 'New approach', text: 'Describe this approach.', icon: 'leaf' })
+}
 
-watch(
-  [statsBand, initiatives, processSteps, approachCards, quoteContent, () => page.value],
-  () => {
-    if (autosaveTimer) clearTimeout(autosaveTimer)
-    autosaveTimer = setTimeout(() => saveToLocalStorage(), 2000)
-  },
-  { deep: true },
-)
+function removeApproachCard(index: number) {
+  const card = draft.approachCards[index]
+  if (!card) return
+  confirmDialog('Remove approach card?', `Remove "${card.title}" from the public Environment page?`, () => {
+    draft.approachCards.splice(index, 1)
+    ui.addToast('Approach card removed.', 'warning')
+  })
+}
 
-onMounted(async () => {
-  try {
-    await auth.init()
-  } catch (e) {
-    console.warn('[EnvironmentDashboard] auth.init() failed:', e)
-  }
-  try {
-    await loadPageContent()
-  } catch (e) {
-    console.error('[EnvironmentDashboard] loadPageContent() crashed:', e)
-    loadFromLocalStorage()
-    storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
-    loading.value = false
-  }
-})
+function addInitiative() {
+  if (!canAddInitiative.value) return
+  draft.initiatives.push({ title: 'New initiative', text: 'Describe this initiative.', img: '', tag: 'New' })
+}
+
+function removeInitiative(index: number) {
+  const item = draft.initiatives[index]
+  if (!item) return
+  confirmDialog('Remove initiative?', `Remove "${item.title}" from the public Environment page?`, () => {
+    draft.initiatives.splice(index, 1)
+    ui.addToast('Initiative removed.', 'warning')
+  })
+}
+
+function addProcessStep() {
+  if (!canAddProcessStep.value) return
+  const stepNumber = draft.processSteps.length + 1
+  draft.processSteps.push({ number: String(stepNumber).padStart(2, '0'), title: 'New step', text: 'Describe this step.' })
+}
+
+function removeProcessStep(index: number) {
+  const step = draft.processSteps[index]
+  if (!step) return
+  confirmDialog('Remove step?', `Remove "${step.title}" from the process steps?`, () => {
+    draft.processSteps.splice(index, 1)
+    ui.addToast('Step removed.', 'warning')
+  })
+}
+
+function addStat() {
+  if (!canAddStat.value) return
+  draft.stats.push({ number: '', label: '' })
+}
+
+function removeStat(index: number) {
+  const stat = draft.stats[index]
+  if (!stat) return
+  confirmDialog('Remove statistic?', `Remove "${stat.number} ${stat.label}" from the public Environment page?`, () => {
+    draft.stats.splice(index, 1)
+    ui.addToast('Statistic removed.', 'warning')
+  })
+}
+
+function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
+  const target = index + direction
+  if (target < 0 || target >= items.length) return
+  const current = items[index]
+  const next = items[target]
+  if (!current || !next) return
+  items[index] = next
+  items[target] = current
+}
 </script>
 
 <template>
-  <v-app :class="['env-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['environment-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
 
       <main class="manager-main">
         <header class="manager-hero">
-          <div class="hero-glow" aria-hidden="true"></div>
-          <div class="hero-accent-line" aria-hidden="true"></div>
-          <div class="hero-content-wrap">
-            <div class="hero-icon-wrap">
-              <v-icon size="22" color="primary">mdi-tree</v-icon>
-            </div>
-            <div class="manager-title">
-              <p class="eyebrow">Environment Program</p>
-              <h1>Manage Environment page</h1>
-            </div>
+          <div class="manager-title">
+            <h1>Manage Environment page</h1>
+            <v-chip size="small" variant="tonal" :color="storageMode === 'supabase' ? 'success' : 'warning'">
+              {{ storageMode === 'supabase' ? 'Database' : 'Local only' }}
+            </v-chip>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/programs/environment" target="_blank" size="small">
-              <v-icon start size="16">mdi-open-in-new</v-icon>
+            <v-btn variant="tonal" to="/programs/environment" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn
-              variant="tonal"
-              :color="editing ? 'primary' : 'default'"
-              size="small"
-              @click="toggleEditing"
-            >
-              <v-icon start size="16">{{ editing ? 'mdi-lock-open' : 'mdi-lock' }}</v-icon>
-              {{ editing ? 'Editing enabled' : 'Enable editing' }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              size="small"
-              :loading="saving"
-              :disabled="saving || loading || !isDirty || !editing"
-              @click="savePageContent"
-            >
-              <v-icon start size="16">mdi-content-save</v-icon>
-              {{ saving ? 'Saving...' : 'Save changes' }}
             </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
-          <v-progress-circular indeterminate color="primary" :size="36" :width="4" />
-          <span class="mt-4 font-weight-bold">Loading Environment content...</span>
-        </div>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Environment content...</span>
+          </div>
 
-        <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
-          <!-- ═══ Quick links ═══ -->
-          <section class="editor-panel quick-links-panel" aria-labelledby="quick-links-heading">
-            <button class="panel-header panel-header-clickable" @click="togglePanel('quick-links')" :aria-expanded="expandedPanels['quick-links']">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-folder-open</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Shortcuts</p>
-                  <h2 id="quick-links-heading">Related tools</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['quick-links']" class="panel-body quick-links-body">
-                <RouterLink class="quick-link" to="/admin/media">
-                  <v-icon size="18">mdi-folder-open</v-icon>
-                  <div>
-                    <strong>Media Library</strong>
-                    <span>Upload images for this page</span>
-                  </div>
-                </RouterLink>
-              </div>
-            </Transition>
-          </section>
+          <div v-else key="content" class="content-grid">
 
-          <!-- ═══ Approach Cards ═══ -->
-          <section class="editor-panel" aria-labelledby="approach-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['approach-cards']" @click="togglePanel('approach-cards')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-shield-leaf</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Our approach</p>
-                  <h2 id="approach-heading">Approach Cards</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-btn v-if="editing" variant="tonal" color="accent" size="x-small" @click="approachCards.push({ title: '', text: '', icon: 'shield' })">
-                  <v-icon start size="14">mdi-plus</v-icon>
+          <AdminSectionNav
+            :sections="sections"
+            :active-section="activeSection"
+            :has-changes="hasChanges"
+            :saving="saving"
+            aria-label="Environment page sections"
+            save-label="Save changes"
+            @navigate="scrollToSection"
+            @save="savePage"
+          />
+
+          <!-- ── HEADER ── -->
+          <AdminEditorPanel
+            :id="sections[0].id"
+            kicker="Public page header"
+            heading="Protecting the land that sustains villages."
+            :editing="!!editingSections.header"
+            :collapsed="collapsedSections.header"
+            @toggle-edit="toggleEdit('header')"
+            @cancel="cancelEdit('header')"
+            @toggle-collapse="toggleCollapse('header')"
+          >
+            <div class="panel-body form-grid">
+              <v-text-field v-model="draft.headline" label="Page headline" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" class="field-wide" />
+              <v-textarea v-model="draft.intro" label="Intro paragraph" rows="3" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" class="field-wide" />
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── APPROACH CARDS ── -->
+          <AdminEditorPanel
+            :id="sections[1].id"
+            kicker="Approach"
+            heading="Our Approach cards"
+            :editing="!!editingSections.approach"
+            :collapsed="collapsedSections.approach"
+            @toggle-edit="toggleEdit('approach')"
+            @cancel="cancelEdit('approach')"
+            @toggle-collapse="toggleCollapse('approach')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddApproachCard" @click="addApproachCard">
+                  <v-icon start>mdi-plus</v-icon>
                   Add card
                 </v-btn>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['approach-cards'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['approach-cards']" class="panel-body">
-                <div class="stack-list two-col">
-                  <article v-for="(card, index) in approachCards" :key="'approach-' + index" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>{{ card.title || 'New card' }}</h3>
-                      <v-btn v-if="editing" icon variant="tonal" color="error" size="x-small" @click="confirmDeleteApproachCard(index)">
-                        <v-icon size="14">mdi-delete</v-icon>
-                      </v-btn>
-                    </header>
-                    <div class="sub-editor-body">
-                      <v-text-field v-model="card.title" label="Title" hide-details density="compact" variant="outlined" />
-                      <v-select v-model="card.icon" :items="[{ title: 'Shield', value: 'shield' }, { title: 'Leaf', value: 'leaf' }, { title: 'Users', value: 'users' }]" label="Icon" hide-details density="compact" variant="outlined" />
-                      <v-textarea v-model="card.text" label="Description" rows="2" hide-details density="compact" variant="outlined" class="field-wide" />
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+              </v-fade-transition>
+            </template>
 
-          <!-- ═══ Stats ═══ -->
-          <section class="editor-panel" aria-labelledby="stats-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['stats']" @click="togglePanel('stats')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-chart-bar</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Statistics</p>
-                  <h2 id="stats-heading">Impact Statistics</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-btn v-if="editing" variant="tonal" color="accent" size="x-small" @click="statsBand.push({ number: '', label: '' })">
-                  <v-icon start size="14">mdi-plus</v-icon>
-                  Add stat
-                </v-btn>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['stats']" class="panel-body">
-                <div class="stack-list two-col">
-                  <article v-for="(stat, index) in statsBand" :key="'stat-' + index" class="sub-editor">
-                    <header class="sub-editor-header">
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list two-col">
+                <article v-for="(card, index) in draft.approachCards" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>{{ stat.label || `Stat ${index + 1}` }}</h3>
-                      <v-btn v-if="editing" icon variant="tonal" color="error" size="x-small" @click="confirmDeleteStat(index)">
-                        <v-icon size="14">mdi-delete</v-icon>
-                      </v-btn>
-                    </header>
-                    <div class="sub-editor-body form-grid">
-                      <v-text-field v-model="stat.number" label="Number" hide-details density="compact" variant="outlined" />
-                      <v-text-field v-model="stat.label" label="Label" hide-details density="compact" variant="outlined" />
                     </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.approach || index === 0" aria-label="Move card up" @click="moveItem(draft.approachCards, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.approach || index === draft.approachCards.length - 1" aria-label="Move card down" @click="moveItem(draft.approachCards, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.approach" icon color="error" variant="tonal" size="x-small" aria-label="Remove card" @click="removeApproachCard(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="card.title" label="Title" :disabled="!editingSections.approach" hide-details density="compact" variant="outlined" />
+                    <v-select v-model="card.icon" :items="APPROACH_ICONS" label="Icon" :disabled="!editingSections.approach" hide-details density="compact" variant="outlined" />
+                    <v-textarea v-model="card.text" label="Description" rows="3" :disabled="!editingSections.approach" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
 
-          <!-- ═══ Initiatives ═══ -->
-          <section class="editor-panel" aria-labelledby="initiatives-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['initiatives']" @click="togglePanel('initiatives')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-leaf</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Key programs</p>
-                  <h2 id="initiatives-heading">Initiatives</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-btn v-if="editing" variant="tonal" color="accent" size="x-small" @click="initiatives.push({ title: '', text: '', img: '', tag: '' })">
-                  <v-icon start size="14">mdi-plus</v-icon>
+          <!-- ── INITIATIVES ── -->
+          <AdminEditorPanel
+            :id="sections[2].id"
+            kicker="Highlights"
+            heading="Key initiatives"
+            :editing="!!editingSections.initiatives"
+            :collapsed="collapsedSections.initiatives"
+            @toggle-edit="toggleEdit('initiatives')"
+            @cancel="cancelEdit('initiatives')"
+            @toggle-collapse="toggleCollapse('initiatives')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddInitiative" @click="addInitiative">
+                  <v-icon start>mdi-plus</v-icon>
                   Add initiative
                 </v-btn>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['initiatives'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['initiatives']" class="panel-body">
-                <div class="stack-list two-col">
-                  <article v-for="(item, index) in initiatives" :key="'init-' + index" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <h3>{{ item.title || 'New initiative' }}</h3>
-                      <v-btn v-if="editing" icon variant="tonal" color="error" size="x-small" @click="confirmDeleteInitiative(index)">
-                        <v-icon size="14">mdi-delete</v-icon>
-                      </v-btn>
-                    </header>
-                    <div class="sub-editor-body">
-                      <v-text-field v-model="item.title" label="Title" hide-details density="compact" variant="outlined" />
-                      <v-text-field v-model="item.tag" label="Tag" hide-details density="compact" variant="outlined" />
-                      <v-textarea v-model="item.text" label="Description" rows="2" hide-details density="compact" variant="outlined" class="field-wide" />
-                      <div class="field-wide upload-wrap">
-                        <label class="field-label">Image URL</label>
-                        <v-text-field v-model="item.img" label="Image URL" placeholder="https://..." hide-details density="compact" variant="outlined" />
-                      </div>
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+              </v-fade-transition>
+            </template>
 
-          <!-- ═══ Process ═══ -->
-          <section class="editor-panel" aria-labelledby="process-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['process']" @click="togglePanel('process')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-map-marker-path</v-icon>
+            <div class="cards-list two-col">
+              <article v-for="(item, index) in draft.initiatives" :key="index" class="card-editor">
+                <header class="card-editor-header">
+                  <div class="card-heading">
+                    <span class="card-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    <div>
+                      <h3>{{ item.title || 'Untitled initiative' }}</h3>
+                      <p>{{ item.tag || 'No tag' }}</p>
+                    </div>
+                  </div>
+                  <div class="card-actions">
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.initiatives || index === 0" aria-label="Move initiative up" @click="moveItem(draft.initiatives, index, -1)">
+                      <v-icon>mdi-chevron-up</v-icon>
+                    </v-btn>
+                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.initiatives || index === draft.initiatives.length - 1" aria-label="Move initiative down" @click="moveItem(draft.initiatives, index, 1)">
+                      <v-icon>mdi-chevron-down</v-icon>
+                    </v-btn>
+                    <v-btn v-if="editingSections.initiatives" icon color="error" variant="tonal" size="small" aria-label="Remove initiative" @click="removeInitiative(index)">
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </div>
+                </header>
+
+                <div class="card-editor-top">
+                  <div class="image-upload-panel card-image-upload">
+                    <v-img v-if="item.img" :src="item.img" aspect-ratio="1.35" cover class="image-preview card-preview" />
+                    <div v-else class="image-preview card-preview image-preview-empty">
+                      <v-icon size="28">mdi-image-outline</v-icon>
+                    </div>
+                    <AdminUploadButton
+                      :disabled="!editingSections.initiatives"
+                      :description="`Environment initiative-${index} image`"
+                      @update:model-value="(url) => (item.img = url)"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <p class="panel-kicker">Our process</p>
-                  <h2 id="process-heading">Process Steps</h2>
+
+                <div class="card-form-grid">
+                  <v-text-field v-model="item.title" label="Title" :disabled="!editingSections.initiatives" hide-details density="comfortable" variant="outlined" />
+                  <v-text-field v-model="item.tag" label="Tag" :disabled="!editingSections.initiatives" hide-details density="comfortable" variant="outlined" />
+                  <v-textarea v-model="item.text" label="Description" rows="2" :disabled="!editingSections.initiatives" hide-details density="comfortable" variant="outlined" class="field-wide" />
                 </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-btn v-if="editing" variant="tonal" color="accent" size="x-small" @click="processSteps.push({ number: String(processSteps.length + 1).padStart(2, '0'), title: '', text: '' })">
-                  <v-icon start size="14">mdi-plus</v-icon>
+              </article>
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── PROCESS STEPS ── -->
+          <AdminEditorPanel
+            :id="sections[3].id"
+            kicker="How we work"
+            heading="Process steps"
+            :editing="!!editingSections.process"
+            :collapsed="collapsedSections.process"
+            @toggle-edit="toggleEdit('process')"
+            @cancel="cancelEdit('process')"
+            @toggle-collapse="toggleCollapse('process')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddProcessStep" @click="addProcessStep">
+                  <v-icon start>mdi-plus</v-icon>
                   Add step
                 </v-btn>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['process'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['process']" class="panel-body">
-                <div class="stack-list two-col">
-                  <article v-for="(step, index) in processSteps" :key="'step-' + index" class="sub-editor">
-                    <header class="sub-editor-header">
-                      <span class="item-number">{{ step.number }}</span>
-                      <h3>{{ step.title || 'New step' }}</h3>
-                      <v-btn v-if="editing" icon variant="tonal" color="error" size="x-small" @click="confirmDeleteProcessStep(index)">
-                        <v-icon size="14">mdi-delete</v-icon>
-                      </v-btn>
-                    </header>
-                    <div class="sub-editor-body">
-                      <v-text-field v-model="step.number" label="Step number" hide-details density="compact" variant="outlined" />
-                      <v-text-field v-model="step.title" label="Title" hide-details density="compact" variant="outlined" />
-                      <v-textarea v-model="step.text" label="Description" rows="2" hide-details density="compact" variant="outlined" class="field-wide" />
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </Transition>
-          </section>
+              </v-fade-transition>
+            </template>
 
-          <!-- ═══ Quote ═══ -->
-          <section class="editor-panel" aria-labelledby="quote-heading">
-            <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['quote']" @click="togglePanel('quote')">
-              <div class="panel-header-left">
-                <div class="panel-icon-wrap">
-                  <v-icon size="18">mdi-format-quote-open</v-icon>
-                </div>
-                <div>
-                  <p class="panel-kicker">Testimonial</p>
-                  <h2 id="quote-heading">Quote</h2>
-                </div>
-              </div>
-              <div class="panel-header-actions">
-                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
-                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quote'] }">mdi-chevron-down</v-icon>
-              </div>
-            </button>
-            <Transition name="collapse">
-              <div v-show="expandedPanels['quote']" class="panel-body">
-                <v-textarea v-model="quoteContent.text" label="Quote text" rows="3" hide-details density="comfortable" variant="outlined" />
-                <v-text-field v-model="quoteContent.cite" label="Attribution" placeholder="— Name, Role" hide-details density="comfortable" variant="outlined" class="mt-3" />
-              </div>
-            </Transition>
-          </section>
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list two-col">
+                <article v-for="(step, index) in draft.processSteps" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ step.number || String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.process || index === 0" aria-label="Move step up" @click="moveItem(draft.processSteps, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.process || index === draft.processSteps.length - 1" aria-label="Move step down" @click="moveItem(draft.processSteps, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.process" icon color="error" variant="tonal" size="x-small" aria-label="Remove step" @click="removeProcessStep(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="step.number" label="Number" :disabled="!editingSections.process" hide-details density="compact" variant="outlined" />
+                    <v-text-field v-model="step.title" label="Title" :disabled="!editingSections.process" hide-details density="compact" variant="outlined" />
+                    <v-textarea v-model="step.text" label="Description" rows="2" :disabled="!editingSections.process" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── STATS ── -->
+          <AdminEditorPanel
+            :id="sections[4].id"
+            kicker="Stats band"
+            heading="Impact statistics"
+            :editing="!!editingSections.stats"
+            :collapsed="collapsedSections.stats"
+            @toggle-edit="toggleEdit('stats')"
+            @cancel="cancelEdit('stats')"
+            @toggle-collapse="toggleCollapse('stats')"
+          >
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddStat" @click="addStat">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add stat
+                </v-btn>
+              </v-fade-transition>
+            </template>
+
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list two-col">
+                <article v-for="(stat, index) in draft.stats" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.stats || index === 0" aria-label="Move stat up" @click="moveItem(draft.stats, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.stats || index === draft.stats.length - 1" aria-label="Move stat down" @click="moveItem(draft.stats, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.stats" icon color="error" variant="tonal" size="x-small" aria-label="Remove stat" @click="removeStat(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="stat.number" label="Number" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" />
+                    <v-text-field v-model="stat.label" label="Label" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── QUOTE ── -->
+          <AdminEditorPanel
+            :id="sections[5].id"
+            kicker="Testimonial"
+            heading="Quote"
+            :editing="!!editingSections.quote"
+            :collapsed="collapsedSections.quote"
+            @toggle-edit="toggleEdit('quote')"
+            @cancel="cancelEdit('quote')"
+            @toggle-collapse="toggleCollapse('quote')"
+          >
+            <div class="panel-body form-grid">
+              <v-textarea v-model="draft.quote.text" label="Quote text" rows="3" :disabled="!editingSections.quote" hide-details density="comfortable" variant="outlined" class="field-wide" />
+              <v-text-field v-model="draft.quote.cite" label="Citation / author" :disabled="!editingSections.quote" hide-details density="comfortable" variant="outlined" class="field-wide" />
+            </div>
+          </AdminEditorPanel>
+
         </div>
+    </v-fade-transition>
       </main>
     </div>
+
+    <AdminConfirmDialog
+      v-model="confirmOpen"
+      :title="confirmData.title"
+      :body="confirmData.body"
+      @confirm="confirmData.onConfirm()"
+    />
   </v-app>
 </template>
 
 <style scoped>
-.env-admin {
+.environment-admin {
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -823,283 +722,154 @@ onMounted(async () => {
 
 .manager-main {
   min-height: 100vh;
-  padding: 0 1.25rem 1.25rem;
+  padding: 1.5rem 2rem 2.5rem;
 }
 
 .manager-hero {
-  position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 1.25rem;
-  padding: 1.25rem 1.35rem;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--admin-theme-surface) 0%, color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 100%);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
   box-shadow: var(--admin-theme-shadow);
-  overflow: hidden;
 }
 
-.hero-glow {
-  position: absolute;
-  top: -40px;
-  right: -30px;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--admin-theme-primary) 20%, transparent) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.hero-accent-line {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--admin-theme-primary-deep) 0%, color-mix(in srgb, var(--admin-theme-primary) 40%, transparent) 60%, transparent 100%);
-  pointer-events: none;
-}
-
-.hero-content-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  min-width: 0;
-}
-
-.hero-icon-wrap {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
+.manager-hero h1 {
+  margin: 0;
+  color: var(--admin-theme-contrast);
+  font-size: 1.32rem;
+  line-height: 1.2;
 }
 
 .manager-title {
-  display: grid;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.manager-title h1 {
-  margin: 0;
-  color: var(--admin-theme-contrast);
-  font-size: 1.35rem;
-  line-height: 1.2;
-  font-weight: 900;
-}
-
-.manager-meta {
   display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.eyebrow {
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin: 0;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: 0.75rem;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.panel-desc {
-  color: var(--admin-theme-muted);
-  font-size: 0.82rem;
-  line-height: 1.5;
-  margin-bottom: 0.85rem;
+.content-grid {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1rem;
 }
 
-.field-label {
-  color: var(--admin-theme-contrast-soft);
-  font-size: 0.78rem;
-  font-weight: 700;
+.panel-body {
+  padding: 1.5rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 1.6rem 0.85rem;
 }
 
-.field-wide {
+.form-grid .field-wide {
   grid-column: 1 / -1;
 }
 
-.upload-wrap {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.quick-links-body {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.65rem;
-}
-
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-primary-deep);
-  padding: 0.75rem 0.85rem;
-  text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
-}
-
-.quick-link:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
-  transform: translateY(-1px);
-}
-
-.quick-link strong {
-  display: block;
-  color: var(--admin-theme-contrast);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.quick-link span {
-  display: block;
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-}
-
-.editor-panel {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
-  overflow: hidden;
-}
-
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 50%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.85rem 1rem;
-}
-
-.panel-header h2 {
-  margin: 0;
-  color: var(--admin-theme-contrast);
-  font-size: 1rem;
-}
-
-.panel-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.panel-header-left > div {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.panel-icon-wrap {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.panel-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-}
-
-.panel-header-clickable {
-  width: 100%;
-  border: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.panel-header-clickable:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-}
-
-.panel-body {
-  padding: 1rem;
-}
-
-.stack-list {
+/* ── Image upload panel (preview + button) ── */
+.image-upload-panel {
   display: grid;
   gap: 0.75rem;
+  align-content: start;
 }
 
-.stack-list.two-col {
+.image-preview {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: var(--admin-theme-surface);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 8%, transparent),
+    0 12px 24px rgba(15, 95, 73, 0.11);
+}
+
+.image-preview-empty {
+  display: grid;
+  place-items: center;
+  color: var(--admin-theme-muted);
+  aspect-ratio: 1.35;
+}
+
+.cards-list {
+  display: grid;
+  gap: 0.95rem;
+  padding: 1.5rem;
+}
+
+.cards-list.two-col {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.sub-editor {
+.card-editor {
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--admin-theme-surface);
   overflow: hidden;
-  transition: border-color 0.18s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.sub-editor:hover {
-  border-color: color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border-strong));
+.card-editor:hover {
+  border-color: color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  box-shadow: 0 4px 14px rgba(15, 95, 73, 0.08);
 }
 
-.sub-editor-header {
+.card-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--admin-theme-border);
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 32%, var(--admin-theme-surface));
+  padding: 0.75rem 1.5rem;
+}
+
+.card-heading {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 38%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.75rem 0.85rem;
+  min-width: 0;
 }
 
-.sub-editor-header h3 {
-  flex: 1;
+.card-heading h3,
+.card-heading p {
   margin: 0;
+}
+
+.card-heading h3 {
   color: var(--admin-theme-contrast);
   font-size: 0.94rem;
   font-weight: 900;
 }
 
-.item-number {
+.card-heading p {
+  color: var(--admin-theme-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.card-number {
   display: grid;
   width: 2rem;
   height: 2rem;
-  flex-shrink: 0;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
   border-radius: 6px;
@@ -1107,51 +877,90 @@ onMounted(async () => {
   color: var(--admin-theme-primary-deep);
   font-size: 0.74rem;
   font-weight: 900;
+  flex-shrink: 0;
 }
 
-.sub-editor-body {
-  padding: 0.9rem;
+.card-editor-top {
+  padding: 1.25rem 1.5rem 0;
+}
+
+.card-image-upload {
+  width: 200px;
+}
+
+.card-preview {
+  width: 100%;
+  aspect-ratio: 1.35;
+}
+
+.card-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem 0.85rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.card-form-grid .field-wide {
+  grid-column: 1 / -1;
+}
+
+/* ── Items list (stats / process / approach) ── */
+.items-list {
   display: grid;
   gap: 0.75rem;
 }
 
-.chevron {
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+.items-list.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.chevron-up {
-  transform: rotate(-180deg);
+.item-card {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  padding: 0.75rem 1rem;
 }
 
-.collapse-leave-active,
-.collapse-enter-active {
-  transition: opacity 0.24s ease, max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow: hidden;
+.item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
 }
 
-.collapse-enter-from,
-.collapse-leave-to {
-  opacity: 0;
-  max-height: 0;
+.item-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-.collapse-enter-to,
-.collapse-leave-from {
-  opacity: 1;
-  max-height: 6000px;
+.item-number {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  border-radius: 6px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.7rem;
+  font-weight: 900;
+  flex-shrink: 0;
 }
 
-.view-mode :deep(input),
-.view-mode :deep(textarea),
-.view-mode :deep(select) {
-  pointer-events: none;
-  opacity: 0.6;
-  user-select: none;
-  cursor: default;
+.item-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.item-fields .field-wide {
+  grid-column: 1 / -1;
 }
 
 @media (min-width: 900px) {
-  .env-admin.sidebar-open {
+  .environment-admin.sidebar-open {
     padding-left: 260px;
   }
 }
@@ -1165,9 +974,11 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
+    padding-top: calc(60px + 1rem);
   }
 
-  .manager-hero {
+  .manager-hero,
+  .card-editor-header {
     align-items: stretch;
     flex-direction: column;
   }
@@ -1176,12 +987,18 @@ onMounted(async () => {
     width: 100%;
   }
 
-  .hero-content-wrap {
-    flex-direction: column;
-    align-items: flex-start;
+  .form-grid,
+  .card-form-grid,
+  .item-fields {
+    grid-template-columns: 1fr;
   }
 
-  .form-grid {
+  .card-image-upload {
+    width: 100%;
+  }
+
+  .cards-list.two-col,
+  .items-list.two-col {
     grid-template-columns: 1fr;
   }
 }

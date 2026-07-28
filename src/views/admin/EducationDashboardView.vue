@@ -1,342 +1,301 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
-import CollapsiblePanel from '@/components/admin/CollapsiblePanel.vue'
-import ImageSlotEditor from '@/components/admin/ImageSlotEditor.vue'
-import SectionItemEditor from '@/components/admin/SectionItemEditor.vue'
-import StatItemEditor from '@/components/admin/StatItemEditor.vue'
-import TeamCardEditor from '@/components/admin/TeamCardEditor.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import AdminSectionNav from '@/components/admin/AdminSectionNav.vue'
+import AdminUploadButton from '@/components/admin/AdminUploadButton.vue'
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useScrollSpyNav } from '@/composables/useScrollSpyNav'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { supabase } from '@/lib/supabase'
 import { imageUrls } from '@/lib/imageUrls'
 import { useUiStore } from '@/stores/ui.store'
-import { useAuthStore } from '@/stores/auth.store'
 
-const ui = useUiStore()
-const auth = useAuthStore()
-useAdminTheme()
+const PROGRAM_SLUG = 'programs-education'
+const MAX_STATS = 6
+const MAX_TEAM_CARDS = 8
+const MAX_LIST_ITEMS = 10
+const TEAM_ICONS: string[] = ['compass', 'map', 'heart', 'chart']
 
-/* ─── Types ─────────────────────────────────────── */
-interface EditableSection {
-  id: string
-  label: string
-  heading: string
-  body: string
-  items: string
+type GalleryImage = { id: string; label: string; url: string }
+type StatItem = { number: string; label: string; description: string }
+type TeamCard = { role: string; icon: string; desc: string }
+
+type EducationDraft = {
+  hero: { title: string; intro: string }
+  images: GalleryImage[]
+  stats: StatItem[]
+  workItems: string[]
+  approachText: string
+  whyItems: string[]
+  team: TeamCard[]
 }
 
-interface GalleryImage {
-  id: string
-  label: string
-  url: string
+const IMAGE_SLOTS = [
+  { field: 'introImageUrl', label: 'Intro section image', description: 'Education intro image' },
+  { field: 'readingImageUrl', label: 'What we do — reading image', description: 'Education reading image' },
+  { field: 'teacherImageUrl', label: 'What we do — teacher image', description: 'Education teacher image' },
+  { field: 'studyImageUrl', label: 'Why it matters — study image', description: 'Education study image' },
+] as const
+
+let idCounter = 0
+function genId() {
+  return `img-${++idCounter}-${Date.now()}`
 }
 
-interface PageDraft {
-  slug: string
-  title: string
-  galleryImages: GalleryImage[]
-  sections: EditableSection[]
-  updatedAt: string
-}
-
-interface StatItem {
-  number: string
-  label: string
-  description: string
-}
-
-interface TeamCard {
-  role: string
-  icon: string
-  desc: string
-}
-
-/* ─── Image slot metadata ───────────────────────── */
-const IMAGE_MAP: { field: string; label: string; badge: string; hint: string }[] = [
-  { field: 'introImageUrl', label: 'Intro Section Image', badge: 'Intro section', hint: 'Our Mission — hero image' },
-  { field: 'readingImageUrl', label: 'What We Do — Reading Image', badge: 'What we do — back', hint: 'Reading / background photo' },
-  { field: 'teacherImageUrl', label: 'What We Do — Teacher Image', badge: 'What we do — front', hint: 'Teacher / foreground photo' },
-  { field: 'studyImageUrl', label: 'Why It Matters — Study Image', badge: 'Why it matters', hint: 'Impact / study image' },
-]
-
-/* ─── Default values matching public website ────── */
-let _idCounter = 0
-function genId() { return `img-${++_idCounter}-${Date.now()}` }
-
-const statsBand = ref<StatItem[]>([
-  { number: '120+', label: 'PRE-SCHOOL CHILDREN', description: 'Enrolled each year across remote villages in Svay Rieng and Prey Veng.' },
-  { number: '8', label: 'MOBILE LIBRARIES', description: 'Reaching villages with no school library or bookshop within 20 km.' },
-  { number: '60+', label: 'ANNUAL SCHOLARSHIPS', description: 'For the poorest students at every level — especially girls.' },
-])
-
-const teamCards = ref<TeamCard[]>([
-  { role: 'Program Director', icon: 'compass', desc: 'Oversees education initiatives, partnerships, and donor reporting across all provinces.' },
-  { role: 'Field Coordinators', icon: 'map', desc: 'Manage pre-school, library and scholarship programs in each province.' },
-  { role: 'Teachers & Facilitators', icon: 'heart', desc: 'Deliver early learning, literacy sessions and youth clubs in village settings.' },
-  { role: 'Monitoring & Evaluation', icon: 'chart', desc: 'Tracks learning progress, attendance and community outcomes.' },
-])
-
-function defaultSections() {
+function defaultImages(): GalleryImage[] {
   return [
-    {
-      id: 'education-work',
-      label: 'What we do',
-      heading: 'What we do',
-      body: 'Community pre-schools led by trained local teachers, mobile libraries reaching remote villages, scholarships for the poorest students, Buddhist moral education, youth peer-educator groups, and teacher training to keep children in school.',
-      items: 'Community pre-schools led by trained local teachers in remote villages\nMobile library service bringing books, audio and learning kits to children\nScholarships covering uniforms, supplies and transport for the poorest students\nBuddhist moral education and life-skills classes in pagoda settings\nYouth peer-educator groups on health, environment and child rights\nTeacher training and parent engagement to keep children in school',
-    },
-    {
-      id: 'education-approach',
-      label: 'Approach',
-      heading: 'Our approach',
-      body: 'We hire teachers from the villages we serve, train them in early-childhood pedagogy, and pair every classroom with a parent committee. Curriculum blends the national standard with Buddhist ethics, Khmer culture and hands-on environmental learning — so a child grows up rooted in both the national curriculum and the wisdom of the pagoda.',
-      items: '',
-    },
-    {
-      id: 'education-why',
-      label: 'Why it matters',
-      heading: 'Why it matters',
-      body: 'Children who attend pre-school are far more likely to complete primary and secondary school. Scholarships keep the poorest girls in class through their most vulnerable years, while mobile libraries reach villages a bus route never will.',
-      items: 'Children who attend pre-school are far more likely to complete primary and secondary school\nScholarships keep the poorest girls in class through the most vulnerable years\nMobile libraries reach children a bus route never will\nPagoda-based ethics classes preserve Khmer language and moral tradition',
-    },
-    {
-      id: 'education-team',
-      label: 'Organizational Structure',
-      heading: 'Who delivers education on the ground',
-      body: 'Our dedicated team works across provinces to ensure every child has access to quality education.',
-      items: teamCards.value.map(c => `${c.role} | ${c.icon} | ${c.desc}`).join('\n'),
-    },
+    { id: genId(), label: IMAGE_SLOTS[0].label, url: imageUrls.education.intro },
+    { id: genId(), label: IMAGE_SLOTS[1].label, url: imageUrls.education.reading },
+    { id: genId(), label: IMAGE_SLOTS[2].label, url: imageUrls.education.teacher },
+    { id: genId(), label: IMAGE_SLOTS[3].label, url: imageUrls.education.study },
   ]
 }
 
-const heroTitle = ref('Access to Education')
-const heroIntro = ref(
-  'Community pre-schools, mobile libraries, scholarships for poor children and the preservation of Buddhist education in pagoda settings across rural Cambodia.',
-)
-
-const page = ref<PageDraft>({
-  slug: 'programs-education',
-  title: 'Education',
-  galleryImages: [
-    { id: genId(), label: 'Intro Section Image', url: imageUrls.education.intro },
-    { id: genId(), label: 'What We Do — Reading Image', url: imageUrls.education.reading },
-    { id: genId(), label: 'What We Do — Teacher Image', url: imageUrls.education.teacher },
-    { id: genId(), label: 'Why It Matters — Study Image', url: imageUrls.education.study },
+const defaultContent: EducationDraft = {
+  hero: {
+    title: 'Access to Education',
+    intro:
+      'Community pre-schools, mobile libraries, scholarships for poor children and the preservation of Buddhist education in pagoda settings across rural Cambodia.',
+  },
+  images: defaultImages(),
+  stats: [
+    { number: '120+', label: 'PRE-SCHOOL CHILDREN', description: 'Enrolled each year across remote villages in Svay Rieng and Prey Veng.' },
+    { number: '8', label: 'MOBILE LIBRARIES', description: 'Reaching villages with no school library or bookshop within 20 km.' },
+    { number: '60+', label: 'ANNUAL SCHOLARSHIPS', description: 'For the poorest students at every level — especially girls.' },
   ],
-  sections: defaultSections(),
-  updatedAt: '',
-})
+  workItems: [
+    'Community pre-schools led by trained local teachers in remote villages',
+    'Mobile library service bringing books, audio and learning kits to children',
+    'Scholarships covering uniforms, supplies and transport for the poorest students',
+    'Buddhist moral education and life-skills classes in pagoda settings',
+    'Youth peer-educator groups on health, environment and child rights',
+    'Teacher training and parent engagement to keep children in school',
+  ],
+  approachText:
+    'We hire teachers from the villages we serve, train them in early-childhood pedagogy, and pair every classroom with a parent committee. Curriculum blends the national standard with Buddhist ethics, Khmer culture and hands-on environmental learning — so a child grows up rooted in both the national curriculum and the wisdom of the pagoda.',
+  whyItems: [
+    'Children who attend pre-school are far more likely to complete primary and secondary school',
+    'Scholarships keep the poorest girls in class through the most vulnerable years',
+    'Mobile libraries reach children a bus route never will',
+    'Pagoda-based ethics classes preserve Khmer language and moral tradition',
+  ],
+  team: [
+    { role: 'Program Director', icon: 'compass', desc: 'Oversees education initiatives, partnerships, and donor reporting across all provinces.' },
+    { role: 'Field Coordinators', icon: 'map', desc: 'Manage pre-school, library and scholarship programs in each province.' },
+    { role: 'Teachers & Facilitators', icon: 'heart', desc: 'Deliver early learning, literacy sessions and youth clubs in village settings.' },
+    { role: 'Monitoring & Evaluation', icon: 'chart', desc: 'Tracks learning progress, attendance and community outcomes.' },
+  ],
+}
 
-/* ─── State ─────────────────────────────────────── */
+function cloneContent(content: EducationDraft): EducationDraft {
+  return {
+    hero: { ...content.hero },
+    images: content.images.map((img) => ({ ...img })),
+    stats: content.stats.map((s) => ({ ...s })),
+    workItems: [...content.workItems],
+    approachText: content.approachText,
+    whyItems: [...content.whyItems],
+    team: content.team.map((t) => ({ ...t })),
+  }
+}
+
+const ui = useUiStore()
+useAdminTheme()
+
+const { open: confirmOpen, data: confirmData, confirm: confirmDialog } = useConfirmDialog()
+
 const loading = ref(false)
 const saving = ref(false)
-const savedSnapshot = ref('')
 const storageMode = ref<'supabase' | 'local'>('supabase')
-const editing = ref(false)
-
-function toggleEditing() {
-  editing.value = !editing.value
-}
-const STORAGE_KEY = 'edu-dashboard-page'
+const updatedAt = ref('')
+// Holds metadata keys not managed by this dashboard so saving here never clobbers them.
 const rawMetadata = ref<Record<string, unknown>>({})
 
-/* ─── Collapsible panels ───────────────────────── */
-const expandedPanels = ref<Record<string, boolean>>({
-  'quick-links': true,
-  'page-header': true,
-  'page-images': true,
-  'stats': true,
-  'content': true,
-  'team': true,
+const draft = reactive<EducationDraft>(cloneContent(defaultContent))
+
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+  setupSectionWatch,
+  stopSectionWatch,
+  resetEditingState,
+} = useSectionEditor([
+  {
+    key: 'header',
+    getSnapshot: () => ({ ...draft.hero }),
+    applySnapshot: (value) => { draft.hero = value },
+  },
+  {
+    key: 'images',
+    getSnapshot: () => draft.images.map((img) => ({ ...img })),
+    applySnapshot: (value) => { draft.images = value },
+  },
+  {
+    key: 'stats',
+    getSnapshot: () => draft.stats.map((s) => ({ ...s })),
+    applySnapshot: (value) => { draft.stats = value },
+  },
+  {
+    key: 'content',
+    getSnapshot: () => ({
+      workItems: [...draft.workItems],
+      approachText: draft.approachText,
+      whyItems: [...draft.whyItems],
+    }),
+    applySnapshot: (value) => {
+      draft.workItems = value.workItems
+      draft.approachText = value.approachText
+      draft.whyItems = value.whyItems
+    },
+  },
+  {
+    key: 'team',
+    getSnapshot: () => draft.team.map((t) => ({ ...t })),
+    applySnapshot: (value) => { draft.team = value },
+  },
+])
+
+const originalSnapshot = ref('')
+const hasChanges = computed(() => JSON.stringify(cloneContent(draft)) !== originalSnapshot.value)
+function updateSnapshot() {
+  originalSnapshot.value = JSON.stringify(cloneContent(draft))
+}
+
+const canAddStat = computed(() => draft.stats.length < MAX_STATS)
+const canAddTeamCard = computed(() => draft.team.length < MAX_TEAM_CARDS)
+const canAddWorkItem = computed(() => draft.workItems.length < MAX_LIST_ITEMS)
+const canAddWhyItem = computed(() => draft.whyItems.length < MAX_LIST_ITEMS)
+
+const sections = [
+  { id: 'edu-header', label: 'Header', icon: 'mdi-image-text' },
+  { id: 'edu-images', label: 'Images', icon: 'mdi-image-multiple' },
+  { id: 'edu-stats', label: 'Stats', icon: 'mdi-chart-box' },
+  { id: 'edu-content', label: 'Content', icon: 'mdi-text-box' },
+  { id: 'edu-team', label: 'Team', icon: 'mdi-account-group' },
+] as const
+
+const { activeSection, scrollToSection, updateActiveSectionFromScroll } = useScrollSpyNav(sections)
+
+useUnsavedChangesGuard(hasChanges)
+
+onMounted(() => {
+  void loadPage()
 })
 
-/* ─── Derived view data ─────────────────────────── */
-const imageSlots = computed(() =>
-  IMAGE_MAP.map((m, index) => ({
-    index,
-    label: m.label,
-    badge: m.badge,
-    hint: m.hint,
-    url: page.value.galleryImages[index]?.url || '',
-  })),
-)
-const contentSections = computed(() => page.value.sections.filter(s => s.id !== 'education-team'))
+onUnmounted(() => {
+  stopSectionWatch()
+})
 
-function saveToLocalStorage(): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      galleryImages: page.value.galleryImages,
-      sections: page.value.sections,
-      statsBand: statsBand.value,
-      teamCards: teamCards.value,
-      updatedAt: new Date().toISOString(),
-    }))
-  } catch { /* ignore */ }
-}
-
-function loadFromLocalStorage(): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return
-    const saved = JSON.parse(raw) as Record<string, unknown>
-    if (Array.isArray(saved.galleryImages) && saved.galleryImages.length > 0) {
-      page.value.galleryImages = saved.galleryImages as GalleryImage[]
-    } else {
-      const urls = [
-        String(saved.introImageUrl || ''),
-        String(saved.readingImageUrl || ''),
-        String(saved.teacherImageUrl || ''),
-        String(saved.studyImageUrl || ''),
-      ]
-      page.value.galleryImages = IMAGE_MAP.map((m, i) => ({
-        id: genId(),
-        label: m.label,
-        url: urls[i] || '',
-      }))
-    }
-    padGalleryToFour()
-    if (Array.isArray(saved.sections)) {
-      const savedSections = saved.sections as EditableSection[]
-      page.value.sections = page.value.sections.map(defSec => {
-        const match = savedSections.find(s => s.id === defSec.id)
-        return match ? { ...defSec, ...match } : defSec
-      })
-    }
-    if (Array.isArray(saved.statsBand)) statsBand.value = saved.statsBand as StatItem[]
-    if (Array.isArray(saved.teamCards)) teamCards.value = saved.teamCards as TeamCard[]
-    if (typeof saved.updatedAt === 'string') page.value.updatedAt = saved.updatedAt
-  } catch { /* ignore */ }
-}
-
-function snapshotData(): string {
-  return JSON.stringify({
-    heroTitle: heroTitle.value,
-    heroIntro: heroIntro.value,
-    galleryImages: page.value.galleryImages.map(g => ({ ...g })),
-    sections: page.value.sections.map(s => ({ ...s })),
-    statsBand: statsBand.value.map(s => ({ ...s })),
-    teamCards: teamCards.value.map(s => ({ ...s })),
-  })
-}
-
-const isDirty = computed(() => savedSnapshot.value !== snapshotData())
-
-function parseTeamFromSection(section: EditableSection): void {
-  if (section.items?.trim()) {
-    const lines = section.items.split('\n').map(l => l.trim()).filter(Boolean)
-    if (lines.length > 0) {
-      teamCards.value = lines.map(line => {
-        const parts = line.split('|').map(p => p.trim())
-        return {
-          role: parts[0] || '',
-          icon: parts[1] || 'chart',
-          desc: parts[2] || parts[0] || '',
-        }
-      })
-    }
-  }
-}
-
-function saveTeamToSection(): void {
-  const teamSection = page.value.sections.find(s => s.id === 'education-team')
-  if (teamSection) {
-    teamSection.items = teamCards.value.map(c => `${c.role} | ${c.icon} | ${c.desc}`).join('\n')
-  }
-}
-
-async function loadPageContent() {
+async function loadPage() {
+  resetEditingState()
   loading.value = true
+
   try {
     const { data, error } = await supabase
       .from('programs')
-      .select('title, summary, description, metadata, updated_at')
-      .eq('slug', 'programs-education')
+      .select('metadata, updated_at')
+      .eq('slug', PROGRAM_SLUG)
       .maybeSingle()
 
-    if (error) {
-      console.warn('Supabase load failed, falling back to localStorage:', error.message)
-      loadFromLocalStorage()
-      storageMode.value = 'local'
-      savedSnapshot.value = snapshotData()
-      loading.value = false
-      return
-    }
+    if (error) throw error
 
-    if (data && data.metadata) {
+    if (data?.metadata) {
       const meta = data.metadata as Record<string, unknown>
       rawMetadata.value = { ...meta }
 
-      if (typeof meta.headline === 'string' && meta.headline.trim()) heroTitle.value = meta.headline.trim()
-      if (typeof meta.intro === 'string' && meta.intro.trim()) heroIntro.value = meta.intro.trim()
+      if (typeof meta.headline === 'string' && meta.headline.trim()) draft.hero.title = meta.headline.trim()
+      if (typeof meta.intro === 'string' && meta.intro.trim()) draft.hero.intro = meta.intro.trim()
 
       const galleryFromMeta = meta.gallery as GalleryImage[] | undefined
       if (Array.isArray(galleryFromMeta) && galleryFromMeta.length > 0) {
-        page.value.galleryImages = galleryFromMeta.map((g, i) => ({
+        draft.images = galleryFromMeta.map((g, i) => ({
           id: g.id || genId(),
-          label: (g.label?.trim() ? g.label : IMAGE_MAP[i]?.label || `Slot ${i + 1}`),
+          label: g.label?.trim() ? g.label : IMAGE_SLOTS[i]?.label || `Slot ${i + 1}`,
           url: g.url || '',
         }))
-        padGalleryToFour()
       } else {
-        const urls = [
-          String(meta.introImageUrl || ''),
-          String(meta.readingImageUrl || ''),
-          String(meta.teacherImageUrl || ''),
-          String(meta.studyImageUrl || ''),
-        ]
-        page.value.galleryImages = IMAGE_MAP.map((m, i) => ({
+        draft.images = IMAGE_SLOTS.map((slot) => ({
           id: genId(),
-          label: m.label,
-          url: urls[i] || '',
+          label: slot.label,
+          url: String(meta[slot.field] || ''),
         }))
+      }
+      while (draft.images.length < 4) {
+        draft.images.push({ id: genId(), label: IMAGE_SLOTS[draft.images.length]?.label || `Slot ${draft.images.length + 1}`, url: '' })
       }
 
       if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
-        statsBand.value = meta.statsBand as StatItem[]
+        draft.stats = meta.statsBand as StatItem[]
       }
 
       if (Array.isArray(meta.sections)) {
-        const dbSections = meta.sections as EditableSection[]
-        page.value.sections = page.value.sections.map(defSec => {
-          const match = dbSections.find(s => s.id === defSec.id)
-          return match ? { ...defSec, ...match } : defSec
-        })
+        const dbSections = meta.sections as { id: string; body?: string; items?: string }[]
+
+        const workSection = dbSections.find((s) => s.id === 'education-work')
+        if (workSection?.items?.trim()) {
+          draft.workItems = workSection.items.split('\n').map((l) => l.trim()).filter(Boolean)
+        }
+
+        const approachSection = dbSections.find((s) => s.id === 'education-approach')
+        if (approachSection?.body?.trim()) draft.approachText = approachSection.body.trim()
+
+        const whySection = dbSections.find((s) => s.id === 'education-why')
+        if (whySection?.items?.trim()) {
+          draft.whyItems = whySection.items.split('\n').map((l) => l.trim()).filter(Boolean)
+        }
+
+        const teamSection = dbSections.find((s) => s.id === 'education-team')
+        if (teamSection?.items?.trim()) {
+          const lines = teamSection.items.split('\n').map((l) => l.trim()).filter(Boolean)
+          if (lines.length) {
+            draft.team = lines.map((line) => {
+              const parts = line.split('|').map((p) => p.trim())
+              return { role: parts[0] || '', icon: parts[1] || 'chart', desc: parts[2] || parts[0] || '' }
+            })
+          }
+        }
       }
 
-      const teamSection = page.value.sections.find(s => s.id === 'education-team')
-      if (teamSection) {
-        parseTeamFromSection(teamSection)
-      }
-
-      page.value.updatedAt = data.updated_at || ''
+      updatedAt.value = data.updated_at || ''
       storageMode.value = 'supabase'
-      saveToLocalStorage()
-    } else {
-      loadFromLocalStorage()
-      storageMode.value = 'local'
     }
-
-    savedSnapshot.value = snapshotData()
-  } catch (e: unknown) {
-    console.warn('Load crashed:', e)
-    loadFromLocalStorage()
+  } catch (error) {
+    console.warn('[EducationDashboard] load failed:', error)
     storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
+    ui.addToast('Could not load from database — showing last saved draft.', 'error')
   } finally {
     loading.value = false
+    updateSnapshot()
+    setupSectionWatch()
   }
 }
 
-async function savePageContent() {
-  saving.value = true
-  try {
-    saveTeamToSection()
+async function savePage() {
+  if (saving.value) return
 
-    const now = new Date().toISOString()
+  const validationError = validateDraft()
+  if (validationError) {
+    ui.addToast(validationError, 'error')
+    return
+  }
+
+  saving.value = true
+
+  try {
+    const workItems = draft.workItems.filter((line) => line.trim()).join('\n')
+    const whyItems = draft.whyItems.filter((line) => line.trim()).join('\n')
+    const teamItems = draft.team.map((c) => `${c.role} | ${c.icon} | ${c.desc}`).join('\n')
 
     const payload = {
-      slug: 'programs-education',
+      slug: PROGRAM_SLUG,
       title: 'Education Program',
       pillar: 'Education',
       summary: 'Community pre-schools, mobile libraries, scholarships and Buddhist education.',
@@ -344,163 +303,147 @@ async function savePageContent() {
       status: 'published',
       metadata: {
         ...rawMetadata.value,
-        headline: heroTitle.value,
-        intro: heroIntro.value,
-        gallery: page.value.galleryImages,
-        introImageUrl: page.value.galleryImages[0]?.url || '',
-        readingImageUrl: page.value.galleryImages[1]?.url || '',
-        teacherImageUrl: page.value.galleryImages[2]?.url || '',
-        studyImageUrl: page.value.galleryImages[3]?.url || '',
-        statsBand: statsBand.value,
-        sections: page.value.sections.map(s => ({
-          id: s.id,
-          label: s.label,
-          heading: s.heading,
-          body: s.body,
-          items: s.items,
-        })),
+        headline: draft.hero.title,
+        intro: draft.hero.intro,
+        gallery: draft.images,
+        introImageUrl: draft.images[0]?.url || '',
+        readingImageUrl: draft.images[1]?.url || '',
+        teacherImageUrl: draft.images[2]?.url || '',
+        studyImageUrl: draft.images[3]?.url || '',
+        statsBand: draft.stats,
+        sections: [
+          {
+            id: 'education-work',
+            label: 'What we do',
+            heading: 'What we do',
+            body: 'Full list of what the education program does, shown on the public Education page.',
+            items: workItems,
+          },
+          {
+            id: 'education-approach',
+            label: 'Approach',
+            heading: 'Our approach',
+            body: draft.approachText,
+            items: '',
+          },
+          {
+            id: 'education-why',
+            label: 'Why it matters',
+            heading: 'Why it matters',
+            body: 'Why the education program matters, shown on the public Education page.',
+            items: whyItems,
+          },
+          {
+            id: 'education-team',
+            label: 'Organizational Structure',
+            heading: 'Who delivers education on the ground',
+            body: 'Our dedicated team works across provinces to ensure every child has access to quality education.',
+            items: teamItems,
+          },
+        ],
       },
-      updated_at: now,
+      updated_at: new Date().toISOString(),
     }
 
-    saveToLocalStorage()
-
-    let { error } = await supabase
-      .from('programs')
-      .upsert(payload, { onConflict: 'slug' })
+    let { error } = await supabase.from('programs').upsert(payload, { onConflict: 'slug' })
 
     if (error && error.message?.includes('row-level security')) {
-      console.warn('Upsert blocked by RLS, trying insert/update separately...')
-
-      const { error: insertError } = await supabase
-        .from('programs')
-        .insert(payload)
-
+      const { error: insertError } = await supabase.from('programs').insert(payload)
       if (insertError && insertError.message?.includes('duplicate key')) {
-        const { error: updateError } = await supabase
-          .from('programs')
-          .update(payload)
-          .eq('slug', 'programs-education')
-
-        if (updateError) {
-          error = updateError
-        } else {
-          error = null
-        }
-      } else if (insertError) {
-        error = insertError
+        const { error: updateError } = await supabase.from('programs').update(payload).eq('slug', PROGRAM_SLUG)
+        error = updateError ?? null
       } else {
-        error = null
+        error = insertError ?? null
       }
     }
 
-    if (error) {
-      console.warn('Supabase save failed:', error)
-      ui.addToast(`DB write blocked: ${error.message}`, 'error')
-      saveToLocalStorage()
-      storageMode.value = 'local'
-      savedSnapshot.value = snapshotData()
-      saving.value = false
-      return
-    }
+    if (error) throw error
 
     rawMetadata.value = payload.metadata
     storageMode.value = 'supabase'
-    savedSnapshot.value = snapshotData()
-    ui.addToast('Education page saved!', 'success')
-  } catch (e: unknown) {
-    console.error('Save crashed:', e)
-    ui.addToast('Saved to browser (database error)', 'info')
+    updatedAt.value = payload.updated_at
+    ui.addToast('Education page saved.', 'success')
+    updateSnapshot()
+  } catch (error) {
+    console.error('[EducationDashboard] save failed:', error)
     storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
+    ui.addToast(error instanceof Error ? `Could not save: ${error.message}` : 'Could not save Education page.', 'error')
   } finally {
     saving.value = false
   }
 }
 
-function padGalleryToFour() {
-  while (page.value.galleryImages.length < 4) {
-    page.value.galleryImages.push({
-      id: genId(),
-      label: IMAGE_MAP[page.value.galleryImages.length]?.label || `Image ${page.value.galleryImages.length + 1}`,
-      url: '',
-    })
-  }
+function validateDraft() {
+  if (!draft.hero.title.trim()) return 'Page title is required.'
+  if (!draft.stats.length) return 'Add at least one statistic.'
+  if (draft.stats.some((s) => !s.label.trim())) return 'Each statistic needs a label.'
+  if (draft.team.some((c) => !c.role.trim())) return 'Each team card needs a role.'
+  return ''
 }
 
-function missingImageWarning(): string {
-  const names: string[] = []
-  if (!page.value.galleryImages[0]?.url?.trim()) names.push('Intro Section')
-  if (!page.value.galleryImages[1]?.url?.trim()) names.push('What We Do — Reading')
-  if (!page.value.galleryImages[2]?.url?.trim()) names.push('What We Do — Teacher')
-  if (!page.value.galleryImages[3]?.url?.trim()) names.push('Why It Matters — Study')
-  if (names.length === 0) return ''
-  return `${names.length} image slot${names.length > 1 ? 's' : ''} missing: ${names.join(', ')}. These sections will show the default fallback image.`
+function addStat() {
+  if (!canAddStat.value) return
+  draft.stats.push({ number: '', label: '', description: '' })
 }
 
-function clearGalleryImage(index: number) {
-  const slotName = IMAGE_MAP[index]?.label || `Slot ${index + 1}`
-  if (!page.value.galleryImages[index]?.url?.trim()) return
-
-  ui.openModal(
-    'Remove image',
-    `Are you sure you want to remove the image from <strong>${slotName}</strong>? The public page will show the default fallback image instead.`,
+function removeStat(index: number) {
+  const stat = draft.stats[index]
+  if (!stat) return
+  confirmDialog(
+    'Remove statistic?',
+    `Remove "${stat.number} ${stat.label}" from the public Education page?`,
     () => {
-      page.value.galleryImages[index]!.url = ''
-      ui.addToast(`Image removed from "${slotName}".`, 'success')
-      void savePageContent()
+      draft.stats.splice(index, 1)
+      ui.addToast('Statistic removed.', 'warning')
     },
   )
 }
 
-function confirmDeleteStat(index: number) {
-  const stat = statsBand.value[index]
-  const label = stat?.label?.trim() || `Stat ${index + 1}`
-  ui.openModal(
-    'Delete statistic',
-    `Permanently delete <strong>${stat?.number || ''} ${label}</strong>? This action cannot be undone.`,
+function addTeamCard() {
+  if (!canAddTeamCard.value) return
+  draft.team.push({ role: 'New role', icon: 'chart', desc: 'Describe this role.' })
+}
+
+function removeTeamCard(index: number) {
+  const card = draft.team[index]
+  if (!card) return
+  confirmDialog(
+    'Remove team card?',
+    `Remove "${card.role}" from the organizational structure?`,
     () => {
-      statsBand.value.splice(index, 1)
-      ui.addToast(`Statistic "${label}" deleted.`, 'success')
+      draft.team.splice(index, 1)
+      ui.addToast('Team card removed.', 'warning')
     },
   )
 }
 
-function confirmDeleteTeamCard(index: number) {
-  const card = teamCards.value[index]
-  const role = card?.role?.trim() || `Card ${index + 1}`
-  ui.openModal(
-    'Delete team card',
-    `Permanently delete the <strong>${role}</strong> card from the organizational structure? This action cannot be undone.`,
-    () => {
-      teamCards.value.splice(index, 1)
-      ui.addToast(`Team card "${role}" deleted.`, 'success')
-    },
-  )
+function addWorkItem() {
+  if (!canAddWorkItem.value) return
+  draft.workItems.push('New item')
 }
 
-function onGalleryImageSaved(msg: string) {
-  ui.addToast(msg, 'success')
-  void savePageContent()
+function removeWorkItem(index: number) {
+  draft.workItems.splice(index, 1)
 }
 
+function addWhyItem() {
+  if (!canAddWhyItem.value) return
+  draft.whyItems.push('New item')
+}
 
-onMounted(async () => {
-  try {
-    await auth.init()
-  } catch (e) {
-    console.warn('[EducationDashboard] auth.init() failed:', e)
-  }
-  try {
-    await loadPageContent()
-  } catch (e) {
-    console.error('[EducationDashboard] loadPageContent() crashed:', e)
-    loadFromLocalStorage()
-    storageMode.value = 'local'
-    savedSnapshot.value = snapshotData()
-    loading.value = false
-  }
-})
+function removeWhyItem(index: number) {
+  draft.whyItems.splice(index, 1)
+}
+
+function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
+  const target = index + direction
+  if (target < 0 || target >= items.length) return
+  const current = items[index]
+  const next = items[target]
+  if (!current || !next) return
+  items[index] = next
+  items[target] = current
+}
 </script>
 
 <template>
@@ -511,210 +454,281 @@ onMounted(async () => {
 
       <main class="manager-main">
         <header class="manager-hero">
-          <div class="hero-glow" aria-hidden="true"></div>
-          <div class="hero-accent-line" aria-hidden="true"></div>
-          <div class="hero-content-wrap">
-            <div class="hero-icon-wrap">
-              <v-icon size="22" color="primary">mdi-book-open-variant</v-icon>
-            </div>
-            <div class="manager-title">
-              <p class="eyebrow">Education Program</p>
-              <h1>Manage Education page</h1>
-            </div>
+          <div class="manager-title">
+            <h1>Manage Education page</h1>
+            <v-chip size="small" variant="tonal" :color="storageMode === 'supabase' ? 'success' : 'warning'">
+              {{ storageMode === 'supabase' ? 'Database' : 'Local only' }}
+            </v-chip>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/programs/education" target="_blank" size="small">
-              <v-icon start size="16">mdi-open-in-new</v-icon>
+            <v-btn variant="tonal" to="/programs/education" target="_blank">
+              <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn
-              variant="tonal"
-              :color="editing ? 'primary' : 'default'"
-              size="small"
-              @click="toggleEditing"
-            >
-              <v-icon start size="16">{{ editing ? 'mdi-lock-open' : 'mdi-lock' }}</v-icon>
-              {{ editing ? 'Editing enabled' : 'Enable editing' }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              size="small"
-              :loading="saving"
-              :disabled="saving || loading || !isDirty || !editing"
-              @click="savePageContent"
-            >
-              <v-icon start size="16">mdi-content-save</v-icon>
-              {{ saving ? 'Saving...' : 'Save changes' }}
             </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
-          <v-progress-circular indeterminate color="primary" :size="36" :width="4" />
-          <span class="mt-4 font-weight-bold">Loading Education content...</span>
-        </div>
+        <v-fade-transition mode="out-in" @after-enter="updateActiveSectionFromScroll">
+          <div v-if="loading" key="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading Education content...</span>
+          </div>
 
-        <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
-          <!-- ═══ Quick links ═══ -->
-          <CollapsiblePanel
-            v-model:expanded="expandedPanels['quick-links']"
-            title="Related tools"
-            kicker="Shortcuts"
-            heading-id="quick-links-heading"
-          >
-            <template #icon>
-              <v-icon size="18">mdi-folder-open</v-icon>
-            </template>
+          <div v-else key="content" class="content-grid">
 
-            <div class="quick-links-body">
-              <RouterLink class="quick-link" to="/admin/media">
-                <v-icon size="18">mdi-folder-open</v-icon>
-                <div>
-                  <strong>Media Library</strong>
-                  <span>Upload images for this page</span>
-                </div>
-              </RouterLink>
-              <RouterLink class="quick-link" to="/admin/modules/programs">
-                <v-icon size="18">mdi-layers</v-icon>
-                <div>
-                  <strong>Program Records</strong>
-                  <span>Manage education data entries</span>
-                </div>
-              </RouterLink>
-            </div>
-          </CollapsiblePanel>
+          <AdminSectionNav
+            :sections="sections"
+            :active-section="activeSection"
+            :has-changes="hasChanges"
+            :saving="saving"
+            aria-label="Education page sections"
+            save-label="Save changes"
+            @navigate="scrollToSection"
+            @save="savePage"
+          />
 
-          <!-- ═══ Page header ═══ -->
-          <CollapsiblePanel
-            v-model:expanded="expandedPanels['page-header']"
-            title="Page title &amp; intro"
+          <!-- ── HEADER ── -->
+          <AdminEditorPanel
+            :id="sections[0].id"
             kicker="Public page header"
-            heading-id="page-header-heading"
+            heading="Page title & intro"
+            :editing="!!editingSections.header"
+            :collapsed="collapsedSections.header"
+            @toggle-edit="toggleEdit('header')"
+            @cancel="cancelEdit('header')"
+            @toggle-collapse="toggleCollapse('header')"
           >
-            <template #icon>
-              <v-icon size="18">mdi-format-title</v-icon>
-            </template>
-
-            <p class="panel-desc">Edit the main title and intro paragraph shown at the top of the public Education page.</p>
-            <div class="header-field">
-              <label for="edu-hero-title">Page title</label>
-              <v-text-field id="edu-hero-title" v-model="heroTitle" placeholder="e.g. Access to Education" hide-details density="comfortable" variant="outlined" />
+            <div class="panel-body form-grid">
+              <v-text-field v-model="draft.hero.title" label="Page title" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" class="field-wide" />
+              <v-textarea v-model="draft.hero.intro" label="Intro paragraph" rows="3" :disabled="!editingSections.header" hide-details density="comfortable" variant="outlined" class="field-wide" />
             </div>
-            <div class="header-field">
-              <label for="edu-hero-intro">Intro paragraph</label>
-              <v-textarea id="edu-hero-intro" v-model="heroIntro" rows="3" placeholder="Short paragraph introducing the program" hide-details density="comfortable" variant="outlined" />
-            </div>
-          </CollapsiblePanel>
+          </AdminEditorPanel>
 
-          <!-- ═══ Page images ═══ -->
-          <CollapsiblePanel
-            v-model:expanded="expandedPanels['page-images']"
-            title="Page images"
+          <!-- ── IMAGES ── -->
+          <AdminEditorPanel
+            :id="sections[1].id"
             kicker="Public page"
-            heading-id="images-heading"
+            heading="Page images"
+            :editing="!!editingSections.images"
+            :collapsed="collapsedSections.images"
+            @toggle-edit="toggleEdit('images')"
+            @cancel="cancelEdit('images')"
+            @toggle-collapse="toggleCollapse('images')"
           >
-            <template #icon>
-              <v-icon size="18">mdi-image</v-icon>
-            </template>
-
-            <p class="panel-desc">Upload a photo from your computer or paste a URL for each section below. Clear a slot to fall back to the default image.</p>
-            <v-alert v-if="missingImageWarning()" type="warning" variant="tonal" density="compact" class="mb-3">
-              {{ missingImageWarning() }}
-            </v-alert>
-
-            <div class="image-slot-grid">
-              <ImageSlotEditor
-                v-for="(slot, index) in imageSlots"
-                :key="slot.index"
-                v-model="page.galleryImages[slot.index]!.url"
-                :index="index"
-                :badge="slot.badge"
-                :hint="slot.hint"
-                :alt="slot.label"
-                @clear="clearGalleryImage(slot.index)"
-                @saved="onGalleryImageSaved"
-                @error="(msg) => ui.addToast(msg, 'error')"
-              />
+            <div class="image-slot-grid pa-4">
+              <div v-for="(image, index) in draft.images" :key="image.id" class="image-slot">
+                <v-img v-if="image.url" :src="image.url" aspect-ratio="1.4" cover class="image-preview" />
+                <div v-else class="image-preview image-preview-empty">
+                  <v-icon size="28">mdi-image-outline</v-icon>
+                </div>
+                <span class="image-slot-label">{{ IMAGE_SLOTS[index]?.label || image.label }}</span>
+                <AdminUploadButton
+                  :disabled="!editingSections.images"
+                  :description="IMAGE_SLOTS[index]?.description || 'Education image'"
+                  @update:model-value="(url) => (image.url = url)"
+                />
+              </div>
             </div>
-          </CollapsiblePanel>
+          </AdminEditorPanel>
 
-          <!-- ═══ Stats band ═══ -->
-          <CollapsiblePanel
-            v-model:expanded="expandedPanels['stats']"
-            title="Impact statistics"
+          <!-- ── STATS ── -->
+          <AdminEditorPanel
+            :id="sections[2].id"
             kicker="Stats band"
-            heading-id="stats-heading"
+            heading="Impact statistics"
+            :editing="!!editingSections.stats"
+            :collapsed="collapsedSections.stats"
+            @toggle-edit="toggleEdit('stats')"
+            @cancel="cancelEdit('stats')"
+            @toggle-collapse="toggleCollapse('stats')"
           >
-            <template #icon>
-              <v-icon size="18">mdi-layers</v-icon>
-            </template>
-            <template #actions>
-              <v-btn v-if="editing" variant="tonal" color="accent" size="small" @click="statsBand.push({ number: '', label: '', description: '' })">
-                <v-icon start size="15">mdi-plus</v-icon>
-                Add stat
-              </v-btn>
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddStat" @click="addStat">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add stat
+                </v-btn>
+              </v-fade-transition>
             </template>
 
-            <p class="panel-desc">Edit the statistics shown on the public Education page.</p>
-            <div class="stack-list">
-              <StatItemEditor
-                v-for="(stat, index) in statsBand"
-                :key="index"
-                v-model="statsBand[index]!"
-                :index="index"
-                @remove="confirmDeleteStat(index)"
-              />
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(stat, index) in draft.stats" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.stats || index === 0" aria-label="Move stat up" @click="moveItem(draft.stats, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.stats || index === draft.stats.length - 1" aria-label="Move stat down" @click="moveItem(draft.stats, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.stats" icon color="error" variant="tonal" size="x-small" aria-label="Remove stat" @click="removeStat(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields stat-fields">
+                    <v-text-field v-model="stat.number" label="Number" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" />
+                    <v-text-field v-model="stat.label" label="Label" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" />
+                    <v-textarea v-model="stat.description" label="Description" rows="2" :disabled="!editingSections.stats" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
             </div>
-          </CollapsiblePanel>
+          </AdminEditorPanel>
 
-          <!-- ═══ Content sections ═══ -->
-          <CollapsiblePanel
-            v-model:expanded="expandedPanels['content']"
-            title="What we do, approach &amp; why it matters"
+          <!-- ── CONTENT ── -->
+          <AdminEditorPanel
+            :id="sections[3].id"
             kicker="Content"
-            heading-id="sections-heading"
+            heading="What we do, approach & why it matters"
+            :editing="!!editingSections.content"
+            :collapsed="collapsedSections.content"
+            @toggle-edit="toggleEdit('content')"
+            @cancel="cancelEdit('content')"
+            @toggle-collapse="toggleCollapse('content')"
           >
-            <template #icon>
-              <v-icon size="18">mdi-book-open-variant</v-icon>
-            </template>
-
-            <p class="panel-desc">Edit the main content blocks shown on the public Education page.</p>
-            <div class="stack-list">
-              <SectionItemEditor v-for="section in contentSections" :key="section.id" :section="section" />
+            <div class="pa-4 content-subsection">
+              <div class="content-subhead">
+                <h3>What we do</h3>
+                <v-btn v-if="editingSections.content" size="x-small" variant="tonal" :disabled="!canAddWorkItem" @click="addWorkItem">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add item
+                </v-btn>
+              </div>
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(item, index) in draft.workItems" :key="'work-' + index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === 0" aria-label="Move item up" @click="moveItem(draft.workItems, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === draft.workItems.length - 1" aria-label="Move item down" @click="moveItem(draft.workItems, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.content" icon color="error" variant="tonal" size="x-small" aria-label="Remove item" @click="removeWorkItem(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="draft.workItems[index]" label="Item" :disabled="!editingSections.content" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
             </div>
-          </CollapsiblePanel>
 
-          <!-- ═══ Team cards ═══ -->
-          <CollapsiblePanel
-            v-model:expanded="expandedPanels['team']"
-            title="Team cards"
+            <v-divider />
+
+            <div class="pa-4 content-subsection">
+              <div class="content-subhead">
+                <h3>Our approach</h3>
+              </div>
+              <v-textarea v-model="draft.approachText" label="Approach text" rows="4" :disabled="!editingSections.content" hide-details density="comfortable" variant="outlined" />
+            </div>
+
+            <v-divider />
+
+            <div class="pa-4 content-subsection">
+              <div class="content-subhead">
+                <h3>Why it matters</h3>
+                <v-btn v-if="editingSections.content" size="x-small" variant="tonal" :disabled="!canAddWhyItem" @click="addWhyItem">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add item
+                </v-btn>
+              </div>
+              <v-slide-y-transition group tag="div" class="items-list">
+                <article v-for="(item, index) in draft.whyItems" :key="'why-' + index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === 0" aria-label="Move item up" @click="moveItem(draft.whyItems, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.content || index === draft.whyItems.length - 1" aria-label="Move item down" @click="moveItem(draft.whyItems, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.content" icon color="error" variant="tonal" size="x-small" aria-label="Remove item" @click="removeWhyItem(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="draft.whyItems[index]" label="Item" :disabled="!editingSections.content" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
+            </div>
+          </AdminEditorPanel>
+
+          <!-- ── TEAM ── -->
+          <AdminEditorPanel
+            :id="sections[4].id"
             kicker="Organizational structure"
-            heading-id="team-heading"
+            heading="Who delivers education on the ground"
+            :editing="!!editingSections.team"
+            :collapsed="collapsedSections.team"
+            @toggle-edit="toggleEdit('team')"
+            @cancel="cancelEdit('team')"
+            @toggle-collapse="toggleCollapse('team')"
           >
-            <template #icon>
-              <v-icon size="18">mdi-account-group</v-icon>
-            </template>
-            <template #actions>
-              <v-btn v-if="editing" variant="tonal" color="accent" size="small" @click="teamCards.push({ role: '', icon: 'chart', desc: '' })">
-                <v-icon start size="15">mdi-plus</v-icon>
-                Add card
-              </v-btn>
+            <template #actions="{ editing }">
+              <v-fade-transition>
+                <v-btn v-if="editing" color="accent" variant="flat" size="small" :disabled="!canAddTeamCard" @click="addTeamCard">
+                  <v-icon start>mdi-plus</v-icon>
+                  Add card
+                </v-btn>
+              </v-fade-transition>
             </template>
 
-            <p class="panel-desc">Edit the team shown in the "Who delivers education on the ground" section.</p>
-            <div class="stack-list">
-              <TeamCardEditor
-                v-for="(card, index) in teamCards"
-                :key="index"
-                v-model="teamCards[index]!"
-                :index="index"
-                @remove="confirmDeleteTeamCard(index)"
-              />
+            <div class="pa-4">
+              <v-slide-y-transition group tag="div" class="items-list two-col">
+                <article v-for="(card, index) in draft.team" :key="index" class="item-card">
+                  <header class="item-header">
+                    <div class="item-heading">
+                      <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
+                    </div>
+                    <div class="card-actions">
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.team || index === 0" aria-label="Move card up" @click="moveItem(draft.team, index, -1)">
+                        <v-icon>mdi-chevron-up</v-icon>
+                      </v-btn>
+                      <v-btn icon variant="outlined" size="x-small" :disabled="!editingSections.team || index === draft.team.length - 1" aria-label="Move card down" @click="moveItem(draft.team, index, 1)">
+                        <v-icon>mdi-chevron-down</v-icon>
+                      </v-btn>
+                      <v-btn v-if="editingSections.team" icon color="error" variant="tonal" size="x-small" aria-label="Remove card" @click="removeTeamCard(index)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
+                  </header>
+                  <div class="item-fields">
+                    <v-text-field v-model="card.role" label="Role" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" />
+                    <v-select v-model="card.icon" :items="[...TEAM_ICONS]" label="Icon" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" />
+                    <v-textarea v-model="card.desc" label="Description" rows="2" :disabled="!editingSections.team" hide-details density="compact" variant="outlined" class="field-wide" />
+                  </div>
+                </article>
+              </v-slide-y-transition>
             </div>
-          </CollapsiblePanel>
+          </AdminEditorPanel>
+
         </div>
+    </v-fade-transition>
       </main>
     </div>
+
+    <AdminConfirmDialog
+      v-model="confirmOpen"
+      :title="confirmData.title"
+      :body="confirmData.body"
+      @confirm="confirmData.onConfirm()"
+    />
   </v-app>
 </template>
 
@@ -732,195 +746,182 @@ onMounted(async () => {
 
 .manager-main {
   min-height: 100vh;
-  padding: 1.25rem;
+  padding: 1.5rem 2rem 2.5rem;
 }
 
 .manager-hero {
-  position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 1.25rem;
-  padding: 1.25rem 1.35rem;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: linear-gradient(
-    135deg,
-    var(--admin-theme-surface) 0%,
-    color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface)) 100%
-  );
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
   box-shadow: var(--admin-theme-shadow);
-  overflow: hidden;
-}
-
-.hero-glow {
-  position: absolute;
-  top: -40px;
-  right: -30px;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--admin-theme-primary) 20%, transparent) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-
-.hero-accent-line {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    var(--admin-theme-primary-deep) 0%,
-    color-mix(in srgb, var(--admin-theme-primary) 40%, transparent) 60%,
-    transparent 100%
-  );
-  pointer-events: none;
-}
-
-.hero-content-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  min-width: 0;
-}
-
-.hero-icon-wrap {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
-}
-
-.manager-hero h1,
-.manager-hero p {
-  margin: 0;
 }
 
 .manager-hero h1 {
+  margin: 0;
   color: var(--admin-theme-contrast);
-  font-size: 1.35rem;
+  font-size: 1.32rem;
   line-height: 1.2;
-  font-weight: 900;
 }
 
 .manager-title {
-  display: grid;
-  gap: 0.3rem;
-  min-width: 0;
-}
-
-.manager-meta {
   display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.eyebrow {
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: 0.75rem;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
-.panel-desc {
-  color: var(--admin-theme-muted);
-  font-size: 0.82rem;
-  line-height: 1.5;
-  margin-bottom: 0.85rem;
+.content-grid {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1rem;
 }
 
-.quick-links-body {
+.panel-body {
+  padding: 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.6rem 0.85rem;
+}
+
+.form-grid .field-wide {
+  grid-column: 1 / -1;
+}
+
+/* ── Image slots ── */
+.image-slot-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.65rem;
+  gap: 1rem;
 }
 
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-primary-deep);
-  padding: 0.75rem 0.85rem;
-  text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
-}
-
-.quick-link:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
-  transform: translateY(-1px);
-}
-
-.quick-link strong {
-  display: block;
-  color: var(--admin-theme-contrast);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.quick-link span {
-  display: block;
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-}
-
-.header-field {
+.image-slot {
   display: grid;
-  gap: 0.35rem;
-  margin-bottom: 0.85rem;
+  gap: 0.6rem;
+  align-content: start;
 }
 
-.header-field:last-child {
-  margin-bottom: 0;
-}
-
-.header-field label {
-  color: var(--admin-theme-contrast);
+.image-slot-label {
+  color: var(--admin-theme-muted);
   font-size: 0.78rem;
   font-weight: 700;
 }
 
-.stack-list {
+.image-preview {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: var(--admin-theme-surface);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 8%, transparent),
+    0 12px 24px rgba(15, 95, 73, 0.11);
+}
+
+.image-preview-empty {
+  display: grid;
+  place-items: center;
+  color: var(--admin-theme-muted);
+  aspect-ratio: 1.4;
+}
+
+/* ── Items list (stats / list items / team cards) ── */
+.items-list {
   display: grid;
   gap: 0.75rem;
 }
 
-.image-slot-grid {
+.items-list.two-col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.item-card {
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 8px;
+  background: var(--admin-theme-surface);
+  padding: 0.75rem 1rem;
+}
+
+.item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.item-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.item-number {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 24%, var(--admin-theme-border));
+  border-radius: 6px;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.7rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.item-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
 }
 
-.view-mode :deep(input),
-.view-mode :deep(textarea),
-.view-mode :deep(select) {
-  pointer-events: none;
-  opacity: 0.6;
-  user-select: none;
-  cursor: default;
+.item-fields .field-wide {
+  grid-column: 1 / -1;
+}
+
+.stat-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* ── Content sub-sections ── */
+.content-subsection {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.content-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.content-subhead h3 {
+  margin: 0;
+  color: var(--admin-theme-contrast);
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 @media (min-width: 900px) {
@@ -932,6 +933,7 @@ onMounted(async () => {
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
+    padding-top: calc(60px + 1rem);
   }
 
   .manager-hero {
@@ -943,9 +945,13 @@ onMounted(async () => {
     width: 100%;
   }
 
-  .hero-content-wrap {
-    flex-direction: column;
-    align-items: flex-start;
+  .form-grid,
+  .item-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .items-list.two-col {
+    grid-template-columns: 1fr;
   }
 }
 </style>
