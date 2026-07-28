@@ -14,8 +14,9 @@ const props = defineProps<{
   } | null
 }>()
 
-const headline = computed(() => props.content?.headline || 'Thirty years of walking with villages.')
-const intro = computed(() => props.content?.intro || 'From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones that shaped Santi Sena.')
+const eyebrow = computed(() => props.content?.hero?.eyebrow || 'IMPACT · TIMELINE')
+const headline = computed(() => props.content?.hero?.title || props.content?.headline || 'Thirty years of walking with villages.')
+const intro = computed(() => props.content?.hero?.description || props.content?.intro || 'From a small pagoda in Svay Rieng to 293 villages across three provinces — the milestones that shaped Santi Sena.')
 
 // ─── Milestones data ──────────────────────────────────────────────
 const defaultMilestones = [
@@ -107,6 +108,10 @@ const defaultMilestones = [
 ]
 
 const allMilestones = computed(() => {
+  const cmsMilestones = (props.content as any)?.milestones
+  if (Array.isArray(cmsMilestones) && cmsMilestones.length > 0) {
+    return cmsMilestones
+  }
   const section = props.content?.sections?.find(s => s.id === 'timeline-events')
   if (!section || !section.items) return defaultMilestones
   
@@ -157,19 +162,24 @@ const timelineHeader = computed(() => {
   }
 })
 
-// ─── State ──────────────────────────────────────────────────────────
-const itemsToShow = ref(6)
+const INITIAL_LIMIT = 6
 const showAll = ref(false)
 
+const hasMoreItems = computed(() => allMilestones.value.length > INITIAL_LIMIT)
+
 const visibleMilestones = computed(() => {
-  return showAll.value ? allMilestones.value : allMilestones.value.slice(0, itemsToShow.value)
+  return showAll.value ? allMilestones.value : allMilestones.value.slice(0, INITIAL_LIMIT)
 })
 
 const expanded = ref<boolean[]>([])
 
 watch(allMilestones, (newVal) => {
-  expanded.value = Array.from({ length: newVal.length }, () => false)
-}, { immediate: true })
+  expanded.value = Array.from({ length: newVal?.length || 0 }, () => false)
+  nextTick(() => {
+    setupObservers()
+    updateLineHeight()
+  })
+}, { immediate: true, deep: true })
 
 const cardRefs: (HTMLElement | null)[] = []
 
@@ -177,8 +187,8 @@ function toggleExpand(index: number) {
   expanded.value[index] = !expanded.value[index]
 }
 
-function seeMore() {
-  showAll.value = true
+function toggleSeeMore() {
+  showAll.value = !showAll.value
   nextTick(() => {
     setupObservers()
     updateLineHeight()
@@ -216,17 +226,20 @@ function setupObservers() {
 
   const elements = document.querySelectorAll(selectors.join(','))
   elements.forEach((el) => {
+    const rect = el.getBoundingClientRect()
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      el.classList.add('card-visible')
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             el.classList.add('card-visible')
-          } else {
-            el.classList.remove('card-visible')
           }
         })
       },
-      { threshold: 0.12, rootMargin: '0px 0px -20px 0px' },
+      { threshold: 0.05, rootMargin: '0px 0px -10px 0px' },
     )
     observer.observe(el)
     observers.push(observer)
@@ -257,14 +270,11 @@ onBeforeUnmount(() => {
           <!-- Badge -->
           <div class="hero-badge">
             <span class="badge-dot"></span>
-            IMPACT · TIMELINE
+            {{ eyebrow }}
           </div>
 
           <!-- Main heading -->
-          <h1 class="hero-title">
-            Thirty years of<br />
-            <span class="highlight">walking with villages.</span>
-          </h1>
+          <h1 class="hero-title">{{ headline }}</h1>
 
           <!-- Subtext -->
           <p class="hero-subtext">{{ intro }}</p>
@@ -317,7 +327,7 @@ onBeforeUnmount(() => {
           <div class="timeline">
             <div
               v-for="(item, index) in visibleMilestones"
-              :key="item.year"
+              :key="'ms-' + index + '-' + (item.year || '')"
               class="timeline-item"
               :class="{ 'timeline-item--reverse': index % 2 }"
             >
@@ -357,9 +367,14 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div v-if="!showAll" class="see-more-wrapper">
-            <button class="see-more-btn" @click="seeMore">
-              See more <span class="arrow-down">↓</span>
+          <div v-if="hasMoreItems" class="see-more-wrapper">
+            <button class="see-more-btn" type="button" @click="toggleSeeMore">
+              <template v-if="!showAll">
+                See more <span class="arrow-down">↓</span>
+              </template>
+              <template v-else>
+                Show less <span class="arrow-up">↑</span>
+              </template>
             </button>
           </div>
         </div>
@@ -865,14 +880,14 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 30px rgba(47, 36, 29, 0.06);
   border: 1px solid rgba(47, 36, 29, 0.05);
   transition:
-    transform 0.3s ease,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.3s ease,
-    opacity 0.6s ease,
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.3s ease;
   overflow: hidden;
   cursor: pointer;
   opacity: 0;
-  transform: translateY(30px) scale(0.96);
+  transform: translateY(35px) scale(0.96);
 }
 
 .timeline-card.card-visible {

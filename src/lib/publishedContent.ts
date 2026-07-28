@@ -43,22 +43,44 @@ export type PublishedPageRow = {
 
 export const contentKind = 'santi-sena-page-content'
 
-export function parsePublishedPage(row: PublishedPageRow): PublishedPageContent | null {
-  const body = parseStoredBody(row.body)
-  if (!body) return null
+export function parsePublishedPage(row: PublishedPageRow): any {
+  if (!row || !row.body) return null
+  try {
+    const parsed = JSON.parse(row.body) as unknown
+    if (!isRecord(parsed)) return null
 
-  return {
-    slug: row.slug,
-    title: row.title || body.headline || row.slug,
-    route: body.route,
-    group: body.group,
-    eyebrow: body.eyebrow,
-    headline: body.headline,
-    intro: body.intro,
-    primaryAction: body.primaryAction,
-    secondaryAction: body.secondaryAction,
-    sections: body.sections,
-    updatedAt: row.updated_at ?? '',
+    if (parsed.kind === contentKind) {
+      return {
+        slug: row.slug,
+        title: row.title || getString(parsed, 'headline') || row.slug,
+        route: getString(parsed, 'route'),
+        group: getString(parsed, 'group'),
+        eyebrow: getString(parsed, 'eyebrow'),
+        headline: getString(parsed, 'headline'),
+        intro: getString(parsed, 'intro'),
+        primaryAction: getString(parsed, 'primaryAction'),
+        secondaryAction: getString(parsed, 'secondaryAction'),
+        sections: getSections(parsed.sections),
+        updatedAt: row.updated_at ?? '',
+      }
+    }
+
+    return {
+      ...(parsed as Record<string, unknown>),
+      slug: row.slug,
+      title: row.title || row.slug,
+      route: '',
+      group: '',
+      eyebrow: (parsed as any).hero?.eyebrow || (parsed as any).eyebrow || '',
+      headline: (parsed as any).hero?.title || (parsed as any).headline || '',
+      intro: (parsed as any).hero?.description || (parsed as any).intro || '',
+      primaryAction: '',
+      secondaryAction: '',
+      sections: Array.isArray((parsed as any).sections) ? getSections((parsed as any).sections) : [],
+      updatedAt: row.updated_at ?? '',
+    }
+  } catch {
+    return null
   }
 }
 
