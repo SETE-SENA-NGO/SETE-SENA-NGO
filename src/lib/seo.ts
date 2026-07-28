@@ -113,6 +113,13 @@ function setCanonical(url: string) {
 }
 
 export function applyRouteSeo(to: RouteLocationNormalized) {
+  if (to.name === 'NotFound') {
+    document.title = `Page Not Found — ${SITE_NAME}`
+    setMetaTag('name', 'description', 'The page you requested could not be found.')
+    setMetaTag('name', 'robots', 'noindex, follow')
+    return
+  }
+
   const meta = pageMeta[to.path] ?? {
     title: `${SITE_NAME}`,
     description: DEFAULT_DESCRIPTION,
@@ -121,6 +128,7 @@ export function applyRouteSeo(to: RouteLocationNormalized) {
 
   document.title = meta.title
   setMetaTag('name', 'description', meta.description)
+  setMetaTag('name', 'robots', 'index, follow')
   setCanonical(canonicalUrl)
   setMetaTag('property', 'og:title', meta.title)
   setMetaTag('property', 'og:description', meta.description)
