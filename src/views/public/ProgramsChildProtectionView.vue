@@ -570,10 +570,10 @@ onBeforeUnmount(() => {
 
               <!-- Two square photos, crossing/staggered, overlapping the bottom of the circle -->
               <div class="story-collage-sub story-collage-sub--left">
-                <img :src="cpHeroRef" alt="" />
+                <img :src="cpHeroRef" alt="Santi Sena Child Protection program in Cambodia" />
               </div>
               <div class="story-collage-sub story-collage-sub--right">
-                <img :src="cpHero1Ref" alt="" />
+                <img :src="cpHero1Ref" alt="Children supported by Santi Sena's Child Protection program" />
               </div>
             </div>
           </div>

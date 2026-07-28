@@ -275,7 +275,7 @@ onUnmounted(() => {
     <section id="head-office" class="headquarters-section" aria-labelledby="headquarters-heading">
       <div class="section-intro reveal">
         <p class="section-kicker">{{ headquarters.eyebrow }}</p>
-        <h2 id="headquarters-heading">{{ headquarters.title }}</h2>
+        <h1 id="headquarters-heading">{{ headquarters.title }}</h1>
         <p>
           {{ headquarters.intro }}
         </p>
@@ -369,7 +369,7 @@ onUnmounted(() => {
                   class="contact-map-image"
                   :class="{ 'contact-map-image--night': ui.darkMode }"
                   :src="activeOffice.mapImage"
-                  alt=""
+                  :alt="`Map of ${activeOffice.mapLabel || activeOffice.title || 'Santi Sena office locations'}`"
                 />
                 <img
                   v-if="activeOffice.id !== 'all'"
@@ -930,6 +930,7 @@ onUnmounted(() => {
   text-align: center;
 }
 
+.section-intro h1,
 .section-intro h2 {
   margin: 0.45rem 0 0.65rem;
   color: var(--color-ink);

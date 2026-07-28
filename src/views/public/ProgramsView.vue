@@ -271,7 +271,7 @@ onBeforeUnmount(() => {
         class="goal-card"
         :class="{ reverse: index % 2 === 1 }"
       >
-        <img :src="goal.image" class="goal-media" alt="" loading="lazy" decoding="async" />
+        <img :src="goal.image" class="goal-media" :alt="goal.title || ''" loading="lazy" decoding="async" />
         <div class="goal-overlay" />
 
         <div class="goal-content">

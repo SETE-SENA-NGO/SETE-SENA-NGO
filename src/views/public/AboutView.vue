@@ -136,8 +136,8 @@ function setGeoRef(el: HTMLElement | null, index: number) {
             <span class="section-badge">Our Story</span>
           </div>
           <div class="story-content">
-            <h2 class="story-heading">From the ashes of conflict,<br />a <span class="highlight">seed of peace</span>
-              was planted.</h2>
+            <h1 class="story-heading">From the ashes of conflict,<br />a <span class="highlight">seed of peace</span>
+              was planted.</h1>
             <div class="story-body">
               <p>
                 In the years following the Cambodian Civil War, as the nation began to heal from decades of

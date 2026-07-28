@@ -563,12 +563,12 @@ onBeforeUnmount(() => {
 
           <div class="radial-wrap" ref="radialWrap">
             <div class="radial-center">
-              <img :src="whatWeDoItems[0]?.image" alt="" />
+              <img :src="whatWeDoItems[0]?.image" :alt="whatWeDoItems[0]?.title || ''" />
               <p class="radial-center-text">{{ whatWeDoItems[0]?.text }}</p>
             </div>
 
             <div class="radial-item radial-item--1">
-              <div class="radial-thumb"><img :src="whatWeDoItems[1]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[1]?.image" :alt="whatWeDoItems[1]?.title || ''" /></div>
               <div class="radial-copy">
                 <p class="radial-title">{{ whatWeDoItems[1]?.title }}</p>
                 <p class="radial-text">{{ whatWeDoItems[1]?.text }}</p>
@@ -576,7 +576,7 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="radial-item radial-item--2">
-              <div class="radial-thumb"><img :src="whatWeDoItems[2]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[2]?.image" :alt="whatWeDoItems[2]?.title || ''" /></div>
               <div class="radial-copy">
                 <p class="radial-title">{{ whatWeDoItems[2]?.title }}</p>
                 <p class="radial-text">{{ whatWeDoItems[2]?.text }}</p>
@@ -584,7 +584,7 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="radial-item radial-item--3">
-              <div class="radial-thumb"><img :src="whatWeDoItems[3]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[3]?.image" :alt="whatWeDoItems[3]?.title || ''" /></div>
               <div class="radial-copy">
                 <p class="radial-title">{{ whatWeDoItems[3]?.title }}</p>
                 <p class="radial-text">{{ whatWeDoItems[3]?.text }}</p>
@@ -592,7 +592,7 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="radial-item radial-item--4">
-              <div class="radial-thumb"><img :src="whatWeDoItems[4]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[4]?.image" :alt="whatWeDoItems[4]?.title || ''" /></div>
               <div class="radial-copy">
                 <p class="radial-title">{{ whatWeDoItems[4]?.title }}</p>
                 <p class="radial-text">{{ whatWeDoItems[4]?.text }}</p>
@@ -600,7 +600,7 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="radial-item radial-item--5">
-              <div class="radial-thumb"><img :src="whatWeDoItems[5]?.image" alt="" /></div>
+              <div class="radial-thumb"><img :src="whatWeDoItems[5]?.image" :alt="whatWeDoItems[5]?.title || ''" /></div>
               <div class="radial-copy">
                 <p class="radial-title">{{ whatWeDoItems[5]?.title }}</p>
                 <p class="radial-text">{{ whatWeDoItems[5]?.text }}</p>
@@ -690,7 +690,7 @@ onBeforeUnmount(() => {
               @click="openImpactModal(item)"
               @keydown.enter="openImpactModal(item)"
             >
-              <img :src="item.image" alt="" class="impact-card-img" />
+              <img :src="item.image" :alt="item.text || ''" class="impact-card-img" />
               <div class="impact-card-overlay">
                 <p class="impact-card-text">{{ item.text }}</p>
               </div>
@@ -714,7 +714,7 @@ onBeforeUnmount(() => {
             ✕
           </button>
           <div class="impact-modal-media">
-            <img :src="activeImpactItem.image" alt="" />
+            <img :src="activeImpactItem.image" :alt="activeImpactItem.text || ''" />
           </div>
         </div>
       </div>
