@@ -3,12 +3,14 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUiStore } from '@/stores/ui.store'
 
 const auth = useAuthStore()
 const ui = useUiStore()
+useAdminTheme()
 
 // ── State ──
 const loading = ref(true)
@@ -72,35 +74,35 @@ const quickActions = [
     detail: 'Update homepage content & slideshow',
     to: '/admin/editor/home',
     color: 'emerald',
-    icon: 'home',
+    icon: 'mdi-home',
   },
   {
     label: 'Manage Programs',
     detail: 'All 4 program pillars',
     to: '/admin/programs',
     color: 'blue',
-    icon: 'layers',
+    icon: 'mdi-layers',
   },
   {
     label: 'Media Library',
     detail: 'Upload & manage images',
     to: '/admin/media',
     color: 'violet',
-    icon: 'image',
+    icon: 'mdi-image',
   },
   {
     label: 'Contact Page',
     detail: 'Offices, form & Telegram',
     to: '/admin/contact',
     color: 'cyan',
-    icon: 'message-square',
+    icon: 'mdi-message-text',
   },
   {
     label: 'Donation QR',
     detail: 'Bank accounts & QR codes',
     to: '/admin/donate',
     color: 'rose',
-    icon: 'credit-card',
+    icon: 'mdi-credit-card',
   },
 ]
 
@@ -220,42 +222,35 @@ const pillarStats = computed(() => {
 </script>
 
 <template>
-  <div :class="['dash-root', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['dash-root', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="dash-flex">
       <AdminSidebar />
 
       <main class="dash-main">
         <!-- Loading -->
-        <Transition name="fade">
-          <div v-if="loading" class="dash-loading">
-            <div class="load-spinner" aria-label="Loading dashboard">
-              <span class="spin-ring"></span>
-              <span>Loading dashboard...</span>
-            </div>
+        <div v-if="loading" class="dash-loading">
+          <div class="d-flex flex-column align-center">
+            <v-progress-circular indeterminate color="primary" :size="36" :width="4" />
+            <span class="mt-4 font-weight-bold text-medium-emphasis">Loading dashboard...</span>
           </div>
-        </Transition>
+        </div>
 
         <!-- Error -->
-        <Transition name="fade">
-          <div v-if="loadError && !loading" class="dash-error">
-            <div class="err-card">
-              <span class="err-icon">⚠️</span>
-              <div>
-                <strong>Could not load dashboard</strong>
-                <p>{{ loadError }}</p>
-              </div>
-              <button type="button" class="btn btn-secondary" @click="loadDashboard">Retry</button>
-            </div>
-          </div>
-        </Transition>
+        <v-alert v-if="loadError && !loading" type="error" variant="tonal" density="comfortable" class="mb-3">
+          <template #title>Could not load dashboard</template>
+          {{ loadError }}
+          <template #append>
+            <v-btn variant="outlined" size="small" @click="loadDashboard">Retry</v-btn>
+          </template>
+        </v-alert>
 
         <!-- Content -->
         <div v-if="!loading" class="dash-content">
           <!-- ── Welcome Banner ── -->
           <header class="welcome-banner">
             <div class="welcome-text">
-              <div class="welcome-badge">{{ adminRole }}</div>
+              <v-chip size="x-small" variant="tonal" color="primary" class="mb-1">{{ adminRole }}</v-chip>
               <h1 class="welcome-heading">
                 {{ greeting }}, <span class="welcome-name">{{ adminName }}</span>
               </h1>
@@ -264,14 +259,14 @@ const pillarStats = computed(() => {
               </p>
             </div>
             <div class="welcome-actions">
-              <RouterLink to="/admin/editor/home" class="btn btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                <span>Edit homepage</span>
-              </RouterLink>
-              <RouterLink to="/admin/programs" class="btn btn-ghost">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
-                <span>Manage programs</span>
-              </RouterLink>
+              <v-btn color="primary" variant="tonal" to="/admin/editor/home" size="small">
+                <v-icon start size="16">mdi-pencil</v-icon>
+                Edit homepage
+              </v-btn>
+              <v-btn variant="tonal" to="/admin/programs" size="small">
+                <v-icon start size="16">mdi-layers</v-icon>
+                Manage programs
+              </v-btn>
             </div>
           </header>
 
@@ -279,33 +274,33 @@ const pillarStats = computed(() => {
           <section class="stats-grid" aria-label="Content statistics">
             <article class="stat-card card-emerald">
               <div class="stat-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <v-icon size="20">mdi-file-document-outline</v-icon>
               </div>
               <div class="stat-body">
                 <strong class="stat-value">{{ stats.pages.total }}</strong>
                 <span class="stat-label">Pages</span>
               </div>
-              <div v-if="stats.pages.total" class="stat-badge" :style="{ '--badge-color': '#10b981' }">
+              <div v-if="stats.pages.total" class="stat-badge" style="--badge-color: #10b981">
                 {{ stats.pages.published }} published
               </div>
             </article>
 
             <article class="stat-card card-blue">
               <div class="stat-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
+                <v-icon size="20">mdi-layers</v-icon>
               </div>
               <div class="stat-body">
                 <strong class="stat-value">{{ stats.programs.total }}</strong>
                 <span class="stat-label">Programs</span>
               </div>
-              <div v-if="stats.programs.total" class="stat-badge" :style="{ '--badge-color': '#3b82f6' }">
+              <div v-if="stats.programs.total" class="stat-badge" style="--badge-color: #3b82f6">
                 {{ stats.programs.published }} active
               </div>
             </article>
 
             <article class="stat-card card-violet">
               <div class="stat-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <v-icon size="20">mdi-image</v-icon>
               </div>
               <div class="stat-body">
                 <strong class="stat-value">{{ stats.media }}</strong>
@@ -315,7 +310,7 @@ const pillarStats = computed(() => {
 
             <article class="stat-card card-cyan">
               <div class="stat-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <v-icon size="20">mdi-account-group</v-icon>
               </div>
               <div class="stat-body">
                 <strong class="stat-value">{{ stats.profiles }}</strong>
@@ -325,7 +320,7 @@ const pillarStats = computed(() => {
 
             <article class="stat-card card-rose">
               <div class="stat-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>
+                <v-icon size="20">mdi-credit-card-outline</v-icon>
               </div>
               <div class="stat-body">
                 <strong class="stat-value">{{ stats.partners }}</strong>
@@ -343,7 +338,7 @@ const pillarStats = computed(() => {
                   <p class="chart-kicker">Content status</p>
                   <h2 class="chart-title">Published vs Draft</h2>
                 </div>
-                <span class="chart-total">{{ totalContent }} total</span>
+                <v-chip size="x-small" variant="tonal">{{ totalContent }} total</v-chip>
               </header>
               <div class="chart-body chart-body-center">
                 <div
@@ -392,7 +387,7 @@ const pillarStats = computed(() => {
                   <p class="chart-kicker">Programs</p>
                   <h2 class="chart-title">Pillar overview</h2>
                 </div>
-                <RouterLink to="/admin/programs" class="chart-link">Manage</RouterLink>
+                <v-btn variant="tonal" size="x-small" to="/admin/programs">Manage</v-btn>
               </header>
               <div class="chart-body">
                 <div v-for="pillar in pillarStats" :key="pillar.key" class="pillar-row">
@@ -402,9 +397,9 @@ const pillarStats = computed(() => {
                       <strong>{{ pillar.label }}</strong>
                       <small>{{ pillar.total }} program{{ pillar.total !== 1 ? 's' : '' }}</small>
                     </div>
-                    <div class="pillar-badge" v-if="pillar.published" :style="{ background: pillar.color + '18', color: pillar.color }">
+                    <v-chip v-if="pillar.published" size="x-small" variant="tonal" :color="pillar.color" class="pillar-badge-v">
                       {{ pillar.published }} active
-                    </div>
+                    </v-chip>
                   </div>
                   <div class="pillar-bar-track">
                     <div
@@ -426,7 +421,7 @@ const pillarStats = computed(() => {
                   <p class="chart-kicker">Activity</p>
                   <h2 class="chart-title">Recent updates</h2>
                 </div>
-                <span class="chart-total">Latest</span>
+                <v-chip size="x-small" variant="tonal">Latest</v-chip>
               </header>
               <div class="chart-body chart-body-scroll">
                 <div v-if="!recentPages.length" class="empty-state">
@@ -434,12 +429,12 @@ const pillarStats = computed(() => {
                 </div>
                 <div v-for="page in recentPages.slice(0, 6)" :key="'page-' + page.slug" class="activity-row">
                   <div class="activity-icon-wrap" style="background: #10b98112; color: #10b981">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <v-icon size="14">mdi-file-document-outline</v-icon>
                   </div>
                   <div class="activity-body">
                     <div class="activity-head">
                       <RouterLink :to="`/admin/editor/${page.slug}`" class="activity-title">{{ page.title }}</RouterLink>
-                      <span class="activity-status" :style="{ background: statusColor(page.status) + '18', color: statusColor(page.status) }">{{ page.status }}</span>
+                      <v-chip size="x-small" variant="tonal" :color="statusColor(page.status)">{{ page.status }}</v-chip>
                     </div>
                     <span class="activity-meta">{{ page.locale === 'kh' ? 'Khmer' : 'English' }} · {{ formatDate(page.updated_at) }}</span>
                   </div>
@@ -465,25 +460,20 @@ const pillarStats = computed(() => {
                 :class="'accent-' + action.color"
               >
                 <div class="action-icon-wrap" aria-hidden="true">
-                  <svg v-if="action.icon === 'home'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                  <svg v-else-if="action.icon === 'layers'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
-                  <svg v-else-if="action.icon === 'file-text'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                  <svg v-else-if="action.icon === 'image'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                  <svg v-else-if="action.icon === 'message-square'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  <svg v-else-if="action.icon === 'credit-card'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>
+                  <v-icon size="18">{{ action.icon }}</v-icon>
                 </div>
                 <div class="action-body">
                   <strong>{{ action.label }}</strong>
                   <small>{{ action.detail }}</small>
                 </div>
-                <svg class="action-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                <v-icon size="14" class="action-chevron">mdi-chevron-right</v-icon>
               </RouterLink>
             </div>
           </section>
         </div>
       </main>
     </div>
-  </div>
+  </v-app>
 </template>
 
 <style scoped>
@@ -536,55 +526,6 @@ const pillarStats = computed(() => {
   min-height: 400px;
 }
 
-.load-spinner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  color: var(--dash-muted);
-  font-weight: 700;
-}
-
-.spin-ring {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  border: 3px solid var(--dash-surface-soft);
-  border-top-color: var(--dash-primary);
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.dash-error {
-  padding: 1rem 0;
-}
-
-.err-card {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 12px;
-  background: rgba(239, 68, 68, 0.06);
-}
-
-.err-icon { font-size: 1.3rem; }
-
-.err-card strong {
-  color: #dc2626;
-  font-size: 0.9rem;
-}
-
-.err-card p {
-  margin: 0;
-  color: var(--dash-muted);
-  font-size: 0.82rem;
-}
-
 /* ═══════════════════════════════════════════
    WELCOME BANNER
    ═══════════════════════════════════════════ */
@@ -599,20 +540,6 @@ const pillarStats = computed(() => {
   background: linear-gradient(135deg, var(--dash-surface), var(--dash-surface-soft));
   box-shadow: var(--dash-shadow);
   margin-bottom: 1.25rem;
-}
-
-.welcome-badge {
-  display: inline-flex;
-  padding: 0.2rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  background: color-mix(in srgb, var(--dash-primary) 14%, transparent);
-  color: var(--dash-primary-deep);
-  margin-bottom: 0.5rem;
-  width: fit-content;
 }
 
 .welcome-text {
@@ -648,62 +575,6 @@ const pillarStats = computed(() => {
   gap: 0.55rem;
   flex-shrink: 0;
   flex-wrap: wrap;
-}
-
-/* ═══════════════════════════════════════════
-   BUTTONS
-   ═══════════════════════════════════════════ */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  padding: 0.45rem 1rem;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.btn-primary {
-  background: linear-gradient(180deg, var(--dash-primary), var(--dash-primary-deep));
-  color: #fff;
-  border-color: var(--dash-primary-deep);
-  box-shadow: 0 8px 16px color-mix(in srgb, var(--dash-primary) 24%, transparent);
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px color-mix(in srgb, var(--dash-primary) 32%, transparent);
-}
-
-.btn-ghost {
-  background: var(--dash-surface);
-  color: var(--dash-contrast);
-  border-color: color-mix(in srgb, var(--dash-contrast) 18%, var(--dash-border));
-}
-
-.btn-ghost:hover {
-  border-color: var(--dash-primary);
-  background: color-mix(in srgb, var(--dash-primary) 8%, var(--dash-surface));
-  color: var(--dash-primary-deep);
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background: var(--dash-surface);
-  color: var(--dash-contrast);
-  border-color: var(--dash-border-strong);
-}
-
-.btn-secondary:hover {
-  background: var(--dash-surface-soft);
-  border-color: var(--dash-primary);
 }
 
 /* ═══════════════════════════════════════════
@@ -825,28 +696,6 @@ const pillarStats = computed(() => {
   color: var(--dash-contrast);
   font-size: 0.95rem;
   font-weight: 800;
-}
-
-.chart-total {
-  color: var(--dash-muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.chart-link {
-  color: var(--dash-primary-deep);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  transition: background 0.12s;
-}
-
-.chart-link:hover {
-  background: color-mix(in srgb, var(--dash-primary) 10%, transparent);
 }
 
 .chart-body {
@@ -977,14 +826,6 @@ const pillarStats = computed(() => {
   font-weight: 600;
 }
 
-.pillar-badge {
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
 .pillar-bar-track {
   height: 5px;
   border-radius: 999px;
@@ -1044,17 +885,6 @@ const pillarStats = computed(() => {
 .activity-title:hover {
   color: var(--dash-primary-deep);
   text-decoration: underline;
-}
-
-.activity-status {
-  padding: 0.08rem 0.45rem;
-  border-radius: 999px;
-  font-size: 0.6rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .activity-meta {
@@ -1163,7 +993,6 @@ const pillarStats = computed(() => {
 
 .action-chevron {
   flex-shrink: 0;
-  color: var(--dash-muted);
   transition: transform 0.15s ease;
 }
 
@@ -1178,18 +1007,6 @@ const pillarStats = computed(() => {
 .accent-violet  { --action-accent: #8b5cf6; }
 .accent-cyan    { --action-accent: #06b6d4; }
 .accent-rose    { --action-accent: #f43f5e; }
-
-/* ═══════════════════════════════════════════
-   TRANSITIONS
-   ═══════════════════════════════════════════ */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
 
 /* ═══════════════════════════════════════════
    RESPONSIVE
@@ -1224,11 +1041,6 @@ const pillarStats = computed(() => {
     width: 100%;
   }
 
-  .welcome-actions .btn {
-    flex: 1;
-    justify-content: center;
-  }
-
   .stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1247,27 +1059,5 @@ const pillarStats = computed(() => {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-}
-</style>
-
-<!-- Non-scoped dark mode override to ensure dark background applies in admin-dark mode -->
-<style>
-.admin-dark .admin-page {
-  background: #06100F !important;
-}
-.admin-dark .admin-page .admin-layout {
-  background: #06100F !important;
-}
-.admin-dark .admin-page .main {
-  background: #06100F !important;
-}
-.admin-dark .admin-page .dashboard-card {
-  background: #0a1a14 !important;
-}
-.admin-dark .admin-page .dashboard-panel {
-  background: #0a1a14 !important;
-}
-.admin-dark .admin-page .overview-header {
-  background: #0a1a14 !important;
 }
 </style>
