@@ -4,7 +4,7 @@ export const khmerContentTranslations: Record<string, string> = {
   'Loading page content...': 'កំពុងផ្ទុកមាតិកាទំព័រ...',
   'Page content is not published yet.':
     'មាតិកាទំព័រនេះមិនទាន់បានផ្សព្វផ្សាយនៅឡើយ។',
-  'Santi Sena NGO': 'អង្គការ សន្តិសេនា',
+  'Santisena Cambodia': 'សន្តិសេនា កម្ពុជា',
   'About Santi Sena — Buddhist NGO in Cambodia':
     'អំពីសន្តិសេនា — អង្គការព្រះពុទ្ធសាសនានៅកម្ពុជា',
   'About Santi Sena': 'អំពីសន្តិសេនា',
