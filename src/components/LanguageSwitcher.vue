@@ -2,8 +2,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronDown } from 'lucide-vue-next'
-import FlagKH from '@/components/icons/FlagKH.vue'
-import FlagUK from '@/components/icons/FlagUK.vue'
+import FlagKH from '@/assets/home-image/Flag_of_Cambodia.svg.webp'
+import FlagUK from '@/assets/home-image/English_Logo.jpg'
 import { setLocale, type SupportedLocale } from '@/i18n'
 
 const { locale, t } = useI18n()
@@ -20,7 +20,7 @@ const defaultLanguage = {
   code: SupportedLocale
   labelKey: string
   shortLabel: string
-  icon: typeof FlagKH
+  icon: string
 }
 const languageOptions = [
   defaultLanguage,
@@ -29,7 +29,7 @@ const languageOptions = [
   code: SupportedLocale
   labelKey: string
   shortLabel: string
-  icon: typeof FlagKH
+  icon: string
 }>
 
 const currentLanguage = computed(
@@ -72,7 +72,7 @@ onUnmounted(() => {
       aria-haspopup="menu"
       @click.stop="toggleMenu"
     >
-      <component :is="currentLanguage.icon" aria-hidden="true" />
+      <img :src="currentLanguage.icon" alt="" class="flag-icon" />
       <span class="language-code">{{ currentLanguage.shortLabel }}</span>
       <ChevronDown class="language-chevron" aria-hidden="true" />
     </button>
@@ -89,7 +89,7 @@ onUnmounted(() => {
           :aria-checked="language.code === locale"
           @click="selectLanguage(language.code)"
         >
-          <component :is="language.icon" aria-hidden="true" />
+          <img :src="language.icon" alt="" class="flag-icon" />
           <span>{{ t(language.labelKey) }}</span>
         </button>
       </div>
@@ -133,11 +133,11 @@ onUnmounted(() => {
   color: var(--language-switcher-accent);
 }
 
-.language-trigger :deep(.flag-icon),
-.language-option :deep(.flag-icon) {
+.flag-icon {
   width: 1.25rem;
   height: 0.8rem;
   border-radius: 2px;
+  object-fit: cover;
   flex-shrink: 0;
 }
 
