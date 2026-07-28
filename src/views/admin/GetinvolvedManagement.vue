@@ -519,7 +519,7 @@ function cloneCard(card: SupportCard): SupportCard {
             <h1>Manage get involved page</h1>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/get-involved" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/get-involved" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
             </v-btn>
@@ -601,7 +601,7 @@ function cloneCard(card: SupportCard): SupportCard {
           >
             <template #actions="{ editing }">
               <v-fade-transition>
-                <v-btn v-if="editing" key="add-card" color="accent" variant="flat" size="small" :disabled="!canAddCard" @click="addCard">
+                <v-btn v-if="editing" key="add-card" color="primary" variant="tonal" size="small" :disabled="!canAddCard" @click="addCard">
                   <v-icon start>mdi-plus</v-icon>
                   Add card
                 </v-btn>
@@ -619,10 +619,10 @@ function cloneCard(card: SupportCard): SupportCard {
                     </div>
                   </div>
                   <div class="card-actions">
-                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.cards || index === 0" aria-label="Move card up" @click="moveItem(draft.supportCards, index, -1)">
+                    <v-btn icon variant="tonal" color="primary" size="small" :disabled="!editingSections.cards || index === 0" aria-label="Move card up" @click="moveItem(draft.supportCards, index, -1)">
                       <v-icon>mdi-chevron-up</v-icon>
                     </v-btn>
-                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.cards || index === draft.supportCards.length - 1" aria-label="Move card down" @click="moveItem(draft.supportCards, index, 1)">
+                    <v-btn icon variant="tonal" color="primary" size="small" :disabled="!editingSections.cards || index === draft.supportCards.length - 1" aria-label="Move card down" @click="moveItem(draft.supportCards, index, 1)">
                       <v-icon>mdi-chevron-down</v-icon>
                     </v-btn>
                     <v-btn v-if="editingSections.cards" icon color="error" variant="tonal" size="small" aria-label="Remove card" @click="removeItem(draft.supportCards, index, 'card')">
@@ -666,7 +666,7 @@ function cloneCard(card: SupportCard): SupportCard {
           >
             <template #actions="{ editing }">
               <v-fade-transition>
-                <v-btn v-if="editing" key="add-step" color="accent" variant="flat" size="small" :disabled="!canAddJourneyStep" @click="addJourneyStep">
+                <v-btn v-if="editing" key="add-step" color="primary" variant="tonal" size="small" :disabled="!canAddJourneyStep" @click="addJourneyStep">
                   <v-icon start>mdi-plus</v-icon>
                   Add step
                 </v-btn>
@@ -684,10 +684,10 @@ function cloneCard(card: SupportCard): SupportCard {
                     </div>
                   </div>
                   <div class="card-actions">
-                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.journey || index === 0" aria-label="Move step up" @click="moveItem(draft.journey, index, -1)">
+                    <v-btn icon variant="tonal" color="primary" size="small" :disabled="!editingSections.journey || index === 0" aria-label="Move step up" @click="moveItem(draft.journey, index, -1)">
                       <v-icon>mdi-chevron-up</v-icon>
                     </v-btn>
-                    <v-btn icon variant="outlined" size="small" :disabled="!editingSections.journey || index === draft.journey.length - 1" aria-label="Move step down" @click="moveItem(draft.journey, index, 1)">
+                    <v-btn icon variant="tonal" color="primary" size="small" :disabled="!editingSections.journey || index === draft.journey.length - 1" aria-label="Move step down" @click="moveItem(draft.journey, index, 1)">
                       <v-icon>mdi-chevron-down</v-icon>
                     </v-btn>
                     <v-btn v-if="editingSections.journey" icon color="error" variant="tonal" size="small" aria-label="Remove step" @click="removeItem(draft.journey, index, 'journey step')">

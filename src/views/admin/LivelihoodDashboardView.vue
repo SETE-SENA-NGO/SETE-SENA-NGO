@@ -1,21 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import {
-  BookOpen,
-  ChevronDown,
-  ExternalLink,
-  FolderOpen,
-  Layers,
-  Lock,
-  MessageSquareQuote,
-  Pencil,
-  Plus,
-  Save,
-  Sprout,
-  Trash2,
-  Users,
-} from 'lucide-vue-next'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ImagePickerField from '@/components/admin/ImagePickerField.vue'
@@ -23,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
 const ui = useUiStore()
+useAdminTheme()
 
 /* ─── Types ─────────────────────────────────────── */
 interface WorkItem {
@@ -239,7 +225,6 @@ function snapshotData(): string {
 
 const isDirty = computed(() => savedSnapshot.value !== snapshotData())
 
-/* ─── Load from programs table ─────────────────── */
 async function loadPageContent() {
   loading.value = true
   try {
@@ -304,7 +289,6 @@ async function loadPageContent() {
   }
 }
 
-/* ─── Save to programs table ────────────────────── */
 async function savePageContent() {
   saving.value = true
   try {
@@ -373,7 +357,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :class="['live-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['live-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -384,39 +368,50 @@ onMounted(async () => {
           <div class="hero-accent-line" aria-hidden="true"></div>
           <div class="hero-content-wrap">
             <div class="hero-icon-wrap">
-              <Sprout :size="22" aria-hidden="true" />
+              <v-icon size="22" color="primary">mdi-sprout</v-icon>
             </div>
             <div class="manager-title">
               <p class="eyebrow">Livelihood Program</p>
               <h1>Manage Livelihood page</h1>
-              <div class="manager-meta" aria-label="Editable livelihood summary">
-                <span>{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</span>
-                <span>{{ workItems.length }} work items</span>
-                <span>{{ teamCards.length }} team cards</span>
-                <span v-if="isDirty" class="meta-dirty">Unsaved changes</span>
-                <span v-else-if="page.updatedAt">Saved {{ formatDate(page.updatedAt) }}</span>
+              <div class="manager-meta">
+                <v-chip size="x-small" variant="tonal" color="primary">{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</v-chip>
+                <v-chip size="x-small" variant="tonal" color="primary">{{ workItems.length }} work items</v-chip>
+                <v-chip size="x-small" variant="tonal" color="primary">{{ teamCards.length }} team cards</v-chip>
+                <v-chip v-if="isDirty" size="x-small" variant="tonal" color="warning">Unsaved changes</v-chip>
+                <v-chip v-else-if="page.updatedAt" size="x-small" variant="tonal" color="success">Saved {{ formatDate(page.updatedAt) }}</v-chip>
               </div>
             </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/programs/livelihood">
-              <ExternalLink :size="16" aria-hidden="true" />
-              <span>View page</span>
-            </RouterLink>
-            <button type="button" class="btn btn-edit" :class="{ 'btn-edit-active': editing }" @click="toggleEditing">
-              <Lock :size="15" aria-hidden="true" />
-              <span>{{ editing ? 'Editing enabled' : 'Enable editing' }}</span>
-            </button>
-            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty || !editing" @click="savePageContent">
-              <Save :size="16" aria-hidden="true" />
-              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
-            </button>
+            <v-btn variant="tonal" to="/programs/livelihood" target="_blank" size="small">
+              <v-icon start size="16">mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
+            <v-btn
+              variant="tonal"
+              :color="editing ? 'primary' : 'default'"
+              size="small"
+              @click="toggleEditing"
+            >
+              <v-icon start size="16">{{ editing ? 'mdi-lock-open' : 'mdi-lock' }}</v-icon>
+              {{ editing ? 'Editing enabled' : 'Enable editing' }}
+            </v-btn>
+            <v-btn
+              color="primary"
+              size="small"
+              :loading="saving"
+              :disabled="saving || loading || !isDirty || !editing"
+              @click="savePageContent"
+            >
+              <v-icon start size="16">mdi-content-save</v-icon>
+              {{ saving ? 'Saving...' : 'Save changes' }}
+            </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">
-          <span class="state-spinner" aria-hidden="true"></span>
-          <span>Loading Livelihood content...</span>
+        <div v-if="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+          <v-progress-circular indeterminate color="primary" :size="36" :width="4" />
+          <span class="mt-4 font-weight-bold">Loading Livelihood content...</span>
         </div>
 
         <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
@@ -425,7 +420,7 @@ onMounted(async () => {
             <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <FolderOpen :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-folder-open</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Shortcuts</p>
@@ -433,14 +428,14 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }" aria-hidden="true" />
+                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }">mdi-chevron-down</v-icon>
               </div>
             </button>
             <Transition name="collapse">
               <div v-show="expandedPanels['quick-links']" class="panel-body quick-links-body">
                 <RouterLink class="quick-link" to="/admin/media">
-                  <FolderOpen :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-folder-open</v-icon>
                   <div>
                     <strong>Media Library</strong>
                     <span>Upload images for this page</span>
@@ -455,7 +450,7 @@ onMounted(async () => {
             <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['our-work']" @click="togglePanel('our-work')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <BookOpen :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-book-open-variant</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Section 1</p>
@@ -463,8 +458,8 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['our-work'] }" aria-hidden="true" />
+                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['our-work'] }">mdi-chevron-down</v-icon>
               </div>
             </button>
             <Transition name="collapse">
@@ -476,19 +471,14 @@ onMounted(async () => {
                     <header class="sub-editor-header">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
                       <h3>{{ item.title || `Work item ${index + 1}` }}</h3>
-                      <button type="button" class="icon-btn ghost-icon-btn" :disabled="!editing" aria-label="Remove image" @click="clearWorkImage(index)">
-                        <Trash2 :size="14" aria-hidden="true" />
-                      </button>
+                      <v-btn icon variant="text" size="x-small" color="error" @click="clearWorkImage(index)">
+                        <v-icon size="14">mdi-trash-can</v-icon>
+                      </v-btn>
                     </header>
                     <div class="sub-editor-body">
-                      <div class="form-grid">
-                        <label class="field">
-                          <span>Title</span>
-                          <input v-model="item.title" type="text" placeholder="e.g. Integrated Farming" />
-                        </label>
-                      </div>
-                      <div class="field wide upload-wrap" :class="{ 'upload-disabled': !editing }">
-                        <span>Image</span>
+                      <v-text-field v-model="item.title" label="Title" placeholder="e.g. Integrated Farming" hide-details density="compact" variant="outlined" />
+                      <div class="upload-wrap" :class="{ 'upload-disabled': !editing }">
+                        <label class="field-label">Image</label>
                         <ImagePickerField
                           v-model="item.imageUrl"
                           :label="item.title || `Work item ${index + 1} image`"
@@ -500,10 +490,7 @@ onMounted(async () => {
                           <img :src="item.imageUrl" alt="" @error="item.imageUrl = ''" />
                         </div>
                       </div>
-                      <label class="field wide">
-                        <span>Description</span>
-                        <textarea v-model="item.text" rows="2" :placeholder="'Description for ' + item.title"></textarea>
-                      </label>
+                      <v-textarea v-model="item.text" label="Description" rows="2" :placeholder="'Description for ' + item.title" hide-details density="compact" variant="outlined" />
                     </div>
                   </article>
                 </div>
@@ -516,7 +503,7 @@ onMounted(async () => {
             <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['org-structure']" @click="togglePanel('org-structure')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <Users :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-account-group</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Section 2</p>
@@ -524,8 +511,8 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['org-structure'] }" aria-hidden="true" />
+                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['org-structure'] }">mdi-chevron-down</v-icon>
               </div>
             </button>
             <Transition name="collapse">
@@ -538,26 +525,10 @@ onMounted(async () => {
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
                       <h3>{{ card.role || `Team member ${index + 1}` }}</h3>
                     </header>
-                    <div class="sub-editor-body">
-                      <div class="form-grid">
-                        <label class="field">
-                          <span>Role</span>
-                          <input v-model="card.role" type="text" placeholder="e.g. Program Director" />
-                        </label>
-                        <label class="field">
-                          <span>Icon</span>
-                          <select v-model="card.icon">
-                            <option value="compass">Compass</option>
-                            <option value="map">Map</option>
-                            <option value="heart">Heart</option>
-                            <option value="chart">Chart</option>
-                          </select>
-                        </label>
-                      </div>
-                      <label class="field wide">
-                        <span>Description</span>
-                        <textarea v-model="card.desc" rows="2" :placeholder="'Description for ' + card.role"></textarea>
-                      </label>
+                    <div class="sub-editor-body form-grid">
+                      <v-text-field v-model="card.role" label="Role" placeholder="e.g. Program Director" hide-details density="compact" variant="outlined" />
+                      <v-select v-model="card.icon" :items="[{ title: 'Compass', value: 'compass' }, { title: 'Map', value: 'map' }, { title: 'Heart', value: 'heart' }, { title: 'Chart', value: 'chart' }]" label="Icon" hide-details density="compact" variant="outlined" />
+                      <v-textarea v-model="card.desc" label="Description" rows="2" :placeholder="'Description for ' + card.role" hide-details density="compact" variant="outlined" class="field-wide" />
                     </div>
                   </article>
                 </div>
@@ -570,7 +541,7 @@ onMounted(async () => {
             <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['our-impact']" @click="togglePanel('our-impact')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <Layers :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-layers</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Section 3</p>
@@ -578,19 +549,16 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="statsBand.push({ number: '', label: '', description: '' })">
-                  <Plus :size="15" aria-hidden="true" />
-                  <span>Add stat</span>
-                </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('our-impact')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['our-impact'] }" />
-                </button>
+                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
+                <v-btn v-if="editing" variant="tonal" color="accent" size="x-small" @click="statsBand.push({ number: '', label: '', description: '' })">
+                  <v-icon start size="14">mdi-plus</v-icon>
+                  Add stat
+                </v-btn>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['our-impact'] }" @click="togglePanel('our-impact')">mdi-chevron-down</v-icon>
               </div>
             </button>
             <Transition name="collapse">
               <div v-show="expandedPanels['our-impact']" class="panel-body">
-                <!-- Stats -->
                 <p class="panel-desc">Edit the impact statistics and "Why it matters" cards shown on the public page.</p>
 
                 <h3 class="subsection-heading">Impact statistics</h3>
@@ -599,19 +567,13 @@ onMounted(async () => {
                     <header class="sub-editor-header">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
                       <h3>Stat {{ index + 1 }}</h3>
-                      <button type="button" class="icon-btn danger" :disabled="!editing" aria-label="Remove stat" @click="confirmDeleteStat(index)">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
+                      <v-btn v-if="editing" icon variant="tonal" color="error" size="x-small" aria-label="Remove stat" @click="confirmDeleteStat(index)">
+                        <v-icon size="15">mdi-delete</v-icon>
+                      </v-btn>
                     </header>
                     <div class="sub-editor-body form-grid">
-                      <label class="field">
-                        <span>Number</span>
-                        <input v-model="stat.number" type="text" placeholder="e.g. 180+" />
-                      </label>
-                      <label class="field">
-                        <span>Label</span>
-                        <input v-model="stat.label" type="text" placeholder="e.g. SAVINGS GROUPS" />
-                      </label>
+                      <v-text-field v-model="stat.number" label="Number" placeholder="e.g. 180+" hide-details density="compact" variant="outlined" />
+                      <v-text-field v-model="stat.label" label="Label" placeholder="e.g. SAVINGS GROUPS" hide-details density="compact" variant="outlined" />
                     </div>
                   </article>
                 </div>
@@ -623,17 +585,14 @@ onMounted(async () => {
                     <header class="sub-editor-header">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
                       <h3>Card {{ index + 1 }}</h3>
-                      <button type="button" class="icon-btn ghost-icon-btn" :disabled="!editing" aria-label="Remove image" @click="clearImpactImage(index)">
-                        <Trash2 :size="14" aria-hidden="true" />
-                      </button>
+                      <v-btn icon variant="text" size="x-small" color="error" aria-label="Remove image" @click="clearImpactImage(index)">
+                        <v-icon size="14">mdi-trash-can</v-icon>
+                      </v-btn>
                     </header>
                     <div class="sub-editor-body form-grid">
-                      <label class="field wide">
-                        <span>Text</span>
-                        <textarea v-model="card.text" rows="2" placeholder="Enter the impact card text..."></textarea>
-                      </label>
-                      <div class="field wide upload-wrap" :class="{ 'upload-disabled': !editing }">
-                        <span>Image</span>
+                      <v-textarea v-model="card.text" label="Text" rows="2" placeholder="Enter the impact card text..." hide-details density="compact" variant="outlined" class="field-wide" />
+                      <div class="field-wide upload-wrap" :class="{ 'upload-disabled': !editing }">
+                        <label class="field-label">Image</label>
                         <ImagePickerField
                           v-model="card.imageUrl"
                           :label="`Impact card ${index + 1} image`"
@@ -657,7 +616,7 @@ onMounted(async () => {
             <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['quote']" @click="togglePanel('quote')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <MessageSquareQuote :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-format-quote-open</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Testimonial</p>
@@ -665,16 +624,13 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quote'] }" aria-hidden="true" />
+                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quote'] }">mdi-chevron-down</v-icon>
               </div>
             </button>
             <Transition name="collapse">
               <div v-show="expandedPanels['quote']" class="panel-body">
-                <label class="field wide">
-                  <span>Quote text</span>
-                  <textarea v-model="quoteContent.text" rows="3" placeholder="Enter the quote..."></textarea>
-                </label>
+                <v-textarea v-model="quoteContent.text" label="Quote text" rows="3" placeholder="Enter the quote..." hide-details density="comfortable" variant="outlined" />
                 <p class="field-hint">This quote appears in the approach section on the public Livelihood page.</p>
               </div>
             </Transition>
@@ -682,25 +638,11 @@ onMounted(async () => {
         </div>
       </main>
     </div>
-  </div>
+  </v-app>
 </template>
 
 <style scoped>
 .live-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -766,7 +708,6 @@ onMounted(async () => {
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
   border-radius: 8px;
   background: color-mix(in srgb, var(--admin-theme-primary-deep) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
 }
 
 .manager-title {
@@ -789,24 +730,8 @@ onMounted(async () => {
 .manager-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.3rem;
   margin-top: 0.1rem;
-}
-
-.manager-meta span {
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border-strong));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 8%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  padding: 0.18rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.manager-meta span.meta-dirty {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 45%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
 }
 
 .hero-actions {
@@ -840,206 +765,96 @@ onMounted(async () => {
   margin-bottom: 1.5rem;
 }
 
-.btn,
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0.55rem 0.8rem;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  white-space: nowrap;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+.panel-desc {
+  color: var(--admin-theme-muted);
+  font-size: 0.82rem;
+  margin-bottom: 0.85rem;
 }
 
-.btn:hover,
-.icon-btn:hover {
-  transform: translateY(-1px);
+.field-hint {
+  color: var(--admin-theme-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 0.5rem;
 }
 
-.btn:active,
-.icon-btn:active {
-  transform: translateY(0px);
-}
-
-.btn:disabled,
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none;
-}
-
-.btn-primary {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  color: #ffffff;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
-}
-
-.btn-primary:hover {
-  box-shadow: 0 14px 28px color-mix(in srgb, var(--admin-theme-primary) 30%, transparent);
-}
-
-.btn-secondary,
-.icon-btn {
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
-  color: var(--admin-theme-contrast);
-}
-
-.icon-btn {
-  width: 34px;
-  min-height: 34px;
-  padding: 0;
-}
-
-.icon-btn.danger {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
-}
-
-.ghost-icon-btn {
-  border: none !important;
-  background: transparent !important;
-  color: var(--admin-theme-muted) !important;
-  width: 30px !important;
-  min-height: 30px !important;
-}
-
-.ghost-icon-btn:hover {
-  color: var(--admin-theme-danger) !important;
-  background: color-mix(in srgb, var(--admin-theme-danger) 8%, transparent) !important;
-}
-
-.btn-secondary:hover,
-.icon-btn:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.icon-btn.danger:hover {
-  border-color: var(--admin-theme-danger);
-  background: var(--admin-theme-danger);
-  color: #ffffff;
-}
-
-.btn-sm {
-  min-height: 32px;
-  padding: 0.4rem 0.65rem;
+.field-label {
+  color: var(--admin-theme-contrast-soft);
   font-size: 0.78rem;
+  font-weight: 700;
 }
 
-/* ─── View mode (editing disabled) ────────────── */
-.view-mode input,
-.view-mode textarea,
-.view-mode select {
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.upload-disabled {
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.5;
+}
+
+.image-preview-thumb {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--admin-theme-border);
   background: var(--admin-theme-surface-soft);
-  user-select: none;
-  cursor: default;
 }
 
-.view-mode :deep(input),
-.view-mode :deep(textarea),
-.view-mode :deep(select) {
-  pointer-events: none;
-  opacity: 0.6;
-  user-select: none;
-  cursor: default;
+.image-preview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.view-mode .sub-editor:hover {
-  border-color: var(--admin-theme-border);
+.quick-links-body {
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
 }
 
-.view-mode .icon-btn-pencil {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.btn-edit {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
-  border-radius: 7px;
-  background: transparent;
-  color: var(--admin-theme-primary-deep);
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
-  padding: 0.55rem 0.8rem;
-  transition: all 0.18s ease;
-}
-
-.btn-edit:hover {
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, transparent);
-  border-color: var(--admin-theme-primary);
-  transform: translateY(-1px);
-}
-
-.btn-edit-active {
-  background: var(--admin-theme-primary);
-  color: #ffffff;
-  border-color: var(--admin-theme-primary-deep);
-}
-
-.btn-edit-active:hover {
-  background: var(--admin-theme-primary-deep);
-}
-
-.state-card {
+.quick-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  margin-top: 1rem;
+  gap: 0.65rem;
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--admin-theme-surface);
+  color: var(--admin-theme-primary-deep);
+  padding: 0.7rem 0.85rem;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.quick-link:hover {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
+  transform: translateY(-1px);
+}
+
+.quick-link strong {
+  display: block;
+  color: var(--admin-theme-contrast);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.quick-link span {
+  display: block;
   color: var(--admin-theme-muted);
-  padding: 2.5rem 1rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.state-spinner {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  border: 2px solid var(--admin-theme-border);
-  border-top-color: var(--admin-theme-primary);
-  border-radius: 50%;
-  animation: state-spin 0.8s linear infinite;
-}
-
-@keyframes state-spin {
-  to { transform: rotate(360deg); }
-}
-
-.content-grid {
-  display: grid;
-  gap: 0.9rem;
-  margin-top: 1rem;
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
 .editor-panel {
@@ -1100,14 +915,7 @@ onMounted(async () => {
 
 .panel-header-clickable {
   width: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
   border: none;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 50%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.85rem 1rem;
   font: inherit;
   color: inherit;
   text-align: left;
@@ -1123,135 +931,6 @@ onMounted(async () => {
   padding: 1rem;
 }
 
-.panel-desc {
-  color: var(--admin-theme-muted);
-  font-size: 0.82rem;
-  margin-bottom: 0.85rem;
-}
-
-.field-hint {
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-  line-height: 1.4;
-  margin-top: 0.5rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.35rem;
-  color: var(--admin-theme-muted);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.field span {
-  color: var(--admin-theme-contrast-soft);
-}
-
-.field input,
-.field textarea,
-.field select {
-  width: 100%;
-  border: 1px solid var(--admin-theme-border-strong);
-  border-radius: 6px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.65rem 0.75rem;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.field textarea {
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.field input:focus,
-.field textarea:focus,
-.field select:focus {
-  border-color: var(--admin-theme-primary);
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.wide {
-  grid-column: 1 / -1;
-}
-
-/* Image upload row */
-.upload-disabled {
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-.image-preview-thumb {
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid var(--admin-theme-border);
-  background: var(--admin-theme-surface-soft);
-}
-
-.image-preview-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Quick links */
-.quick-links-body {
-  padding: 1rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.65rem;
-}
-
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-primary-deep);
-  padding: 0.7rem 0.85rem;
-  text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
-}
-
-.quick-link:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
-  transform: translateY(-1px);
-}
-
-.quick-link strong {
-  display: block;
-  color: var(--admin-theme-contrast);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.quick-link span {
-  display: block;
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-}
-
-/* Numbered / repeated item cards */
 .stack-list {
   display: grid;
   gap: 0.75rem;
@@ -1306,49 +985,17 @@ onMounted(async () => {
   gap: 0.75rem;
 }
 
-/* Edit icon */
-.edit-icon {
-  color: var(--admin-theme-muted);
-  opacity: 0.5;
-  transition: opacity 0.15s ease, color 0.15s ease;
-  flex-shrink: 0;
+.upload-wrap {
+  display: grid;
+  gap: 0.35rem;
 }
 
-.panel-header:hover .edit-icon {
-  opacity: 1;
-  color: var(--admin-theme-primary-deep);
-}
-
-/* Chevron */
 .chevron {
-  color: var(--admin-theme-muted);
-  flex-shrink: 0;
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .chevron-up {
   transform: rotate(-180deg);
-}
-
-/* Icon button ghost (no border, just icon) */
-.icon-btn-ghost {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 30px !important;
-  min-height: 30px !important;
-  border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  color: var(--admin-theme-muted) !important;
-  cursor: pointer;
-  padding: 0 !important;
-  transition: background 0.15s ease, color 0.15s ease !important;
-}
-
-.icon-btn-ghost:hover {
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface)) !important;
-  color: var(--admin-theme-primary-deep) !important;
 }
 
 /* Collapse transition */
@@ -1372,36 +1019,14 @@ onMounted(async () => {
   max-height: 6000px;
 }
 
-:global(.admin-dark) .live-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-}
-
-:global(.admin-dark) .btn-primary {
-  color: #071311;
-}
-
-:global(.admin-dark) .manager-hero {
-  background: linear-gradient(135deg, var(--admin-theme-surface) 0%, color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) 100%);
-}
-
-:global(.admin-dark) .hero-icon-wrap {
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 20%, var(--admin-theme-surface));
-}
-
-:global(.admin-dark) .panel-header-clickable:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
+/* View mode */
+.view-mode :deep(input),
+.view-mode :deep(textarea),
+.view-mode :deep(select) {
+  pointer-events: none;
+  opacity: 0.6;
+  user-select: none;
+  cursor: default;
 }
 
 @media (min-width: 900px) {
@@ -1422,8 +1047,7 @@ onMounted(async () => {
     flex-direction: column;
   }
 
-  .hero-actions,
-  .hero-actions .btn {
+  .hero-actions {
     width: 100%;
   }
 

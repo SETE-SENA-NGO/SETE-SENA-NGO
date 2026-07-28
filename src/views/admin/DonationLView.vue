@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
@@ -14,6 +15,7 @@ import {
 
 const ui = useUiStore()
 const media = useMediaStore()
+useAdminTheme()
 
 // Exactly two fixed bank slots — banks can be edited but never added or
 // removed, so the public Support Us page always shows the same two cards.
@@ -23,21 +25,15 @@ const previews = reactive<Record<string, string>>({})
 
 // Only one bank card is shown at a time; the switcher toggles between them.
 const activeIndex = ref(0)
-// methods always has the two fixed slots from defaultDonationMethods(), so
-// the fallback here only guards TypeScript's indexed-access check.
 const activeMethod = computed<DonationMethod>(
   () => methods.value[activeIndex.value] ?? methods.value[0]!,
 )
 
 const loading = ref(true)
-// Each card saves independently, so track saving/message state per bank id
-// rather than a single global one.
 const savingId = ref<string | null>(null)
 const cardMessages = reactive<Record<string, { text: string; type: 'success' | 'error' }>>({})
+const fileInputRefs = reactive<Record<string, HTMLInputElement | null>>({})
 
-// Merges saved rows into the fixed slots (matching by id, falling back to
-// position) so the slot's id — and therefore its identity on save — never
-// changes even if older saved data used different ids.
 function toFixedSlots(saved: DonationMethod[]): DonationMethod[] {
   return defaultDonationMethods().map((slot, index) => {
     const match = saved.find((m) => m.id === slot.id) ?? saved[index]
@@ -142,44 +138,51 @@ async function saveCard(method: DonationMethod, index: number) {
 </script>
 
 <template>
-  <div :class="['admin-page', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['donation-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
-      <main class="main">
+      <main class="manager-main">
         <section class="donation-overview" aria-label="Donation QR settings">
-          <header class="donation-header">
-            <div class="header-copy">
-              <p class="eyebrow">Support Us</p>
+          <header class="manager-hero">
+            <div class="manager-title">
               <h1>Donation Banks & QR Codes</h1>
-              <p>
-                Manage the two banks shown on the public Support Us page — upload each bank's QR
-                code and edit its account details. Changes go live as soon as you save.
-              </p>
+              <div class="manager-meta">
+                <v-chip size="small" variant="tonal" color="primary">{{ methods.length }} banks</v-chip>
+              </div>
             </div>
+            <p class="header-description">
+              Manage the two banks shown on the public Support Us page — upload each bank's QR
+              code and edit its account details. Changes go live as soon as you save.
+            </p>
           </header>
 
-          <p v-if="loading" class="loading-note">Loading current settings...</p>
+          <div v-if="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+            <v-progress-circular indeterminate color="primary" :size="40" :width="4" />
+            <span class="mt-4 font-weight-bold">Loading current settings...</span>
+          </div>
 
           <div v-else class="method-single">
             <div class="method-switcher" role="tablist" aria-label="Select bank to edit">
-              <button
+              <v-btn
                 v-for="(m, i) in methods"
                 :key="m.id"
-                type="button"
                 role="tab"
-                class="switch-tab"
-                :class="{ active: i === activeIndex }"
+                variant="tonal"
+                :color="i === activeIndex ? 'primary' : 'default'"
                 :aria-selected="i === activeIndex"
+                size="small"
+                class="switch-tab"
                 @click="activeIndex = i"
               >
-                <span class="tab-badge">{{ i + 1 }}</span>
+                <v-icon start size="14">mdi-bank</v-icon>
                 {{ i === 0 ? 'First bank' : 'Second bank' }}
-              </button>
+              </v-btn>
             </div>
 
             <article class="method-card">
               <header class="method-head" :style="{ background: activeMethod.headerColor }">
+                <v-icon start size="28" color="white">mdi-bank</v-icon>
                 <div class="head-copy">
                   <div class="bank-name">{{ activeMethod.bank || 'New bank' }}</div>
                   <div class="bank-subtitle">{{ activeMethod.subtitle || 'Bank subtitle' }}</div>
@@ -195,154 +198,149 @@ async function saveCard(method: DonationMethod, index: number) {
                       :alt="`${activeMethod.bank || 'Bank'} donation QR code`"
                     />
                     <div v-else class="qr-empty">
-                      <span class="qr-empty-icon" aria-hidden="true">&#9635;</span>
+                      <v-icon size="36" color="disabled">mdi-qrcode</v-icon>
                       <span>No QR uploaded yet</span>
                     </div>
-                    <span v-if="pendingFiles[activeMethod.id]" class="pending-tag"
-                      >Not saved yet</span
-                    >
+                    <v-chip
+                      v-if="pendingFiles[activeMethod.id]"
+                      size="x-small"
+                      color="warning"
+                      class="pending-tag"
+                    >Not saved yet</v-chip>
                   </div>
 
                   <div class="qr-actions">
-                    <label class="upload-btn">
-                      <input
-                        :id="`${activeMethod.id}-qr-upload`"
-                        :name="`${activeMethod.id}-qr-upload`"
-                        type="file"
-                        accept="image/*"
-                        class="sr-only"
-                        @change="onFileChange(activeMethod, $event)"
-                      />
+                    <input
+                      :id="`${activeMethod.id}-qr-upload`"
+                      :ref="(el) => { if (el) fileInputRefs[activeMethod.id] = el as HTMLInputElement }"
+                      type="file"
+                      accept="image/*"
+                      class="sr-only"
+                      @change="onFileChange(activeMethod, $event)"
+                    />
+                    <v-btn
+                      variant="tonal"
+                      color="primary"
+                      size="small"
+                      :disabled="savingId === activeMethod.id"
+                      @click="fileInputRefs[activeMethod.id]?.click()"
+                    >
+                      <v-icon start size="16">mdi-upload</v-icon>
                       {{ displayedQr(activeMethod) ? 'Replace QR image' : 'Upload QR image' }}
-                    </label>
-                    <button
+                    </v-btn>
+                    <v-btn
                       v-if="displayedQr(activeMethod)"
-                      type="button"
-                      class="remove-btn"
+                      variant="tonal"
+                      color="error"
+                      size="small"
+                      :disabled="savingId === activeMethod.id"
                       @click="removeQr(activeMethod)"
                     >
+                      <v-icon start size="16">mdi-delete</v-icon>
                       Remove QR
-                    </button>
+                    </v-btn>
                   </div>
                 </div>
 
                 <div class="method-body-col fields-col">
-                  <div class="field">
-                    <label :for="`${activeMethod.id}-bank`">Bank name</label>
-                    <input
-                      :id="`${activeMethod.id}-bank`"
-                      v-model="activeMethod.bank"
-                      :name="`${activeMethod.id}-bank`"
-                      placeholder="e.g. Wing Bank"
-                    />
-                  </div>
-                  <div class="field">
-                    <label :for="`${activeMethod.id}-subtitle`">Subtitle</label>
-                    <input
-                      :id="`${activeMethod.id}-subtitle`"
-                      v-model="activeMethod.subtitle"
-                      :name="`${activeMethod.id}-subtitle`"
-                      placeholder="e.g. WING BANK - CAMBODIA"
-                    />
-                  </div>
-                  <div class="field">
-                    <label :for="`${activeMethod.id}-color`">Card color</label>
+                  <v-text-field
+                    v-model="activeMethod.bank"
+                    label="Bank name"
+                    placeholder="e.g. Wing Bank"
+                    hide-details
+                    density="comfortable"
+                    variant="outlined"
+                  />
+                  <v-text-field
+                    v-model="activeMethod.subtitle"
+                    label="Subtitle"
+                    placeholder="e.g. WING BANK - CAMBODIA"
+                    hide-details
+                    density="comfortable"
+                    variant="outlined"
+                  />
+                  <div class="color-field-wrap">
+                    <label class="color-label">Card color</label>
                     <div class="color-field">
                       <input
-                        :id="`${activeMethod.id}-color`"
                         v-model="activeMethod.headerColor"
-                        :name="`${activeMethod.id}-color`"
                         type="color"
+                        class="color-input"
                       />
                       <span class="color-value">{{ activeMethod.headerColor }}</span>
                     </div>
                   </div>
-                  <div class="field">
-                    <label :for="`${activeMethod.id}-account-name`">Account name</label>
-                    <input
-                      :id="`${activeMethod.id}-account-name`"
-                      v-model="activeMethod.accountName"
-                      :name="`${activeMethod.id}-account-name`"
-                    />
-                  </div>
-                  <div class="field">
-                    <label :for="`${activeMethod.id}-account-no`">Account number</label>
-                    <input
-                      :id="`${activeMethod.id}-account-no`"
-                      v-model="activeMethod.accountNo"
-                      :name="`${activeMethod.id}-account-no`"
-                    />
-                  </div>
-                  <div class="field">
-                    <label :for="`${activeMethod.id}-currency`">Currency</label>
-                    <input
-                      :id="`${activeMethod.id}-currency`"
-                      v-model="activeMethod.currency"
-                      :name="`${activeMethod.id}-currency`"
-                    />
-                  </div>
+                  <v-text-field
+                    v-model="activeMethod.accountName"
+                    label="Account name"
+                    hide-details
+                    density="comfortable"
+                    variant="outlined"
+                  />
+                  <v-text-field
+                    v-model="activeMethod.accountNo"
+                    label="Account number"
+                    hide-details
+                    density="comfortable"
+                    variant="outlined"
+                  />
+                  <v-text-field
+                    v-model="activeMethod.currency"
+                    label="Currency"
+                    placeholder="KHR / USD"
+                    hide-details
+                    density="comfortable"
+                    variant="outlined"
+                  />
                 </div>
               </div>
 
               <footer class="card-save-bar">
-                <p
-                  v-if="cardMessages[activeMethod.id]"
-                  :class="['save-message', cardMessages[activeMethod.id]?.type]"
-                  role="status"
-                >
-                  {{ cardMessages[activeMethod.id]?.text }}
-                </p>
-                <button
-                  class="save-btn"
-                  type="button"
+                <div v-if="cardMessages[activeMethod.id]" class="save-message-wrap">
+                  <v-alert
+                    :type="cardMessages[activeMethod.id]?.type"
+                    variant="tonal"
+                    density="compact"
+                    class="save-message"
+                    closable
+                    @click:close="delete cardMessages[activeMethod.id]"
+                  >{{ cardMessages[activeMethod.id]?.text }}</v-alert>
+                </div>
+                <v-btn
+                  color="primary"
+                  :loading="savingId === activeMethod.id"
                   :disabled="savingId === activeMethod.id"
                   @click="saveCard(activeMethod, activeIndex)"
                 >
+                  <v-icon start size="18">mdi-content-save</v-icon>
                   {{ savingId === activeMethod.id ? 'Saving...' : 'Save changes' }}
-                </button>
+                </v-btn>
               </footer>
             </article>
           </div>
         </section>
       </main>
     </div>
-  </div>
+  </v-app>
 </template>
 
 <style scoped>
-.admin-page {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-blue: var(--admin-theme-primary);
-  --admin-blue-deep: var(--admin-theme-primary-deep);
-  --admin-shadow: var(--admin-theme-shadow);
-
+.donation-admin {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
   background: var(--admin-bg);
   color: var(--admin-text);
-  font-family: var(--font-family-base);
   transition: padding-left 0.25s ease;
 }
 
 .admin-layout {
+  min-height: 100vh;
   display: flex;
-  flex: 1;
 }
 
-.main {
+.manager-main {
   flex: 1;
-  width: 100%;
-  padding: 1.5rem 2.25rem 2.5rem;
-  background: var(--admin-bg);
+  min-height: 100vh;
+  padding: 1.5rem 2rem 2.5rem;
 }
 
 .donation-overview {
@@ -350,52 +348,44 @@ async function saveCard(method: DonationMethod, index: number) {
   gap: 1.5rem;
 }
 
-.donation-header {
+.manager-hero {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   padding: 1.4rem 1.6rem;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 16px;
-  background: linear-gradient(135deg, var(--admin-surface-soft), var(--admin-surface));
-  box-shadow: var(--admin-shadow);
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
-.header-copy {
+.manager-title {
   display: grid;
   gap: 0.5rem;
-  max-width: 640px;
 }
 
-.eyebrow {
+.manager-hero h1 {
   margin: 0;
-  color: var(--admin-blue-deep);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-h1 {
-  margin: 0;
-  color: var(--admin-contrast);
+  color: var(--admin-theme-contrast);
   font-size: 1.85rem;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
 
-.header-copy p:not(.eyebrow) {
-  margin: 0;
-  color: var(--admin-muted);
-  line-height: 1.6;
+.manager-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.loading-note {
+.header-description {
   margin: 0;
-  color: var(--admin-muted);
-  font-weight: 600;
+  color: var(--admin-theme-muted);
+  line-height: 1.6;
+  max-width: 640px;
+  font-size: 0.92rem;
 }
 
 .method-single {
@@ -407,66 +397,23 @@ h1 {
   display: inline-flex;
   gap: 0.4rem;
   padding: 0.35rem;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 12px;
-  background: var(--admin-surface-soft);
+  background: var(--admin-theme-surface-soft);
   width: fit-content;
 }
 
 .switch-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 40px;
-  border: none;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--admin-muted);
-  padding: 0.5rem 1.1rem;
+  text-transform: none;
   font-weight: 700;
-  font-size: 0.86rem;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
-}
-
-.switch-tab:hover {
-  color: var(--admin-contrast);
-}
-
-.switch-tab.active {
-  background: var(--admin-surface);
-  color: var(--admin-contrast);
-  box-shadow: var(--admin-shadow);
-}
-
-.tab-badge {
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  background: var(--admin-border);
-  color: var(--admin-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
-}
-
-.switch-tab.active .tab-badge {
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-  color: #ffffff;
 }
 
 .method-card {
   width: 100%;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-theme-border);
   border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
   overflow: hidden;
   display: grid;
   align-content: start;
@@ -514,11 +461,6 @@ h1 {
   align-content: start;
 }
 
-.fields-col .field:nth-child(1),
-.fields-col .field:nth-child(2) {
-  grid-column: 1 / -1;
-}
-
 .qr-preview {
   position: relative;
   border: 2px dashed;
@@ -527,7 +469,7 @@ h1 {
   display: grid;
   place-items: center;
   padding: 0.75rem;
-  background: var(--admin-surface-soft);
+  background: var(--admin-theme-surface-soft);
 }
 
 .qr-preview img {
@@ -541,59 +483,21 @@ h1 {
   display: grid;
   gap: 0.35rem;
   justify-items: center;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   font-size: 0.85rem;
   font-weight: 600;
-}
-
-.qr-empty-icon {
-  font-size: 2rem;
 }
 
 .pending-tag {
   position: absolute;
   top: 0.6rem;
   right: 0.6rem;
-  background: #d9ad2f;
-  color: #1d3d5c;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 0.25rem 0.55rem;
-  border-radius: 999px;
-}
-
-:global(.admin-dark) .pending-tag {
-  background: rgba(217, 173, 47, 0.85);
-  color: #0c1f1a;
 }
 
 .qr-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-}
-
-.upload-btn {
-  display: inline-flex;
-  align-items: center;
-  min-height: 42px;
-  border: 1px solid var(--admin-blue);
-  border-radius: 10px;
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-  color: #ffffff;
-  padding: 0.5rem 1rem;
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-  box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.18s ease;
-}
-
-.upload-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px rgba(15, 125, 56, 0.3);
 }
 
 .sr-only {
@@ -605,62 +509,15 @@ h1 {
   white-space: nowrap;
 }
 
-.remove-btn {
-  min-height: 42px;
-  border: 1.5px solid rgba(225, 29, 72, 0.35);
-  border-radius: 10px;
-  background: rgba(225, 29, 72, 0.06);
-  color: #be123c;
-  padding: 0.5rem 1rem;
-  font-weight: 700;
-  font-size: 0.88rem;
-  cursor: pointer;
-  transition: background 0.18s ease;
-}
-
-.remove-btn:hover {
-  background: rgba(225, 29, 72, 0.13);
-}
-
-:global(.admin-dark) .remove-btn {
-  border-color: rgba(251, 113, 133, 0.35);
-  background: rgba(251, 113, 133, 0.08);
-  color: #fb7185;
-}
-
-:global(.admin-dark) .remove-btn:hover {
-  background: rgba(251, 113, 133, 0.18);
-}
-
-.field {
+.color-field-wrap {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
-.field label {
+.color-label {
   font-size: 0.84rem;
   font-weight: 700;
-  color: var(--admin-contrast-soft);
-}
-
-.field input:not([type='color']) {
-  min-height: 44px;
-  border: 1.5px solid var(--admin-border-strong);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  color: var(--admin-text);
-  padding: 0.6rem 0.85rem;
-  font-size: 0.92rem;
-  font-family: inherit;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.field input:not([type='color']):focus {
-  border-color: var(--admin-blue);
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
-  outline: none;
+  color: var(--admin-theme-contrast-soft);
 }
 
 .color-field {
@@ -669,12 +526,12 @@ h1 {
   gap: 0.7rem;
 }
 
-.color-field input[type='color'] {
+.color-input {
   width: 3.2rem;
   height: 2.6rem;
-  border: 1.5px solid var(--admin-border-strong);
+  border: 1.5px solid var(--admin-theme-border-strong);
   border-radius: 10px;
-  background: var(--admin-surface);
+  background: var(--admin-theme-surface);
   padding: 0.2rem;
   cursor: pointer;
 }
@@ -682,7 +539,7 @@ h1 {
 .color-value {
   font-size: 0.86rem;
   font-weight: 700;
-  color: var(--admin-muted);
+  color: var(--admin-theme-muted);
   text-transform: uppercase;
 }
 
@@ -693,66 +550,30 @@ h1 {
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.4rem 1.4rem;
-  border-top: 1px solid var(--admin-border);
+  border-top: 1px solid var(--admin-theme-border);
+}
+
+.save-message-wrap {
+  flex: 1;
+  min-width: 200px;
 }
 
 .save-message {
-  margin: 0 auto 0 0;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.save-message.success {
-  color: var(--admin-blue-deep);
-}
-
-.save-message.error {
-  color: #be123c;
-}
-
-:global(.admin-dark) .save-message.error {
-  color: #fb7185;
-}
-
-.save-btn {
-  min-height: 46px;
-  border: 1px solid var(--admin-blue);
-  border-radius: 10px;
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-  color: #ffffff;
-  padding: 0.6rem 1.5rem;
-  font-weight: 700;
-  font-size: 0.92rem;
-  cursor: pointer;
-  box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.18s ease;
-}
-
-.save-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px rgba(15, 125, 56, 0.3);
-}
-
-.save-btn:disabled {
-  cursor: wait;
-  opacity: 0.72;
-  transform: none;
+  margin: 0;
 }
 
 @media (min-width: 900px) {
-  .admin-page.sidebar-open {
+  .donation-admin.sidebar-open {
     padding-left: 260px;
   }
 }
 
 @media (max-width: 760px) {
-  .main {
+  .manager-main {
     padding: 1rem;
   }
 
-  .donation-header {
+  .manager-hero {
     padding: 1.1rem;
   }
 
@@ -764,74 +585,8 @@ h1 {
     grid-template-columns: 1fr;
   }
 
-  .fields-col .field:nth-child(1),
-  .fields-col .field:nth-child(2) {
-    grid-column: auto;
-  }
-
-  h1 {
+  .manager-hero h1 {
     font-size: 1.5rem;
   }
-}
-</style>
-
-<!-- Non-scoped dark mode overrides for Donation QR page -->
-<style>
-.admin-dark .admin-page {
-  background: #06100F !important;
-}
-.admin-dark .admin-page .admin-layout {
-  background: #06100F !important;
-}
-.admin-dark .admin-page .main {
-  background: #06100F !important;
-}
-.admin-dark .donation-header,
-.admin-dark .method-card {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-}
-.admin-dark .btn,
-.admin-dark .btn-primary,
-.admin-dark .btn-secondary,
-.admin-dark .btn-ghost {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
-}
-.admin-dark .btn-primary {
-  background: #38c982 !important;
-  border-color: #74e0ae !important;
-  color: #06100F !important;
-}
-.admin-dark input:not([type="color"]),
-.admin-dark textarea,
-.admin-dark select {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
-}
-.admin-dark .field label {
-  color: #c9ddd4 !important;
-}
-.admin-dark .qr-preview {
-  background: #0b1b17 !important;
-  border-color: #2d554a !important;
-}
-.admin-dark .method-switcher {
-  background: #0b1b17 !important;
-  border-color: #1d3b33 !important;
-}
-.admin-dark .switch-tab.active {
-  background: #0a1a14 !important;
-}
-.admin-dark .switch-tab:hover {
-  color: #f2fbf6 !important;
-}
-.admin-dark .card-save-bar {
-  border-color: #1d3b33 !important;
-}
-.admin-dark .save-message.success {
-  color: #74e0ae !important;
 }
 </style>

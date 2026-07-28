@@ -1,18 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import {
-  BookOpen,
-  ExternalLink,
-  FolderOpen,
-  Image as ImageIcon,
-  Layers,
-  Lock,
-  Plus,
-  Save,
-  Type,
-  Users,
-} from 'lucide-vue-next'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import CollapsiblePanel from '@/components/admin/CollapsiblePanel.vue'
@@ -27,6 +15,7 @@ import { useAuthStore } from '@/stores/auth.store'
 
 const ui = useUiStore()
 const auth = useAuthStore()
+useAdminTheme()
 
 /* ─── Types ─────────────────────────────────────── */
 interface EditableSection {
@@ -150,8 +139,6 @@ function toggleEditing() {
   editing.value = !editing.value
 }
 const STORAGE_KEY = 'edu-dashboard-page'
-// Holds metadata keys not managed by this dashboard (e.g. headline, intro set via SQL)
-// so saving here never clobbers them.
 const rawMetadata = ref<Record<string, unknown>>({})
 
 /* ─── Collapsible panels ───────────────────────── */
@@ -196,7 +183,6 @@ function loadFromLocalStorage(): void {
     if (Array.isArray(saved.galleryImages) && saved.galleryImages.length > 0) {
       page.value.galleryImages = saved.galleryImages as GalleryImage[]
     } else {
-      // Backward compat: migrate individual fields to gallery
       const urls = [
         String(saved.introImageUrl || ''),
         String(saved.readingImageUrl || ''),
@@ -209,7 +195,6 @@ function loadFromLocalStorage(): void {
         url: urls[i] || '',
       }))
     }
-    // Ensure exactly 4 image slots (pad with empty if needed)
     padGalleryToFour()
     if (Array.isArray(saved.sections)) {
       const savedSections = saved.sections as EditableSection[]
@@ -237,7 +222,6 @@ function snapshotData(): string {
 
 const isDirty = computed(() => savedSnapshot.value !== snapshotData())
 
-/* ─── Parse team cards from section items ──────── */
 function parseTeamFromSection(section: EditableSection): void {
   if (section.items?.trim()) {
     const lines = section.items.split('\n').map(l => l.trim()).filter(Boolean)
@@ -261,7 +245,6 @@ function saveTeamToSection(): void {
   }
 }
 
-/* ─── Load from programs table ─────────────────── */
 async function loadPageContent() {
   loading.value = true
   try {
@@ -284,23 +267,18 @@ async function loadPageContent() {
       const meta = data.metadata as Record<string, unknown>
       rawMetadata.value = { ...meta }
 
-      // Hero title & intro
       if (typeof meta.headline === 'string' && meta.headline.trim()) heroTitle.value = meta.headline.trim()
       if (typeof meta.intro === 'string' && meta.intro.trim()) heroIntro.value = meta.intro.trim()
 
-      // Image gallery — prefer gallery array, fall back to individual fields
       const galleryFromMeta = meta.gallery as GalleryImage[] | undefined
       if (Array.isArray(galleryFromMeta) && galleryFromMeta.length > 0) {
         page.value.galleryImages = galleryFromMeta.map((g, i) => ({
           id: g.id || genId(),
-          // Reassign labels from IMAGE_MAP to ensure keyword matching works on the public page
           label: (g.label?.trim() ? g.label : IMAGE_MAP[i]?.label || `Slot ${i + 1}`),
           url: g.url || '',
         }))
-        // Ensure exactly 4 image slots (pad with empty if needed)
         padGalleryToFour()
       } else {
-        // Backward compat: map individual fields to gallery
         const urls = [
           String(meta.introImageUrl || ''),
           String(meta.readingImageUrl || ''),
@@ -314,12 +292,10 @@ async function loadPageContent() {
         }))
       }
 
-      // Stats band
       if (Array.isArray(meta.statsBand) && meta.statsBand.length > 0) {
         statsBand.value = meta.statsBand as StatItem[]
       }
 
-      // Sections (What we do, Approach, Why it matters)
       if (Array.isArray(meta.sections)) {
         const dbSections = meta.sections as EditableSection[]
         page.value.sections = page.value.sections.map(defSec => {
@@ -328,14 +304,12 @@ async function loadPageContent() {
         })
       }
 
-      // Team cards from education-team section
       const teamSection = page.value.sections.find(s => s.id === 'education-team')
       if (teamSection) {
         parseTeamFromSection(teamSection)
       }
 
       page.value.updatedAt = data.updated_at || ''
-
       storageMode.value = 'supabase'
       saveToLocalStorage()
     } else {
@@ -354,11 +328,9 @@ async function loadPageContent() {
   }
 }
 
-/* ─── Save to programs table ────────────────────── */
 async function savePageContent() {
   saving.value = true
   try {
-    // Save team cards back into the team section before saving
     saveTeamToSection()
 
     const now = new Date().toISOString()
@@ -374,7 +346,6 @@ async function savePageContent() {
         ...rawMetadata.value,
         headline: heroTitle.value,
         intro: heroIntro.value,
-        // Store gallery array and individual fields for backward compatibility
         gallery: page.value.galleryImages,
         introImageUrl: page.value.galleryImages[0]?.url || '',
         readingImageUrl: page.value.galleryImages[1]?.url || '',
@@ -394,12 +365,10 @@ async function savePageContent() {
 
     saveToLocalStorage()
 
-    // Try upsert first
     let { error } = await supabase
       .from('programs')
       .upsert(payload, { onConflict: 'slug' })
 
-    // If upsert fails with RLS, try insert then update
     if (error && error.message?.includes('row-level security')) {
       console.warn('Upsert blocked by RLS, trying insert/update separately...')
 
@@ -449,7 +418,6 @@ async function savePageContent() {
   }
 }
 
-/* ─── Ensure gallery always has exactly 4 slots ── */
 function padGalleryToFour() {
   while (page.value.galleryImages.length < 4) {
     page.value.galleryImages.push({
@@ -542,7 +510,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :class="['education-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['education-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -553,39 +521,50 @@ onMounted(async () => {
           <div class="hero-accent-line" aria-hidden="true"></div>
           <div class="hero-content-wrap">
             <div class="hero-icon-wrap">
-              <BookOpen :size="22" aria-hidden="true" />
+              <v-icon size="22" color="primary">mdi-book-open-variant</v-icon>
             </div>
             <div class="manager-title">
               <p class="eyebrow">Education Program</p>
               <h1>Manage Education page</h1>
-              <div class="manager-meta" aria-label="Editable education summary">
-                <span>{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</span>
-                <span>{{ statsBand.length }} stats</span>
-                <span>{{ teamCards.length }} team cards</span>
-                <span v-if="isDirty" class="meta-dirty">Unsaved changes</span>
-                <span v-else-if="page.updatedAt">Saved {{ formatDate(page.updatedAt) }}</span>
+              <div class="manager-meta">
+                <v-chip size="x-small" variant="tonal" color="primary">{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</v-chip>
+                <v-chip size="x-small" variant="tonal" color="primary">{{ statsBand.length }} stats</v-chip>
+                <v-chip size="x-small" variant="tonal" color="primary">{{ teamCards.length }} team cards</v-chip>
+                <v-chip v-if="isDirty" size="x-small" variant="tonal" color="warning">Unsaved changes</v-chip>
+                <v-chip v-else-if="page.updatedAt" size="x-small" variant="tonal" color="success">Saved {{ formatDate(page.updatedAt) }}</v-chip>
               </div>
             </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/programs/education">
-              <ExternalLink :size="16" aria-hidden="true" />
-              <span>View page</span>
-            </RouterLink>
-            <button type="button" class="btn btn-edit" :class="{ 'btn-edit-active': editing }" @click="toggleEditing">
-              <Lock :size="15" aria-hidden="true" />
-              <span>{{ editing ? 'Editing enabled' : 'Enable editing' }}</span>
-            </button>
-            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty || !editing" @click="savePageContent">
-              <Save :size="16" aria-hidden="true" />
-              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
-            </button>
+            <v-btn variant="tonal" to="/programs/education" target="_blank" size="small">
+              <v-icon start size="16">mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
+            <v-btn
+              variant="tonal"
+              :color="editing ? 'primary' : 'default'"
+              size="small"
+              @click="toggleEditing"
+            >
+              <v-icon start size="16">{{ editing ? 'mdi-lock-open' : 'mdi-lock' }}</v-icon>
+              {{ editing ? 'Editing enabled' : 'Enable editing' }}
+            </v-btn>
+            <v-btn
+              color="primary"
+              size="small"
+              :loading="saving"
+              :disabled="saving || loading || !isDirty || !editing"
+              @click="savePageContent"
+            >
+              <v-icon start size="16">mdi-content-save</v-icon>
+              {{ saving ? 'Saving...' : 'Save changes' }}
+            </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">
-          <span class="state-spinner" aria-hidden="true"></span>
-          <span>Loading Education content...</span>
+        <div v-if="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+          <v-progress-circular indeterminate color="primary" :size="36" :width="4" />
+          <span class="mt-4 font-weight-bold">Loading Education content...</span>
         </div>
 
         <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
@@ -597,19 +576,19 @@ onMounted(async () => {
             heading-id="quick-links-heading"
           >
             <template #icon>
-              <FolderOpen :size="18" aria-hidden="true" />
+              <v-icon size="18">mdi-folder-open</v-icon>
             </template>
 
             <div class="quick-links-body">
               <RouterLink class="quick-link" to="/admin/media">
-                <FolderOpen :size="18" aria-hidden="true" />
+                <v-icon size="18">mdi-folder-open</v-icon>
                 <div>
                   <strong>Media Library</strong>
                   <span>Upload images for this page</span>
                 </div>
               </RouterLink>
               <RouterLink class="quick-link" to="/admin/modules/programs">
-                <Layers :size="18" aria-hidden="true" />
+                <v-icon size="18">mdi-layers</v-icon>
                 <div>
                   <strong>Program Records</strong>
                   <span>Manage education data entries</span>
@@ -626,17 +605,17 @@ onMounted(async () => {
             heading-id="page-header-heading"
           >
             <template #icon>
-              <Type :size="18" aria-hidden="true" />
+              <v-icon size="18">mdi-format-title</v-icon>
             </template>
 
             <p class="panel-desc">Edit the main title and intro paragraph shown at the top of the public Education page.</p>
             <div class="header-field">
               <label for="edu-hero-title">Page title</label>
-              <input id="edu-hero-title" v-model="heroTitle" type="text" placeholder="e.g. Access to Education" />
+              <v-text-field id="edu-hero-title" v-model="heroTitle" placeholder="e.g. Access to Education" hide-details density="comfortable" variant="outlined" />
             </div>
             <div class="header-field">
               <label for="edu-hero-intro">Intro paragraph</label>
-              <textarea id="edu-hero-intro" v-model="heroIntro" rows="3" placeholder="Short paragraph introducing the program"></textarea>
+              <v-textarea id="edu-hero-intro" v-model="heroIntro" rows="3" placeholder="Short paragraph introducing the program" hide-details density="comfortable" variant="outlined" />
             </div>
           </CollapsiblePanel>
 
@@ -648,11 +627,13 @@ onMounted(async () => {
             heading-id="images-heading"
           >
             <template #icon>
-              <ImageIcon :size="18" aria-hidden="true" />
+              <v-icon size="18">mdi-image</v-icon>
             </template>
 
             <p class="panel-desc">Upload a photo from your computer or paste a URL for each section below. Clear a slot to fall back to the default image.</p>
-            <p v-if="missingImageWarning()" class="field-hint field-hint-warning">{{ missingImageWarning() }}</p>
+            <v-alert v-if="missingImageWarning()" type="warning" variant="tonal" density="compact" class="mb-3">
+              {{ missingImageWarning() }}
+            </v-alert>
 
             <div class="image-slot-grid">
               <ImageSlotEditor
@@ -678,13 +659,13 @@ onMounted(async () => {
             heading-id="stats-heading"
           >
             <template #icon>
-              <Layers :size="18" aria-hidden="true" />
+              <v-icon size="18">mdi-layers</v-icon>
             </template>
             <template #actions>
-              <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="statsBand.push({ number: '', label: '', description: '' })">
-                <Plus :size="15" aria-hidden="true" />
-                <span>Add stat</span>
-              </button>
+              <v-btn v-if="editing" variant="tonal" color="accent" size="small" @click="statsBand.push({ number: '', label: '', description: '' })">
+                <v-icon start size="15">mdi-plus</v-icon>
+                Add stat
+              </v-btn>
             </template>
 
             <p class="panel-desc">Edit the statistics shown on the public Education page.</p>
@@ -707,7 +688,7 @@ onMounted(async () => {
             heading-id="sections-heading"
           >
             <template #icon>
-              <BookOpen :size="18" aria-hidden="true" />
+              <v-icon size="18">mdi-book-open-variant</v-icon>
             </template>
 
             <p class="panel-desc">Edit the main content blocks shown on the public Education page.</p>
@@ -724,13 +705,13 @@ onMounted(async () => {
             heading-id="team-heading"
           >
             <template #icon>
-              <Users :size="18" aria-hidden="true" />
+              <v-icon size="18">mdi-account-group</v-icon>
             </template>
             <template #actions>
-              <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="teamCards.push({ role: '', icon: 'chart', desc: '' })">
-                <Plus :size="15" aria-hidden="true" />
-                <span>Add card</span>
-              </button>
+              <v-btn v-if="editing" variant="tonal" color="accent" size="small" @click="teamCards.push({ role: '', icon: 'chart', desc: '' })">
+                <v-icon start size="15">mdi-plus</v-icon>
+                Add card
+              </v-btn>
             </template>
 
             <p class="panel-desc">Edit the team shown in the "Who delivers education on the ground" section.</p>
@@ -747,25 +728,11 @@ onMounted(async () => {
         </div>
       </main>
     </div>
-  </div>
+  </v-app>
 </template>
 
 <style scoped>
 .education-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -781,7 +748,6 @@ onMounted(async () => {
   padding: 1.25rem;
 }
 
-/* ─── Hero banner ───────────────────────────────── */
 .manager-hero {
   position: relative;
   display: flex;
@@ -846,7 +812,6 @@ onMounted(async () => {
   flex-shrink: 0;
   border-radius: 10px;
   background: color-mix(in srgb, var(--admin-theme-primary) 14%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
 }
 
@@ -868,27 +833,10 @@ onMounted(async () => {
   min-width: 0;
 }
 
-.manager-meta,
-.hero-actions {
+.manager-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.manager-meta span {
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 20%, var(--admin-theme-border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 6%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  padding: 0.18rem 0.6rem;
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
-.manager-meta span.meta-dirty {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 50%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
+  gap: 0.3rem;
 }
 
 .eyebrow {
@@ -899,164 +847,11 @@ onMounted(async () => {
   text-transform: uppercase;
 }
 
-/* ─── Buttons ───────────────────────────────────── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  padding: 0.55rem 0.8rem;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  white-space: nowrap;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn:active {
-  transform: translateY(0);
-}
-
-.btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none !important;
-}
-
-.btn-primary {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  color: #ffffff;
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
-}
-
-.btn-primary:hover {
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--admin-theme-primary) 32%, transparent);
-}
-
-.btn-secondary {
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
-  color: var(--admin-theme-contrast);
-}
-
-.btn-secondary:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.btn-sm {
-  min-height: 34px;
-  padding: 0.4rem 0.65rem;
-  font-size: 0.78rem;
-}
-
-/* ─── View mode (editing disabled) ────────────── */
-.view-mode input,
-.view-mode textarea,
-.view-mode select {
-  pointer-events: none;
-  opacity: 0.6;
-  background: var(--admin-theme-surface-soft);
-  user-select: none;
-  cursor: default;
-}
-
-/* Reach into child components to disable their inputs too */
-.view-mode :deep(input),
-.view-mode :deep(textarea),
-.view-mode :deep(select) {
-  pointer-events: none;
-  opacity: 0.6;
-  user-select: none;
-  cursor: default;
-}
-
-.btn-edit {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
-  border-radius: 7px;
-  background: transparent;
-  color: var(--admin-theme-primary-deep);
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
-  padding: 0.55rem 0.8rem;
-  transition: all 0.18s ease;
-}
-
-.btn-edit:hover {
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, transparent);
-  border-color: var(--admin-theme-primary);
-  transform: translateY(-1px);
-}
-
-.btn-edit-active {
-  background: var(--admin-theme-primary);
-  color: #ffffff;
-  border-color: var(--admin-theme-primary-deep);
-}
-
-.btn-edit-active:hover {
-  background: var(--admin-theme-primary-deep);
-}
-
-/* ─── State / loading ───────────────────────────── */
-.state-card {
+.hero-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  margin-top: 1rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-muted);
-  padding: 2.5rem 1rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.state-spinner {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  border: 2px solid var(--admin-theme-border);
-  border-top-color: var(--admin-theme-primary);
-  border-radius: 50%;
-  animation: state-spin 0.8s linear infinite;
-}
-
-@keyframes state-spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ─── Content grid ──────────────────────────────── */
-.content-grid {
-  display: grid;
-  gap: 0.9rem;
-  margin-top: 1rem;
+  gap: 0.5rem;
 }
 
 .panel-desc {
@@ -1066,7 +861,6 @@ onMounted(async () => {
   margin-bottom: 0.85rem;
 }
 
-/* ─── Quick links ───────────────────────────────── */
 .quick-links-body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -1106,7 +900,6 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-/* ─── Page header fields ────────────────────────── */
 .header-field {
   display: grid;
   gap: 0.35rem;
@@ -1123,39 +916,6 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-.header-field input,
-.header-field textarea {
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 7px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
-  padding: 0.55rem 0.7rem;
-  font: inherit;
-  font-size: 0.86rem;
-  resize: vertical;
-}
-
-.header-field input:focus,
-.header-field textarea:focus {
-  outline: none;
-  border-color: var(--admin-theme-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 18%, transparent);
-}
-
-/* ─── Field hints ───────────────────────────────── */
-.field-hint {
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.field-hint-warning {
-  color: var(--admin-theme-danger);
-  margin: -0.35rem 0 0.85rem;
-}
-
-/* ─── Stacked cards / image grid layout wrappers ── */
 .stack-list {
   display: grid;
   gap: 0.75rem;
@@ -1167,36 +927,15 @@ onMounted(async () => {
   gap: 0.85rem;
 }
 
-/* ─── Dark mode ─────────────────────────────────── */
-:global(.admin-dark) .education-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
+.view-mode :deep(input),
+.view-mode :deep(textarea),
+.view-mode :deep(select) {
+  pointer-events: none;
+  opacity: 0.6;
+  user-select: none;
+  cursor: default;
 }
 
-:global(.admin-dark) .btn-primary {
-  color: #071311;
-}
-
-:global(.admin-dark) .manager-hero {
-  background: linear-gradient(
-    135deg,
-    var(--admin-theme-surface) 0%,
-    color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface)) 100%
-  );
-}
-
-/* ─── Responsive ────────────────────────────────── */
 @media (min-width: 900px) {
   .education-admin.sidebar-open {
     padding-left: 260px;
@@ -1213,8 +952,7 @@ onMounted(async () => {
     flex-direction: column;
   }
 
-  .hero-actions,
-  .hero-actions .btn {
+  .hero-actions {
     width: 100%;
   }
 
