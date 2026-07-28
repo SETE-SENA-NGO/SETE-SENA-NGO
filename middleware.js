@@ -57,7 +57,9 @@ export default async function middleware(request) {
   const token = process.env.PRERENDER_TOKEN
   if (!token) {
     // Not configured yet — fail open to normal routing rather than error.
-    return next()
+    return next({
+      headers: { 'x-middleware-debug': 'bot-detected-no-token' },
+    })
   }
 
   const targetUrl = `https://service.prerender.io/${url.toString()}`
@@ -77,7 +79,9 @@ export default async function middleware(request) {
   } catch {
     // If Prerender.io is unreachable, fall back to normal routing rather
     // than showing bots an error page.
-    return next()
+    return next({
+      headers: { 'x-middleware-debug': 'prerender-fetch-failed' },
+    })
   }
 }
 
