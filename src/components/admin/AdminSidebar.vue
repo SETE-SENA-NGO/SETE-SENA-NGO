@@ -160,8 +160,14 @@ function isGroupOpen(group: PageGroup) {
 }
 
 function toggleGroup(group: PageGroup) {
+  const opening = !isGroupOpen(group)
   const nextOverrides = new Map(groupOverrides.value)
-  nextOverrides.set(group.slug, !isGroupOpen(group))
+  if (opening) {
+    for (const otherGroup of pageGroups) {
+      if (otherGroup.slug !== group.slug) nextOverrides.set(otherGroup.slug, false)
+    }
+  }
+  nextOverrides.set(group.slug, opening)
   groupOverrides.value = nextOverrides
 }
 
