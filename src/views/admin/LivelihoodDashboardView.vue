@@ -445,12 +445,9 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
         <header class="manager-hero">
           <div class="manager-title">
             <h1>Manage Livelihood page</h1>
-            <v-chip size="small" variant="tonal" :color="storageMode === 'supabase' ? 'success' : 'warning'">
-              {{ storageMode === 'supabase' ? 'Database' : 'Local only' }}
-            </v-chip>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/programs/livelihood" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/programs/livelihood" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
             </v-btn>

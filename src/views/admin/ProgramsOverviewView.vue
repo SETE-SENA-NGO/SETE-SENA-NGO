@@ -409,7 +409,7 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
             <h1>Manage programs page</h1>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/programs" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/programs" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
             </v-btn>
