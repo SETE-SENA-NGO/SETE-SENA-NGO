@@ -447,7 +447,7 @@ onMounted(() => {
         </div>
       </main>
     </div>
-  </div>
+  </v-app>
 </template>
 
 <style scoped>
