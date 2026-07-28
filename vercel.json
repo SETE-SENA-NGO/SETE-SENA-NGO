@@ -1,5 +1,25 @@
 {
   "rewrites": [
+    { "source": "/about", "destination": "/about/index.html" },
+    { "source": "/about/vision", "destination": "/about/vision/index.html" },
+    { "source": "/about/organization", "destination": "/about/organization/index.html" },
+    { "source": "/programs", "destination": "/programs/index.html" },
+    { "source": "/programs/environment", "destination": "/programs/environment/index.html" },
+    { "source": "/programs/education", "destination": "/programs/education/index.html" },
+    { "source": "/programs/livelihood", "destination": "/programs/livelihood/index.html" },
+    { "source": "/programs/child-protection", "destination": "/programs/child-protection/index.html" },
+    { "source": "/services", "destination": "/services/index.html" },
+    { "source": "/impact/numbers", "destination": "/impact/numbers/index.html" },
+    { "source": "/impact/partners", "destination": "/impact/partners/index.html" },
+    { "source": "/impact/timeline", "destination": "/impact/timeline/index.html" },
+    { "source": "/get-involved", "destination": "/get-involved/index.html" },
+    { "source": "/get-involved/donate", "destination": "/get-involved/donate/index.html" },
+    { "source": "/get-involved/volunteer", "destination": "/get-involved/volunteer/index.html" },
+    { "source": "/get-involved/partner", "destination": "/get-involved/partner/index.html" },
+    { "source": "/contact", "destination": "/contact/index.html" },
+    { "source": "/contact/headoffice", "destination": "/contact/headoffice/index.html" },
+    { "source": "/contact/fieldoffice", "destination": "/contact/fieldoffice/index.html" },
+    { "source": "/qr-donate", "destination": "/qr-donate/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
