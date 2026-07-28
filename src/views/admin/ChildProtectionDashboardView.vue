@@ -1,20 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
-import {
-  BookOpen,
-  ChevronDown,
-  ExternalLink,
-  FolderOpen,
-  Image as ImageIcon,
-  Layers,
-  Lock,
-  Pencil,
-  Plus,
-  Save,
-  Shield,
-  Trash2,
-} from 'lucide-vue-next'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import ImagePickerField from '@/components/admin/ImagePickerField.vue'
@@ -22,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { useUiStore } from '@/stores/ui.store'
 
 const ui = useUiStore()
+useAdminTheme()
 
 /* ─── Types ─────────────────────────────────────── */
 interface EditableSection {
@@ -171,15 +158,13 @@ function loadFromLocalStorage(): void {
   } catch { /* ignore */ }
 }
 
-/* ─── Merge DB sections with defaults to fill empty fields ── */
 function mergeSectionsWithDefaults(dbSections: EditableSection[], defaults: PageDraft): EditableSection[] {
-  // Build result in the CORRECT order (matching defaults), using DB data when available
   const dbMap = new Map<string, EditableSection>()
   for (const s of dbSections) dbMap.set(s.id, s)
 
   return defaults.sections.map(defSec => {
     const dbSec = dbMap.get(defSec.id)
-    if (!dbSec) return { ...defSec } // missing from DB — use default
+    if (!dbSec) return { ...defSec }
     return {
       id: dbSec.id,
       label: dbSec.label?.trim() ? dbSec.label : defSec.label,
@@ -222,7 +207,6 @@ function snapshotData(): string {
 
 const isDirty = computed(() => savedSnapshot.value !== snapshotData())
 
-/* ─── Load from programs table ─────────────────── */
 async function loadPageContent() {
   loading.value = true
   try {
@@ -282,7 +266,6 @@ async function loadPageContent() {
   }
 }
 
-/* ─── Save to programs table ────────────────────── */
 async function savePageContent() {
   saving.value = true
   try {
@@ -363,7 +346,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :class="['cp-admin', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['cp-admin', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -374,39 +357,50 @@ onMounted(async () => {
           <div class="hero-accent-line" aria-hidden="true"></div>
           <div class="hero-content-wrap">
             <div class="hero-icon-wrap">
-              <Shield :size="22" aria-hidden="true" />
+              <v-icon size="22" color="primary">mdi-shield-check</v-icon>
             </div>
             <div class="manager-title">
               <p class="eyebrow">Child Protection Program</p>
               <h1>Manage Child Protection page</h1>
-              <div class="manager-meta" aria-label="Editable child protection summary">
-                <span>{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</span>
-                <span>{{ statsBand.length }} stats</span>
-                <span>{{ page.sections.length }} sections</span>
-                <span v-if="isDirty" class="meta-dirty">Unsaved changes</span>
-                <span v-else-if="page.updatedAt">Saved {{ formatDate(page.updatedAt) }}</span>
+              <div class="manager-meta">
+                <v-chip size="x-small" variant="tonal" color="primary">{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</v-chip>
+                <v-chip size="x-small" variant="tonal" color="primary">{{ statsBand.length }} stats</v-chip>
+                <v-chip size="x-small" variant="tonal" color="primary">{{ page.sections.length }} sections</v-chip>
+                <v-chip v-if="isDirty" size="x-small" variant="tonal" color="warning">Unsaved changes</v-chip>
+                <v-chip v-else-if="page.updatedAt" size="x-small" variant="tonal" color="success">Saved {{ formatDate(page.updatedAt) }}</v-chip>
               </div>
             </div>
           </div>
           <div class="hero-actions">
-            <RouterLink class="btn btn-secondary" to="/programs/child-protection">
-              <ExternalLink :size="16" aria-hidden="true" />
-              <span>View page</span>
-            </RouterLink>
-            <button type="button" class="btn btn-edit" :class="{ 'btn-edit-active': editing }" @click="toggleEditing">
-              <Lock :size="15" aria-hidden="true" />
-              <span>{{ editing ? 'Editing enabled' : 'Enable editing' }}</span>
-            </button>
-            <button type="button" class="btn btn-primary" :disabled="saving || loading || !isDirty || !editing" @click="savePageContent">
-              <Save :size="16" aria-hidden="true" />
-              <span>{{ saving ? 'Saving...' : 'Save changes' }}</span>
-            </button>
+            <v-btn variant="tonal" to="/programs/child-protection" target="_blank" size="small">
+              <v-icon start size="16">mdi-open-in-new</v-icon>
+              View page
+            </v-btn>
+            <v-btn
+              variant="tonal"
+              :color="editing ? 'primary' : 'default'"
+              size="small"
+              @click="toggleEditing"
+            >
+              <v-icon start size="16">{{ editing ? 'mdi-lock-open' : 'mdi-lock' }}</v-icon>
+              {{ editing ? 'Editing enabled' : 'Enable editing' }}
+            </v-btn>
+            <v-btn
+              color="primary"
+              size="small"
+              :loading="saving"
+              :disabled="saving || loading || !isDirty || !editing"
+              @click="savePageContent"
+            >
+              <v-icon start size="16">mdi-content-save</v-icon>
+              {{ saving ? 'Saving...' : 'Save changes' }}
+            </v-btn>
           </div>
         </header>
 
-        <div v-if="loading" class="state-card">
-          <span class="state-spinner" aria-hidden="true"></span>
-          <span>Loading Child Protection content...</span>
+        <div v-if="loading" class="d-flex flex-column align-center justify-center pa-8 text-medium-emphasis">
+          <v-progress-circular indeterminate color="primary" :size="36" :width="4" />
+          <span class="mt-4 font-weight-bold">Loading Child Protection content...</span>
         </div>
 
         <div v-else class="content-grid" :class="{ 'view-mode': !editing }">
@@ -415,7 +409,7 @@ onMounted(async () => {
             <button class="panel-header panel-header-clickable" aria-expanded="true" @click="togglePanel('quick-links')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <FolderOpen :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-folder-open</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Shortcuts</p>
@@ -423,21 +417,21 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }" aria-hidden="true" />
+                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['quick-links'] }">mdi-chevron-down</v-icon>
               </div>
             </button>
             <Transition name="collapse">
               <div v-show="expandedPanels['quick-links']" class="panel-body quick-links-body">
                 <RouterLink class="quick-link" to="/admin/media">
-                  <FolderOpen :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-folder-open</v-icon>
                   <div>
                     <strong>Media Library</strong>
                     <span>Upload images for this page</span>
                   </div>
                 </RouterLink>
                 <RouterLink class="quick-link" to="/admin/modules/programs">
-                  <Layers :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-layers</v-icon>
                   <div>
                     <strong>Program Records</strong>
                     <span>Manage child protection data entries</span>
@@ -452,7 +446,7 @@ onMounted(async () => {
             <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['hero-header']" @click="togglePanel('hero-header')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <Shield :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-shield-check</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Public page</p>
@@ -460,34 +454,25 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['hero-header'] }" aria-hidden="true" />
+                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['hero-header'] }">mdi-chevron-down</v-icon>
               </div>
             </button>
             <Transition name="collapse">
               <div v-show="expandedPanels['hero-header']" class="image-editor-grid">
                 <figure class="image-preview hero-preview">
-                  <img v-if="page.heroImageUrl" :src="page.heroImageUrl" alt="" />
+                  <v-img v-if="page.heroImageUrl" :src="page.heroImageUrl" aspect-ratio="16/10" cover />
                   <div v-else class="slot-empty">
-                    <ImageIcon :size="22" aria-hidden="true" />
+                    <v-icon size="22" color="disabled">mdi-image</v-icon>
                     <span>No image set</span>
                   </div>
                 </figure>
 
                 <div class="form-stack">
                   <div class="form-grid">
-                    <label class="field">
-                      <span>Eyebrow / badge</span>
-                      <input v-model="page.eyebrow" type="text" placeholder="e.g. Child Protection" />
-                    </label>
-                    <label class="field wide">
-                      <span>Headline (main title)</span>
-                      <input v-model="page.headline" type="text" placeholder="Safeguarding children through local action." />
-                    </label>
-                    <label class="field wide">
-                      <span>Intro / description</span>
-                      <textarea v-model="page.intro" rows="3" placeholder="Cross-border migration, poverty and family separation put rural Cambodian children at risk."></textarea>
-                    </label>
+                    <v-text-field v-model="page.eyebrow" label="Eyebrow / badge" placeholder="e.g. Child Protection" hide-details density="comfortable" variant="outlined" />
+                    <v-text-field v-model="page.headline" label="Headline (main title)" placeholder="Safeguarding children through local action." hide-details density="comfortable" variant="outlined" class="field-wide" />
+                    <v-textarea v-model="page.intro" label="Intro / description" rows="3" placeholder="Cross-border migration, poverty and family separation..." hide-details density="comfortable" variant="outlined" class="field-wide" />
                   </div>
 
                   <ImagePickerField
@@ -508,7 +493,7 @@ onMounted(async () => {
             <div class="panel-header">
               <div class="panel-header-left panel-header-left-clickable" @click="togglePanel('stats')">
                 <div class="panel-icon-wrap">
-                  <Layers :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-chart-bar</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Stats band</p>
@@ -516,14 +501,11 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <button type="button" class="btn btn-secondary btn-sm" :disabled="!editing" @click="statsBand.push({ number: '', label: '', description: '' })">
-                  <Plus :size="15" aria-hidden="true" />
-                  <span>Add stat</span>
-                </button>
-                <button type="button" class="icon-btn icon-btn-ghost" aria-label="Toggle panel" @click="togglePanel('stats')">
-                  <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }" />
-                </button>
+                <v-btn v-if="editing" variant="tonal" color="accent" size="x-small" @click="statsBand.push({ number: '', label: '', description: '' })">
+                  <v-icon start size="14">mdi-plus</v-icon>
+                  Add stat
+                </v-btn>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['stats'] }">mdi-chevron-down</v-icon>
               </div>
             </div>
             <Transition name="collapse">
@@ -535,23 +517,14 @@ onMounted(async () => {
                     <header class="sub-editor-header">
                       <span class="item-number">{{ String(index + 1).padStart(2, '0') }}</span>
                       <h3>Stat {{ index + 1 }}</h3>
-                      <button type="button" class="icon-btn danger" :disabled="!editing" aria-label="Remove stat" @click="confirmDeleteStat(index)">
-                        <Trash2 :size="15" aria-hidden="true" />
-                      </button>
+                      <v-btn v-if="editing" icon variant="tonal" color="error" size="x-small" aria-label="Remove stat" @click="confirmDeleteStat(index)">
+                        <v-icon size="15">mdi-delete</v-icon>
+                      </v-btn>
                     </header>
                     <div class="sub-editor-body form-grid">
-                      <label class="field">
-                        <span>Number</span>
-                        <input v-model="stat.number" type="text" placeholder="e.g. 43" />
-                      </label>
-                      <label class="field">
-                        <span>Label</span>
-                        <input v-model="stat.label" type="text" placeholder="e.g. COMMUNES" />
-                      </label>
-                      <label class="field wide">
-                        <span>Description</span>
-                        <input v-model="stat.description" type="text" placeholder="Brief description of this statistic" />
-                      </label>
+                      <v-text-field v-model="stat.number" label="Number" placeholder="e.g. 43" hide-details density="compact" variant="outlined" />
+                      <v-text-field v-model="stat.label" label="Label" placeholder="e.g. COMMUNES" hide-details density="compact" variant="outlined" />
+                      <v-text-field v-model="stat.description" label="Description" placeholder="Brief description" hide-details density="compact" variant="outlined" class="field-wide" />
                     </div>
                   </article>
                 </div>
@@ -564,7 +537,7 @@ onMounted(async () => {
             <button class="panel-header panel-header-clickable" :aria-expanded="expandedPanels['content']" @click="togglePanel('content')">
               <div class="panel-header-left">
                 <div class="panel-icon-wrap">
-                  <BookOpen :size="18" aria-hidden="true" />
+                  <v-icon size="18">mdi-book-open-variant</v-icon>
                 </div>
                 <div>
                   <p class="panel-kicker">Content</p>
@@ -572,8 +545,8 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="panel-header-actions">
-                <Pencil :size="15" class="edit-icon" aria-hidden="true" />
-                <ChevronDown :size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['content'] }" aria-hidden="true" />
+                <v-icon size="15" color="disabled">mdi-pencil</v-icon>
+                <v-icon size="18" class="chevron" :class="{ 'chevron-up': !expandedPanels['content'] }">mdi-chevron-down</v-icon>
               </div>
             </button>
             <Transition name="collapse">
@@ -587,20 +560,11 @@ onMounted(async () => {
                       <h3>{{ section.heading || 'No heading yet' }}</h3>
                     </header>
                     <div class="sub-editor-body">
-                      <label class="field wide">
-                        <span>Heading</span>
-                        <input v-model="section.heading" type="text" :placeholder="'Heading for ' + section.label" />
-                      </label>
-                      <label class="field wide">
-                        <span>Body / description</span>
-                        <textarea v-model="section.body" rows="3" :placeholder="'Description for ' + section.label"></textarea>
-                      </label>
-                      <label class="field wide">
-                        <span>Bullet items <em>(one per line)</em></span>
-                        <textarea v-model="section.items" rows="5" placeholder="Anti-trafficking campaigns&#10;Child Protection Networks&#10;Child rights advocacy"></textarea>
-                      </label>
+                      <v-text-field v-model="section.heading" label="Heading" :placeholder="'Heading for ' + section.label" hide-details density="compact" variant="outlined" class="field-wide" />
+                      <v-textarea v-model="section.body" label="Body / description" rows="3" :placeholder="'Description for ' + section.label" hide-details density="compact" variant="outlined" class="field-wide" />
+                      <v-textarea v-model="section.items" label="Bullet items (one per line)" rows="5" placeholder="Anti-trafficking campaigns&#10;Child Protection Networks&#10;Child rights advocacy" hide-details density="compact" variant="outlined" class="field-wide" />
                       <div v-if="parsedItemsForSection(section).length" class="item-chips">
-                        <span v-for="item in parsedItemsForSection(section)" :key="item" class="item-chip">{{ item }}</span>
+                        <v-chip v-for="item in parsedItemsForSection(section)" :key="item" size="x-small" variant="tonal" color="primary">{{ item }}</v-chip>
                       </div>
                     </div>
                   </article>
@@ -611,25 +575,11 @@ onMounted(async () => {
         </div>
       </main>
     </div>
-  </div>
+  </v-app>
 </template>
 
 <style scoped>
 .cp-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-
   min-height: 100vh;
   background: var(--admin-bg);
   color: var(--admin-text);
@@ -695,7 +645,6 @@ onMounted(async () => {
   border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
   border-radius: 8px;
   background: color-mix(in srgb, var(--admin-theme-primary-deep) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
 }
 
 .manager-title {
@@ -718,24 +667,8 @@ onMounted(async () => {
 .manager-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.3rem;
   margin-top: 0.1rem;
-}
-
-.manager-meta span {
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border-strong));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 8%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  padding: 0.18rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.manager-meta span.meta-dirty {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 45%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
 }
 
 .hero-actions {
@@ -756,193 +689,97 @@ onMounted(async () => {
   margin: 0;
 }
 
-.btn,
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0.55rem 0.8rem;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  white-space: nowrap;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+.panel-desc {
+  color: var(--admin-theme-muted);
+  font-size: 0.82rem;
+  margin-bottom: 0.85rem;
 }
 
-.btn:hover,
-.icon-btn:hover {
-  transform: translateY(-1px);
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
 }
 
-.btn:active,
-.icon-btn:active {
-  transform: translateY(0px);
+.field-wide {
+  grid-column: 1 / -1;
 }
 
-.btn:disabled,
-.icon-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none;
+.quick-links-body {
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
 }
 
-.btn-primary {
-  border-color: var(--admin-theme-primary-deep);
-  background: linear-gradient(180deg, var(--admin-theme-primary), var(--admin-theme-primary-deep));
-  color: #ffffff;
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--admin-theme-primary) 22%, transparent);
-}
-
-.btn-primary:hover {
-  box-shadow: 0 14px 28px color-mix(in srgb, var(--admin-theme-primary) 30%, transparent);
-}
-
-.btn-secondary,
-.icon-btn {
-  border-color: color-mix(in srgb, var(--admin-theme-contrast-soft) 42%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-surface) 86%, var(--admin-theme-contrast) 14%);
-  color: var(--admin-theme-contrast);
-}
-
-.icon-btn {
-  width: 34px;
-  min-height: 34px;
-  padding: 0;
-}
-
-.icon-btn.danger {
-  border-color: color-mix(in srgb, var(--admin-theme-danger) 64%, var(--admin-theme-border));
-  background: color-mix(in srgb, var(--admin-theme-danger) 9%, var(--admin-theme-surface));
-  color: var(--admin-theme-danger);
-}
-
-.btn-secondary:hover,
-.icon-btn:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-}
-
-.icon-btn.danger:hover {
-  border-color: var(--admin-theme-danger);
-  background: var(--admin-theme-danger);
-  color: #ffffff;
-}
-
-.btn-sm {
-  min-height: 32px;
-  padding: 0.4rem 0.65rem;
-  font-size: 0.78rem;
-}
-
-/* ─── View mode (editing disabled) ────────────── */
-.view-mode input,
-.view-mode textarea,
-.view-mode select {
-  pointer-events: none;
-  opacity: 0.6;
-  background: var(--admin-theme-surface-soft);
-  user-select: none;
-  cursor: default;
-}
-
-.view-mode :deep(input),
-.view-mode :deep(textarea),
-.view-mode :deep(select) {
-  pointer-events: none;
-  opacity: 0.6;
-  user-select: none;
-  cursor: default;
-}
-
-.view-mode .sub-editor:hover {
-  border-color: var(--admin-theme-border);
-}
-
-.view-mode .icon-btn-pencil {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.btn-edit {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 38px;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 30%, var(--admin-theme-border));
-  border-radius: 7px;
-  background: transparent;
-  color: var(--admin-theme-primary-deep);
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
-  padding: 0.55rem 0.8rem;
-  transition: all 0.18s ease;
-}
-
-.btn-edit:hover {
-  background: color-mix(in srgb, var(--admin-theme-primary) 10%, transparent);
-  border-color: var(--admin-theme-primary);
-  transform: translateY(-1px);
-}
-
-.btn-edit-active {
-  background: var(--admin-theme-primary);
-  color: #ffffff;
-  border-color: var(--admin-theme-primary-deep);
-}
-
-.btn-edit-active:hover {
-  background: var(--admin-theme-primary-deep);
-}
-
-.state-card {
+.quick-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  margin-top: 1rem;
+  gap: 0.65rem;
   border: 1px solid var(--admin-theme-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--admin-theme-surface);
+  color: var(--admin-theme-primary-deep);
+  padding: 0.7rem 0.85rem;
+  text-decoration: none;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.quick-link:hover {
+  border-color: var(--admin-theme-primary);
+  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
+  transform: translateY(-1px);
+}
+
+.quick-link strong {
+  display: block;
+  color: var(--admin-theme-contrast);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.quick-link span {
+  display: block;
   color: var(--admin-theme-muted);
-  padding: 2.5rem 1rem;
-  font-weight: 700;
-  text-align: center;
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
-.state-spinner {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  border: 2px solid var(--admin-theme-border);
-  border-top-color: var(--admin-theme-primary);
-  border-radius: 50%;
-  animation: state-spin 0.8s linear infinite;
-}
-
-@keyframes state-spin {
-  to { transform: rotate(360deg); }
-}
-
-.content-grid {
+.image-editor-grid {
   display: grid;
-  gap: 0.9rem;
-  margin-top: 1rem;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(320px, 1.3fr);
+  gap: 1.1rem;
+  padding: 1.1rem;
+}
+
+.image-preview {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
+  border-radius: 7px;
+  background: var(--admin-theme-surface-soft);
+}
+
+.hero-preview {
+  aspect-ratio: 16 / 10;
+}
+
+.slot-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  color: var(--admin-theme-muted);
+  opacity: 0.7;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.form-stack {
+  display: grid;
+  gap: 0.85rem;
 }
 
 .editor-panel {
@@ -1003,14 +840,7 @@ onMounted(async () => {
 
 .panel-header-clickable {
   width: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
   border: none;
-  border-bottom: 1px solid var(--admin-theme-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-surface-soft) 50%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
-  padding: 0.85rem 1rem;
   font: inherit;
   color: inherit;
   text-align: left;
@@ -1035,147 +865,6 @@ onMounted(async () => {
   padding: 1rem;
 }
 
-.panel-desc {
-  color: var(--admin-theme-muted);
-  font-size: 0.82rem;
-  margin-bottom: 0.85rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.35rem;
-  color: var(--admin-theme-muted);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.field span {
-  color: var(--admin-theme-contrast-soft);
-}
-
-.field input,
-.field textarea {
-  width: 100%;
-  border: 1px solid var(--admin-theme-border-strong);
-  border-radius: 6px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-text);
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.65rem 0.75rem;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.field textarea {
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.field input:focus,
-.field textarea:focus {
-  border-color: var(--admin-theme-primary);
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary) 15%, transparent);
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.wide {
-  grid-column: 1 / -1;
-}
-
-/* Quick links */
-.quick-links-body {
-  padding: 1rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.65rem;
-}
-
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-primary-deep);
-  padding: 0.7rem 0.85rem;
-  text-decoration: none;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
-}
-
-.quick-link:hover {
-  border-color: var(--admin-theme-primary);
-  background: color-mix(in srgb, var(--admin-theme-primary) 8%, var(--admin-theme-surface));
-  transform: translateY(-1px);
-}
-
-.quick-link strong {
-  display: block;
-  color: var(--admin-theme-contrast);
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.quick-link span {
-  display: block;
-  color: var(--admin-theme-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-}
-
-/* Hero image editor */
-.image-editor-grid {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.7fr) minmax(320px, 1.3fr);
-  gap: 1.1rem;
-  padding: 1.1rem;
-}
-
-.image-preview {
-  margin: 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 34%, var(--admin-theme-border));
-  border-radius: 7px;
-  background: var(--admin-theme-surface-soft);
-}
-
-.image-preview img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-preview {
-  aspect-ratio: 16 / 10;
-}
-
-.slot-empty {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  color: var(--admin-theme-muted);
-  opacity: 0.7;
-  font-size: 0.76rem;
-  font-weight: 700;
-}
-
-.form-stack {
-  display: grid;
-  gap: 0.85rem;
-}
-
-/* Numbered / repeated item cards shared by stats & sections */
 .stack-list {
   display: grid;
   gap: 0.75rem;
@@ -1248,34 +937,7 @@ onMounted(async () => {
   gap: 0.35rem;
 }
 
-.item-chip {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--admin-theme-primary) 12%, var(--admin-theme-surface));
-  color: var(--admin-theme-primary-deep);
-  font-size: 0.74rem;
-  font-weight: 700;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-primary) 14%, transparent);
-}
-
-/* Edit icon */
-.edit-icon {
-  color: var(--admin-theme-muted);
-  opacity: 0.5;
-  transition: opacity 0.15s ease, color 0.15s ease;
-  flex-shrink: 0;
-}
-
-.panel-header:hover .edit-icon {
-  opacity: 1;
-  color: var(--admin-theme-primary-deep);
-}
-
-/* Chevron */
 .chevron {
-  color: var(--admin-theme-muted);
-  flex-shrink: 0;
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1283,33 +945,10 @@ onMounted(async () => {
   transform: rotate(-180deg);
 }
 
-/* Icon button ghost (no border, just icon) */
-.icon-btn-ghost {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 30px !important;
-  min-height: 30px !important;
-  border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  color: var(--admin-theme-muted) !important;
-  cursor: pointer;
-  padding: 0 !important;
-  transition: background 0.15s ease, color 0.15s ease !important;
-}
-
-.icon-btn-ghost:hover {
-  background: color-mix(in srgb, var(--admin-theme-surface-soft) 60%, var(--admin-theme-surface)) !important;
-  color: var(--admin-theme-primary-deep) !important;
-}
-
 /* Collapse transition */
 .collapse-leave-active,
 .collapse-enter-active {
-  transition:
-    opacity 0.24s ease,
-    max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.24s ease, max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
 }
 
@@ -1325,36 +964,14 @@ onMounted(async () => {
   max-height: 6000px;
 }
 
-:global(.admin-dark) .cp-admin {
-  --admin-bg: var(--admin-theme-bg);
-  --admin-surface: var(--admin-theme-surface);
-  --admin-surface-soft: var(--admin-theme-surface-soft);
-  --admin-contrast: var(--admin-theme-contrast);
-  --admin-contrast-soft: var(--admin-theme-contrast-soft);
-  --admin-text: var(--admin-theme-text);
-  --admin-muted: var(--admin-theme-muted);
-  --admin-border: var(--admin-theme-border);
-  --admin-border-strong: var(--admin-theme-border-strong);
-  --admin-primary: var(--admin-theme-primary);
-  --admin-primary-deep: var(--admin-theme-primary-deep);
-  --admin-danger: var(--admin-theme-danger);
-  --admin-shadow: var(--admin-theme-shadow);
-}
-
-:global(.admin-dark) .btn-primary {
-  color: #071311;
-}
-
-:global(.admin-dark) .manager-hero {
-  background: linear-gradient(135deg, var(--admin-theme-surface) 0%, color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) 100%);
-}
-
-:global(.admin-dark) .hero-icon-wrap {
-  background: color-mix(in srgb, var(--admin-theme-primary-deep) 20%, var(--admin-theme-surface));
-}
-
-:global(.admin-dark) .panel-header-clickable:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) 0%, var(--admin-theme-surface) 100%);
+/* View mode */
+.view-mode :deep(input),
+.view-mode :deep(textarea),
+.view-mode :deep(select) {
+  pointer-events: none;
+  opacity: 0.6;
+  user-select: none;
+  cursor: default;
 }
 
 @media (min-width: 900px) {
@@ -1375,8 +992,7 @@ onMounted(async () => {
     flex-direction: column;
   }
 
-  .hero-actions,
-  .hero-actions .btn {
+  .hero-actions {
     width: 100%;
   }
 
