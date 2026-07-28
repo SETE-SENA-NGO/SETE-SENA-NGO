@@ -965,6 +965,12 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   }
 }
 
+@media (max-width: 1100px) {
+  .stack-list.two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .manager-main {
     padding: 1rem;
