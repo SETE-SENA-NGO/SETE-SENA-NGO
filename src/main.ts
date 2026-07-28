@@ -58,10 +58,37 @@ const vuetify = createVuetify({
     VTextField: {
       variant: 'outlined',
       density: 'comfortable',
+      rounded: 'lg',
+      color: 'var(--admin-form-focus)',
+      baseColor: 'var(--admin-form-border)',
     },
     VTextarea: {
       variant: 'outlined',
       density: 'comfortable',
+      rounded: 'lg',
+      color: 'var(--admin-form-focus)',
+      baseColor: 'var(--admin-form-border)',
+    },
+    VSelect: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg',
+      color: 'var(--admin-form-focus)',
+      baseColor: 'var(--admin-form-border)',
+    },
+    VAutocomplete: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg',
+      color: 'var(--admin-form-focus)',
+      baseColor: 'var(--admin-form-border)',
+    },
+    VCombobox: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg',
+      color: 'var(--admin-form-focus)',
+      baseColor: 'var(--admin-form-border)',
     },
     VCard: {
       rounded: 'lg',

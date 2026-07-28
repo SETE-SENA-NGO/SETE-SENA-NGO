@@ -6,6 +6,7 @@ import acledaLogo from '@/assets/acleda-logo.png'
 import {
   defaultDonationMethods,
   fetchDonationMethods,
+  toFixedDonationSlots,
   type DonationMethod,
 } from '@/lib/donationSettings'
 import { subscribeToTableChanges } from '@/lib/realtime'
@@ -135,7 +136,7 @@ onUnmounted(() => {
 
 const methods = computed<PayMethod[]>(() => {
   const source = savedMethods.value.length
-    ? savedMethods.value
+    ? toFixedDonationSlots(savedMethods.value)
     : defaultDonationMethods()
   return source.map((method) => toPayMethod(method, activeLocale.value))
 })

@@ -67,6 +67,17 @@ export function defaultDonationMethods(): DonationMethod[] {
   ]
 }
 
+// Collapses whatever rows exist in the DB down to the two fixed bank slots
+// ('aba' and 'acleda') the admin panel manages, matching by slug first and
+// falling back to position — so stray/duplicate rows never surface as extra
+// cards on the public Support Us page.
+export function toFixedDonationSlots(saved: DonationMethod[]): DonationMethod[] {
+  return defaultDonationMethods().map((slot, index) => {
+    const match = saved.find((m) => m.id === slot.id) ?? saved[index]
+    return match ? { ...slot, ...match, id: slot.id } : slot
+  })
+}
+
 function rowToMethod(row: DonationMethodRow): DonationMethod {
   const meta = row.metadata ?? {}
   return {

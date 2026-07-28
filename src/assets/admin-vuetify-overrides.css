@@ -27,27 +27,76 @@
   opacity: 0 !important;
 }
 
-/* Outlined text field theme alignment */
+/*
+  Outlined field theme alignment. The idle/focused/error border color is
+  NOT set here directly - VTextField/VTextarea/VSelect/VAutocomplete/
+  VCombobox get `color: 'var(--admin-form-focus)'` and `baseColor: 'var(
+  --admin-form-border)'` as global defaults (see main.ts), and Vuetify's
+  own VField CSS resolves those into the outline's `currentColor` via an
+  inline style that already reacts correctly to focus/error state. Setting
+  border-color explicitly here would win the cascade (same specificity,
+  later source) and permanently flatten every state - idle, focused, and
+  error - to one color, which is what silently broke the focus/error
+  outline before this comment was added.
+*/
 .v-field--variant-outlined {
-  background: var(--admin-theme-surface);
+  background: var(--admin-form-bg);
+  border-radius: var(--admin-form-radius);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.v-field--variant-outlined .v-field__outline__start,
-.v-field--variant-outlined .v-field__outline__end,
-.v-field--variant-outlined .v-field__outline__notch::before,
-.v-field--variant-outlined .v-field__outline__notch::after {
-  border-color: var(--admin-theme-border-strong);
+/* Bump comfortable-density outlined fields up from Vuetify's 48px default
+   toward the 52-56px target height. */
+.v-input--density-comfortable .v-field--variant-outlined {
+  --v-input-control-height: 54px;
+}
+
+/* Compact density (used for the repeated sub-fields inside item-card lists -
+   gift/vision/value cards, table-style rows, etc. across most admin content
+   editors) stays deliberately shorter than comfortable fields so long lists
+   don't get impractically tall, but Vuetify's own 40px default still reads
+   cramped next to the rest of the panel - split the difference. */
+.v-input--density-compact .v-field--variant-outlined {
+  --v-input-control-height: 44px;
 }
 
 .v-field__input,
 textarea.v-field__input {
   color: var(--admin-theme-contrast);
   font-weight: 600;
+  font-size: 1rem;
+}
+
+textarea.v-field__input {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.v-field__input::placeholder {
+  color: var(--admin-form-placeholder);
+  opacity: 1;
+}
+
+/* Idle-state border darkens slightly on hover; focus (below) still wins
+   since it's a more specific state applied via Vuetify's own class. */
+@media (hover: hover) {
+  .v-field--variant-outlined:hover:not(.v-field--focused):not(.v-field--disabled) .v-field__outline {
+    color: var(--admin-form-border-hover);
+  }
+}
+
+.v-field--variant-outlined.v-field--focused {
+  box-shadow: 0 0 0 4px var(--admin-form-focus-shadow);
+}
+
+.v-field__input:focus,
+.v-field__input:focus-visible {
+  outline: none;
 }
 
 .v-label.v-field-label {
-  color: var(--admin-theme-muted);
-  font-weight: 600;
+  color: var(--admin-form-label);
+  font-weight: 700;
   opacity: 1;
 }
 
@@ -98,4 +147,34 @@ textarea.v-field__input {
 .v-field--disabled .v-field__outline__notch::after {
   border-color: var(--admin-theme-border);
   opacity: 1;
+}
+
+/*
+  Read-only fields (native `readonly` attribute, e.g. `<v-text-field
+  readonly>`) get no distinct styling from Vuetify by default - readonly
+  inputs look identical to editable ones. Give them the filled/muted look
+  fields displaying saved values should have, without touching every
+  template that sets `readonly`.
+*/
+.v-field:has(input[readonly]),
+.v-field:has(textarea[readonly]) {
+  background: color-mix(in srgb, var(--admin-theme-surface-soft) 55%, var(--admin-theme-surface));
+}
+
+.v-field:has(input[readonly]) .v-field__input,
+.v-field:has(textarea[readonly]) .v-field__input {
+  color: var(--admin-theme-contrast);
+  font-weight: 700;
+  cursor: default;
+}
+
+/* Helper text / error messages under a field */
+.v-messages {
+  color: var(--admin-theme-muted);
+  font-size: 0.76rem;
+  opacity: 1;
+}
+
+.v-input--error .v-messages {
+  color: var(--admin-theme-danger);
 }

@@ -28,6 +28,18 @@
   --admin-theme-danger: #d14343;
   --admin-theme-shadow: 0 18px 44px rgba(15, 95, 73, 0.1);
 
+  /* Admin form fields (labels, inputs, textareas) - shared across every
+     admin page (Vuetify-driven and raw HTML alike) so one edit here keeps
+     the whole panel's forms in sync. */
+  --admin-form-label: #1f5d4e;
+  --admin-form-bg: #ffffff;
+  --admin-form-border: #c9d8d0;
+  --admin-form-border-hover: #a9c2b7;
+  --admin-form-focus: #2f7d5a;
+  --admin-form-focus-shadow: rgba(47, 125, 90, 0.15);
+  --admin-form-placeholder: #9aa8a1;
+  --admin-form-radius: 16px;
+
   --font-family-latin: 'Poppins', sans-serif;
   --font-family-khmer: 'Battambang', sans-serif;
   --font-family-base: var(--font-family-latin);
@@ -63,6 +75,17 @@
   --admin-theme-gold: #e0b15a;
   --admin-theme-danger: #fb7185;
   --admin-theme-shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
+
+  /* Dark-mode counterparts of the admin form tokens above - same roles
+     (label / border / focus / placeholder), adapted for a dark surface
+     instead of literal white. */
+  --admin-form-label: #8fd9be;
+  --admin-form-bg: #0a1a14;
+  --admin-form-border: #2d554a;
+  --admin-form-border-hover: #3d6e5e;
+  --admin-form-focus: #38c982;
+  --admin-form-focus-shadow: rgba(56, 201, 130, 0.2);
+  --admin-form-placeholder: #6b8578;
 }
 
 @media (max-width: 640px) {

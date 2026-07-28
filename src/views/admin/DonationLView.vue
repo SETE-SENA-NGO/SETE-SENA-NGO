@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useAdminTheme } from '@/composables/useAdminTheme'
+import { useSectionEditor } from '@/composables/useSectionEditor'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
 import ImageCropModal from '@/components/admin/ImageCropModal.vue'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
@@ -11,6 +13,7 @@ import {
   defaultDonationMethods,
   fetchDonationMethods,
   saveDonationMethod,
+  toFixedDonationSlots,
   type DonationMethod,
 } from '@/lib/donationSettings'
 
@@ -30,25 +33,58 @@ const activeMethod = computed<DonationMethod>(
   () => methods.value[activeIndex.value] ?? methods.value[0]!,
 )
 
+// Same Edit -> Cancel/Done gating as every other admin content editor. There's
+// only ever one section (the active bank), but which bank it points at
+// changes when the switcher tab changes - selectMethod() resets
+// editingSections.method directly so a stale snapshot never gets applied to
+// the wrong bank.
+const { editingSections, toggleEdit, cancelEdit } = useSectionEditor([
+  {
+    key: 'method',
+    getSnapshot: () => ({ ...activeMethod.value }),
+    applySnapshot: (value) => {
+      Object.assign(activeMethod.value, value)
+    },
+  },
+])
+
+function selectMethod(index: number) {
+  editingSections.method = false
+  activeIndex.value = index
+}
+
 const loading = ref(true)
 const savingId = ref<string | null>(null)
 const cardMessages = reactive<Record<string, { text: string; type: 'success' | 'error' }>>({})
 const fileInputRefs = reactive<Record<string, HTMLInputElement | null>>({})
 
-function toFixedSlots(saved: DonationMethod[]): DonationMethod[] {
-  return defaultDonationMethods().map((slot, index) => {
-    const match = saved.find((m) => m.id === slot.id) ?? saved[index]
-    return match ? { ...slot, ...match, id: slot.id } : slot
-  })
+// Save button only lights up once the active bank actually differs from what
+// was last loaded/saved — same "disabled until there's something to save" as
+// the AdminSectionNav "Save Change" button every other admin editor uses.
+const originalSnapshots = reactive<Record<string, string>>({})
+
+function snapshotMethod(method: DonationMethod) {
+  return JSON.stringify(method)
 }
+
+function updateSnapshot(method: DonationMethod) {
+  originalSnapshots[method.id] = snapshotMethod(method)
+}
+
+const hasActiveChanges = computed(() => {
+  const method = activeMethod.value
+  if (!method) return false
+  return snapshotMethod(method) !== originalSnapshots[method.id] || Boolean(pendingFiles[method.id])
+})
 
 onMounted(async () => {
   try {
     const saved = await fetchDonationMethods()
-    if (saved.length) methods.value = toFixedSlots(saved)
+    if (saved.length) methods.value = toFixedDonationSlots(saved)
   } catch {
     // No settings saved yet — start from defaults.
   } finally {
+    for (const method of methods.value) updateSnapshot(method)
     loading.value = false
   }
 })
@@ -150,6 +186,7 @@ async function saveCard(method: DonationMethod, index: number) {
     }
 
     await saveDonationMethod(method, index)
+    updateSnapshot(method)
 
     cardMessages[method.id] = { text: 'Saved. The Support Us page is now updated.', type: 'success' }
   } catch (e) {
@@ -196,22 +233,22 @@ async function saveCard(method: DonationMethod, index: number) {
                 :aria-selected="i === activeIndex"
                 size="small"
                 class="switch-tab"
-                @click="activeIndex = i"
+                @click="selectMethod(i)"
               >
                 <v-icon start size="14">mdi-bank</v-icon>
                 {{ i === 0 ? 'First bank' : 'Second bank' }}
               </v-btn>
             </div>
 
-            <article class="method-card">
-              <header class="method-head" :style="{ background: activeMethod.headerColor }">
-                <v-icon start size="28" color="white">mdi-bank</v-icon>
-                <div class="head-copy">
-                  <div class="bank-name">{{ activeMethod.bank || 'New bank' }}</div>
-                  <div class="bank-subtitle">{{ activeMethod.subtitle || 'Bank subtitle' }}</div>
-                </div>
-              </header>
-
+            <AdminEditorPanel
+              :key="activeMethod.id"
+              id="active-method-panel"
+              :kicker="activeIndex === 0 ? 'First bank' : 'Second bank'"
+              :heading="activeMethod.bank || 'New bank'"
+              :editing="!!editingSections.method"
+              @toggle-edit="toggleEdit('method')"
+              @cancel="cancelEdit('method')"
+            >
               <div class="method-body">
                 <div class="method-body-col">
                   <div class="qr-preview" :style="{ borderColor: activeMethod.headerColor }">
@@ -239,13 +276,14 @@ async function saveCard(method: DonationMethod, index: number) {
                       type="file"
                       accept="image/*"
                       class="sr-only"
+                      :disabled="!editingSections.method"
                       @change="onFileChange(activeMethod, $event)"
                     />
                     <v-btn
                       variant="tonal"
                       color="primary"
                       size="small"
-                      :disabled="savingId === activeMethod.id"
+                      :disabled="savingId === activeMethod.id || !editingSections.method"
                       @click="fileInputRefs[activeMethod.id]?.click()"
                     >
                       <v-icon start size="16">mdi-upload</v-icon>
@@ -255,7 +293,7 @@ async function saveCard(method: DonationMethod, index: number) {
                       v-if="pendingFiles[activeMethod.id]"
                       variant="tonal"
                       size="small"
-                      :disabled="savingId === activeMethod.id"
+                      :disabled="savingId === activeMethod.id || !editingSections.method"
                       @click="reopenCrop(activeMethod)"
                     >
                       <v-icon start size="16">mdi-crop</v-icon>
@@ -266,7 +304,7 @@ async function saveCard(method: DonationMethod, index: number) {
                       variant="tonal"
                       color="error"
                       size="small"
-                      :disabled="savingId === activeMethod.id"
+                      :disabled="savingId === activeMethod.id || !editingSections.method"
                       @click="removeQr(activeMethod)"
                     >
                       <v-icon start size="16">mdi-delete</v-icon>
@@ -280,6 +318,7 @@ async function saveCard(method: DonationMethod, index: number) {
                     v-model="activeMethod.bank"
                     label="Bank name"
                     placeholder="e.g. Wing Bank"
+                    :disabled="!editingSections.method"
                     hide-details
                     density="comfortable"
                     variant="outlined"
@@ -288,24 +327,15 @@ async function saveCard(method: DonationMethod, index: number) {
                     v-model="activeMethod.subtitle"
                     label="Subtitle"
                     placeholder="e.g. WING BANK - CAMBODIA"
+                    :disabled="!editingSections.method"
                     hide-details
                     density="comfortable"
                     variant="outlined"
                   />
-                  <div class="color-field-wrap">
-                    <label class="color-label">Card color</label>
-                    <div class="color-field">
-                      <input
-                        v-model="activeMethod.headerColor"
-                        type="color"
-                        class="color-input"
-                      />
-                      <span class="color-value">{{ activeMethod.headerColor }}</span>
-                    </div>
-                  </div>
                   <v-text-field
                     v-model="activeMethod.accountName"
                     label="Account name"
+                    :disabled="!editingSections.method"
                     hide-details
                     density="comfortable"
                     variant="outlined"
@@ -313,6 +343,7 @@ async function saveCard(method: DonationMethod, index: number) {
                   <v-text-field
                     v-model="activeMethod.accountNo"
                     label="Account number"
+                    :disabled="!editingSections.method"
                     hide-details
                     density="comfortable"
                     variant="outlined"
@@ -321,35 +352,41 @@ async function saveCard(method: DonationMethod, index: number) {
                     v-model="activeMethod.currency"
                     label="Currency"
                     placeholder="KHR / USD"
+                    :disabled="!editingSections.method"
                     hide-details
                     density="comfortable"
                     variant="outlined"
                   />
                 </div>
               </div>
+            </AdminEditorPanel>
 
-              <footer class="card-save-bar">
-                <div v-if="cardMessages[activeMethod.id]" class="save-message-wrap">
-                  <v-alert
-                    :type="cardMessages[activeMethod.id]?.type"
-                    variant="tonal"
-                    density="compact"
-                    class="save-message"
-                    closable
-                    @click:close="delete cardMessages[activeMethod.id]"
-                  >{{ cardMessages[activeMethod.id]?.text }}</v-alert>
-                </div>
-                <v-btn
-                  color="primary"
-                  :loading="savingId === activeMethod.id"
-                  :disabled="savingId === activeMethod.id"
-                  @click="saveCard(activeMethod, activeIndex)"
-                >
-                  <v-icon start size="18">mdi-content-save</v-icon>
-                  {{ savingId === activeMethod.id ? 'Saving...' : 'Save changes' }}
-                </v-btn>
-              </footer>
-            </article>
+            <footer class="card-save-bar">
+              <div v-if="cardMessages[activeMethod.id]" class="save-message-wrap">
+                <v-alert
+                  :type="cardMessages[activeMethod.id]?.type"
+                  variant="tonal"
+                  density="compact"
+                  class="save-message"
+                  closable
+                  @click:close="delete cardMessages[activeMethod.id]"
+                >{{ cardMessages[activeMethod.id]?.text }}</v-alert>
+              </div>
+              <span v-if="hasActiveChanges" class="unsaved-badge">
+                <v-icon size="10">mdi-circle</v-icon>
+                Unsaved changes
+              </span>
+              <v-btn
+                color="primary"
+                variant="tonal"
+                :loading="savingId === activeMethod.id"
+                :disabled="savingId === activeMethod.id || !hasActiveChanges"
+                @click="saveCard(activeMethod, activeIndex)"
+              >
+                <v-icon start>mdi-content-save</v-icon>
+                {{ savingId === activeMethod.id ? 'Saving...' : 'Save Changes' }}
+              </v-btn>
+            </footer>
           </div>
         </section>
       </main>
@@ -452,40 +489,6 @@ async function saveCard(method: DonationMethod, index: number) {
   font-weight: 700;
 }
 
-.method-card {
-  width: 100%;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 16px;
-  background: var(--admin-theme-surface);
-  box-shadow: var(--admin-theme-shadow);
-  overflow: hidden;
-  display: grid;
-  align-content: start;
-}
-
-.method-head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.4rem;
-  color: #ffffff;
-}
-
-.head-copy {
-  min-width: 0;
-}
-
-.bank-name {
-  font-weight: 800;
-  font-size: 1.05rem;
-}
-
-.bank-subtitle {
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
-  opacity: 0.85;
-}
-
 .method-body {
   padding: 1.4rem;
   display: grid;
@@ -553,39 +556,6 @@ async function saveCard(method: DonationMethod, index: number) {
   white-space: nowrap;
 }
 
-.color-field-wrap {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.color-label {
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: var(--admin-theme-contrast-soft);
-}
-
-.color-field {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-.color-input {
-  width: 3.2rem;
-  height: 2.6rem;
-  border: 1.5px solid var(--admin-theme-border-strong);
-  border-radius: 10px;
-  background: var(--admin-theme-surface);
-  padding: 0.2rem;
-  cursor: pointer;
-}
-
-.color-value {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--admin-theme-muted);
-  text-transform: uppercase;
-}
 
 .card-save-bar {
   display: flex;
@@ -593,8 +563,11 @@ async function saveCard(method: DonationMethod, index: number) {
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
-  padding: 1rem 1.4rem 1.4rem;
-  border-top: 1px solid var(--admin-theme-border);
+  padding: 1rem 1.4rem;
+  border: 1px solid var(--admin-theme-border);
+  border-radius: 16px;
+  background: var(--admin-theme-surface);
+  box-shadow: var(--admin-theme-shadow);
 }
 
 .save-message-wrap {
@@ -604,6 +577,19 @@ async function saveCard(method: DonationMethod, index: number) {
 
 .save-message {
   margin: 0;
+}
+
+.unsaved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.unsaved-badge .v-icon {
+  color: var(--admin-theme-primary);
 }
 
 @media (min-width: 900px) {

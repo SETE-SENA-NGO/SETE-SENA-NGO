@@ -3010,7 +3010,7 @@ function formatDate(value: string) {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.85rem;
+  gap: 1.5rem;
 }
 
 .field {
@@ -3019,7 +3019,7 @@ function formatDate(value: string) {
 }
 
 .field-block {
-  margin-top: 0.85rem;
+  margin-top: 1.5rem;
 }
 
 .field-block:first-child {
@@ -3027,9 +3027,9 @@ function formatDate(value: string) {
 }
 
 .field-label {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--admin-theme-contrast-soft, var(--admin-contrast-soft));
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--admin-form-label);
   letter-spacing: 0.01em;
 }
 
@@ -3048,26 +3048,34 @@ function formatDate(value: string) {
 
 input, textarea {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--admin-theme-contrast-soft, #475569) 30%, var(--admin-theme-border, #cbd5e1));
-  border-radius: 6px;
-  background: var(--admin-theme-surface, var(--admin-surface));
+  min-height: 54px;
+  border: 1px solid var(--admin-form-border);
+  border-radius: var(--admin-form-radius);
+  background: var(--admin-form-bg);
   color: var(--admin-theme-contrast, var(--admin-text));
-  padding: 0.62rem 0.78rem;
-  font-size: 0.88rem;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
   line-height: 1.5;
   font-family: inherit;
   font-weight: 600;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 textarea {
   resize: vertical;
-  min-height: 48px;
+  min-height: 150px;
+}
+
+@media (hover: hover) {
+  input:hover:not(:disabled):not(:focus),
+  textarea:hover:not(:disabled):not(:focus) {
+    border-color: var(--admin-form-border-hover);
+  }
 }
 
 input:focus, textarea:focus {
-  border-color: var(--admin-theme-primary, var(--admin-blue));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-theme-primary, #10b981) 15%, transparent);
+  border-color: var(--admin-form-focus);
+  box-shadow: 0 0 0 4px var(--admin-form-focus-shadow);
   outline: none;
 }
 
@@ -3078,7 +3086,7 @@ input:disabled {
 }
 
 input::placeholder, textarea::placeholder {
-  color: var(--admin-muted-light);
+  color: var(--admin-form-placeholder);
 }
 
 /* ==============================
@@ -4452,13 +4460,6 @@ input::placeholder, textarea::placeholder {
   border-color: var(--admin-theme-primary) !important;
   background: color-mix(in srgb, var(--admin-theme-primary) 10%, var(--admin-theme-surface)) !important;
   color: var(--admin-theme-primary-deep) !important;
-}
-.admin-dark input,
-.admin-dark textarea,
-.admin-dark select {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
 }
 .admin-dark .impact-saved-pill {
   background: #38c982 !important;

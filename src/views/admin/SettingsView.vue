@@ -190,7 +190,7 @@ h1 {
   box-shadow: var(--admin-shadow);
   padding: 1.4rem;
   display: grid;
-  gap: 1.1rem;
+  gap: 1.5rem;
   align-content: start;
   transition:
     transform 0.15s ease,
@@ -239,29 +239,45 @@ h1 {
 
 .settings-field label,
 .settings-label {
-  font-size: 0.84rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--admin-contrast-soft);
+  color: var(--admin-form-label);
 }
 
 .settings-field input {
-  min-height: 44px;
-  border: 1.5px solid var(--admin-border-strong);
-  border-radius: 10px;
-  background: var(--admin-surface);
+  min-height: 54px;
+  border: 1px solid var(--admin-form-border);
+  border-radius: var(--admin-form-radius);
+  background: var(--admin-form-bg);
   color: var(--admin-text);
-  padding: 0.6rem 0.85rem;
-  font-size: 0.92rem;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
   font-family: inherit;
   transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.settings-field input::placeholder {
+  color: var(--admin-form-placeholder);
+}
+
+@media (hover: hover) {
+  .settings-field input:hover:not(:disabled):not(:focus) {
+    border-color: var(--admin-form-border-hover);
+  }
 }
 
 .settings-field input:focus {
-  border-color: var(--admin-blue);
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+  border-color: var(--admin-form-focus);
+  box-shadow: 0 0 0 4px var(--admin-form-focus-shadow);
   outline: none;
+}
+
+.settings-field input:disabled {
+  background: color-mix(in srgb, var(--admin-surface-soft) 60%, var(--admin-surface));
+  color: var(--admin-muted);
+  cursor: not-allowed;
 }
 
 .settings-note {

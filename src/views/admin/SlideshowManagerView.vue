@@ -2,6 +2,9 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel.vue'
+import { useSectionEditor } from '@/composables/useSectionEditor'
+import { useAdminTheme } from '@/composables/useAdminTheme'
 import { useUiStore } from '@/stores/ui.store'
 import { useMediaStore } from '@/stores/media.store'
 import { imageUploadHelpText, isAllowedImageFile } from '@/lib/media'
@@ -18,6 +21,7 @@ const MAX_SLIDES = 5
 
 const ui = useUiStore()
 const media = useMediaStore()
+useAdminTheme()
 
 const slides = ref<HomeSlide[]>(normalizeSlideSlots(defaultHomeSlides()))
 const pendingFiles = reactive<Record<string, File>>({})
@@ -33,6 +37,45 @@ const activeIndex = ref(0)
 const activeSlide = computed(() => slides.value[activeIndex.value])
 const filledSlideCount = computed(() => slides.value.filter(hasSlideImage).length)
 
+// Same Edit -> Cancel/Done gating as every other admin content editor: fields
+// stay disabled until "Edit" is pressed. There's only ever one section here
+// (the active slide), but which slide it points at changes when the tab
+// strip switches - selectSlide() resets editingSections.slide directly so a
+// stale snapshot never gets applied to the wrong slide.
+const {
+  editingSections,
+  collapsedSections,
+  toggleCollapse,
+  toggleEdit,
+  cancelEdit,
+} = useSectionEditor([
+  {
+    key: 'slide',
+    getSnapshot: () => (activeSlide.value ? { ...activeSlide.value } : null),
+    applySnapshot: (value) => {
+      if (!value || !activeSlide.value) return
+      Object.assign(activeSlide.value, value)
+    },
+  },
+])
+
+// Save button only lights up once the slideshow actually differs from what
+// was last loaded/saved — same "disabled until there's something to save" as
+// the AdminSectionNav "Save Change" button every other admin editor uses.
+const originalSnapshot = ref('')
+
+function snapshotSlides() {
+  return JSON.stringify(slides.value)
+}
+
+function updateSnapshot() {
+  originalSnapshot.value = snapshotSlides()
+}
+
+const hasChanges = computed(
+  () => snapshotSlides() !== originalSnapshot.value || Object.keys(pendingFiles).length > 0,
+)
+
 onMounted(async () => {
   try {
     const saved = await fetchHomeSlides()
@@ -41,6 +84,7 @@ onMounted(async () => {
     slides.value = normalizeSlideSlots(defaultHomeSlides())
     // No settings saved yet — start from defaults.
   } finally {
+    updateSnapshot()
     loading.value = false
   }
 })
@@ -104,6 +148,7 @@ function removeImage(slide: HomeSlide) {
 
 function selectSlide(index: number) {
   if (index < 0 || index >= MAX_SLIDES) return
+  editingSections.slide = false
   activeIndex.value = index
 }
 
@@ -122,17 +167,6 @@ function clearSlot(slide: HomeSlide) {
     message.value = ''
     ui.addToast(`Slide ${index + 1} cleared. Save changes to update the homepage.`, 'info')
   })
-}
-
-function moveSlide(index: number, direction: -1 | 1) {
-  const target = index + direction
-  if (target < 0 || target >= slides.value.length) return
-  const list = slides.value.slice()
-  const moved = list.splice(index, 1)[0]
-  if (!moved) return
-  list.splice(target, 0, moved)
-  slides.value = list
-  if (activeIndex.value === index) activeIndex.value = target
 }
 
 function showMessage(text: string, type: 'success' | 'error') {
@@ -169,6 +203,7 @@ async function save() {
     }
 
     await saveHomeSlides(slides.value.filter((slide) => slide.imageUrl.trim()).slice(0, MAX_SLIDES))
+    updateSnapshot()
 
     showMessage('Slideshow saved. The homepage is now updated.', 'success')
   } catch (e) {
@@ -190,7 +225,7 @@ function normalizeSlideSlots(source: HomeSlide[]) {
 </script>
 
 <template>
-  <div :class="['admin-page', { 'sidebar-open': ui.sidebarOpen }]">
+  <v-app :class="['admin-page', { 'sidebar-open': ui.sidebarOpen }]">
     <AdminHeader />
     <div class="admin-layout">
       <AdminSidebar />
@@ -239,43 +274,30 @@ function normalizeSlideSlots(source: HomeSlide[]) {
               </button>
             </div>
 
-            <article v-if="activeSlide" :key="activeSlide.id" class="slide-card">
-              <header class="slide-head">
-                <div class="head-copy">
-                  <div class="slide-name">Slide {{ activeIndex + 1 }} of {{ slides.length }}</div>
-                  <div class="slide-subtitle">{{ activeSlide.title || 'Untitled slide' }}</div>
-                </div>
-                <div class="slide-head-actions">
-                  <button
-                    type="button"
-                    class="order-btn"
-                    :disabled="activeIndex === 0"
-                    aria-label="Move slide up"
-                    @click="moveSlide(activeIndex, -1)"
-                  >
-                    &uarr;
-                  </button>
-                  <button
-                    type="button"
-                    class="order-btn"
-                    :disabled="activeIndex === slides.length - 1"
-                    aria-label="Move slide down"
-                    @click="moveSlide(activeIndex, 1)"
-                  >
-                    &darr;
-                  </button>
-                  <button
-                    type="button"
-                    class="remove-slide-btn"
-                    :disabled="!slotHasContent(activeSlide)"
-                    :title="!slotHasContent(activeSlide) ? 'This slide slot is already empty.' : ''"
-                    :aria-label="`Clear slide ${activeIndex + 1}`"
-                    @click="clearSlot(activeSlide)"
-                  >
-                    ×
-                  </button>
-                </div>
-              </header>
+            <AdminEditorPanel
+              v-if="activeSlide"
+              :key="activeSlide.id"
+              id="active-slide-panel"
+              :kicker="`Slide ${activeIndex + 1} of ${slides.length}`"
+              :heading="activeSlide.title || 'Untitled slide'"
+              :editing="!!editingSections.slide"
+              :collapsed="!!collapsedSections.slide"
+              @toggle-edit="toggleEdit('slide')"
+              @cancel="cancelEdit('slide')"
+              @toggle-collapse="toggleCollapse('slide')"
+            >
+              <template #actions>
+                <button
+                  type="button"
+                  class="remove-slide-btn"
+                  :disabled="!slotHasContent(activeSlide)"
+                  :title="!slotHasContent(activeSlide) ? 'This slide slot is already empty.' : ''"
+                  :aria-label="`Clear slide ${activeIndex + 1}`"
+                  @click="clearSlot(activeSlide)"
+                >
+                  ×
+                </button>
+              </template>
 
               <div class="slide-body">
                 <div class="media-column">
@@ -293,13 +315,14 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                   </div>
 
                   <div class="image-actions">
-                    <label class="upload-btn">
+                    <label class="upload-btn" :class="{ disabled: !editingSections.slide }">
                       <input
                         :id="`${activeSlide.id}-image-upload`"
                         :name="`${activeSlide.id}-image-upload`"
                         type="file"
                         accept="image/*"
                         class="sr-only"
+                        :disabled="!editingSections.slide"
                         @change="onFileChange(activeSlide, $event)"
                       />
                       {{ displayedImage(activeSlide) ? 'Replace image' : 'Upload image' }}
@@ -308,6 +331,7 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                       v-if="displayedImage(activeSlide)"
                       type="button"
                       class="remove-btn"
+                      :disabled="!editingSections.slide"
                       @click="removeImage(activeSlide)"
                     >
                       Remove image
@@ -321,6 +345,7 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                       v-model="activeSlide.alt"
                       :name="`${activeSlide.id}-alt`"
                       placeholder="Describe the photo for accessibility"
+                      :disabled="!editingSections.slide"
                     />
                   </div>
                 </div>
@@ -333,6 +358,7 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                       v-model="activeSlide.eyebrow"
                       :name="`${activeSlide.id}-eyebrow`"
                       placeholder="e.g. Education and Buddhist learning"
+                      :disabled="!editingSections.slide"
                     />
                   </div>
                   <div class="field">
@@ -342,6 +368,7 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                       v-model="activeSlide.title"
                       :name="`${activeSlide.id}-title`"
                       placeholder="e.g. Helping children learn with confidence."
+                      :disabled="!editingSections.slide"
                     />
                   </div>
                   <div class="field">
@@ -352,25 +379,37 @@ function normalizeSlideSlots(source: HomeSlide[]) {
                       :name="`${activeSlide.id}-description`"
                       rows="4"
                       placeholder="One or two sentences shown under the title"
+                      :disabled="!editingSections.slide"
                     />
                   </div>
                 </div>
               </div>
-            </article>
+            </AdminEditorPanel>
           </template>
 
           <footer v-if="!loading" class="save-bar">
             <p v-if="message" :class="['save-message', messageType]" role="status">
               {{ message }}
             </p>
-            <button class="save-btn" type="button" :disabled="saving" @click="save">
-              {{ saving ? 'Saving...' : 'Save changes' }}
-            </button>
+            <span v-if="hasChanges" class="unsaved-badge">
+              <v-icon size="10">mdi-circle</v-icon>
+              Unsaved changes
+            </span>
+            <v-btn
+              color="primary"
+              variant="tonal"
+              :loading="saving"
+              :disabled="saving || !hasChanges"
+              @click="save"
+            >
+              <v-icon start>mdi-content-save</v-icon>
+              {{ saving ? 'Saving...' : 'Save Changes' }}
+            </v-btn>
           </footer>
         </section>
       </main>
     </div>
-  </div>
+  </v-app>
 </template>
 
 <style scoped>
@@ -559,77 +598,30 @@ h1 {
   color: var(--admin-blue-deep);
 }
 
-.slide-card {
-  border: 1px solid var(--admin-border);
-  border-radius: 16px;
-  background: var(--admin-surface);
-  box-shadow: var(--admin-shadow);
-  overflow: hidden;
-  display: grid;
-  align-content: start;
-}
-
-.slide-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 1rem 1.4rem;
-  color: #ffffff;
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-}
-
-.head-copy {
-  min-width: 0;
-}
-
-.slide-name {
-  font-weight: 800;
-  font-size: 1.05rem;
-}
-
-.slide-subtitle {
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
-  opacity: 0.85;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.slide-head-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-}
-
-.order-btn,
+/*
+  Clear button now sits in AdminEditorPanel's own toolbar (light
+  background, shared across every admin editor) instead of the page's old
+  bespoke gradient header - colored for a light surface instead of the
+  previous white-on-transparent-white made for a dark green header.
+*/
 .remove-slide-btn {
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--admin-theme-border-strong);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: var(--admin-theme-surface);
+  color: var(--admin-theme-contrast-soft);
   font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.18s ease;
-}
-
-.order-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.28);
-}
-
-.order-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .remove-slide-btn:hover:not(:disabled) {
-  background: rgba(225, 29, 72, 0.65);
+  border-color: var(--admin-theme-danger);
+  color: var(--admin-theme-danger);
+  background: color-mix(in srgb, var(--admin-theme-danger) 8%, var(--admin-theme-surface));
 }
 
 .remove-slide-btn:disabled {
@@ -654,7 +646,7 @@ h1 {
 .fields-column {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .fields-column .field:last-child {
@@ -665,8 +657,8 @@ h1 {
 
 .fields-column .field:last-child textarea {
   flex: 1;
-  min-height: 120px;
-  resize: none;
+  min-height: 150px;
+  resize: vertical;
 }
 
 .image-preview {
@@ -747,6 +739,19 @@ h1 {
   box-shadow: 0 16px 28px rgba(15, 125, 56, 0.3);
 }
 
+.upload-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.remove-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -795,35 +800,56 @@ h1 {
 }
 
 .field label {
-  font-size: 0.84rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--admin-contrast-soft);
+  color: var(--admin-form-label);
 }
 
 .field input,
 .field textarea {
-  min-height: 44px;
-  border: 1.5px solid var(--admin-border-strong);
-  border-radius: 10px;
-  background: var(--admin-surface);
-  color: var(--admin-text);
-  padding: 0.6rem 0.85rem;
-  font-size: 0.92rem;
+  min-height: 54px;
+  border: 1px solid var(--admin-form-border);
+  border-radius: var(--admin-form-radius);
+  background: var(--admin-form-bg);
+  color: var(--admin-contrast);
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
   font-family: inherit;
   transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .field textarea {
+  min-height: 150px;
   resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--admin-form-placeholder);
+}
+
+@media (hover: hover) {
+  .field input:hover:not(:disabled):not(:focus),
+  .field textarea:hover:not(:disabled):not(:focus) {
+    border-color: var(--admin-form-border-hover);
+  }
 }
 
 .field input:focus,
 .field textarea:focus {
-  border-color: var(--admin-blue);
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+  border-color: var(--admin-form-focus);
+  box-shadow: 0 0 0 4px var(--admin-form-focus-shadow);
   outline: none;
+}
+
+.field input:disabled,
+.field textarea:disabled {
+  background: color-mix(in srgb, var(--admin-surface-soft) 60%, var(--admin-surface));
+  color: var(--admin-muted);
+  cursor: not-allowed;
 }
 
 .save-bar {
@@ -857,31 +883,17 @@ h1 {
   color: #fb7185;
 }
 
-.save-btn {
-  min-height: 46px;
-  border: 1px solid var(--admin-blue);
-  border-radius: 10px;
-  background: linear-gradient(180deg, var(--admin-blue), var(--admin-blue-deep));
-  color: #ffffff;
-  padding: 0.6rem 1.5rem;
+.unsaved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--admin-theme-primary-deep);
+  font-size: 0.78rem;
   font-weight: 700;
-  font-size: 0.92rem;
-  cursor: pointer;
-  box-shadow: 0 12px 22px rgba(15, 125, 56, 0.25);
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.18s ease;
 }
 
-.save-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px rgba(15, 125, 56, 0.3);
-}
-
-.save-btn:disabled {
-  cursor: wait;
-  opacity: 0.72;
-  transform: none;
+.unsaved-badge .v-icon {
+  color: var(--admin-theme-primary);
 }
 
 @media (min-width: 900px) {
@@ -926,7 +938,6 @@ h1 {
   background: #06100F !important;
 }
 .admin-dark .slideshow-header,
-.admin-dark .slide-card,
 .admin-dark .save-bar {
   background: #0a1a14 !important;
   border-color: #1d3b33 !important;
@@ -944,13 +955,6 @@ h1 {
   border-color: #74e0ae !important;
   color: #06100F !important;
 }
-.admin-dark input,
-.admin-dark textarea,
-.admin-dark select {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
-}
 .admin-dark .selector-tab {
   background: #0a1a14 !important;
   border-color: #1d3b33 !important;
@@ -960,9 +964,6 @@ h1 {
 }
 .admin-dark .selector-tab:hover {
   border-color: #2d554a !important;
-}
-.admin-dark .field label {
-  color: #c9ddd4 !important;
 }
 .admin-dark .image-preview {
   background: #0b1b17 !important;

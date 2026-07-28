@@ -1189,7 +1189,7 @@ h1 {
 .module-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .form-field {
@@ -1202,11 +1202,9 @@ h1 {
 }
 
 .form-field label {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  color: var(--admin-form-label);
 }
 
 .input-wrap {
@@ -1232,26 +1230,51 @@ h1 {
 .input-wrap select,
 .input-wrap textarea {
   width: 100%;
-  padding: 0.7rem 0.85rem 0.7rem 2.2rem;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  min-height: 54px;
+  padding: 1rem 1.25rem 1rem 2.2rem;
+  border: 1px solid var(--admin-form-border);
+  border-radius: var(--admin-form-radius);
+  background: var(--admin-form-bg);
   color: var(--contrast);
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   font-family: inherit;
 }
 
 .input-wrap textarea {
   padding-left: 2.2rem;
+  min-height: 150px;
+  resize: vertical;
+}
+
+.input-wrap input::placeholder,
+.input-wrap select::placeholder,
+.input-wrap textarea::placeholder {
+  color: var(--admin-form-placeholder);
+}
+
+@media (hover: hover) {
+  .input-wrap input:hover:not(:disabled):not(:focus),
+  .input-wrap select:hover:not(:disabled):not(:focus),
+  .input-wrap textarea:hover:not(:disabled):not(:focus) {
+    border-color: var(--admin-form-border-hover);
+  }
 }
 
 .input-wrap input:focus,
 .input-wrap select:focus,
 .input-wrap textarea:focus {
   outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.1);
+  border-color: var(--admin-form-focus);
+  box-shadow: 0 0 0 4px var(--admin-form-focus-shadow);
+}
+
+.input-wrap input:disabled,
+.input-wrap select:disabled,
+.input-wrap textarea:disabled {
+  background: var(--surface-soft);
+  color: var(--muted);
+  cursor: not-allowed;
 }
 
 .input-wrap select {
@@ -1323,23 +1346,29 @@ h1 {
 .search-field input {
   width: 100%;
   padding: 0.62rem 0.85rem 0.62rem 2.2rem;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  border: 1px solid var(--admin-form-border);
+  border-radius: var(--admin-form-radius);
+  background: var(--admin-form-bg);
   color: var(--contrast);
   font-size: 0.88rem;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (hover: hover) {
+  .search-field input:hover:not(:focus) {
+    border-color: var(--admin-form-border-hover);
+  }
 }
 
 .search-field input:focus {
   outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.1);
+  border-color: var(--admin-form-focus);
+  box-shadow: 0 0 0 4px var(--admin-form-focus-shadow);
 }
 
 .search-field input::placeholder {
-  color: var(--muted);
-  opacity: 0.7;
+  color: var(--admin-form-placeholder);
+  opacity: 1;
 }
 
 .toolbar-selects {
@@ -1965,12 +1994,5 @@ td {
   background: #38c982 !important;
   border-color: #74e0ae !important;
   color: #06100F !important;
-}
-.admin-dark input,
-.admin-dark textarea,
-.admin-dark select {
-  background: #0a1a14 !important;
-  border-color: #1d3b33 !important;
-  color: #f2fbf6 !important;
 }
 </style>

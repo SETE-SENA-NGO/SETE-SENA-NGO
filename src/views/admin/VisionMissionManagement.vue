@@ -563,9 +563,9 @@ function cloneContent(content: VisionMissionContent): VisionMissionContent {
             </template>
 
             <div class="panel-body form-grid">
-              <v-text-field v-model="draft.vision.label" label="Section label" :disabled="!editingSections.vision" hide-details density="comfortable" variant="outlined" />
-              <v-text-field v-model="draft.vision.heading" label="Section heading" :disabled="!editingSections.vision" hide-details density="comfortable" variant="outlined" />
-              <v-textarea v-model="draft.vision.body" label="Description" rows="2" :disabled="!editingSections.vision" hide-details density="comfortable" variant="outlined" class="field-wide" />
+              <v-text-field v-model="draft.vision.label" label="Section label" placeholder="e.g. Vision" :disabled="!editingSections.vision" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.vision.heading" label="Section heading" placeholder="e.g. What Santi Sena Strives For" :disabled="!editingSections.vision" hide-details density="comfortable" variant="outlined" />
+              <v-textarea v-model="draft.vision.body" label="Description" placeholder="e.g. Peace With Justice, Community Ownership and Sustainable Livelihoods." rows="2" :disabled="!editingSections.vision" hide-details density="comfortable" variant="outlined" class="field-wide" />
             </div>
 
             <v-divider class="mx-4" />
@@ -594,8 +594,8 @@ function cloneContent(content: VisionMissionContent): VisionMissionContent {
                     </div>
                   </header>
                   <div class="item-fields">
-                    <v-text-field v-model="card.title" label="Title" :disabled="!editingSections.vision" hide-details density="compact" variant="outlined" />
-                    <v-text-field v-model="card.text" label="Description" :disabled="!editingSections.vision" hide-details density="compact" variant="outlined" class="field-wide" />
+                    <v-text-field v-model="card.title" label="Title" placeholder="e.g. Peace With Justice" :disabled="!editingSections.vision" hide-details density="compact" variant="outlined" />
+                    <v-text-field v-model="card.text" label="Description" placeholder="Describe this vision element." :disabled="!editingSections.vision" hide-details density="compact" variant="outlined" class="field-wide" />
                   </div>
                 </article>
               </v-slide-y-transition>
@@ -623,9 +623,9 @@ function cloneContent(content: VisionMissionContent): VisionMissionContent {
             </template>
 
             <div class="panel-body form-grid">
-              <v-text-field v-model="draft.mission.label" label="Section label" :disabled="!editingSections.mission" hide-details density="comfortable" variant="outlined" />
-              <v-text-field v-model="draft.mission.heading" label="Section heading" :disabled="!editingSections.mission" hide-details density="comfortable" variant="outlined" />
-              <v-textarea v-model="draft.mission.body" label="Mission body text" rows="3" :disabled="!editingSections.mission" hide-details density="comfortable" variant="outlined" class="field-wide" />
+              <v-text-field v-model="draft.mission.label" label="Section label" placeholder="e.g. Mission" :disabled="!editingSections.mission" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.mission.heading" label="Section heading" placeholder="e.g. How The Mission Becomes Practical" :disabled="!editingSections.mission" hide-details density="comfortable" variant="outlined" />
+              <v-textarea v-model="draft.mission.body" label="Mission body text" placeholder="e.g. Santi Sena alleviates poverty through community-led development rooted in Buddhist ethics." rows="3" :disabled="!editingSections.mission" hide-details density="comfortable" variant="outlined" class="field-wide" />
             </div>
 
             <v-divider class="mx-4" />
@@ -648,7 +648,7 @@ function cloneContent(content: VisionMissionContent): VisionMissionContent {
                     </div>
                   </header>
                   <div class="item-fields">
-                    <v-text-field v-model="draft.mission.items[index]" label="Mission item" :disabled="!editingSections.mission" hide-details density="compact" variant="outlined" class="field-wide" />
+                    <v-text-field v-model="draft.mission.items[index]" label="Mission item" placeholder="e.g. Work with monks, villagers, local government and schools" :disabled="!editingSections.mission" hide-details density="compact" variant="outlined" class="field-wide" />
                   </div>
                 </article>
               </v-slide-y-transition>
@@ -676,9 +676,9 @@ function cloneContent(content: VisionMissionContent): VisionMissionContent {
             </template>
 
             <div class="panel-body form-grid">
-              <v-text-field v-model="draft.values.label" label="Section label" :disabled="!editingSections.values" hide-details density="comfortable" variant="outlined" />
-              <v-text-field v-model="draft.values.heading" label="Section heading" :disabled="!editingSections.values" hide-details density="comfortable" variant="outlined" />
-              <v-textarea v-model="draft.values.desc" label="Section description" rows="2" :disabled="!editingSections.values" hide-details density="comfortable" variant="outlined" class="field-wide" />
+              <v-text-field v-model="draft.values.label" label="Section label" placeholder="e.g. Core Values" :disabled="!editingSections.values" hide-details density="comfortable" variant="outlined" />
+              <v-text-field v-model="draft.values.heading" label="Section heading" placeholder="e.g. Values That Guide The Work" :disabled="!editingSections.values" hide-details density="comfortable" variant="outlined" />
+              <v-textarea v-model="draft.values.desc" label="Section description" placeholder="e.g. These values shape how Santi Sena works with communities, donors and partners." rows="2" :disabled="!editingSections.values" hide-details density="comfortable" variant="outlined" class="field-wide" />
             </div>
 
             <v-divider class="mx-4" />
@@ -707,8 +707,8 @@ function cloneContent(content: VisionMissionContent): VisionMissionContent {
                     </div>
                   </header>
                   <div class="item-fields">
-                    <v-text-field v-model="val.title" label="Title" :disabled="!editingSections.values" hide-details density="compact" variant="outlined" />
-                    <v-text-field v-model="val.text" label="Description" :disabled="!editingSections.values" hide-details density="compact" variant="outlined" class="field-wide" />
+                    <v-text-field v-model="val.title" label="Title" placeholder="e.g. Honesty" :disabled="!editingSections.values" hide-details density="compact" variant="outlined" />
+                    <v-text-field v-model="val.text" label="Description" placeholder="Describe this value." :disabled="!editingSections.values" hide-details density="compact" variant="outlined" class="field-wide" />
                   </div>
                 </article>
               </v-slide-y-transition>
