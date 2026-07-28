@@ -223,7 +223,9 @@ function applyCmsContent(body: string) {
         if (striveSection.label) visionLabel.value = striveSection.label
         if (striveSection.heading) visionHeading.value = striveSection.heading
         if (striveSection.items) {
-          const lines = striveSection.items.split('\n').filter((line: string) => line.trim())
+          const lines = typeof striveSection.items === 'string'
+            ? striveSection.items.split('\n').filter((line: string) => line.trim())
+            : striveSection.items
           if (lines.length > 0) {
             visionCards.value = lines.map((line: string, i: number) => {
               const [title, ...rest] = line.split('|').map((p: string) => p.trim())
@@ -243,7 +245,9 @@ function applyCmsContent(body: string) {
         if (missionSection.heading) missionHeading.value = missionSection.heading
         if (missionSection.body) missionBody.value = missionSection.body
         if (missionSection.items) {
-          const lines = missionSection.items.split('\n').filter((l: string) => l.trim())
+          const lines = typeof missionSection.items === 'string'
+            ? missionSection.items.split('\n').filter((l: string) => l.trim())
+            : missionSection.items
           if (lines.length) missionItems.value = lines.map((l: string) => l.trim())
         }
       }
@@ -253,7 +257,9 @@ function applyCmsContent(body: string) {
         if (guidesSection.label) valueSectionLabel.value = guidesSection.label
         if (guidesSection.heading) valueSectionHeading.value = guidesSection.heading
         if (guidesSection.items) {
-          const lines = guidesSection.items.split('\n').filter((l: string) => l.trim())
+          const lines = typeof guidesSection.items === 'string'
+            ? guidesSection.items.split('\n').filter((l: string) => l.trim())
+            : guidesSection.items
           if (lines.length) {
             displayValues.value = lines.map((line: string, i: number) => {
               const trimmed = line.trim()
