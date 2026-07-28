@@ -278,14 +278,6 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
   if (typeof meta.headline === 'string' && meta.headline.trim()) pageTitle.value = meta.headline.trim()
   if (typeof meta.intro === 'string' && meta.intro.trim()) introText.value = meta.intro.trim()
 
-  // Gallery images — from meta.gallery (array of {label, url} like Education)
-  let galleryUrls: string[] = []
-  if (Array.isArray(meta.gallery) && meta.gallery.length > 0) {
-    galleryUrls = meta.gallery
-      .map((g: Record<string, unknown>) => typeof g.url === 'string' ? g.url.trim() : '')
-      .filter(Boolean)
-  }
-
   // Quote — from meta.quoteContent.text
   if (meta.quoteContent && typeof meta.quoteContent === 'object') {
     const qc = meta.quoteContent as Record<string, unknown>
@@ -310,57 +302,37 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
     })
   }
 
-  // Sections
+  // Work items — from meta.workItems (new admin structure: array of {title, text, imageUrl})
+  if (Array.isArray(meta.workItems) && meta.workItems.length > 0) {
+    whatWeDoItems.value = (meta.workItems as Array<Record<string, unknown>>).map(w => ({
+      title: String(w.title ?? ''),
+      text: String(w.text ?? ''),
+      image: String(w.imageUrl ?? '') || FALLBACK_WHAT_WE_DO[0]?.image || imageUrls.programs.livelihoodHero1,
+    }))
+  }
+
+  // Impact cards — from meta.impactCards (new admin structure: array of {text, imageUrl})
+  if (Array.isArray(meta.impactCards) && meta.impactCards.length > 0) {
+    whyMattersItems.value = (meta.impactCards as Array<Record<string, unknown>>).map((c, i) => ({
+      text: String(c.text ?? ''),
+      icon: FALLBACK_WHY_IT_MATTERS[i]?.icon || 'shield-halved',
+      image: String(c.imageUrl ?? '') || FALLBACK_WHY_IT_MATTERS[i % FALLBACK_WHY_IT_MATTERS.length]?.image || imageUrls.programs.livelihoodHero1,
+    }))
+  }
+
+  // Team cards — from meta.teamCards (new admin structure: array of {role, icon, desc})
+  if (Array.isArray(meta.teamCards) && meta.teamCards.length > 0) {
+    teamCards.value = meta.teamCards as Array<{ role: string; icon: string; desc: string }>
+  }
+
+  // Sections (legacy — still read for approach fallback)
   if (Array.isArray(meta.sections)) {
     const sections = meta.sections as Array<Record<string, unknown>>
-
-    // What we do — from 'livelihood-work' section items
-    const workSection = sections.find((s) => s.id === 'livelihood-work')
-    if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
-      const lines = workSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
-      if (lines.length > 0) {
-        const defaultText = (typeof workSection.body === 'string' && workSection.body.trim()) ? workSection.body : ''
-        whatWeDoItems.value = lines.map((title: string, i: number) => ({
-          title,
-          text: defaultText || FALLBACK_WHAT_WE_DO[i]?.text || '',
-          image: galleryUrls[i] || FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.livelihoodHero1,
-        }))
-      }
-    }
-
-    // Why it matters — from 'livelihood-why' section items
-    const whySection = sections.find((s) => s.id === 'livelihood-why')
-    if (whySection && typeof whySection.items === 'string' && whySection.items.trim()) {
-      const lines = whySection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
-      if (lines.length > 0) {
-        whyMattersItems.value = lines.map((text: string, i: number) => ({
-          text,
-          icon: FALLBACK_WHY_IT_MATTERS[i]?.icon || 'shield-halved',
-          image: galleryUrls[(FALLBACK_WHAT_WE_DO.length) + i] || FALLBACK_WHY_IT_MATTERS[i % FALLBACK_WHY_IT_MATTERS.length]?.image || imageUrls.programs.livelihoodHero1,
-        }))
-      }
-    }
 
     // Approach — from 'livelihood-approach' section body
     const approachSection = sections.find((s) => s.id === 'livelihood-approach')
     if (approachSection && typeof approachSection.body === 'string' && approachSection.body.trim()) {
       approachText.value = approachSection.body.trim()
-    }
-
-    // Team / Organizational Structure — from 'livelihood-team' section items
-    const teamSection = sections.find((s) => s.id === 'livelihood-team')
-    if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
-      const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
-      if (lines.length > 0) {
-        teamCards.value = lines.map(line => {
-          const parts = line.split('|').map((p: string) => p.trim())
-          return {
-            role: parts[0] || '',
-            icon: parts[1] || 'chart',
-            desc: parts[2] || parts[0] || '',
-          }
-        })
-      }
     }
   }
 }
