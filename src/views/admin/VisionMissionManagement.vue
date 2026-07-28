@@ -328,17 +328,6 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   items[target] = current
 }
 
-function resetToDefaults() {
-  confirmDialog(
-    'Reset Vision & Mission content?',
-    'Restore default vision cards, mission content and core values?',
-    () => {
-      replaceDraft(cloneContent(fallbackContent))
-      ui.addToast('Default Vision & Mission draft restored.', 'info')
-    },
-  )
-}
-
 function prepareForSave(content: VisionMissionContent): VisionMissionContent {
   return {
     vision: {
@@ -516,21 +505,11 @@ function cloneContent(content: VisionMissionContent): VisionMissionContent {
         <header class="manager-hero">
           <div class="manager-title">
             <h1>Manage Vision, Mission & Core Values</h1>
-            <div class="manager-meta">
-              <v-chip size="small" variant="tonal" color="primary">{{ activeLocaleName }} content</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.vision.cards.length }} vision cards</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.mission.items.length }} mission items</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.values.cards.length }} core values</v-chip>
-            </div>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/about/vision" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/about/vision" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn variant="tonal" @click="resetToDefaults">
-              <v-icon start>mdi-restore</v-icon>
-              Reset draft
             </v-btn>
           </div>
         </header>

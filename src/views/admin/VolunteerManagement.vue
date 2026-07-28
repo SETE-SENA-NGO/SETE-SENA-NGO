@@ -244,10 +244,6 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   items[index] = next; items[target] = current
 }
 
-function resetToDefaults() {
-  confirmDialog('Reset Volunteer content?', 'Restore all sections, cards, gallery and contact details to their defaults?', () => { replaceDraft(cloneContent(fallbackContent)); ui.addToast('Default Volunteer draft restored.', 'info') })
-}
-
 function prepareForSave(content: VolunteerPageContent): VolunteerPageContent {
   return {
     serviceSection: { ...content.serviceSection },
@@ -356,21 +352,11 @@ function cloneContent(c: VolunteerPageContent): VolunteerPageContent {
         <header class="manager-hero">
           <div class="manager-title">
             <h1>Manage volunteer page</h1>
-            <div class="manager-meta">
-              <v-chip size="small" variant="tonal" color="primary">{{ activeLocaleName }} content</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.serviceCards.length }} service cards</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.helpCards.length }} help cards</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.galleryImages.length }} gallery</v-chip>
-            </div>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/get-involved/volunteer" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/get-involved/volunteer" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn variant="tonal" @click="resetToDefaults">
-              <v-icon start>mdi-restore</v-icon>
-              Reset draft
             </v-btn>
           </div>
         </header>

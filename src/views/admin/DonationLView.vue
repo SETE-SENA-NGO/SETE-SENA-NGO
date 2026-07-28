@@ -147,9 +147,6 @@ async function saveCard(method: DonationMethod, index: number) {
           <header class="manager-hero">
             <div class="manager-title">
               <h1>Donation Banks & QR Codes</h1>
-              <div class="manager-meta">
-                <v-chip size="small" variant="tonal" color="primary">{{ methods.length }} banks</v-chip>
-              </div>
             </div>
             <p class="header-description">
               Manage the two banks shown on the public Support Us page — upload each bank's QR

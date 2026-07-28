@@ -306,17 +306,6 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   items[target] = current
 }
 
-function resetToDefaults() {
-  confirmDialog(
-    'Reset About content?',
-    'Restore the default core values, team members and provinces?',
-    () => {
-      replaceDraft(createFallbackContent())
-      ui.addToast('Default About draft restored.', 'info')
-    },
-  )
-}
-
 function prepareForSave(content: AboutPageContent) {
   return {
     kind: 'santi-sena-page-content',
@@ -473,22 +462,11 @@ function mergeContent(
         <header class="manager-hero">
           <div class="manager-title">
             <h1>Manage About Page</h1>
-            <div class="manager-meta">
-              <v-chip size="small" variant="tonal" color="primary">{{ activeLocaleName }} content</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.values.items.length }} core values</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.team.items.length }} team members</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.reach.items.length }} provinces</v-chip>
-              <v-chip v-if="pageRow?.updated_at" size="small" variant="tonal" color="success">Saved</v-chip>
-            </div>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/about" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/about" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn variant="tonal" @click="resetToDefaults">
-              <v-icon start>mdi-restore</v-icon>
-              Reset draft
             </v-btn>
           </div>
         </header>

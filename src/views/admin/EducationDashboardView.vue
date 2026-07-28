@@ -484,12 +484,6 @@ function onGalleryImageSaved(msg: string) {
   void savePageContent()
 }
 
-function formatDate(value: string) {
-  if (!value) return 'Not saved yet'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Not saved yet'
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
-}
 
 onMounted(async () => {
   try {
@@ -526,13 +520,6 @@ onMounted(async () => {
             <div class="manager-title">
               <p class="eyebrow">Education Program</p>
               <h1>Manage Education page</h1>
-              <div class="manager-meta">
-                <v-chip size="x-small" variant="tonal" color="primary">{{ storageMode === 'supabase' ? 'Database' : 'Local only' }}</v-chip>
-                <v-chip size="x-small" variant="tonal" color="primary">{{ statsBand.length }} stats</v-chip>
-                <v-chip size="x-small" variant="tonal" color="primary">{{ teamCards.length }} team cards</v-chip>
-                <v-chip v-if="isDirty" size="x-small" variant="tonal" color="warning">Unsaved changes</v-chip>
-                <v-chip v-else-if="page.updatedAt" size="x-small" variant="tonal" color="success">Saved {{ formatDate(page.updatedAt) }}</v-chip>
-              </div>
             </div>
           </div>
           <div class="hero-actions">

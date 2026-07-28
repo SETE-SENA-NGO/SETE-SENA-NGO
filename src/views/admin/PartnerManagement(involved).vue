@@ -245,10 +245,6 @@ function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   items[index] = b; items[target] = a
 }
 
-function resetToDefaults() {
-  confirmDialog('Reset Partner content?', 'Restore all partner page sections to the current public defaults?', () => { replaceDraft(cloneContent(fallbackContent)); ui.addToast('Default Partner draft restored.', 'info') })
-}
-
 function prepareForSave(content: PartnerPageContent): PartnerPageContent {
   return {
     hero: { ...content.hero, primaryCta: { ...content.hero.primaryCta }, secondaryCta: { ...content.hero.secondaryCta }, slides: content.hero.slides.map((s) => ({ image: normalizeMediaUrl(s.image), caption: s.caption.trim() })).filter((s) => s.image) },
@@ -320,20 +316,11 @@ function cloneContent(content: PartnerPageContent): PartnerPageContent {
         <header class="manager-hero">
           <div class="manager-title">
             <h1>Manage partner page</h1>
-            <div class="manager-meta">
-              <v-chip size="small" variant="tonal" color="primary">{{ activeLocaleName }} content</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.activeProjects.length }} projects</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.strategicThemes.length }} themes</v-chip>
-            </div>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/get-involved/partner" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/get-involved/partner" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn variant="tonal" @click="resetToDefaults">
-              <v-icon start>mdi-restore</v-icon>
-              Reset draft
             </v-btn>
           </div>
         </header>
