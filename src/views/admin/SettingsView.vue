@@ -5,7 +5,7 @@ import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import { useUiStore } from '@/stores/ui.store'
 
 const ui = useUiStore()
-const siteName = ref('Santi Sena NGO')
+const siteName = ref('Santisena Cambodia')
 const adminEmail = ref('')
 </script>
 

@@ -278,17 +278,6 @@ function moveOffice(index: number, direction: -1 | 1) {
   draft.offices[target] = current
 }
 
-function resetToDefaults() {
-  confirmDialog(
-    'Reset Contact content?',
-    'Restore the default contact details, office info, Telegram QR and visitor guide?',
-    () => {
-      replaceDraft(cloneContactContent(fallbackContactContent))
-      ui.addToast('Default Contact draft restored.', 'info')
-    },
-  )
-}
-
 function prepareForSave(content: ContactPageContent): ContactPageContent {
   return {
     headquarters: {
@@ -388,20 +377,11 @@ function normalizeTelegramUrl(value: string): string {
         <header class="manager-hero">
           <div class="manager-title">
             <h1>Manage contact page</h1>
-            <div class="manager-meta">
-              <v-chip size="small" variant="tonal" color="primary">{{ activeLocaleName }} content</v-chip>
-              <v-chip size="small" variant="tonal" color="primary">{{ draft.offices.length }} offices</v-chip>
-              <v-chip v-if="savedAt" size="small" variant="tonal" color="success">Saved</v-chip>
-            </div>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/contact" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/contact" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn variant="tonal" @click="resetToDefaults">
-              <v-icon start>mdi-restore</v-icon>
-              Reset draft
             </v-btn>
           </div>
         </header>

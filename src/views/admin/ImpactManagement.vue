@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAdminTheme } from '@/composables/useAdminTheme'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
@@ -106,7 +106,6 @@ type ImpactPartnersContent = {
 }
 
 const route = useRoute()
-const router = useRouter()
 const { locale } = useI18n()
 const contentStore = useContentStore()
 const ui = useUiStore()
@@ -124,10 +123,6 @@ const activeTab = computed<'numbers' | 'timeline' | 'partners'>(() => {
 
 const activeSlug = computed(() => `impact-${activeTab.value}`)
 const activePublicRoute = computed(() => `/impact/${activeTab.value}`)
-
-function switchTab(tab: 'numbers' | 'timeline' | 'partners') {
-  void router.push(`/admin/editor/impact-${tab}`)
-}
 
 // ─── Fallback Content ───
 const fallbackNumbers: ImpactNumbersContent = {
@@ -854,32 +849,9 @@ function mergePartners(base: ImpactPartnersContent, override: Record<string, unk
         <header class="manager-hero">
           <div class="manager-title">
             <h1>Manage impact section</h1>
-            <div class="tab-switcher">
-              <button
-                type="button"
-                :class="['tab-btn', { active: activeTab === 'numbers' }]"
-                @click="switchTab('numbers')"
-              >
-                Numbers
-              </button>
-              <button
-                type="button"
-                :class="['tab-btn', { active: activeTab === 'timeline' }]"
-                @click="switchTab('timeline')"
-              >
-                Timeline
-              </button>
-              <button
-                type="button"
-                :class="['tab-btn', { active: activeTab === 'partners' }]"
-                @click="switchTab('partners')"
-              >
-                Partners
-              </button>
-            </div>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" :to="activePublicRoute" target="_blank">
+            <v-btn variant="tonal" color="primary" :to="activePublicRoute" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
             </v-btn>
@@ -1484,40 +1456,6 @@ function mergePartners(base: ImpactPartnersContent, override: Record<string, unk
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-}
-
-.tab-switcher {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem;
-  border: 1px solid var(--admin-theme-border);
-  border-radius: 8px;
-  background: var(--admin-theme-surface-soft);
-  width: fit-content;
-}
-
-.tab-btn {
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--admin-theme-muted);
-  padding: 0.35rem 0.85rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.tab-btn:hover {
-  color: var(--admin-theme-contrast);
-}
-
-.tab-btn.active {
-  background: var(--admin-theme-surface);
-  color: var(--admin-theme-primary-deep);
-  font-weight: 800;
-  box-shadow: 0 2px 6px rgba(15, 95, 73, 0.1);
 }
 
 .hero-actions {

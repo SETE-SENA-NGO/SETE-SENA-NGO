@@ -95,9 +95,9 @@ const pageGroups: PageGroup[] = [
     labelKey: 'admin.sidebar.impact',
     path: '/admin/editor/impact-numbers',
     items: [
-      { slug: 'impact-numbers', labelKey: 'admin.sidebar.numbers' },
-      { slug: 'impact-timeline', labelKey: 'admin.sidebar.timeline' },
-      { slug: 'impact-partners', labelKey: 'admin.sidebar.partners' },
+      { slug: 'impact-numbers', labelKey: 'admin.sidebar.numbers', path: '/admin/editor/impact-numbers' },
+      { slug: 'impact-timeline', labelKey: 'admin.sidebar.timeline', path: '/admin/editor/impact-timeline' },
+      { slug: 'impact-partners', labelKey: 'admin.sidebar.partners', path: '/admin/editor/impact-partners' },
     ],
   },
   {
@@ -110,9 +110,9 @@ const pageGroups: PageGroup[] = [
         labelKey: 'admin.sidebar.overview',
         path: '/admin/get-involved',
       },
-      { slug: 'get-involved-donate', labelKey: 'admin.sidebar.donate' },
+      { slug: 'get-involved-donate', labelKey: 'admin.sidebar.donate', path: '/admin/editor/get-involved-donate' },
       { slug: 'get-involved-volunteer', labelKey: 'admin.sidebar.volunteer', path: '/admin/volunteer' },
-      { slug: 'get-involved-partner', labelKey: 'admin.sidebar.partner' },
+      { slug: 'get-involved-partner', labelKey: 'admin.sidebar.partner', path: '/admin/editor/get-involved-partner' },
     ],
   },
   {
@@ -123,10 +123,6 @@ const pageGroups: PageGroup[] = [
   },
 ]
 
-function editorPath(slug: string) {
-  return `/admin/editor/${slug}`
-}
-
 function isActive(path: string) {
   return route.path === path
 }
@@ -135,24 +131,26 @@ function isNavActive(item: NavItem) {
   return isActive(item.to)
 }
 
+function getGroupPath(group: PageGroup): string {
+  return group.path ?? `/admin/editor/${group.slug}`
+}
+
 function isGroupActive(group: PageGroup) {
-  const groupPath = group.path ?? editorPath(group.slug)
-  if (isActive(groupPath)) return true
+  if (isActive(getGroupPath(group))) return true
   return group.items.some((item) =>
-    isActive(item.path ?? editorPath(item.slug)),
+    isActive(item.path ?? `/admin/editor/${item.slug}`),
   )
 }
 
 function isSummaryActive(group: PageGroup) {
   const isChildActive = group.items.some((item) =>
-    isActive(item.path ?? editorPath(item.slug)),
+    isActive(item.path ?? `/admin/editor/${item.slug}`),
   )
   if (isChildActive) {
     return !isGroupOpen(group)
   }
 
-  const groupPath = group.path ?? editorPath(group.slug)
-  return isActive(groupPath)
+  return isActive(getGroupPath(group))
 }
 
 function isGroupOpen(group: PageGroup) {
@@ -233,7 +231,17 @@ function handleKeydown(event: KeyboardEvent) {
 
 watch(
   () => route.path,
-  () => void nextTick(updateActiveIndicator),
+  () => {
+    // Clear stale group overrides when navigating to a page within that group
+    const nextOverrides = new Map(groupOverrides.value)
+    for (const group of pageGroups) {
+      if (nextOverrides.has(group.slug) && isGroupActive(group)) {
+        nextOverrides.delete(group.slug)
+      }
+    }
+    groupOverrides.value = nextOverrides
+    void nextTick(updateActiveIndicator)
+  },
 )
 
 watch(groupOverrides, () => void nextTick(updateActiveIndicator))
@@ -301,12 +309,12 @@ onUnmounted(() => {
         <!-- Flat single pages -->
         <RouterLink
           v-if="!group.items.length"
-          :to="group.path ?? editorPath(group.slug)"
+          :to="getGroupPath(group)"
           :class="[
             'link',
-            { active: isActive(group.path ?? editorPath(group.slug)) },
+            { active: isActive(getGroupPath(group)) },
           ]"
-          :data-nav-active="isActive(group.path ?? editorPath(group.slug))"
+          :data-nav-active="isActive(getGroupPath(group))"
           @click="ui.closeSidebarForNavigation"
         >
           <span class="link-icon-wrap" aria-hidden="true">
@@ -392,10 +400,10 @@ onUnmounted(() => {
               <RouterLink
                 v-for="item in group.items"
                 :key="item.slug"
-                :to="item.path ?? editorPath(item.slug)"
+                :to="item.path ?? '/admin/editor/' + item.slug"
                 :class="[
                   'sub-link',
-                  { active: isActive(item.path ?? editorPath(item.slug)) },
+                  { active: isActive(item.path ?? '/admin/editor/' + item.slug) },
                 ]"
                 @click="ui.closeSidebarForNavigation"
               >
