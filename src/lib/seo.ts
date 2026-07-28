@@ -1,7 +1,7 @@
 import type { RouteLocationNormalized } from 'vue-router'
 
 const SITE_NAME = 'Santi Sena Cambodia'
-const SITE_URL = 'https://santisenacambodia.org'
+const SITE_URL = 'https://www.santisenacambodia.org'
 const DEFAULT_DESCRIPTION =
   "Santi Sena (the Peace Army) is a Cambodian NGO founded by Buddhist monks in 1994, working across environment, education, livelihood and child protection to build peace through community development."
 

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://santisenacambodia.org/sitemap.xml
+Sitemap: https://www.santisenacambodia.org/sitemap.xml
