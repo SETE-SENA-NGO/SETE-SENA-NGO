@@ -300,17 +300,6 @@ async function savePage() {
   }
 }
 
-function resetToDefaults() {
-  confirmDialog(
-    'Reset Home content?',
-    'Restore all sections, stats and cards to default values?',
-    () => {
-      replaceDraft(cloneContent(fallbackContent))
-      ui.addToast('Default Home draft restored.', 'info')
-    },
-  )
-}
-
 function parseCmsBody(body: string): Partial<HomePageContent> | null {
   if (!body.trim()) return null
   try {
@@ -382,13 +371,9 @@ function cloneContent(content: HomePageContent): HomePageContent {
             </p>
           </div>
           <div class="hero-actions">
-            <v-btn variant="tonal" to="/" target="_blank">
+            <v-btn variant="tonal" color="primary" to="/" target="_blank">
               <v-icon start>mdi-open-in-new</v-icon>
               View page
-            </v-btn>
-            <v-btn variant="tonal" @click="resetToDefaults">
-              <v-icon start>mdi-restore</v-icon>
-              Reset draft
             </v-btn>
           </div>
         </header>
