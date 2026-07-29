@@ -3,6 +3,7 @@ import NotFoundView from '@/views/NotFoundView.vue'
 import { publicRoutes } from './publicRoutes'
 import { adminRoutes } from './adminRoutes'
 import { useAuthStore } from '@/stores/auth.store'
+import { useUiStore } from '@/stores/ui.store'
 import { applyRouteSeo } from '@/lib/seo'
 
 const router = createRouter({
@@ -48,6 +49,8 @@ router.beforeEach(async (to) => {
 })
 
 router.afterEach((to) => {
+  useUiStore().syncThemeWithRoute()
+
   if (!to.meta.requiresAuth && !to.path.startsWith('/admin')) {
     applyRouteSeo(to)
   }

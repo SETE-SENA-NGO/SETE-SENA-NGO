@@ -493,23 +493,6 @@ onBeforeUnmount(() => {
   font-family: var(--font-family-base);
 }
 
-/* Dark mode override */
-html.dark .vision-page,
-:root.dark .vision-page,
-.admin-dark .vision-page {
-  --color-cream: #0f1a16;
-  --color-cream-soft: #13211b;
-  --color-white: #1a2c24;
-  --color-ink: #e6f0eb;
-  --color-ink-soft: #a0bcb0;
-  --color-border: #244033;
-  --primary-color: #4ade80;
-  --primary-dark: #74e0ae;
-  --primary-light: #1a3d2e;
-  background: var(--color-cream);
-  color: var(--color-ink);
-}
-
 .container {
   max-width: var(--container-max-width);
   margin: 0 auto;

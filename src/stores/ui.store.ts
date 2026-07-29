@@ -3,8 +3,14 @@ import { ref } from 'vue'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
 
+function isAdminRoute() {
+  if (typeof window === 'undefined') return false
+  return window.location.pathname.startsWith('/admin')
+}
+
 function getInitialDarkMode() {
   if (typeof window === 'undefined') return false
+  if (!isAdminRoute()) return false
 
   const savedTheme = window.localStorage.getItem('admin-theme')
   if (savedTheme) return savedTheme === 'dark'
@@ -12,11 +18,15 @@ function getInitialDarkMode() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
+// Dark mode is an admin-panel-only feature. The `admin-dark`/`dark` classes
+// on <html> must never be present while viewing the public site, even if
+// the admin has dark mode saved on, or the visitor's OS prefers dark.
 function applyTheme(darkMode: boolean) {
   if (typeof document === 'undefined') return
 
-  document.documentElement.classList.toggle('admin-dark', darkMode)
-  document.documentElement.classList.toggle('dark', darkMode)
+  const shouldApply = darkMode && isAdminRoute()
+  document.documentElement.classList.toggle('admin-dark', shouldApply)
+  document.documentElement.classList.toggle('dark', shouldApply)
   window.localStorage.setItem('admin-theme', darkMode ? 'dark' : 'light')
 }
 
@@ -102,6 +112,13 @@ export const useUiStore = defineStore('ui', () => {
     setDarkMode(!darkMode.value)
   }
 
+  // Re-applies the current darkMode value against the current route.
+  // Call on every navigation so leaving /admin strips the dark classes
+  // even though darkMode itself stays saved for next time.
+  function syncThemeWithRoute() {
+    applyTheme(darkMode.value)
+  }
+
   return {
     toasts,
     modal,
@@ -118,5 +135,6 @@ export const useUiStore = defineStore('ui', () => {
     setSidebarOpen,
     setDarkMode,
     toggleDarkMode,
+    syncThemeWithRoute,
   }
 })
