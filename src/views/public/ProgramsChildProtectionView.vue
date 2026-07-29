@@ -196,8 +196,7 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
   if (typeof meta.eyebrow === 'string' && meta.eyebrow.trim()) pageEyebrow.value = meta.eyebrow.trim()
   if (typeof meta.headline === 'string' && meta.headline.trim()) pageTitle.value = meta.headline.trim()
 
-  // Hero image — from meta.heroImageUrl (saved by Child Protection admin dashboard)
-  // Since the admin only has one image field, update all three collage images
+  // Hero image — from meta.heroImageUrl (legacy)
   if (typeof meta.heroImageUrl === 'string' && meta.heroImageUrl.trim()) {
     const url = meta.heroImageUrl.trim()
     cpHeroRef.value = url
@@ -205,13 +204,12 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
     cpHero3Ref.value = url
   }
 
-  // Gallery images — from meta.gallery (array of {label, url} for backward compat)
+  // Gallery images — from meta.gallery (legacy)
   let galleryUrls: string[] = []
   if (Array.isArray(meta.gallery) && meta.gallery.length > 0) {
     galleryUrls = meta.gallery
       .map((g: Record<string, unknown>) => typeof g.url === 'string' ? g.url.trim() : '')
       .filter(Boolean)
-    // Map gallery URLs to CP hero refs for the story collage
     if (galleryUrls.length > 0) cpHeroRef.value = galleryUrls[0]!
     if (galleryUrls.length > 1) cpHero1Ref.value = galleryUrls[1]!
     if (galleryUrls.length > 2) cpHero3Ref.value = galleryUrls[2]!
@@ -228,11 +226,37 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
     }))
   }
 
-  // Sections
-  if (Array.isArray(meta.sections)) {
+  // Work items — from meta.workItems (new admin structure: array of {title, text, imageUrl})
+  if (Array.isArray(meta.workItems) && meta.workItems.length > 0) {
+    whatWeDoItems.value = (meta.workItems as Array<Record<string, unknown>>).map((w, i) => ({
+      title: String(w.title ?? ''),
+      text: String(w.text ?? ''),
+      image: String(w.imageUrl ?? '') || FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.image || imageUrls.programs.childProtection,
+      color: FALLBACK_WHAT_WE_DO[i % FALLBACK_WHAT_WE_DO.length]?.color || '#0a7d5c',
+    }))
+  }
+
+  // Impact cards — from meta.impactCards (new admin structure)
+  // Not used in CP public page template directly, but read for consistency
+
+  // Team cards — from meta.teamCards (new admin structure: array of {role, icon, desc})
+  if (Array.isArray(meta.teamCards) && meta.teamCards.length > 0) {
+    teamCards.value = meta.teamCards as Array<{ role: string; icon: string; desc: string }>
+  }
+
+  // Quote / approach — from meta.quoteContent (new admin structure)
+  if (meta.quoteContent && typeof meta.quoteContent === 'object') {
+    const qc = meta.quoteContent as Record<string, unknown>
+    if (typeof qc.text === 'string' && qc.text.trim()) {
+      approachText.value = qc.text.trim()
+    }
+  }
+
+  // Sections (legacy — fallback for backward compatibility)
+  if (Array.isArray(meta.sections) && !Array.isArray(meta.workItems)) {
     const sections = meta.sections as Array<Record<string, unknown>>
 
-    // What we do — from 'child-protection-work' section items
+    // What we do — only if workItems wasn't already set above
     const workSection = sections.find((s) => s.id === 'child-protection-work')
     if (workSection && typeof workSection.items === 'string' && workSection.items.trim()) {
       const lines = workSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
@@ -246,25 +270,27 @@ function applyProgramMetadata(meta: Record<string, unknown>) {
       }
     }
 
-    // Approach — from 'child-protection-approach' section body
+    // Approach — from 'child-protection-approach' section body (only if quoteContent wasn't set above)
     const approachSection = sections.find((s) => s.id === 'child-protection-approach')
     if (approachSection && typeof approachSection.body === 'string' && approachSection.body.trim()) {
-      approachText.value = approachSection.body.trim()
+      if (!meta.quoteContent) approachText.value = approachSection.body.trim()
     }
 
-    // Team — from 'child-protection-team' section items
+    // Team — from 'child-protection-team' section items (only if teamCards wasn't set above)
     const teamSection = sections.find((s) => s.id === 'child-protection-team')
     if (teamSection && typeof teamSection.items === 'string' && teamSection.items.trim()) {
-      const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
-      if (lines.length > 0) {
-        teamCards.value = lines.map(line => {
-          const parts = line.split('|').map((p: string) => p.trim())
-          return {
-            role: parts[0] || '',
-            icon: parts[1] || 'chart',
-            desc: parts[2] || parts[0] || '',
-          }
-        })
+      if (!Array.isArray(meta.teamCards)) {
+        const lines = teamSection.items.split('\n').map((l: string) => l.trim()).filter(Boolean)
+        if (lines.length > 0) {
+          teamCards.value = lines.map(line => {
+            const parts = line.split('|').map((p: string) => p.trim())
+            return {
+              role: parts[0] || '',
+              icon: parts[1] || 'chart',
+              desc: parts[2] || parts[0] || '',
+            }
+          })
+        }
       }
     }
   }
